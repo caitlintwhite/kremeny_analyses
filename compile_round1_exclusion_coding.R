@@ -34,7 +34,8 @@ for(i in 1:nrow(results)){
     mutate(filename = results$name[i],
            owner = results$drive_resource[[i]]$owner[[1]]$emailAddress,
            createdTime = results$drive_resource[[i]]$createdTime,
-           modifiedTime = results$drive_resource[[i]]$modifiedTime)
+           modifiedTime = results$drive_resource[[i]]$modifiedTime,
+           records = nrow(.))
 }
 
 
@@ -80,8 +81,13 @@ lapply(resultsls, function(x) summary(is.na(x)))
 # gather times created and last modified..
 times <- unlist(lapply(results$drive_resource, function(x) x[names(x) == "createdTime"])) %>% gsub("T|Z", " ", .) %>% as.POSIXct()
 modtimes <- unlist(lapply(results$drive_resource, function(x) x[names(x) == "modifiedTime"])) %>% gsub("T|Z", " ", .) %>% as.POSIXct()
+records <- sapply(resultsls, nrow)
 which.max(times) #idk why earliest made (ie.e. pre-q8) has most recent create date..
 which.max(modtimes) # go with mod times for prioritizing results
+refdf <- data.frame(createdTime = times, modifiedTime = modtimes, `records` = records) %>%
+  arrange(desc(records), desc(modifiedTime), desc(createdTime)) %>%
+  # assign priority rank
+  mutate(rank = seq(1,nrow(.), 1))
 
 # stack all dats
 master <- data.frame()
@@ -115,27 +121,56 @@ glimpse(master) # fix title col as list (all questions NA and title == NULL)
 #ID which rows have no entries
 rowNA <- apply(master[,grep("^Q[0-9]|[?]|Comments",names(master))], 1, function(x)all(is.na(x)))
 View(master[rowNA,]) #good
-# remove empty rows or rows with NULL
+# remove empty rows or rows with NULL, then unlist title values
 master <- master[!rowNA,]
+master$Title <- unlist(master$Title)
+str(master) # okay now
+
 # fix datetime cols
 master <- mutate_at(master, vars("createdTime", "modifiedTime"), function(x)as.POSIXct(gsub("T", "", x)))
-
-# join assigment dats
-# are all titles in the assignment dataset?
-summary(unique(master$Title) %in% assignmentsdf$Title) # 22 don't match..
-needsmatch <- unique(master$Title[!master$Title %in% assignmentsdf$Title])
-
-summary(duplicated(master$Timestamp))
-
+# assign ranking
+master <- left_join(master, refdf)
 
 
 
 # -- CLEAN UP COMPILED -----
+# qa titles and append reviewer info (emails collected in first version of form)
+namecheck <- dplyr::select(master, Title) %>% distinct() %>%
+  mutate(reviewed = 1) %>%
+  left_join(dplyr::select(assignmentsdf, EBIOReviewer, Number, Title)) %>%
+  mutate(final_name = ifelse(reviewed == 1 & !is.na(EBIOReviewer), Title, NA))
+# run check on name mispell
+for(n in namecheck$Title[is.na(namecheck$final_name) & !is.na(namecheck$Title)]) {
+  words <- strsplit(n, " ") %>% unlist()
+  # look for max word match
+  ncheck <- sapply(assignmentsdf$Title, function(x) sum(words %in% unlist(strsplit(x, " "))))
+  if(max(ncheck) > length(words)*.7){
+  # replace title
+  namecheck$final_name[namecheck$Title == n & !is.na(namecheck$Title)] <- assignmentsdf$Title[which.max(ncheck)]
+  }
+  # try matching abstract
+  if(!is.na(pmatch(n,assignmentsdf$Abstract)) & pmatch(n, assignmentsdf$Abstract) > 0){
+  namecheck$final_name[namecheck$Title == n] <- assignmentsdf$Title[pmatch(n, assignmentsdf$Abstract)]
+  }
+}
+# who still needs match?
+namecheck$Title[is.na(namecheck$final_name)]
+# what is NA title in master?
+View(master[is.na(master$Title),]) # can ignore, looks like initial testing before launching coding doc
+
 # distill to unique records
 # select colnames on which to check dups
 qnames <- names(master)[grep("[?]|^Q[0-9]|Comments|Title", names(master))]
-# sort dat by date modified
-master2 <- arrange(master, modifiedTime, Timestamp)
+# sort dat by date modified so remove earlier duplicate entries
+master <- arrange(master, rank, Title)
+# remove duplicate records (removes 2nd+ instance)
+masterdups <- master[(duplicated(master[,qnames])),] # keep just in case need
 master2 <- master[!(duplicated(master[,qnames])),]
 
-
+# join assigment dats
+# are all titles in the assignment dataset?
+summary(unique(master2$Title) %in% assignmentsdf$Title) # 22 don't match..
+summary(assignmentsdf$Title %in% unique(master2$Title)) # 989 don't have match..
+length(unique(assignmentsdf$EBIOReviewer)) #13 reviewers total
+namecheck <- dplyrmaster2
+needsmatch <- unique(master2$Title[!master2$Title %in% assignmentsdf$Title])
