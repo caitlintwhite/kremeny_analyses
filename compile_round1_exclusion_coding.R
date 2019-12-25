@@ -48,6 +48,10 @@ assignmentsdf <- read_excel(tempxl)
 # delete file downloaded locally
 file.remove(tempxl)
 
+# read in LD/CTW abstracts to cross check re-eval'd papers
+abstracts_LD <- read_sheet(drive_find(pattern = "Laura/Caitlin", type = "spreadsheet", n_max = 1))
+glimpse(abstracts_LD) # read in correct file .. pubdate col is list, header didn't import correctly
+
 
 
 # -- PRELIM REVIEW DATA ----
@@ -157,20 +161,54 @@ for(n in namecheck$Title[is.na(namecheck$final_name) & !is.na(namecheck$Title)])
 namecheck$Title[is.na(namecheck$final_name)]
 # what is NA title in master?
 View(master[is.na(master$Title),]) # can ignore, looks like initial testing before launching coding doc
+# ditch NA title in namecheck
+namecheck <- subset(namecheck, !is.na(Title))
+# manual corrections on the rest..
+## 1190 = ref num
+namecheck$final_name[namecheck$Title == "1190"] <- assignmentsdf$Title[assignmentsdf$Number == 1190]
+## SUDS
+namecheck$final_name[grepl("SUDS", namecheck$Title)] <- assignmentsdf$Title[grepl("SUDS", assignmentsdf$Abstract)]
+## bat comment -- check LD abstracts sheet -- can get it from matching comment in master
+namecheck$final_name[grepl("Only really focused on bat", namecheck$Title)] <- unique(master$Title[grepl("Only really focused on bat", master$`Comments on the paper or any questions that are unclear`)])
+## I can't find any paper assigned to LB that's on TRY database.. given it was from first version of coding form and only presents in that one record, maybe was just a test entry.. going to ignore
+# reassign reviewers and record nums
+namecheck <- namecheck[c("Title", "final_name", "reviewed")] %>%
+  left_join(dplyr::select(assignmentsdf, EBIOReviewer, Number, Title), by = c("final_name" = "Title")) %>%
+  distinct()
 
 # distill to unique records
 # select colnames on which to check dups
-qnames <- names(master)[grep("[?]|^Q[0-9]|Comments|Title", names(master))]
-# sort dat by date modified so remove earlier duplicate entries
-master <- arrange(master, rank, Title)
+qnames <- names(master)[grep("[?]|^Q[0-9]|Comments|Titl", names(master))]
+# use second copy to preserve original
+# append reviewer and clean title info
+master2 <-  left_join(master, distinct(namecheck[c("Title", "final_name", "EBIOReviewer", "Number")])) %>% # added 4 extra rows.. not sure why
+  # remove any record that doesn't have reviewier assigned (e.g. NA or TRY title from round 1 coding)
+  filter(!(is.na(EBIOReviewer) & rank == max(master$rank))) %>%
+  # sort dat by date modified so remove earlier duplicate entries
+  arrange(final_name, rank) %>%
+  # reorder cols and ditch email address (only contains 4 unique addresses and have all names now anyway)
+  dplyr::select(filename:records, rank, EBIOReviewer, Number, Timestamp, `Email Address`, final_name, Title, names(.)[grep("meta-analy", names(.))]:names(.)[grep("^Q7", names(.))], names(.)[grep("^Q8", names(.))], names(.)[grep("^Comments", names(.))]) %>%
+  distinct()
+  rename(Title = final_name)
 # remove duplicate records (removes 2nd+ instance)
-masterdups <- master[(duplicated(master[,qnames])),] # keep just in case need
-master2 <- master[!(duplicated(master[,qnames])),]
+masterdups <- master2[(duplicated(master2[,qnames])),] # keep just in case need
+master3 <- master2[!(duplicated(master2[,qnames])),]
+  
 
-# join assigment dats
-# are all titles in the assignment dataset?
-summary(unique(master2$Title) %in% assignmentsdf$Title) # 22 don't match..
-summary(assignmentsdf$Title %in% unique(master2$Title)) # 989 don't have match..
-length(unique(assignmentsdf$EBIOReviewer)) #13 reviewers total
-namecheck <- dplyrmaster2
-needsmatch <- unique(master2$Title[!master2$Title %in% assignmentsdf$Title])
+# think I should split papers re-eval'd for Q8 vs ones that haven't been...
+reval_titles <- master3$final_name[duplicated(master3$final_name)]
+# select records for titles that were rescored
+rescored <- subset(master3, final_name %in% reval_titles)
+# who rescored? [CTW re-eval'd what LD had done prior to Q8 development]
+summary(as.factor(rescored$EBIOReviewer))
+# select records for titles only eval'd once
+singlerev <- subset(master3, !final_name %in% reval_titles)
+
+
+# -- SCREEN SINGLE-REVIEWED RECORDS -----
+# how many do not have q8 scored? do reviewers want to rescore before we move on to coding, or let round 2 score biodiv question?
+
+
+
+# -- ADDRESS RESCORED RECORDS -----
+
