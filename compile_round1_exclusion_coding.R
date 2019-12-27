@@ -222,28 +222,54 @@ sapply(with(singlerev, singlerev[EBIOReviewer == "Caitlin", names(singlerev)[13:
 ## what are the NAs?
 View(subset(singlerev, EBIOReviewer == "Caitlin" & (is.na(review)|is.na(no_efes)))) # looks like both should be no
 # how many others are empty when should be answered?
-View(subset(singlerev, EBIOReviewer != "Caitlin")) %>%
+subset(singlerev, EBIOReviewer != "Caitlin") %>%
   dplyr::select(meta:tool) %>%
   mutate_all(as.factor) %>%
   summary()
 # were q5-q7 not scored bc scored Yes for meta-analysis or review question?
-View(subset(singlerev, EBIOReviewer != "Caitlin" & (meta == "Yes" | review == "Yes"))) %>%
+subset(singlerev, EBIOReviewer != "Caitlin" & (meta == "Yes" | review == "Yes")) %>%
   dplyr::select(meta:tool) %>%
   mutate_all(as.factor) %>%
   summary() # not necessarily..
 # how many rows have NAs (excluding Q8) when at least one question scored YES, or all else NO
-test <- dplyr::select(singlerev, EBIOReviewer, rank, meta:tool) %>%
+yesno_tally <- dplyr::select(singlerev, EBIOReviewer, rank, meta:tool) %>%
   subset(complete.cases(.) == F) %>%
   mutate(Yes = apply(.,1, function(x) sum(x == "Yes", na.rm = T)),
          No = apply(.,1, function(x) sum(x == "No", na.rm = T)),
          empty = apply(.,1, function(x) sum(is.na(x), na.rm = T)),
          tally = Yes+No)
-  
-sapply(with(singlerev, singlerev[EBIOReviewer == "Caitlin" & is.na(names(singlerev)), names(singlerev)[13:18]]), function(x) summary(as.factor(x)))
-View(subset(singlerev, EBIOReviewer == "Caitlin"))
+View(yesno_tally)
+# -- 12/26 question: -----
+## asked group how to address NAs ... save for later and move on ...
 
-# q8 NA vs answered
-table(is.na(singlerev$`Q8: This paper only measures biodiversity/abundance but NOT as an explicit proxy for ES/EF`))
+
+# picking up LD/CTW NA infill..
+# infill NAs with No and Q8 NAs with No
+singlerev <- singlerev %>%
+  mutate_at(grep("meta", names(singlerev)):grep("biodi", names(singlerev)), function(x) ifelse(singlerev$EBIOReviewer == "Caitlin" & is.na(x), "No", x))
+sapply(with(singlerev, singlerev[EBIOReviewer == "Caitlin", names(singlerev)[13:18]]), function(x) summary(as.factor(x))) # no more NAs
+sapply(with(singlerev, singlerev[EBIOReviewer != "Caitlin" & rank == 1, names(singlerev)[13:18]]), function(x) summary(as.factor(x)))
+# check for NAs by coding form version..
+sapply(singlerev[names(singlerev)[13:18]], function(x) sapply(split(x, singlerev$rank), function(x) summary(as.factor(x))))
+# who filled out earliest version?
+subset(singlerev, rank > 1) %>% dplyr::select(rank, EBIOReviewer, Number) %>%
+  group_by(rank, EBIOReviewer) %>%
+  summarise(nobs = length(Number))
+# do N, S and T have entries in rank == 1 (most recent version) form?
+subset(singlerev, rank == 1 & grepl("Trav|Sier|Nick", EBIOReviewer)) %>% dplyr::select(rank, EBIOReviewer, Number) %>%
+  group_by(rank, EBIOReviewer) %>%
+  summarise(nobs = length(Number)) #hm.. nick only for now (12/26)
+# update actual reviewer for Caitlin-assigned abstracts
+singlerev <- singlerev %>%
+  # use LD/CTW abstracts form
+  left_join(abstracts_LD[c("Reviewer", "Title")], by = c("final_name" = "Title")) %>%
+  # standardize Laura name first
+  mutate(Reviewer = ifelse(!grepl("Cait", Reviewer), "Laura", Reviewer),
+         EBIOReviewer = ifelse(EBIOReviewer == "Caitlin", Reviewer, EBIOReviewer)) %>%
+  dplyr::select(-Reviewer)
+
+# q8 NA vs answered (12/26-- wrote group to ask if people will re-eval or not)
+table(is.na(singlerev$biodiv)) # more not answered than answered
 
 
 
