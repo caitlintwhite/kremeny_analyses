@@ -53,6 +53,9 @@ abstracts_LD <- read_sheet(drive_find(pattern = "Laura/Caitlin", type = "spreads
 glimpse(abstracts_LD) # read in correct file .. pubdate col is list, header didn't import correctly
 
 
+# list papers in Meets Criteria folder for cross checking
+meetscriteria <- drive_ls(drive_find(pattern = "Meets Criteria", type = "folder", n_max = 10))
+
 
 # -- PRELIM REVIEW DATA ----
 # quick check of assignments df
@@ -275,4 +278,88 @@ table(is.na(singlerev$biodiv)) # more not answered than answered
 
 
 # -- ADDRESS RESCORED RECORDS -----
+# prioritize most recent entry, but check scoring against first round to see that it makes sense (e.g. filling in  NA)
+# look for yes/no conflicts in repeat scoring
+# for ctw-ld entries, ctw is most recent and should be used, but append earlier comment as well
 
+# sum Yes's and No's as first check
+rescored <- rescored %>%
+  mutate(Yes = apply(.,1, function(x) sum(x == "Yes", na.rm = T)),
+         No = apply(.,1, function(x) sum(x == "No", na.rm = T)),
+         # only sum NAs in exclusion questions
+         empty = apply(.[names(.)[grep("meta", names(.)):grep("biodiv", names(.))]],1, function(x) sum(is.na(x), na.rm = T)),
+         tally = Yes+No) %>%
+  #remove names created by apply fxn
+  mutate_at(vars("Yes", "No", "empty", "tally"), as.numeric) %>%
+  # flag any rescore whose tally is not greater than earlier score
+  group_by(final_name) %>%
+  mutate(flag_tally = tally[which.max(Timestamp)] <= tally[which.min(Timestamp)]) %>%
+  ungroup()
+
+# -- triage rescores where tally doesn't increase -----
+# who are the problem cases?
+View(subset(rescored, flag_tally)) 
+## CTW forgot to answer question, can infill with LD's answer
+## Isabel's rescore is the same, but more recent entry lacks comment (comment accidentally pasted to title when filling out form)
+## Aislyn changed 2 papers to YES for doesn't directly measure EF or ES, but those papers are in the Meets Criteria folder.. need to follow up?
+conflict_rescore <- subset(rescored, flag_tally) %>%
+  group_by(final_name)
+# break piping bc can't figure out using mutate_at
+# this line will infill later timestamp NAs with previous version if non-NA value present
+conflict_rescore[names(conflict_rescore)[13:17]] <- sapply(conflict_rescore[names(conflict_rescore)[13:17]], function(x) ifelse(is.na(x) & conflict_rescore$Timestamp == max(conflict_rescore$Timestamp), x[which.min(conflict_rescore$Timestamp)], x))
+# keep Aislyn's NO to question 3 since those articles are in meets criteria folder (write line to search for authors in files within meets criteria folder, i.e. automate)
+conflict_rescore <- ungroup(conflict_rescore) %>%
+  left_join(assignmentsdf[c("Title", "AuthorsFull")], by = c("final_name" = "Title")) %>%
+  # extract First author last name to search Meets Criteria folder
+  mutate(FirstAuthor = word(AuthorsFull, sep = ",")) %>%
+  group_by(final_name) %>%
+  mutate(in_meetscriteria = sum(grepl(unique(FirstAuthor), meetscriteria$name))) %>%
+  ungroup() %>%
+  #recrunch tallies
+  mutate(Yes = apply(.,1, function(x) sum(x == "Yes", na.rm = T)),
+         No = apply(.,1, function(x) sum(x == "No", na.rm = T)),
+         # only sum NAs in exclusion questions PLUS comments
+         empty = apply(.[names(.)[grep("meta", names(.)):grep("comments", names(.))]],1, function(x) sum(is.na(x), na.rm = T)),
+         tally = Yes+No) %>%
+  # choose whichever has most Nos or fewest empty cells (kind of specific to these cases)
+  group_by(final_name) %>%
+  mutate(keep = (No == max(No)) & empty == min(empty)) %>%
+  ungroup()%>%
+  # keep only those entries that meet keep criteria
+  filter(keep)
+
+
+# -- prep unproblematic rescored abstracts -----
+# see if comments for those not CTW-LD should be appended to more recent score
+View(subset(rescored, !flag_tally & EBIOReviewer != "Caitlin")) # looks like people re-entered their comments for re-score (don't append old comments)
+# append LD comments to CTW re-scored
+okay_rescored <- subset(rescored, !Number %in% conflict_rescore$Number) %>%
+  # if only comment is CTW re-evaluated article for Q8 or something like that, NA
+  mutate(comments = ifelse(grepl("^CTW .* for Q8$", comments), NA, comments)) %>%
+  group_by(final_name) %>%
+  mutate(comments2 = ifelse(EBIOReviewer == "Caitlin" & tally != max(tally) & !is.na(comments), paste("LD:", comments), comments),
+    comments3 = ifelse(EBIOReviewer == "Caitlin", str_flatten(comments2, collapse = "; "), comments2))
+okay_rescored$comments2 <- apply(okay_rescored$comments, 1, function(x) ifelse(okay_rescored$EBIOReviewer == "Caitlin", paste(x[min(okay_rescored$Timestamp)], x[which.max(okay_rescored$Timestamp)], sep = ", "), x))
+
+
+
+# -- COMPILE FINAL SCORING, SUMMARIZE -----
+# restack single-reviewed and re-eval'd cleaned up results
+results_clean <- singlerev
+results_clean$exclude <- apply(dplyr::select(results_clean, meta:biodiv), 1, function(x) any(x == "Yes"))
+
+# separate exclude from pass to round 2
+exclude <- subset(results_clean, exclude)
+keep <- subset(results_clean, !exclude | is.na(exclude))
+
+
+
+# -- RANDOM ASSIGN ROUND 2 PAPERS -----
+# write out to google sheets? or csv?
+reviewers <- data.frame(EBIOReviewer = unique(master2$EBIOReviewer)) %>%
+  mutate(ID = 1:nrow(.))
+test <- data.frame(Title = keep$final_name, ID = sample(1:nrow(reviewers), nrow(keep), replace = T, prob = (1/nrow(reviewers))*100)) %>%
+  left_join(reviewers)
+table(test$EBIOReviewer)
+      
+    
