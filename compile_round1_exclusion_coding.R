@@ -189,12 +189,18 @@ master2 <-  left_join(master, distinct(namecheck[c("Title", "final_name", "EBIOR
   # reorder cols and ditch email address (only contains 4 unique addresses and have all names now anyway)
   dplyr::select(filename:records, rank, EBIOReviewer, Number, Timestamp, `Email Address`, final_name, Title, names(.)[grep("meta-analy", names(.))]:names(.)[grep("^Q7", names(.))], names(.)[grep("^Q8", names(.))], names(.)[grep("^Comments", names(.))]) %>%
   distinct()
-  rename(Title = final_name)
+  
 # remove duplicate records (removes 2nd+ instance)
 masterdups <- master2[(duplicated(master2[,qnames])),] # keep just in case need
 master3 <- master2[!(duplicated(master2[,qnames])),]
   
 
+# make abbrev colnames for review
+nameref <- data.frame(orig = names(master3),
+                      abbr = c(names(master3)[1:grep("Title", names(master3))],"meta", "review", "no_efes", "valrisk", "tool", "biodiv", "comments")) %>%
+  mutate(abbr = ifelse(grepl("Emai", abbr), "email", abbr))
+
+names(master3) <- nameref$abbr
 # think I should split papers re-eval'd for Q8 vs ones that haven't been...
 reval_titles <- master3$final_name[duplicated(master3$final_name)]
 # select records for titles that were rescored
@@ -205,8 +211,40 @@ summary(as.factor(rescored$EBIOReviewer))
 singlerev <- subset(master3, !final_name %in% reval_titles)
 
 
+
 # -- SCREEN SINGLE-REVIEWED RECORDS -----
 # how many do not have q8 scored? do reviewers want to rescore before we move on to coding, or let round 2 score biodiv question?
+# for laura-caitlin abstracts, need to infill No to anything that's NA (CTW re-eval'd anything that might be Yes for Q8), also correctly assign reviewer (LD or CTW)
+
+# infill LD/CTW Q8 with No
+## check to be sure all make sense for No infilling
+sapply(with(singlerev, singlerev[EBIOReviewer == "Caitlin", names(singlerev)[13:18]]), function(x) summary(as.factor(x)))
+## what are the NAs?
+View(subset(singlerev, EBIOReviewer == "Caitlin" & (is.na(review)|is.na(no_efes)))) # looks like both should be no
+# how many others are empty when should be answered?
+View(subset(singlerev, EBIOReviewer != "Caitlin")) %>%
+  dplyr::select(meta:tool) %>%
+  mutate_all(as.factor) %>%
+  summary()
+# were q5-q7 not scored bc scored Yes for meta-analysis or review question?
+View(subset(singlerev, EBIOReviewer != "Caitlin" & (meta == "Yes" | review == "Yes"))) %>%
+  dplyr::select(meta:tool) %>%
+  mutate_all(as.factor) %>%
+  summary() # not necessarily..
+# how many rows have NAs (excluding Q8) when at least one question scored YES, or all else NO
+test <- dplyr::select(singlerev, EBIOReviewer, rank, meta:tool) %>%
+  subset(complete.cases(.) == F) %>%
+  mutate(Yes = apply(.,1, function(x) sum(x == "Yes", na.rm = T)),
+         No = apply(.,1, function(x) sum(x == "No", na.rm = T)),
+         empty = apply(.,1, function(x) sum(is.na(x), na.rm = T)),
+         tally = Yes+No)
+  
+sapply(with(singlerev, singlerev[EBIOReviewer == "Caitlin" & is.na(names(singlerev)), names(singlerev)[13:18]]), function(x) summary(as.factor(x)))
+View(subset(singlerev, EBIOReviewer == "Caitlin"))
+
+# q8 NA vs answered
+table(is.na(singlerev$`Q8: This paper only measures biodiversity/abundance but NOT as an explicit proxy for ES/EF`))
+
 
 
 
