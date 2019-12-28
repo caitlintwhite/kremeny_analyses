@@ -334,12 +334,21 @@ conflict_rescore <- ungroup(conflict_rescore) %>%
 View(subset(rescored, !flag_tally & EBIOReviewer != "Caitlin")) # looks like people re-entered their comments for re-score (don't append old comments)
 # append LD comments to CTW re-scored
 okay_rescored <- subset(rescored, !Number %in% conflict_rescore$Number) %>%
-  # if only comment is CTW re-evaluated article for Q8 or something like that, NA
-  mutate(comments = ifelse(grepl("^CTW .* for Q8$", comments), NA, comments)) %>%
+  # append LD to comments if reviewed by LD and comment not NA
+  mutate(comments = ifelse(EBIOReviewer == "Caitlin" & tally != max(tally) & !is.na(comments), paste("LD:", comments), comments)) %>%
   group_by(final_name) %>%
-  mutate(comments2 = ifelse(EBIOReviewer == "Caitlin" & tally != max(tally) & !is.na(comments), paste("LD:", comments), comments),
-    comments3 = ifelse(EBIOReviewer == "Caitlin", str_flatten(comments2, collapse = "; "), comments2))
-okay_rescored$comments2 <- apply(okay_rescored$comments, 1, function(x) ifelse(okay_rescored$EBIOReviewer == "Caitlin", paste(x[min(okay_rescored$Timestamp)], x[which.max(okay_rescored$Timestamp)], sep = ", "), x))
+  # str_flatten won't collapse comments within paper if one cell is NA, so leave CTW re-eval'd comment for now
+  mutate(comments2 = ifelse(EBIOReviewer == "Caitlin", str_flatten(comments, collapse = "; "), comments)) %>%
+  # filter to most recent eval within paper
+  filter(tally == max(tally)) %>%
+  ungroup() %>%
+  # clean up comments  
+  mutate(comments2 = trimws(gsub("; CTW .* Q8$", "", comments2)),
+         # if only comment is CTW re-evaluated article for Q8 or something like that, NA
+         comments = ifelse(grepl("^CTW .* for Q8$", comments), NA, comments),
+         final_comment = ifelse(!is.na(comments2), comments2, comments),
+         # update reviewer
+         EBIOReviewer = recode(EBIOReviewer, "Caitlin" ="Laura/Caitlin"))
 
 
 
