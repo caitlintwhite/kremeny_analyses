@@ -377,7 +377,28 @@ results_clean <- rbind(singlerev, final_rescore[names(singlerev)]) %>%
   # this is a pretty coarse check and not perfect, but at least quick screen
   mutate(in_meetscriteria = sum(grepl(FirstAuthor, meetscriteria$name))) %>%
   ungroup() %>%
-  # create col for exlusion
+  data.frame()
+
+# triage: if any papers are incomplete-eval'd (i.e. NAs exists, for all but biodiv q) but paper exists in meet criteria folder, infill NAs with NO
+incomplete <- which(results_clean$Yes == 0 & results_clean$empty > 0)
+for(i in incomplete){
+  if(results_clean$in_meetscriteria[i]>0){
+    # could generically assign No to all cols, but to be sure only infill confirmed NAs with No
+    results_clean[i, names(results_clean)[grep("meta", names(results_clean)):grep("tool", names(results_clean))]] <- sapply(results_clean[i, names(results_clean)[grep("meta", names(results_clean)):grep("tool", names(results_clean))]], function(x) ifelse(is.na(x), "No", x))
+  }
+}
+# continue with flagging create col for exlusion
+results_clean  <- results_clean %>%
+  #recrunch tallies
+  mutate(Yes = apply(.,1, function(x) sum(x == "Yes", na.rm = T)),
+         No = apply(.,1, function(x) sum(x == "No", na.rm = T)),
+         # only sum NAs in exclusion questions PLUS comments
+         empty = apply(.[names(.)[grep("meta", names(.)):grep("tool", names(.))]],1, function(x) sum(is.na(x), na.rm = T)),
+         tally = Yes+No) %>%
+  # remove attr names created during apply
+  mutate_at(vars("Yes", "No", "empty", "tally"), as.numeric) %>%
+  data.frame() %>%
+  # create flagging
   mutate(exclude = Yes > 0,
          # create flagging
          ## flag 1 is if only NOs answered and rest are NAs
@@ -389,12 +410,14 @@ results_clean <- rbind(singlerev, final_rescore[names(singlerev)]) %>%
          flag_paper = in_meetscriteria == 0 & Yes == 0 & No >= 5)
 
 
-# separate exclude from pass to round 2
+# separate exclude and needs further review from keep for to round 2
 exclude <- subset(results_clean, exclude)
-keep <- subset(results_clean, !exclude | is.na(exclude))
+questions <- subset(results_clean, flag_NO)
+keep <- subset(results_clean, (!exclude | is.na(exclude)) & !flag_NO)
 
-# pull out papers from keep that still need clarification from reviewers
-good_keep <- subset(keep, No == tally)
+# check all papers accounted for
+nrow(results_clean) == sum(nrow(exclude), nrow(questions), nrow(keep)) # <-- this should be TRUE before proceeding
+
 
 
 # -- SUMMARIZE EXCLUSIONS ---- 
@@ -420,7 +443,8 @@ ggsave("figs/excluded_abstracts_summary.pdf", width = 6, height = 5, units = "in
 
 
 # -- PARSE KEEP PAPERS ----
-# pull out papers that still need clarification from reviewers (e.g. not all questions answered, ambiguous keep)
+# placeholder section for any future data treatment needed for keep papers (e.g. manual corrections on coding outstanding question abstracts)
+
 
 
 
@@ -472,20 +496,16 @@ assign_round2 <- rename(assign_round2, round1_reviewer = actual_reviewer, Title 
 write.csv(assign_round2, "review_assignments_round2.csv", row.names = F)
 
 
+
 # -- PROGRESS REPORT ----
 # all abstracts done? who still needs to complete if not?
 summary(unique(assignmentsdf$Title) %in% results_clean$final_name)
 sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summary(x %in% results_clean$final_name))
-# 12/27: Grant done (yay!) .. check duplicates for Aislyn, Caitlin, Nick papers.. seems like those should be done (only a few papers missing).
+# 12/28: Grant, Caitlin, Nick done (yay!) .. emailed Aislyn with outstanding paper
 
-# CTW missing papers
-assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Caitlin" & !assignmentsdf$Title %in% results_clean$final_name]
-# both are in LD's abstracts spreadsheet as reviewed, but not in master results.. maybe never coded in Google form?
 # Aislyn missing papers
 assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Aislyn" & !assignmentsdf$Title %in% results_clean$final_name]
-# Nick missing papers
-assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Nick" & !assignmentsdf$Title %in% results_clean$final_name]
-# none of these are in master.. still need to be coded
+# not master.. still need to be coded
 
 # write out still needs review if others want to check it
 needs_review <- subset(assignmentsdf, !assignmentsdf$Title %in% results_clean$final_name)
