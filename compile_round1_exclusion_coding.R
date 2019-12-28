@@ -411,10 +411,11 @@ dplyr::select(exclude,Number, meta:biodiv) %>%
   geom_col() +
   labs(y = "Count", x = "Response",
        title = paste0("Excluded abstracts: summary of round 1 responses"),
-       subtitle = paste0("Last updated: ", Sys.Date(),", n = ",nrow(exclude))) +
+       subtitle = paste0("Last updated: ", Sys.Date(),", ", nrow(exclude), " excluded of ", nrow(results_clean), " reviewed")) +
   facet_wrap(~question)
 
-ggsave("figs/excluded_abstracts_summary.jpg", width = 6, height = 5, units = "in")
+# write out 
+ggsave("figs/excluded_abstracts_summary.pdf", width = 6, height = 5, units = "in")
 
 
 
