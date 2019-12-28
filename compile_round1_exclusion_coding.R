@@ -70,6 +70,7 @@ test$Title_extract <- NA
 for(i in 1:nrow(test)){
   test$Title_extract[i] <- test$Title[[i]][1]
 } # row 246 no bueno (Title == NULL) in list items 2-4 .. fix after combining all dats
+test[246,]
 
 # colnames a little different in each..
 ## 1 has email address, no q8 -- these would have papers reviewed before q8 created
@@ -152,12 +153,12 @@ for(n in namecheck$Title[is.na(namecheck$final_name) & !is.na(namecheck$Title)])
   # look for max word match
   ncheck <- sapply(assignmentsdf$Title, function(x) sum(words %in% unlist(strsplit(x, " "))))
   if(max(ncheck) > length(words)*.7){
-  # replace title
-  namecheck$final_name[namecheck$Title == n & !is.na(namecheck$Title)] <- assignmentsdf$Title[which.max(ncheck)]
+    # replace title
+    namecheck$final_name[namecheck$Title == n & !is.na(namecheck$Title)] <- assignmentsdf$Title[which.max(ncheck)]
   }
   # try matching abstract
   if(!is.na(pmatch(n,assignmentsdf$Abstract)) & pmatch(n, assignmentsdf$Abstract) > 0){
-  namecheck$final_name[namecheck$Title == n] <- assignmentsdf$Title[pmatch(n, assignmentsdf$Abstract)]
+    namecheck$final_name[namecheck$Title == n] <- assignmentsdf$Title[pmatch(n, assignmentsdf$Abstract)]
   }
 }
 # who still needs match?
@@ -192,11 +193,11 @@ master2 <-  left_join(master, distinct(namecheck[c("Title", "final_name", "EBIOR
   # reorder cols and ditch email address (only contains 4 unique addresses and have all names now anyway)
   dplyr::select(filename:records, rank, EBIOReviewer, Number, Timestamp, `Email Address`, final_name, Title, names(.)[grep("meta-analy", names(.))]:names(.)[grep("^Q7", names(.))], names(.)[grep("^Q8", names(.))], names(.)[grep("^Comments", names(.))]) %>%
   distinct()
-  
+
 # remove duplicate records (removes 2nd+ instance)
 masterdups <- master2[(duplicated(master2[,qnames])),] # keep just in case need
 master3 <- master2[!(duplicated(master2[,qnames])),]
-  
+
 
 # make abbrev colnames for review
 nameref <- data.frame(orig = names(master3),
@@ -309,7 +310,7 @@ conflict_rescore <- subset(rescored, flag_tally) %>%
 conflict_rescore[names(conflict_rescore)[13:17]] <- sapply(conflict_rescore[names(conflict_rescore)[13:17]], function(x) ifelse(is.na(x) & conflict_rescore$Timestamp == max(conflict_rescore$Timestamp), x[which.min(conflict_rescore$Timestamp)], x))
 # keep Aislyn's NO to question 3 since those articles are in meets criteria folder (write line to search for authors in files within meets criteria folder, i.e. automate)
 conflict_rescore <- ungroup(conflict_rescore) %>%
-  left_join(assignmentsdf[c("Title", "AuthorsFull")], by = c("final_name" = "Title")) %>%
+  left_join(distinct(assignmentsdf[c("Title", "AuthorsFull")]), by = c("final_name" = "Title")) %>%
   # extract First author last name to search Meets Criteria folder
   mutate(FirstAuthor = word(AuthorsFull, sep = ",")) %>%
   group_by(final_name) %>%
@@ -346,22 +347,79 @@ okay_rescored <- subset(rescored, !Number %in% conflict_rescore$Number) %>%
   mutate(comments2 = trimws(gsub("; CTW .* Q8$", "", comments2)),
          # if only comment is CTW re-evaluated article for Q8 or something like that, NA
          comments = ifelse(grepl("^CTW .* for Q8$", comments), NA, comments),
-         final_comment = ifelse(!is.na(comments2), comments2, comments),
+         comments = ifelse(!is.na(comments2), comments2, comments),
          # update reviewer
          EBIOReviewer = recode(EBIOReviewer, "Caitlin" ="Laura/Caitlin"))
 
+# stack treated rescored
+final_rescore <- dplyr::select(okay_rescored, -comments2) %>% rbind(conflict_rescore[names(.)])
 
 
-# -- COMPILE FINAL SCORING, SUMMARIZE -----
+
+# -- COMPILE PREPPED SCORING, CREATE FLAGS, SEPARATE FOR PROCESSING -----
 # restack single-reviewed and re-eval'd cleaned up results
-results_clean <- singlerev
-results_clean$exclude <- apply(dplyr::select(results_clean, meta:biodiv), 1, function(x) any(x == "Yes"))
+# recrunch Yes and No tallies as I calculated them a few ways above for flagging
+results_clean <- rbind(singlerev, final_rescore[names(singlerev)]) %>%
+  mutate(Yes = apply(.,1, function(x) sum(x == "Yes", na.rm = T)),
+         No = apply(.,1, function(x) sum(x == "No", na.rm = T)),
+         # only sum NAs in exclusion questions PLUS comments
+         empty = apply(.[names(.)[grep("meta", names(.)):grep("tool", names(.))]],1, function(x) sum(is.na(x), na.rm = T)),
+         tally = Yes+No) %>%
+  # remove attr names created during apply
+  mutate_at(vars("Yes", "No", "empty", "tally"), as.numeric) %>%
+  # bring in authors to check for presence in Meets Criteria
+  left_join(distinct(assignmentsdf[c("Title", "AuthorsFull")]), by = c("final_name" = "Title")) %>% # may want to also join pubdate or pubyear to search meets criteria folder
+  mutate(FirstAuthor = ifelse(grepl(", ", AuthorsFull), word(AuthorsFull, sep = ","), word(AuthorsFull)),
+         # remove white space
+         FirstAuthor = trimws(FirstAuthor)) %>%
+  # check for author in Meets Criteria (won't be perfect bc not everyone named files by first author last name and year)
+  group_by(final_name) %>%
+  # this is a pretty coarse check and not perfect, but at least quick screen
+  mutate(in_meetscriteria = sum(grepl(FirstAuthor, meetscriteria$name))) %>%
+  ungroup() %>%
+  # create col for exlusion
+  mutate(exclude = Yes > 0,
+         # create flagging
+         ## flag 1 is if only NOs answered and rest are NAs
+         ## flag 2 is any NAs in q1-7
+         flag_NO = No > 0 & Yes == 0 & empty > 0,
+         flag_NA = empty > 0,
+         flag_Q8 = is.na(biodiv),
+         # flag if paper should be in folder and isn't
+         flag_paper = in_meetscriteria == 0 & Yes == 0 & No >= 5)
+
 
 # separate exclude from pass to round 2
 exclude <- subset(results_clean, exclude)
 keep <- subset(results_clean, !exclude | is.na(exclude))
 
+# pull out papers from keep that still need clarification from reviewers
+good_keep <- subset(keep, No == tally)
 
+
+# -- SUMMARIZE EXCLUSIONS ---- 
+dplyr::select(exclude,Number, meta:biodiv) %>%
+  data.frame() %>%
+  gather(question, answer, meta:biodiv) %>%
+  mutate(answer = ifelse(is.na(answer), "NA", answer)) %>%
+  group_by(question, answer) %>%
+  summarise(nobs = length(Number)) %>%
+  ungroup() %>%
+  mutate(question = factor(question, levels = c("meta", "review", "no_efes", "tool", "valrisk", "biodiv"),
+                           labels = c("Is meta-analysis", "Is review", "No EF/ES", "Tool only", "Valuation/risk only", "Biodiv not EF/ES proxy"))) %>%
+  ggplot(aes(answer, nobs)) +
+  geom_col() +
+  labs(y = "Count", x = "Response",
+       title = paste0("Excluded abstracts: summary of round 1 responses"),
+       subtitle = paste0("Last updated: ", Sys.Date(),", n = ",nrow(exclude))) +
+  facet_wrap(~question)
+
+ggsave("figs/excluded_abstracts_summary.jpg", width = 6, height = 5, units = "in")
+
+
+
+# -- PARSE KEEP PAPERS ----
+# pull out papers that still need
 
 # -- RANDOM ASSIGN ROUND 2 PAPERS -----
 # write out to google sheets? or csv?
@@ -370,5 +428,4 @@ reviewers <- data.frame(EBIOReviewer = unique(master2$EBIOReviewer)) %>%
 test <- data.frame(Title = keep$final_name, ID = sample(1:nrow(reviewers), nrow(keep), replace = T, prob = (1/nrow(reviewers))*100)) %>%
   left_join(reviewers)
 table(test$EBIOReviewer)
-      
-    
+
