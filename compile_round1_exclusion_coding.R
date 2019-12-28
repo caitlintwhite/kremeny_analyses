@@ -420,13 +420,53 @@ ggsave("figs/excluded_abstracts_summary.pdf", width = 6, height = 5, units = "in
 
 
 # -- PARSE KEEP PAPERS ----
-# pull out papers that still need
+# pull out papers that still need clarification from reviewers (e.g. not all questions answered, ambiguous keep)
+
+
 
 # -- RANDOM ASSIGN ROUND 2 PAPERS -----
 # write out to google sheets? or csv?
-reviewers <- data.frame(EBIOReviewer = unique(master2$EBIOReviewer)) %>%
-  mutate(ID = 1:nrow(.))
-test <- data.frame(Title = keep$final_name, ID = sample(1:nrow(reviewers), nrow(keep), replace = T, prob = (1/nrow(reviewers))*100)) %>%
-  left_join(reviewers)
-table(test$EBIOReviewer)
+# rules: 
+## if reviewed paper in round 1, cannot review same paper in round 2
+## everyone gets roughly equal amount of papers to review
+## random number assign
 
+reviewers <- unique(master2$EBIOReviewer)
+                    
+assign_round2 <- dplyr::select(keep, Number, EBIOReviewer, final_name, AuthorsFull, FirstAuthor, comments, in_meetscriteria) %>%
+  rename(actual_reviewer = EBIOReviewer) %>%
+  mutate(EBIOReviewer = ifelse(grepl("Laura|Caitl", actual_reviewer), "Caitlin", actual_reviewer),
+         round2_reviewer = NA) %>%
+  dplyr::select(round2_reviewer, Number, EBIOReviewer, actual_reviewer, comments, final_name:ncol(.))
+
+# start with unique numbers
+numbers <- unique(keep$Number)
+for(r in reviewers){
+  # random sample papers in keep not previously reviewed by person r
+  select <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == r]], size = floor(nrow(keep)/length(reviewers)))
+  # assign person r to selected numbers
+  assign_round2$round2_reviewer[assign_round2$Number %in% select] <- r
+  #update numbers before next iteration (remove papers selected)
+  numbers <- numbers[!numbers %in% select]
+}
+
+# for remaining unassigned papers (if not equal amount), random draw who will review
+for(n in numbers){
+  # random sample papers in keep not previously reviewed by person r
+  select <- sample(reviewers[!reviewers == assign_round2$EBIOReviewer[assign_round2$Number == n]], size = 1)
+  # assign person r to selected numbers
+  assign_round2$round2_reviewer[assign_round2$Number == n] <- select
+  #update reviewers before next iteration (remove person selected)
+  reviewers <- reviewers[!reviewers == select]
+}
+
+# check all assigned
+summary(is.na(assign_round2$round2_reviewer)) # looks good
+# check no one reviewing something they already have
+summary(assign_round2$round2_reviewer == assign_round2$EBIOReviewer) # looks good
+
+# clean up before writing out
+assign_round2 <- rename(assign_round2, round1_reviewer = actual_reviewer, Title = final_name) %>%
+  dplyr::select(round2_reviewer, round1_reviewer, Number, comments, Title:ncol(.))
+# write out
+write.csv(assign_round2, "review_assignments_round2.csv", row.names = F)
