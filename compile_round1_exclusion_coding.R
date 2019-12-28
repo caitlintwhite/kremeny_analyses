@@ -470,3 +470,23 @@ assign_round2 <- rename(assign_round2, round1_reviewer = actual_reviewer, Title 
   dplyr::select(round2_reviewer, round1_reviewer, Number, comments, Title:ncol(.))
 # write out
 write.csv(assign_round2, "review_assignments_round2.csv", row.names = F)
+
+
+# -- PROGRESS REPORT ----
+# all abstracts done? who still needs to complete if not?
+summary(unique(assignmentsdf$Title) %in% results_clean$final_name)
+sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summary(x %in% results_clean$final_name))
+# 12/27: Grant done (yay!) .. check duplicates for Aislyn, Caitlin, Nick papers.. seems like those should be done (only a few papers missing).
+
+# CTW missing papers
+assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Caitlin" & !assignmentsdf$Title %in% results_clean$final_name]
+# both are in LD's abstracts spreadsheet as reviewed, but not in master results.. maybe never coded in Google form?
+# Aislyn missing papers
+assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Aislyn" & !assignmentsdf$Title %in% results_clean$final_name]
+# Nick missing papers
+assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Nick" & !assignmentsdf$Title %in% results_clean$final_name]
+# none of these are in master.. still need to be coded
+
+# write out still needs review if others want to check it
+needs_review <- subset(assignmentsdf, !assignmentsdf$Title %in% results_clean$final_name)
+
