@@ -491,7 +491,22 @@ summary(assign_round2$round2_reviewer == assign_round2$EBIOReviewer) # looks goo
 
 # clean up before writing out
 assign_round2 <- rename(assign_round2, round1_reviewer = actual_reviewer, Title = final_name) %>%
-  dplyr::select(round2_reviewer, round1_reviewer, Number, comments, Title:ncol(.))
+  # join full citation info
+  left_join(assignmentsdf, by = c("EBIOReviewer", "Title", "Number", "AuthorsFull")) %>%
+  # clean up
+  dplyr::select(round2_reviewer, Number, in_meetscriteria, round1_reviewer, comments, FirstAuthor, Title:PublicationYear) %>%
+  # redo in_meets criteria using first author last name and year of publication
+  mutate(searchterm = ifelse(is.na(PublicationYear), FirstAuthor, paste0(FirstAuthor,".*", PublicationYear))) %>%
+  group_by(Number) %>%
+  mutate(in_meetscriteria = sum(grepl(searchterm, meetscriteria$name))) %>%
+  ungroup() %>%
+  rename(MeetsCriteria_matches = in_meetscriteria) %>%
+  dplyr::select(-searchterm) %>%
+  # capitalize first letter in colnames
+  rename_all(function(x) paste0(casefold(substr(x,1,1), upper = T), substr(x, 2, nchar(x)))) %>%
+  # sort by reviewer 2 name, first author, and year since that's how articles are saved in meets criteria folder
+  arrange(Round2_reviewer, FirstAuthor, PublicationYear)
+
 # write out
 write.csv(assign_round2, "review_assignments_round2.csv", row.names = F)
 
@@ -506,6 +521,8 @@ sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summa
 # Aislyn missing papers
 assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Aislyn" & !assignmentsdf$Title %in% results_clean$final_name]
 # not master.. still need to be coded
+# Laurel also missing one
+assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Laurel" & !assignmentsdf$Title %in% results_clean$final_name]
 
 # write out still needs review if others want to check it
 needs_review <- subset(assignmentsdf, !assignmentsdf$Title %in% results_clean$final_name)
