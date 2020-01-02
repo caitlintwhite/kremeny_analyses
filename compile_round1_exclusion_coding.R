@@ -8,7 +8,10 @@
 # random-assign equal number of papers to class list
 
 # notes:
+# > 1/1/20 -- need to fix code for Anna's updates (a couple of titles don't match, grepl error in pattern matching). 
+# CTW headed to field tomorrow (1/2/20) for several days.. can fix when get out or someone else can fix before then.
 
+# for anyone else working with code, warnings are fine (can ignore), errors need to be resolved (even tho sometimes code will still run when errors occur)
 
 
 # -- SETUP ----
@@ -455,7 +458,7 @@ ggsave("figs/excluded_abstracts_summary.pdf", width = 6, height = 5, units = "in
 ## everyone gets roughly equal amount of papers to review
 ## random number assign
 
-reviewers <- unique(master2$EBIOReviewer)
+reviewers <- unique(master2$EBIOReviewer[!is.na(master2$EBIOReviewer)])
                     
 assign_round2 <- dplyr::select(keep, Number, EBIOReviewer, final_name, AuthorsFull, FirstAuthor, comments, in_meetscriteria) %>%
   rename(actual_reviewer = EBIOReviewer) %>%
@@ -516,13 +519,18 @@ write.csv(assign_round2, "review_assignments_round2.csv", row.names = F)
 # all abstracts done? who still needs to complete if not?
 summary(unique(assignmentsdf$Title) %in% results_clean$final_name)
 sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summary(x %in% results_clean$final_name))
-# 12/28: Grant, Caitlin, Nick done (yay!) .. emailed Aislyn with outstanding paper
+# 1/2: Grant, Caitlin, Nick, Laurel done (yay!) .. emailed Aislyn with outstanding paper, Anna is shy by 3 papers.
 
 # Aislyn missing papers
 assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Aislyn" & !assignmentsdf$Title %in% results_clean$final_name]
 # not master.. still need to be coded
 # Laurel also missing one
-assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Laurel" & !assignmentsdf$Title %in% results_clean$final_name]
+assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Anna" & !assignmentsdf$Title %in% results_clean$final_name]
+# [1] "Building biodiversity: Vegetated facades as habitats for spider and beetle assemblages"   
+# [2] "A social-ecological framework for \"micromanaging\" microbial services"                   
+# [3] "Optimizing carbon storage and biodiversity protection in tropical agricultural landscapes"
+## first two of these are reviewed but not detected in code above (need to tweak pattern match code, will fix after 1/7)
+## third paper is not done tho
 
 # write out still needs review if others want to check it
 needs_review <- subset(assignmentsdf, !assignmentsdf$Title %in% results_clean$final_name)
