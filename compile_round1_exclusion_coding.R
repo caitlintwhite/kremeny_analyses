@@ -102,6 +102,7 @@ refdf <- data.frame(createdTime = times, modifiedTime = modtimes, `records` = re
 
 # stack all dats
 master <- data.frame()
+# > note: this will throw warning mssgs but it's okay
 for(i in 1:length(resultsls)){
   tempdat <- resultsls[[i]]
   # ensure Title col named Title to match with assignemnts dat
@@ -150,7 +151,7 @@ namecheck <- dplyr::select(master, Title) %>% distinct() %>%
   mutate(reviewed = 1) %>%
   left_join(dplyr::select(assignmentsdf, EBIOReviewer, Number, Title)) %>%
   mutate(final_name = ifelse(reviewed == 1 & !is.na(EBIOReviewer), Title, NA))
-# run check on name mispell
+# run check on title mispell
 for(n in namecheck$Title[is.na(namecheck$final_name) & !is.na(namecheck$Title)]) {
   words <- strsplit(n, " ") %>% unlist()
   # look for max word match
@@ -158,8 +159,25 @@ for(n in namecheck$Title[is.na(namecheck$final_name) & !is.na(namecheck$Title)])
   if(max(ncheck) > length(words)*.7){
     # replace title
     namecheck$final_name[namecheck$Title == n & !is.na(namecheck$Title)] <- assignmentsdf$Title[which.max(ncheck)]
+    next
   }
-  # try matching abstract
+  # try partial character match
+  tempchars <- casefold(unlist(str_extract_all(n, "[:alpha:]")))
+  # extract final titles not assigned yet
+  needs_match <- assignmentsdf$Title[!assignmentsdf$Title %in% namecheck$final_name]
+  for(i in needs_match){
+    # split out characters in available title that needs a match
+    comparechars <- casefold(unlist(str_extract_all(i, "[:alpha:]")))
+    # run partial match
+    match1 <- pmatch(comparechars, tempchars)
+    # if partial match results in sequential order (i.e. is the same as if sorted from low to hi, assign title)
+    ## > if title is a match, characters should match in sequential order of comparison
+    if(all(match1[!is.na(match1)] == sort(match1[!is.na(match1)]))){
+      namecheck$final_name[namecheck$Title == n & !is.na(namecheck$Title)] <- i
+      next
+    }
+  }
+  # try matching abstract if partial title matches don't work
   if(!is.na(pmatch(n,assignmentsdf$Abstract)) & pmatch(n, assignmentsdf$Abstract) > 0){
     namecheck$final_name[namecheck$Title == n] <- assignmentsdf$Title[pmatch(n, assignmentsdf$Abstract)]
   }
@@ -178,6 +196,7 @@ namecheck$final_name[grepl("SUDS", namecheck$Title)] <- assignmentsdf$Title[grep
 ## bat comment -- check LD abstracts sheet -- can get it from matching comment in master
 namecheck$final_name[grepl("Only really focused on bat", namecheck$Title)] <- unique(master$Title[grepl("Only really focused on bat", master$`Comments on the paper or any questions that are unclear`)])
 ## I can't find any paper assigned to LB that's on TRY database.. given it was from first version of coding form and only presents in that one record, maybe was just a test entry.. going to ignore
+## article reviewed by Aislyn is wrong article (correct author, wrong article) -- can ignore
 # reassign reviewers and record nums
 namecheck <- namecheck[c("Title", "final_name", "reviewed")] %>%
   left_join(dplyr::select(assignmentsdf, EBIOReviewer, Number, Title), by = c("final_name" = "Title")) %>%
@@ -189,10 +208,10 @@ qnames <- names(master)[grep("[?]|^Q[0-9]|Comments|Titl", names(master))]
 # use second copy to preserve original
 # append reviewer and clean title info
 master2 <-  left_join(master, distinct(namecheck[c("Title", "final_name", "EBIOReviewer", "Number")])) %>% # added 4 extra rows.. not sure why
-  # remove any record that doesn't have reviewier assigned (e.g. NA or TRY title from round 1 coding)
-  filter(!(is.na(EBIOReviewer) & rank == max(master$rank))) %>%
+  # remove any record that doesn't have review Number assigned -- no match in assignmnets df
+  filter(!(is.na(Number))) %>%
   # sort dat by date modified so remove earlier duplicate entries
-  arrange(final_name, rank) %>%
+  arrange(final_name, rank, desc(Timestamp)) %>%
   # reorder cols and ditch email address (only contains 4 unique addresses and have all names now anyway)
   dplyr::select(filename:records, rank, EBIOReviewer, Number, Timestamp, `Email Address`, final_name, Title, names(.)[grep("meta-analy", names(.))]:names(.)[grep("^Q7", names(.))], names(.)[grep("^Q8", names(.))], names(.)[grep("^Comments", names(.))]) %>%
   distinct()
@@ -265,7 +284,7 @@ subset(singlerev, rank > 1) %>% dplyr::select(rank, EBIOReviewer, Number) %>%
 # do N, S and T have entries in rank == 1 (most recent version) form?
 subset(singlerev, rank == 1 & grepl("Trav|Sier|Nick", EBIOReviewer)) %>% dplyr::select(rank, EBIOReviewer, Number) %>%
   group_by(rank, EBIOReviewer) %>%
-  summarise(nobs = length(Number)) #hm.. nick only for now (12/26)
+  summarise(nobs = length(Number)) #nick and sierra only (1/8)
 # update actual reviewer for Caitlin-assigned abstracts
 singlerev <- singlerev %>%
   # use LD/CTW abstracts form
