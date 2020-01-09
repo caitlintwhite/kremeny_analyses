@@ -8,10 +8,7 @@
 # random-assign equal number of papers to class list
 
 # notes:
-# > 1/1/20 -- need to fix code for Anna's updates (a couple of titles don't match, grepl error in pattern matching). 
-# CTW headed to field tomorrow (1/2/20) for several days.. can fix when get out or someone else can fix before then.
 
-# for anyone else working with code, warnings are fine (can ignore), errors need to be resolved (even tho sometimes code will still run when errors occur)
 
 
 # -- SETUP ----
@@ -55,9 +52,9 @@ file.remove(tempxl)
 abstracts_LD <- read_sheet(drive_find(pattern = "Laura/Caitlin", type = "spreadsheet", n_max = 1))
 glimpse(abstracts_LD) # read in correct file .. pubdate col is list, header didn't import correctly
 
-
 # list papers in Meets Criteria folder for cross checking
 meetscriteria <- drive_ls(drive_find(pattern = "Meets Criteria", type = "folder", n_max = 10))
+
 
 
 # -- PRELIM REVIEW DATA ----
@@ -80,8 +77,8 @@ test[246,]
 ## 2 and 3 have a column ...9 (??)
 View(resultsls[[2]])
 sapply(resultsls[[2]], function(x) summary(is.na(x))) # mystery ...9 col is empty..
-# how many rows empty? (excluding timestamp, title, and last 3 file ID cols I added)
-summary(apply(resultsls[[2]][,3:(ncol(resultsls[[2]])-4)], 1, function(x) all(is.na(x)))) # only 1
+# how many rows empty? (excluding timestamp, title, and last 5 file ID cols I added)
+summary(apply(resultsls[[2]][,3:(ncol(resultsls[[2]])-5)], 1, function(x) all(is.na(x)))) # only 1
 #check for empty cols in all
 lapply(resultsls, function(x) summary(is.na(x)))
 
@@ -93,7 +90,7 @@ lapply(resultsls, function(x) summary(is.na(x)))
 times <- unlist(lapply(results$drive_resource, function(x) x[names(x) == "createdTime"])) %>% gsub("T|Z", " ", .) %>% as.POSIXct()
 modtimes <- unlist(lapply(results$drive_resource, function(x) x[names(x) == "modifiedTime"])) %>% gsub("T|Z", " ", .) %>% as.POSIXct()
 records <- sapply(resultsls, nrow)
-which.max(times) #idk why earliest made (ie.e. pre-q8) has most recent create date..
+which.max(times) # results with most recent create time not the results most recently modified 
 which.max(modtimes) # go with mod times for prioritizing results
 refdf <- data.frame(createdTime = times, modifiedTime = modtimes, `records` = records) %>%
   arrange(desc(records), desc(modifiedTime), desc(createdTime)) %>%
@@ -110,7 +107,7 @@ for(i in 1:length(resultsls)){
   # remove any cols that are all NA
   tempdat <- tempdat[,!sapply(tempdat, function(x) all(is.na(x)))]
   # if all colnames agree or is first instance, rbind as is
-  if(all(names(master) == names(tempdat)) | nrow(master) == 0){ # <-- this line throws a warning, it's fine
+  if(all(names(master) == names(tempdat)) | nrow(master) == 0){ # <-- this line throws a warning, it's fine. error is string vectors being compared are not same length; some results have different number columns.
     master <- rbind(master, tempdat)
   } else{
     # find and resolve name mismatch
@@ -163,6 +160,10 @@ for(n in namecheck$Title[is.na(namecheck$final_name) & !is.na(namecheck$Title)])
   }
   # try partial character match
   tempchars <- casefold(unlist(str_extract_all(n, "[:alpha:]")))
+  # if any alpha-character-extracted title is length 0, next (happens for title 1190)
+  if(length(tempchars) == 0){
+    next
+  }
   # extract final titles not assigned yet
   needs_match <- assignmentsdf$Title[!assignmentsdf$Title %in% namecheck$final_name]
   for(i in needs_match){
@@ -220,7 +221,6 @@ master2 <-  left_join(master, distinct(namecheck[c("Title", "final_name", "EBIOR
 masterdups <- master2[(duplicated(master2[,qnames])),] # keep just in case need
 master3 <- master2[!(duplicated(master2[,qnames])),]
 
-
 # make abbrev colnames for review
 nameref <- data.frame(orig = names(master3),
                       abbr = c(names(master3)[1:grep("Title", names(master3))],"meta", "review", "no_efes", "valrisk", "tool", "biodiv", "comments")) %>%
@@ -274,6 +274,7 @@ View(yesno_tally)
 singlerev <- singlerev %>%
   mutate_at(grep("meta", names(singlerev)):grep("biodi", names(singlerev)), function(x) ifelse(singlerev$EBIOReviewer == "Caitlin" & is.na(x), "No", x))
 sapply(with(singlerev, singlerev[EBIOReviewer == "Caitlin", names(singlerev)[13:18]]), function(x) summary(as.factor(x))) # no more NAs
+# look at NAs in non-CTW rows
 sapply(with(singlerev, singlerev[EBIOReviewer != "Caitlin" & rank == 1, names(singlerev)[13:18]]), function(x) summary(as.factor(x)))
 # check for NAs by coding form version..
 sapply(singlerev[names(singlerev)[13:18]], function(x) sapply(split(x, singlerev$rank), function(x) summary(as.factor(x))))
@@ -285,7 +286,7 @@ subset(singlerev, rank > 1) %>% dplyr::select(rank, EBIOReviewer, Number) %>%
 subset(singlerev, rank == 1 & grepl("Trav|Sier|Nick", EBIOReviewer)) %>% dplyr::select(rank, EBIOReviewer, Number) %>%
   group_by(rank, EBIOReviewer) %>%
   summarise(nobs = length(Number)) #nick and sierra only (1/8)
-# update actual reviewer for Caitlin-assigned abstracts
+# update actual reviewer for Caitlin-assigned abstracts (LD reviewed some)
 singlerev <- singlerev %>%
   # use LD/CTW abstracts form
   left_join(abstracts_LD[c("Reviewer", "Title")], by = c("final_name" = "Title")) %>%
@@ -325,29 +326,44 @@ View(subset(rescored, flag_tally))
 ## CTW forgot to answer question, can infill with LD's answer
 ## Isabel's rescore is the same, but more recent entry lacks comment (comment accidentally pasted to title when filling out form)
 ## Aislyn changed 2 papers to YES for doesn't directly measure EF or ES, but those papers are in the Meets Criteria folder.. need to follow up?
+## Sierra changed 2 papers to YES for no EF/ES directly measured
 conflict_rescore <- subset(rescored, flag_tally) %>%
-  group_by(final_name)
+  grouped_df(c("final_name")) %>%
+  mutate(minT= min(Timestamp),
+         maxT= max(Timestamp))
 # break piping bc can't figure out using mutate_at
 # this line will infill later timestamp NAs with previous version if non-NA value present
-conflict_rescore[names(conflict_rescore)[13:17]] <- sapply(conflict_rescore[names(conflict_rescore)[13:17]], function(x) ifelse(is.na(x) & conflict_rescore$Timestamp == max(conflict_rescore$Timestamp), x[which.min(conflict_rescore$Timestamp)], x))
+conflict_rescore[names(conflict_rescore)[13:17]] <- sapply(conflict_rescore[names(conflict_rescore)[13:17]], function(x) ifelse(is.na(x) & conflict_rescore$Timestamp == conflict_rescore$maxT, x[conflict_rescore$Timestamp == conflict_rescore$minT], x))
+
 # keep Aislyn's NO to question 3 since those articles are in meets criteria folder (write line to search for authors in files within meets criteria folder, i.e. automate)
 conflict_rescore <- ungroup(conflict_rescore) %>%
+  dplyr::select(-c("minT", "maxT")) %>%
   left_join(distinct(assignmentsdf[c("Title", "AuthorsFull")]), by = c("final_name" = "Title")) %>%
   # extract First author last name to search Meets Criteria folder
   mutate(FirstAuthor = word(AuthorsFull, sep = ",")) %>%
   group_by(final_name) %>%
-  mutate(in_meetscriteria = sum(grepl(unique(FirstAuthor), meetscriteria$name))) %>%
+  mutate(in_meetscriteria = sum(grepl(paste0("^", unique(FirstAuthor)), meetscriteria$name))) %>%
   ungroup() %>%
   #recrunch tallies
   mutate(Yes = apply(.,1, function(x) sum(x == "Yes", na.rm = T)),
          No = apply(.,1, function(x) sum(x == "No", na.rm = T)),
          # only sum NAs in exclusion questions PLUS comments
          empty = apply(.[names(.)[grep("meta", names(.)):grep("comments", names(.))]],1, function(x) sum(is.na(x), na.rm = T)),
-         tally = Yes+No) %>%
-  # choose whichever has most Nos or fewest empty cells (kind of specific to these cases)
+         tally = Yes+No) %>% 
+  # rules for choosing:
+  ## 1) has the most questions answered
+  ## 2) if tally tied, and has at least 1 Yes and not in Meets Criteria, keep
+  ## 3) if tally tied, and if all NOs and in Meets Criteria, keep
+  ## 4) choose by most recent Timestamp -- Timestamp not necessarily best filter for this (e.g. see Aislym's Pueyo-Ros example, or Isabel's example)
+  #group_by(final_name) %>%
+  #mutate(keep = (No == max(No)) & empty == min(empty) ) %>%
+  #ungroup() %>%
+  mutate(keep = (tally == max(tally) & ((Yes == 0 & in_meetscriteria == 1) | (Yes > 0 & in_meetscriteria == 0)))) %>%
   group_by(final_name) %>%
-  mutate(keep = (No == max(No)) & empty == min(empty)) %>%
-  ungroup()%>%
+  mutate(keep2 = ifelse(length(unique(keep)) == 1, 0, 1)) %>%
+  #ungroup() %>%
+  mutate(keep = ifelse((keep2 == 0), ((in_meetscriteria == 1 & Yes == 0) | (in_meetscriteria == 0 & Yes > 0 & empty == min(empty))), keep)) %>%
+  ungroup() %>%
   # keep only those entries that meet keep criteria
   filter(keep)
 
@@ -397,7 +413,7 @@ results_clean <- rbind(singlerev, final_rescore[names(singlerev)]) %>%
   # check for author in Meets Criteria (won't be perfect bc not everyone named files by first author last name and year)
   group_by(final_name) %>%
   # this is a pretty coarse check and not perfect, but at least quick screen
-  mutate(in_meetscriteria = sum(grepl(FirstAuthor, meetscriteria$name))) %>%
+  mutate(in_meetscriteria = sum(grepl(paste0("^", FirstAuthor), meetscriteria$name))) %>%
   ungroup() %>%
   data.frame()
 
@@ -540,16 +556,10 @@ summary(unique(assignmentsdf$Title) %in% results_clean$final_name)
 sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summary(x %in% results_clean$final_name))
 # 1/2: Grant, Caitlin, Nick, Laurel done (yay!) .. emailed Aislyn with outstanding paper, Anna is shy by 3 papers.
 
-# Aislyn missing papers
-assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Aislyn" & !assignmentsdf$Title %in% results_clean$final_name]
-# not master.. still need to be coded
+
 # Laurel also missing one
-assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Anna" & !assignmentsdf$Title %in% results_clean$final_name]
-# [1] "Building biodiversity: Vegetated facades as habitats for spider and beetle assemblages"   
-# [2] "A social-ecological framework for \"micromanaging\" microbial services"                   
-# [3] "Optimizing carbon storage and biodiversity protection in tropical agricultural landscapes"
-## first two of these are reviewed but not detected in code above (need to tweak pattern match code, will fix after 1/7)
-## third paper is not done tho
+#assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Anna" & !assignmentsdf$Title %in% results_clean$final_name]
+
 
 # write out still needs review if others want to check it
 needs_review <- subset(assignmentsdf, !assignmentsdf$Title %in% results_clean$final_name)
