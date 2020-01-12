@@ -40,7 +40,9 @@ for(i in 1:nrow(results)){
 
 
 # read in paper assignments
-assignments <- drive_find(pattern = "EcosystemServicesPapersNov2019.xlsx", n_max = 10) # first should be assignments
+ES_folder <- drive_find(pattern = "EBIO: Ecology of Ecosystem Services", type = "folder", n_max = 10) %>% drive_ls()
+abstracts_folder <- drive_get(id = ES_folder$id[grep("^Abstract Review", ES_folder$name)]) %>% drive_ls()
+assignments <- drive_get(id = abstracts_folder$id[grep("^EcosystemServicesPapersNov2019.xls", abstracts_folder$name)]) # first should be assignments
 # create temp file for downloading excel sheet
 tempxl <- tempfile(fileext = ".xlsx")
 drive_download(assignments[1,], path = tempxl, overwrite = T) # downloads paper assignments to github repo.. until can figure out how to read excel directly from gdrive..
@@ -53,7 +55,7 @@ abstracts_LD <- read_sheet(drive_find(pattern = "Laura/Caitlin", type = "spreads
 glimpse(abstracts_LD) # read in correct file .. pubdate col is list, header didn't import correctly
 
 # list papers in Meets Criteria folder for cross checking
-meetscriteria <- drive_ls(drive_find(pattern = "Meets Criteria", type = "folder", n_max = 10))
+meetscriteria <- drive_ls(drive_get(id = abstracts_folder$id[grep("^Meets Criteria", abstracts_folder$name)]))
 
 
 
@@ -202,6 +204,8 @@ namecheck$final_name[grepl("Only really focused on bat", namecheck$Title)] <- un
 namecheck <- namecheck[c("Title", "final_name", "reviewed")] %>%
   left_join(dplyr::select(assignmentsdf, EBIOReviewer, Number, Title), by = c("final_name" = "Title")) %>%
   distinct()
+# review what's left with NAs
+subset(namecheck, is.na(final_name)) # okay -- ignore TRY and SOIL CARBON SEQUESTRATION (reviewed wrong paper, not assigned)
 
 # distill to unique records
 # select colnames on which to check dups
