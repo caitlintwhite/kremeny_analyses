@@ -1,4 +1,5 @@
 # compile results from class coding round 1 (exclusion screening)
+# author(s): CTW (caitlin.t.white@colorado.edu)
 
 # script workflow:
 # search G Drive for all instances of exclusion criteria coding form results (as of 12/23/19, there are at least 4-5 copies)
@@ -55,7 +56,11 @@ abstracts_LD <- read_sheet(drive_find(pattern = "Laura/Caitlin", type = "spreads
 glimpse(abstracts_LD) # read in correct file .. pubdate col is list, header didn't import correctly
 
 # list papers in Meets Criteria folder for cross checking
-meetscriteria <- drive_ls(drive_get(id = abstracts_folder$id[grep("^Meets Criteria", abstracts_folder$name)]))
+# > note: drive_ls() doesn't appear to consistently list all files within the meets criteria folder, e.g. ranges from 406-429 (with duplicates listed for the higher end range)
+meetscriteria <- drive_get(id = abstracts_folder$id[abstracts_folder$name == "Meets Criteria"]) %>% 
+  drive_ls()
+# remove duplicated files
+meetscriteria <- filter(meetscriteria, !duplicated(id))
 
 
 
@@ -346,7 +351,7 @@ conflict_rescore <- ungroup(conflict_rescore) %>%
   # extract First author last name to search Meets Criteria folder
   mutate(FirstAuthor = word(AuthorsFull, sep = ",")) %>%
   group_by(final_name) %>%
-  mutate(in_meetscriteria = sum(grepl(paste0("^", unique(FirstAuthor)), meetscriteria$name))) %>%
+  mutate(in_meetscriteria = sum(grepl(paste0("^", unique(FirstAuthor), "(?![a-z])"), meetscriteria$name, ignore.case = T, perl = T))) %>%
   ungroup() %>%
   #recrunch tallies
   mutate(Yes = apply(.,1, function(x) sum(x == "Yes", na.rm = T)),
@@ -417,7 +422,7 @@ results_clean <- rbind(singlerev, final_rescore[names(singlerev)]) %>%
   # check for author in Meets Criteria (won't be perfect bc not everyone named files by first author last name and year)
   group_by(final_name) %>%
   # this is a pretty coarse check and not perfect, but at least quick screen
-  mutate(in_meetscriteria = sum(grepl(paste0("^", FirstAuthor), meetscriteria$name))) %>%
+  mutate(in_meetscriteria = sum(grepl(paste0("^", FirstAuthor, "(?![a-z])"), meetscriteria$name, ignore.case = T, perl = T))) %>%
   ungroup() %>%
   data.frame()
 
@@ -454,11 +459,16 @@ results_clean  <- results_clean %>%
 
 # separate exclude and needs further review from keep for to round 2
 exclude <- subset(results_clean, exclude)
-questions <- subset(results_clean, flag_NO)
-keep <- subset(results_clean, (!exclude | is.na(exclude)) & !flag_NO)
+questions <- subset(results_clean, flag_NO | empty >= 5)
+keep <- subset(results_clean, (!exclude | is.na(exclude)) & !flag_NO & !empty>=5)
+#keep <- anti_join(results_clean, rbind(exclude, questions))
 
 # check all papers accounted for
 nrow(results_clean) == sum(nrow(exclude), nrow(questions), nrow(keep)) # <-- this should be TRUE before proceeding
+# alternative check all titles accounted for
+summary(results_clean$final_name %in% c(exclude$final_name, questions$final_name, keep$final_name)) # <-- should be all TRUE
+# check titles against everything read in initially
+summary(results_clean$final_name %in% unique(master$filename)) # <-- should also be true 
 
 
 
