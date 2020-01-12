@@ -548,9 +548,10 @@ assign_round2 <- rename(assign_round2, round1_reviewer = actual_reviewer, Title 
   # clean up
   dplyr::select(round2_reviewer, Number, in_meetscriteria, round1_reviewer, comments, FirstAuthor, Title:PublicationYear) %>%
   # redo in_meets criteria using first author last name and year of publication
-  mutate(searchterm = ifelse(is.na(PublicationYear), FirstAuthor, paste0(FirstAuthor,".*", PublicationYear))) %>%
+  mutate(searchterm = ifelse(is.na(PublicationYear), FirstAuthor, paste0("^",FirstAuthor,"(?![a-z]).*(", PublicationYear-1, "|", PublicationYear, "|", PublicationYear+1,")"))) %>%
   group_by(Number) %>%
-  mutate(in_meetscriteria = sum(grepl(searchterm, meetscriteria$name))) %>%
+  mutate(in_meetscriteria = sum(grepl(searchterm, meetscriteria$name, ignore.case = T, perl = T))) %>%
+         #in_meetscriteria2 = sum(grepl(paste0("^", FirstAuthor, "(?![a-z])"), meetscriteria$name, ignore.case = T, perl = T))) %>%
   ungroup() %>%
   rename(MeetsCriteria_matches = in_meetscriteria) %>%
   dplyr::select(-searchterm) %>%
