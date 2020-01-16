@@ -9,7 +9,7 @@
 # random-assign equal number of papers to class list
 
 # notes:
-
+# 1/15/20: Sierra, Aislyn and Nick -- if NA can assume NO in their abstracts, need to fill in
 
 
 # -- SETUP ----
@@ -63,6 +63,33 @@ meetscriteria <- drive_get(id = abstracts_folder$id[abstracts_folder$name == "Me
 meetscriteria <- filter(meetscriteria, !duplicated(id))
 
 
+# read in any abstracts re-evald for Q8 or NAs (in Excel or method other than Google Form)
+## locate folder
+reval_files <- drive_get(id = abstracts_folder$id[grep("^Round1_NA", abstracts_folder$name)]) %>% drive_ls()
+# initiate empty list for storing different people's responses
+revalls <- list()
+# iterate through each file
+for(pos in 1:nrow(reval_files)){
+  # extract file name
+  temp_name <- reval_files$name[pos]
+  # print status
+  print(paste("Reading in",temp_name))
+  #if excel spreadsheet, temp download file, read in file to list, and delete temp file
+  if(grepl("xls", temp_name)){
+    # specify extension type
+    tempext <- str_extract(temp_name, pattern = "xls[x]?$") 
+    tempxl <- tempfile(fileext = tempext)
+    drive_download(as_id(reval_files$id[pos]), path = tempxl, overwrite = T) # downloads paper assignments to github repo.. until can figure out how to read excel directly from gdrive..
+    revalls[[pos]] <- read_excel(tempxl, sheet = 1) 
+    # name item in list
+    names(revalls)[pos] <- temp_name
+    # delete file downloaded locally
+    file.remove(tempxl)
+  }
+  #if googlesheet, read sheet directly -- not writing this code right now bc currently only excel sheets in the folder
+}
+
+
 
 # -- PRELIM REVIEW DATA ----
 # quick check of assignments df
@@ -88,6 +115,13 @@ sapply(resultsls[[2]], function(x) summary(is.na(x))) # mystery ...9 col is empt
 summary(apply(resultsls[[2]][,3:(ncol(resultsls[[2]])-5)], 1, function(x) all(is.na(x)))) # only 1
 #check for empty cols in all
 lapply(resultsls, function(x) summary(is.na(x)))
+
+# check out re-evaluated abstracts in NA folder
+glimpse(revalls[[1]]) # aislyn's
+summary(as.factor(revalls[[1]]$Q8)) # <- when answered, all NO
+
+glimpse(revalls[[2]]) # nick's
+summary(as.factor(revalls[[2]]$`Q8:Biodiversity`)) # mix, need to standardize char-casing
 
 
 
@@ -203,8 +237,13 @@ namecheck$final_name[namecheck$Title == "1190"] <- assignmentsdf$Title[assignmen
 namecheck$final_name[grepl("SUDS", namecheck$Title)] <- assignmentsdf$Title[grepl("SUDS", assignmentsdf$Abstract)]
 ## bat comment -- check LD abstracts sheet -- can get it from matching comment in master
 namecheck$final_name[grepl("Only really focused on bat", namecheck$Title)] <- unique(master$Title[grepl("Only really focused on bat", master$`Comments on the paper or any questions that are unclear`)])
-## I can't find any paper assigned to LB that's on TRY database.. given it was from first version of coding form and only presents in that one record, maybe was just a test entry.. going to ignore
-## article reviewed by Aislyn is wrong article (correct author, wrong article) -- can ignore
+## TRY -- I can't find any paper assigned to LB that's on TRY database.. given it was from first version of coding form and only presents in that one record, maybe was just a test entry.. going to ignore
+## SOIL CARBON SEQUESTRATION... -- article reviewed by Aislyn is wrong article (correct author, wrong article) -- can ignore
+## Effects of dams..
+# > This corresponds to title "eEde predator-prey interactions" in assignmentsdf
+master$`Comments on the paper or any questions that are unclear`[grepl("Effects of dams on downs", master$Title)]
+# > For selecting correct row of answers, keep assignmentsdf title (eEde..) for now, but apply correct title at end for round2 write-out
+namecheck$final_name[grepl("Effects of dams on downstream moll", namecheck$Title)] <- assignmentsdf$Title[grepl("eEde pred", assignmentsdf$Title)]
 # reassign reviewers and record nums
 namecheck <- namecheck[c("Title", "final_name", "reviewed")] %>%
   left_join(dplyr::select(assignmentsdf, EBIOReviewer, Number, Title), by = c("final_name" = "Title")) %>%
@@ -371,7 +410,13 @@ conflict_rescore <- ungroup(conflict_rescore) %>%
   group_by(final_name) %>%
   mutate(keep2 = ifelse(length(unique(keep)) == 1, 0, 1)) %>%
   #ungroup() %>%
-  mutate(keep = ifelse((keep2 == 0), ((in_meetscriteria == 1 & Yes == 0) | (in_meetscriteria == 0 & Yes > 0 & empty == min(empty))), keep)) %>%
+  mutate(keep = ifelse((keep2 == 0), ((in_meetscriteria == 1 & Yes == 0) | (in_meetscriteria == 0 & Yes > 0 & empty == min(empty))), keep),
+         # all else being equal, combine comments field and keep the row that has the most recent timestamp
+         sumcheck = sum(keep),
+         comments = ifelse(sumcheck != 1, str_flatten(comments, collapse = " "), comments),
+         keep = ifelse(sumcheck != 1, Timestamp == max(Timestamp), keep),
+         # redo sumcheck
+         sumcheck = sum(keep)) %>%
   ungroup() %>%
   # keep only those entries that meet keep criteria
   filter(keep)
@@ -426,6 +471,9 @@ results_clean <- rbind(singlerev, final_rescore[names(singlerev)]) %>%
   ungroup() %>%
   data.frame()
 
+# infill anything re-evald for Q8 or other NAs
+
+
 # triage: if any papers are incomplete-eval'd (i.e. NAs exists, for all but biodiv q) but paper exists in meet criteria folder, infill NAs with NO
 incomplete <- which(results_clean$Yes == 0 & results_clean$empty > 0)
 for(i in incomplete){
@@ -468,7 +516,7 @@ nrow(results_clean) == sum(nrow(exclude), nrow(questions), nrow(keep)) # <-- thi
 # alternative check all titles accounted for
 summary(results_clean$final_name %in% c(exclude$final_name, questions$final_name, keep$final_name)) # <-- should be all TRUE
 # check titles against everything read in initially
-summary(results_clean$final_name %in% unique(master$filename)) # <-- should also be true 
+summary(results_clean$Title %in% unique(master$Title)) # <-- should also be true 
 
 
 
@@ -497,6 +545,64 @@ ggsave("figs/excluded_abstracts_summary.pdf", width = 6, height = 5, units = "in
 # -- PARSE KEEP PAPERS ----
 # placeholder section for any future data treatment needed for keep papers (e.g. manual corrections on coding outstanding question abstracts)
 
+# visualize the NAs in keep papers, similar to excluded
+dplyr::select(keep,Number, meta:biodiv) %>%
+  data.frame() %>%
+  gather(question, answer, meta:biodiv) %>%
+  mutate(answer = ifelse(is.na(answer), "NA", answer)) %>%
+  group_by(question, answer) %>%
+  summarise(nobs = length(Number)) %>%
+  ungroup() %>%
+  mutate(question = factor(question, levels = c("meta", "review", "no_efes", "tool", "valrisk", "biodiv"),
+                           labels = c("Is meta-analysis", "Is review", "No EF/ES", "Tool only", "Valuation/risk only", "Biodiv not EF/ES proxy"))) %>%
+  ggplot(aes(answer, nobs)) +
+  geom_col() +
+  labs(y = "Count", x = "Response",
+       title = paste0("Kept abstracts: summary of round 1 responses"),
+       subtitle = paste0("Last updated: ", Sys.Date(),", ", nrow(keep), " kept of ", nrow(results_clean), " reviewed")) +
+  facet_wrap(~question)
+
+# pull out kept abstracts with NA in biodiov to send back to class to answer
+keep_biodivNAs <- filter(keep, is.na(biodiv)) %>%
+  # append questions
+  rbind(questions) %>%
+  # arrange by reviewer
+  arrange(EBIOReviewer)
+
+# infill Aisyln
+keep_biodivNAs2 <- 
+q8response <- revalls[[1]] %>%
+  dplyr::select(EBIOReviewer, Number, Title, Q8) %>%
+  rename(Number2 = Number) %>%
+  rbind(data.frame(EBIOReviewer = "Nick", Number2 = NA, Title = revalls[[2]]$`Q1: Paper Title`, Q8 = revalls[[2]]$`Q8:Biodiversity`)) %>%
+  filter(!is.na(Q8)) %>%
+  # standardize casefold
+  mutate(Q8 = paste0(casefold(substr(Q8,1,1), upper = T), casefold(substr(Q8, 2, nchar(Q8))))) %>%
+  left_join(assignmentsdf[c("Title", "Number")]) %>%
+  mutate(Number = ifelse(is.na(Number), Number2, Number)) %>%
+  dplyr::select(-Number2)
+# assign numbers for titles that didn't match
+q8response$Title[is.na(q8response$Number)]
+q8response$Number[grep("Microbial ecological response of the intestinal flora", q8response$Title)] <- assignmentsdf$Number[grep("Microbial ecological response of the intestinal flora", assignmentsdf$Title)]
+
+keep_biodivNAs2 <- left_join(keep_biodivNAs, q8response[c("EBIOReviewer", "Number", "Q8")], by = c("EBIOReviewer", "Number")) %>%
+  mutate(biodiv = ifelse(is.na(biodiv), Q8, biodiv)) %>%
+  # Sierra said all of hers should be No
+  mutate(biodiv = ifelse(EBIOReviewer == "Sierra", "No", biodiv)) %>%
+  filter(is.na(biodiv) & empty == 0) %>%
+  dplyr::select(EBIOReviewer, Number, final_name, FirstAuthor, biodiv) %>%
+  rename(Q8_Biodiversity = biodiv,
+         Title = final_name) %>%
+  #sort by reviewer and Number
+  arrange(EBIOReviewer, Number)
+  
+# # create temp csv file for writing to google drive
+# #tempcsv <- tempfile(fileext = ".csv")
+# write.csv(keep_biodivNAs2, tempcsv, row.names = F)
+# #write temp file to google drive
+# drive_upload(tempcsv, path = as_id(abstracts_folder$id[grep("^Round1_NA", abstracts_folder$name)]), type = "spreadsheet", 
+#              name = "PotentialRound2Abstracts_NeedsQ8", overwrite = T)
+# file.remove(tempcsv)
 
 
 
@@ -508,7 +614,7 @@ ggsave("figs/excluded_abstracts_summary.pdf", width = 6, height = 5, units = "in
 ## random number assign
 
 reviewers <- unique(master2$EBIOReviewer[!is.na(master2$EBIOReviewer)])
-                    
+
 assign_round2 <- dplyr::select(keep, Number, EBIOReviewer, final_name, AuthorsFull, FirstAuthor, comments, in_meetscriteria) %>%
   rename(actual_reviewer = EBIOReviewer) %>%
   mutate(EBIOReviewer = ifelse(grepl("Laura|Caitl", actual_reviewer), "Caitlin", actual_reviewer),
@@ -551,7 +657,7 @@ assign_round2 <- rename(assign_round2, round1_reviewer = actual_reviewer, Title 
   mutate(searchterm = ifelse(is.na(PublicationYear), FirstAuthor, paste0("^",FirstAuthor,"(?![a-z]).*(", PublicationYear-1, "|", PublicationYear, "|", PublicationYear+1,")"))) %>%
   group_by(Number) %>%
   mutate(in_meetscriteria = sum(grepl(searchterm, meetscriteria$name, ignore.case = T, perl = T))) %>%
-         #in_meetscriteria2 = sum(grepl(paste0("^", FirstAuthor, "(?![a-z])"), meetscriteria$name, ignore.case = T, perl = T))) %>%
+  #in_meetscriteria2 = sum(grepl(paste0("^", FirstAuthor, "(?![a-z])"), meetscriteria$name, ignore.case = T, perl = T))) %>%
   ungroup() %>%
   rename(MeetsCriteria_matches = in_meetscriteria) %>%
   dplyr::select(-searchterm) %>%
