@@ -123,11 +123,11 @@ test[246,]
 
 # colnames a little different in each..
 ## 1 has email address, no q8 -- these would have papers reviewed before q8 created
-## 2 and 3 have a column ...9 (??)
-View(resultsls[[2]])
-sapply(resultsls[[2]], function(x) summary(is.na(x))) # mystery ...9 col is empty..
+## 1 and 3 have a column ...9 (??)
+View(resultsls[[1]])
+sapply(resultsls[[1]], function(x) summary(is.na(x))) # mystery ...9 col is empty..
 # how many rows empty? (excluding timestamp, title, and last 5 file ID cols I added)
-summary(apply(resultsls[[2]][,3:(ncol(resultsls[[2]])-5)], 1, function(x) all(is.na(x)))) # only 1
+summary(apply(resultsls[[1]][,3:(ncol(resultsls[[2]])-5)], 1, function(x) all(is.na(x)))) # only 1
 #check for empty cols in all
 lapply(resultsls, function(x) summary(is.na(x)))
 
@@ -190,7 +190,7 @@ for(i in 1:length(resultsls)){
   }
 }
 # check data stacking
-glimpse(master) # fix title col as list (all questions NA and title == NULL)
+glimpse(master) # fix title col as list (all questions NA and title == NULL), also clean up Q8 name mismatch (someone edited colanme in one of the files since I wrote the code..)
 #ID which rows have no entries
 rowNA <- apply(master[,grep("^Q[0-9]|[?]|Comments",names(master))], 1, function(x)all(is.na(x)))
 View(master[rowNA,]) #good
@@ -198,7 +198,17 @@ View(master[rowNA,]) #good
 master <- master[!rowNA,]
 master$Title <- unlist(master$Title)
 str(master) # okay now
-
+# what are the unique vals in each Q8 col?
+sapply(master[grepl("Q8", names(master))], function(x) summary(as.factor(x))) # there are only 2 NOs in last q8 question, all else na..
+subset(master, `Q8: This paper only measures diversity/abundance but NOT as an explicit proxy for ES/EF` == "No")
+# assign Nos to main Q8
+master <- mutate(master,
+                 #mouthfull of a colname.. if the alt QA question is not NA, assign answer to main question, else leave main question response be
+                 `Q8: This paper only measures biodiversity/abundance but NOT as an explicit proxy for ES/EF` = ifelse(!is.na(`Q8: This paper only measures diversity/abundance but NOT as an explicit proxy for ES/EF`), 
+                                                                                                                       `Q8: This paper only measures diversity/abundance but NOT as an explicit proxy for ES/EF`,
+                                                                                                                       `Q8: This paper only measures biodiversity/abundance but NOT as an explicit proxy for ES/EF`)) %>%
+  # drop alt Q8
+  dplyr::select(-`Q8: This paper only measures diversity/abundance but NOT as an explicit proxy for ES/EF`)
 # fix datetime cols
 master <- mutate_at(master, vars("createdTime", "modifiedTime"), function(x)as.POSIXct(gsub("T", "", x)))
 # assign ranking
@@ -305,7 +315,16 @@ names(master3) <- nameref$abbr
 # append/infill reval'd Q8 answers to master3
 View(revalls[[1]])
 # perhaps iterate through master 3.. if Q8 is NA, then infill with googlesheet by *final_name* (clean title) and EBIOReviewer
-# 1) remove any NAs in googlesheet
+# also review Nick's separately bc he also has answers to questions 1-7, can double check no NAs in those or infill with answers from his excel sheet
+
+# 1) check to see if Nick's answers agree with what's in google form.. if so, can append answers to googlesheet
+nick_q8 <- revalls[[grep("Dragone", names(revalls))]] %>% dplyr::select(-Timestamp) %>% rename(Title = 'Q1: Paper Title')
+#bc will join by q1-q7, if nick's answers agree with what's in master, everything will pair
+agrees <- left_join(nick_q8, distinct(master2[master2$EBIOReviewer == "Nick", !colnames(master2) %in% c("Timestamp", names(refdf))])) %>% subset(!is.na(filename)) %>% distinct()
+summary(is.na(agrees$filename)) #no NAs from joining master, all answers agree, can append q8 answers to googlesheet
+
+
+# 2) rbind all q8 responses, remove any NAs in googlesheet, and standardize responses
 q8answers <- revalls[[grep("PotentialRound", names(revalls))]] %>% 
   # remove FirstAuthor to rbind with Aislyn's excel sheet
   dplyr::select(-FirstAuthor) %>%
@@ -314,29 +333,41 @@ q8answers <- revalls[[grep("PotentialRound", names(revalls))]] %>%
   #rename Q8 to match Aislyn's spreadsheet for rbinding
   #rbind Aislyn's answers from her excel sheet (rename her colnames)
   rbind(setNames(revalls[[grep("Aislyn", names(revalls))]][c("EBIOReviewer", "Number", "Title", "Q8")], names(.))) %>%
+  # append Nick's answers from joined df above (bind Nick's q8 column tho)
+  rbind(setNames(agrees[,c("EBIOReviewer", "Number", "final_name", "Q8:Biodiversity")], names(.))) %>%
   subset(!Q8_Biodiversity == "NA" & !is.na(Q8_Biodiversity)) %>%
   #standardize character casing (first letter = capital, rest = lowcase)
   mutate(Q8_Biodiversity = paste0(casefold(substr(Q8_Biodiversity, 1,1), upper = T), casefold(substr(Q8_Biodiversity, 2, nchar(Q8_Biodiversity)))))
-# perhaps review Nick's separately bc he also has answers to questions 1-7, can double check no NAs in those or infill with answers from his excel sheet
+
+# 3) infill q8 answers
 for(i in 1:nrow(q8answers)){
   temprow <- left_join(q8answers[i,], cbind(master3, rowid = rownames(master3)), by = c("EBIOReviewer","Number")) %>%
     # just in case multiple rows, sort by timestamp and rank, choose first row
     arrange(desc(Timestamp), rank) %>% 
     # choose most recent
-    filter(rank == 1 & Timestamp == max(Timestamp)) %>%
+    filter(rank ==min (rank) & Timestamp == max(Timestamp)) %>%
     data.frame()
   stopifnot(nrow(temprow) == 1)
   # if biodiv in master is NA, infill with response from googlesheet
   if(is.na(temprow$biodiv)){
     master3$biodiv[rownames(master3) == temprow$rowid] <- temprow$Q8_Biodiversity
   }else{
-  # if not NA, check that answer agrees with what they answered in googlesheet
-  stopifnot(temprow$biodiv == temprow$Q8_Biodiversity)
+    # if not NA, check that answer agrees with what they answered in googlesheet
+    stopifnot(temprow$biodiv == temprow$Q8_Biodiversity)
   }
 }
 
+# also.. because Aislyn lists yes/no exclued in her sheet, infill any NAs for q1-8 with NO if she indicates paper should not be excluded
+check_NA <- filter(master3, EBIOReviewer == "Aislyn") %>%
+  mutate(hasNA = apply(.[names(.)[grep("meta", names(.)):grep("biodiv", names(.))]],1, function(x) any(is.na(x)))) %>%
+  filter(hasNA) %>%
+  # join Aislyn's exclusion values
+  left_join(revalls[[2]][c("Number", "Excluded?")])
+# maybe save for later down in code.. let the code select the most recent/most complete version and if there are still NAs after that look at Aislyn's answers
+## e.g. the cultural ES paper here is excluded based on no direct EF/ES in q3, but record that has NA is an earlier version of her scoring, which would get thrown out in the code
 
-
+# extract Aislyn's rescoring in its own df
+aislyn_reval <- revalls[[grep("Aislyn", names(revalls))]]
 
 
 
@@ -441,6 +472,7 @@ View(subset(rescored, flag_tally))
 ## Isabel's rescore is the same, but more recent entry lacks comment (comment accidentally pasted to title when filling out form)
 ## Aislyn changed 2 papers to YES for doesn't directly measure EF or ES, but those papers are in the Meets Criteria folder.. need to follow up?
 ## Sierra changed 2 papers to YES for no EF/ES directly measured
+## Travis' paper lacks answer for most recent scoring (can infill with earlier version)
 conflict_rescore <- subset(rescored, flag_tally) %>%
   grouped_df(c("final_name")) %>%
   mutate(minT= min(Timestamp),
@@ -449,8 +481,9 @@ conflict_rescore <- subset(rescored, flag_tally) %>%
 # this line will infill later timestamp NAs with previous version if non-NA value present
 conflict_rescore[names(conflict_rescore)[13:17]] <- sapply(conflict_rescore[names(conflict_rescore)[13:17]], function(x) ifelse(is.na(x) & conflict_rescore$Timestamp == conflict_rescore$maxT, x[conflict_rescore$Timestamp == conflict_rescore$minT], x))
 
-# keep Aislyn's NO to question 3 since those articles are in meets criteria folder (write line to search for authors in files within meets criteria folder, i.e. automate)
-conflict_rescore2 <- ungroup(conflict_rescore) %>%
+# 1/20/20: new way -- use Aislyn's exclude yes/no col to tease which row to keep (she has papers in meets criteria folder, but last score and her excel sheet says to exclude)
+# old way: keep Aislyn's NO to question 3 since those articles are in meets criteria folder (write line to search for authors in files within meets criteria folder, i.e. automate)
+conflict_rescore <- ungroup(conflict_rescore) %>%
   dplyr::select(-c("minT", "maxT")) %>%
   left_join(distinct(assignmentsdf[c("Title", "AuthorsFull")]), by = c("final_name" = "Title")) %>%
   # extract First author last name to search Meets Criteria folder
@@ -464,15 +497,14 @@ conflict_rescore2 <- ungroup(conflict_rescore) %>%
          # only sum NAs in exclusion questions PLUS comments
          empty = apply(.[names(.)[grep("meta", names(.)):grep("comments", names(.))]],1, function(x) sum(is.na(x), na.rm = T)),
          tally = Yes+No) %>% 
+  # add in Aislyn's excluded column
+  left_join(revalls[[2]][c("EBIOReviewer", "Number", "Excluded?")]) %>%
   # rules for choosing:
   ## 1) has the most questions answered
   ## 2) if tally tied, and has at least 1 Yes and not in Meets Criteria, keep
   ## 3) if tally tied, and if all NOs and in Meets Criteria, keep
   ## 4) choose by most recent Timestamp -- Timestamp not necessarily best filter for this (e.g. see Aislym's Pueyo-Ros example, or Isabel's example)
-  #group_by(final_name) %>%
-  #mutate(keep = (No == max(No)) & empty == min(empty) ) %>%
-  #ungroup() %>%
-  mutate(keep = (tally == max(tally) & ((Yes == 0 & in_meetscriteria == 1) | (Yes > 0 & in_meetscriteria == 0)))) %>%
+  mutate(keep = (tally == max(tally) & ((Yes == 0 & in_meetscriteria == 1) | (Yes > 0 & in_meetscriteria == 0) | (Yes > 0 & grepl("yes", `Excluded?`, ignore.case = T))))) %>%
   group_by(final_name) %>%
   mutate(keep2 = ifelse(length(unique(keep)) == 1, 0, 1)) %>%
   #ungroup() %>%
@@ -516,6 +548,7 @@ final_rescore <- dplyr::select(okay_rescored, -comments2) %>% rbind(conflict_res
 
 # -- COMPILE PREPPED SCORING, CREATE FLAGS, SEPARATE FOR PROCESSING -----
 # restack single-reviewed and re-eval'd cleaned up results
+# > infill Sierra's Nos here  -- she said in class that if all her q1-q7 are no, then q8 should be no
 # recrunch Yes and No tallies as I calculated them a few ways above for flagging
 results_clean <- rbind(singlerev, final_rescore[names(singlerev)]) %>%
   mutate(Yes = apply(.,1, function(x) sum(x == "Yes", na.rm = T)),
@@ -525,6 +558,8 @@ results_clean <- rbind(singlerev, final_rescore[names(singlerev)]) %>%
          tally = Yes+No) %>%
   # remove attr names created during apply
   mutate_at(vars("Yes", "No", "empty", "tally"), as.numeric) %>%
+  # infill Sierra's No's -- if Yes tally = 0, Reviewer == Sierra and biodiv is NA, then no, else leave biodiv as is
+  mutate(biodiv = ifelse(Yes == 0 & EBIOReviewer == "Sierra" & is.na(biodiv), "No", biodiv)) %>%
   # bring in authors to check for presence in Meets Criteria
   left_join(distinct(assignmentsdf[c("Title", "AuthorsFull")]), by = c("final_name" = "Title")) %>% # may want to also join pubdate or pubyear to search meets criteria folder
   mutate(FirstAuthor = ifelse(grepl(", ", AuthorsFull), word(AuthorsFull, sep = ","), word(AuthorsFull)),
@@ -537,13 +572,12 @@ results_clean <- rbind(singlerev, final_rescore[names(singlerev)]) %>%
   ungroup() %>%
   data.frame()
 
-# infill anything re-evald for Q8 or other NAs
 
 
 # triage: if any papers are incomplete-eval'd (i.e. NAs exists, for all but biodiv q) but paper exists in meet criteria folder, infill NAs with NO
 incomplete <- which(results_clean$Yes == 0 & results_clean$empty > 0)
 for(i in incomplete){
-  if(results_clean$in_meetscriteria[i]>0){
+  if(results_clean$in_meetscriteria[i]>0 | results_clean$Number[i] %in% aislyn_reval$Number[grepl("no", aislyn_reval$`Excluded?`, ignore.case = T)]){
     # could generically assign No to all cols, but to be sure only infill confirmed NAs with No
     results_clean[i, names(results_clean)[grep("meta", names(results_clean)):grep("tool", names(results_clean))]] <- sapply(results_clean[i, names(results_clean)[grep("meta", names(results_clean)):grep("tool", names(results_clean))]], function(x) ifelse(is.na(x), "No", x))
   }
@@ -575,7 +609,7 @@ results_clean  <- results_clean %>%
 exclude <- subset(results_clean, exclude)
 questions <- subset(results_clean, flag_NO | empty >= 5)
 keep <- subset(results_clean, (!exclude | is.na(exclude)) & !flag_NO & !empty>=5)
-#keep <- anti_join(results_clean, rbind(exclude, questions))
+#keep2 <- anti_join(results_clean, rbind(exclude, questions))
 
 # check all papers accounted for
 nrow(results_clean) == sum(nrow(exclude), nrow(questions), nrow(keep)) # <-- this should be TRUE before proceeding
@@ -609,8 +643,6 @@ ggsave("figs/excluded_abstracts_summary.pdf", width = 6, height = 5, units = "in
 
 
 # -- PARSE KEEP PAPERS ----
-# placeholder section for any future data treatment needed for keep papers (e.g. manual corrections on coding outstanding question abstracts)
-
 # visualize the NAs in keep papers, similar to excluded
 dplyr::select(keep,Number, meta:biodiv) %>%
   data.frame() %>%
@@ -631,36 +663,41 @@ dplyr::select(keep,Number, meta:biodiv) %>%
 # pull out kept abstracts with NA in biodiov to send back to class to answer
 keep_biodivNAs <- filter(keep, is.na(biodiv)) %>%
   # append questions
-  rbind(questions) %>%
+  #rbind(questions) %>%
   # arrange by reviewer
   arrange(EBIOReviewer)
 
-# infill Aisyln
-keep_biodivNAs2 <- 
-  q8response <- revalls[[1]] %>%
-  dplyr::select(EBIOReviewer, Number, Title, Q8) %>%
-  rename(Number2 = Number) %>%
-  rbind(data.frame(EBIOReviewer = "Nick", Number2 = NA, Title = revalls[[2]]$`Q1: Paper Title`, Q8 = revalls[[2]]$`Q8:Biodiversity`)) %>%
-  filter(!is.na(Q8)) %>%
-  # standardize casefold
-  mutate(Q8 = paste0(casefold(substr(Q8,1,1), upper = T), casefold(substr(Q8, 2, nchar(Q8))))) %>%
-  left_join(assignmentsdf[c("Title", "Number")]) %>%
-  mutate(Number = ifelse(is.na(Number), Number2, Number)) %>%
-  dplyr::select(-Number2)
-# assign numbers for titles that didn't match
-q8response$Title[is.na(q8response$Number)]
-q8response$Number[grep("Microbial ecological response of the intestinal flora", q8response$Title)] <- assignmentsdf$Number[grep("Microbial ecological response of the intestinal flora", assignmentsdf$Title)]
+# who still has q8 NA vals in kept papers?
+sort(unique(keep_biodivNAs$EBIOReviewer))
 
-keep_biodivNAs2 <- left_join(keep_biodivNAs, q8response[c("EBIOReviewer", "Number", "Q8")], by = c("EBIOReviewer", "Number")) %>%
-  mutate(biodiv = ifelse(is.na(biodiv), Q8, biodiv)) %>%
-  # Sierra said all of hers should be No
-  mutate(biodiv = ifelse(EBIOReviewer == "Sierra", "No", biodiv)) %>%
-  filter(is.na(biodiv) & empty == 0) %>%
-  dplyr::select(EBIOReviewer, Number, final_name, FirstAuthor, biodiv) %>%
-  rename(Q8_Biodiversity = biodiv,
-         Title = final_name) %>%
-  #sort by reviewer and Number
-  arrange(EBIOReviewer, Number)
+
+# -- code here is what I used in class on 1/15 to write out googlesheet in the needs8 folder. don't re-run
+# # infill Aisyln
+# keep_biodivNAs2 <- 
+#   q8response <- revalls[[1]] %>%
+#   dplyr::select(EBIOReviewer, Number, Title, Q8) %>%
+#   rename(Number2 = Number) %>%
+#   rbind(data.frame(EBIOReviewer = "Nick", Number2 = NA, Title = revalls[[2]]$`Q1: Paper Title`, Q8 = revalls[[2]]$`Q8:Biodiversity`)) %>%
+#   filter(!is.na(Q8)) %>%
+#   # standardize casefold
+#   mutate(Q8 = paste0(casefold(substr(Q8,1,1), upper = T), casefold(substr(Q8, 2, nchar(Q8))))) %>%
+#   left_join(assignmentsdf[c("Title", "Number")]) %>%
+#   mutate(Number = ifelse(is.na(Number), Number2, Number)) %>%
+#   dplyr::select(-Number2)
+# # assign numbers for titles that didn't match
+# q8response$Title[is.na(q8response$Number)]
+# q8response$Number[grep("Microbial ecological response of the intestinal flora", q8response$Title)] <- assignmentsdf$Number[grep("Microbial ecological response of the intestinal flora", assignmentsdf$Title)]
+# 
+# keep_biodivNAs2 <- left_join(keep_biodivNAs, q8response[c("EBIOReviewer", "Number", "Q8")], by = c("EBIOReviewer", "Number")) %>%
+#   mutate(biodiv = ifelse(is.na(biodiv), Q8, biodiv)) %>%
+#   # Sierra said all of hers should be No
+#   mutate(biodiv = ifelse(EBIOReviewer == "Sierra", "No", biodiv)) %>%
+#   filter(is.na(biodiv) & empty == 0) %>%
+#   dplyr::select(EBIOReviewer, Number, final_name, FirstAuthor, biodiv) %>%
+#   rename(Q8_Biodiversity = biodiv,
+#          Title = final_name) %>%
+#   #sort by reviewer and Number
+#   arrange(EBIOReviewer, Number)
 
 # # create temp csv file for writing to google drive
 # #tempcsv <- tempfile(fileext = ".csv")
@@ -678,8 +715,18 @@ keep_biodivNAs2 <- left_join(keep_biodivNAs, q8response[c("EBIOReviewer", "Numbe
 ## if reviewed paper in round 1, cannot review same paper in round 2
 ## everyone gets roughly equal amount of papers to review
 ## random number assign
+## add Laura to list of reviewers, Laura should not review Caitlin papers from round 1
 
-reviewers <- unique(master2$EBIOReviewer[!is.na(master2$EBIOReviewer)])
+# order reviewers by who has most number of round 1 reviewed papers
+reviewers <- c(unique(master2$EBIOReviewer[!is.na(master2$EBIOReviewer)]), "Laura")
+reviewersdf <- keep %>%
+  #mutate(keep, EBIOReviewer = ifelse(EBIOReviewer == "Laura/Caitlin", "Caitlin", EBIOReviewer)) %>%
+  mutate(EBIOReviewer = ifelse(grepl("Laura", EBIOReviewer), "Caitlin", EBIOReviewer)) %>%
+  group_by(EBIOReviewer) %>%
+  summarise(nobs = length(final_name)) %>%
+  ungroup() %>%
+  arrange(desc(nobs))
+reviewers <- c("Laura", reviewersdf$EBIOReviewer)
 
 assign_round2 <- dplyr::select(keep, Number, EBIOReviewer, final_name, AuthorsFull, FirstAuthor, comments, in_meetscriteria) %>%
   rename(actual_reviewer = EBIOReviewer) %>%
@@ -690,8 +737,13 @@ assign_round2 <- dplyr::select(keep, Number, EBIOReviewer, final_name, AuthorsFu
 # start with unique numbers
 numbers <- unique(keep$Number)
 for(r in reviewers){
-  # random sample papers in keep not previously reviewed by person r
-  select <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == r]], size = floor(nrow(keep)/length(reviewers)))
+  if(r != "Laura"){
+    # random sample papers in keep not previously reviewed by person r
+    select <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == r]], size = (floor(nrow(keep)/length(reviewers)))) # leave a little bit of grace in floor, otherwise code will bonk
+  }else{
+    # write different line for Laura
+    select <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == "Caitlin"]], size = (floor(nrow(keep)/length(reviewers))))
+  }
   # assign person r to selected numbers
   assign_round2$round2_reviewer[assign_round2$Number %in% select] <- r
   #update numbers before next iteration (remove papers selected)
@@ -746,6 +798,7 @@ sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summa
 
 # Tim missing two
 assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Tim" & !assignmentsdf$Title %in% results_clean$final_name]
+assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Isabel" & !assignmentsdf$Title %in% results_clean$final_name]
 
 
 # write out still needs review if others want to check it
