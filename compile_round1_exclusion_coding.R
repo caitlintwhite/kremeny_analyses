@@ -5,11 +5,19 @@
 # search G Drive for all instances of exclusion criteria coding form results (as of 12/23/19, there are at least 4-5 copies)
 # compare coding results files and distill to unique rows
 # prioritize more recent scoring for any papers reviewed twice (e.g. papers re-scored to answer Q8)
-# output: final set of papers that make it through to round 2 coding
-# random-assign equal number of papers to class list
+# sort: 1) set of papers excluded, 2) final set of papers that make it through to round 2 coding, 3) any scoring that needs follow-up (e.g. conflicting answers)
+# output: 
+## 1) random-assignly equal number of round 2 papers to class list, write out to ... (google drive? in repo for now)
+## 2) summary figure out abstracts excluded and why (figure written out to figs subfolder in repository)
+
 
 # notes:
-# 1/15/20: Sierra, Aislyn and Nick -- if NA can assume NO in their abstracts, need to fill in
+# 1/15/20 (class meeting): 
+## Sierra, Aislyn and Nick confirmed in class: if NA can assume NO in their abstracts questions (code needs to infill)
+## we decided everyone will go back and score any NAs for q8 only IFF the paper would otherwise make it round 2
+## if abstract is excluded based on some other question, ignore any NAs that exist for that record
+
+
 
 
 # -- SETUP ----
@@ -27,6 +35,7 @@ theme_set(theme_bw())
 # find all instances of exclusion criteria results on GDrive
 # > note: CTW tried to read in results dynamically from Google form, but everything I searched shows savings results to GSheet and reading that in
 # > tried reading in form via xml/html, but reads form only, not results. Think, for now, must manually export form results to GDrive first before reading into R..
+## with next line, can choose to cache Google credentials on your machine or not.. caching means you won't have to login each time you run code
 results <- drive_find(pattern = "Exclusion Criteria for Kremen Review", type = "spreadsheet")
 # import all results to list
 resultsls <- list()
@@ -40,9 +49,11 @@ for(i in 1:nrow(results)){
 }
 
 
-# read in paper assignments
+# read in round 1 paper assignments
 ES_folder <- drive_find(pattern = "EBIO: Ecology of Ecosystem Services", type = "folder", n_max = 10) %>% drive_ls()
+ES_folder
 abstracts_folder <- drive_get(id = ES_folder$id[grep("^Abstract Review", ES_folder$name)]) %>% drive_ls()
+abstracts_folder
 assignments <- drive_get(id = abstracts_folder$id[grep("^EcosystemServicesPapersNov2019.xls", abstracts_folder$name)]) # first should be assignments
 # create temp file for downloading excel sheet
 tempxl <- tempfile(fileext = ".xlsx")
@@ -86,7 +97,11 @@ for(pos in 1:nrow(reval_files)){
     # delete file downloaded locally
     file.remove(tempxl)
   }
-  #if googlesheet, read sheet directly -- not writing this code right now bc currently only excel sheets in the folder
+  #if googlesheet, read sheet directly
+  if(grepl("PotentialRound2", temp_name)){
+    revalls[[pos]] <- read_sheet(reval_files$id[reval_files$name == temp_name])
+    names(revalls)[pos] <- temp_name
+  }
 }
 
 
@@ -117,11 +132,19 @@ summary(apply(resultsls[[2]][,3:(ncol(resultsls[[2]])-5)], 1, function(x) all(is
 lapply(resultsls, function(x) summary(is.na(x)))
 
 # check out re-evaluated abstracts in NA folder
-glimpse(revalls[[1]]) # aislyn's
-summary(as.factor(revalls[[1]]$Q8)) # <- when answered, all NO
+glimpse(revalls[[1]]) # googlesheet CTW made for class (anyone listed on there just supposed to infill Q8 in the googlesheet)
+summary(as.factor(revalls[[1]]$Q8_Biodiversity)) # <- when answered, all NO
+# who hasn't answered yet? or who used this form?
+sapply(split(revalls[[1]]$Q8_Biodiversity, revalls[[1]]$EBIOReviewer), function(x) summary(as.factor(x)))
+## Aislyn added herself -- remove bc using her spreadsheet; 
+## Tim, Julie, Isabel used the form.. Grant has one answer and the rest NA
+## Travis, Laurel, Anna, Kathryn, Grant have all or mostly NAs.. check to see if they rescored in the Google form
 
-glimpse(revalls[[2]]) # nick's
-summary(as.factor(revalls[[2]]$`Q8:Biodiversity`)) # mix, need to standardize char-casing
+glimpse(revalls[[2]]) # aislyn's
+summary(as.factor(revalls[[2]]$Q8)) # <- when answered, all NO
+
+glimpse(revalls[[3]]) # nick's
+summary(as.factor(revalls[[3]]$`Q8:Biodiversity`)) # mix, need to standardize char-casing
 
 
 
@@ -138,7 +161,7 @@ refdf <- data.frame(createdTime = times, modifiedTime = modtimes, `records` = re
   # assign priority rank
   mutate(rank = seq(1,nrow(.), 1))
 
-# stack all dats
+# stack all google form dats
 master <- data.frame()
 # > note: this will throw warning mssgs but it's okay
 for(i in 1:length(resultsls)){
@@ -267,14 +290,57 @@ master2 <-  left_join(master, distinct(namecheck[c("Title", "final_name", "EBIOR
 
 # remove duplicate records (removes 2nd+ instance)
 masterdups <- master2[(duplicated(master2[,qnames])),] # keep just in case need
-master3 <- master2[!(duplicated(master2[,qnames])),]
+master2 <- master2[!(duplicated(master2[,qnames])),]
 
 # make abbrev colnames for review
-nameref <- data.frame(orig = names(master3),
-                      abbr = c(names(master3)[1:grep("Title", names(master3))],"meta", "review", "no_efes", "valrisk", "tool", "biodiv", "comments")) %>%
+nameref <- data.frame(orig = names(master2),
+                      abbr = c(names(master2)[1:grep("Title", names(master2))],"meta", "review", "no_efes", "valrisk", "tool", "biodiv", "comments")) %>%
   mutate(abbr = ifelse(grepl("Emai", abbr), "email", abbr))
 
+# make new version to manipulate
+master3 <- master2
 names(master3) <- nameref$abbr
+
+
+# append/infill reval'd Q8 answers to master3
+View(revalls[[1]])
+# perhaps iterate through master 3.. if Q8 is NA, then infill with googlesheet by *final_name* (clean title) and EBIOReviewer
+# 1) remove any NAs in googlesheet
+q8answers <- revalls[[grep("PotentialRound", names(revalls))]] %>% 
+  # remove FirstAuthor to rbind with Aislyn's excel sheet
+  dplyr::select(-FirstAuthor) %>%
+  # remove Aislyn bc I have her answers elsewhere
+  filter(!EBIOReviewer == "Aislyn") %>%
+  #rename Q8 to match Aislyn's spreadsheet for rbinding
+  #rbind Aislyn's answers from her excel sheet (rename her colnames)
+  rbind(setNames(revalls[[grep("Aislyn", names(revalls))]][c("EBIOReviewer", "Number", "Title", "Q8")], names(.))) %>%
+  subset(!Q8_Biodiversity == "NA" & !is.na(Q8_Biodiversity)) %>%
+  #standardize character casing (first letter = capital, rest = lowcase)
+  mutate(Q8_Biodiversity = paste0(casefold(substr(Q8_Biodiversity, 1,1), upper = T), casefold(substr(Q8_Biodiversity, 2, nchar(Q8_Biodiversity)))))
+# perhaps review Nick's separately bc he also has answers to questions 1-7, can double check no NAs in those or infill with answers from his excel sheet
+for(i in 1:nrow(q8answers)){
+  temprow <- left_join(q8answers[i,], cbind(master3, rowid = rownames(master3)), by = c("EBIOReviewer","Number")) %>%
+    # just in case multiple rows, sort by timestamp and rank, choose first row
+    arrange(desc(Timestamp), rank) %>% 
+    # choose most recent
+    filter(rank == 1 & Timestamp == max(Timestamp)) %>%
+    data.frame()
+  stopifnot(nrow(temprow) == 1)
+  # if biodiv in master is NA, infill with response from googlesheet
+  if(is.na(temprow$biodiv)){
+    master3$biodiv[rownames(master3) == temprow$rowid] <- temprow$Q8_Biodiversity
+  }else{
+  # if not NA, check that answer agrees with what they answered in googlesheet
+  stopifnot(temprow$biodiv == temprow$Q8_Biodiversity)
+  }
+}
+
+
+
+
+
+
+# -- SPLIT ABSTRACTS BASED ON TIMES SCORED-----
 # think I should split papers re-eval'd for Q8 vs ones that haven't been...
 reval_titles <- master3$final_name[duplicated(master3$final_name)]
 # select records for titles that were rescored
@@ -384,7 +450,7 @@ conflict_rescore <- subset(rescored, flag_tally) %>%
 conflict_rescore[names(conflict_rescore)[13:17]] <- sapply(conflict_rescore[names(conflict_rescore)[13:17]], function(x) ifelse(is.na(x) & conflict_rescore$Timestamp == conflict_rescore$maxT, x[conflict_rescore$Timestamp == conflict_rescore$minT], x))
 
 # keep Aislyn's NO to question 3 since those articles are in meets criteria folder (write line to search for authors in files within meets criteria folder, i.e. automate)
-conflict_rescore <- ungroup(conflict_rescore) %>%
+conflict_rescore2 <- ungroup(conflict_rescore) %>%
   dplyr::select(-c("minT", "maxT")) %>%
   left_join(distinct(assignmentsdf[c("Title", "AuthorsFull")]), by = c("final_name" = "Title")) %>%
   # extract First author last name to search Meets Criteria folder
@@ -571,7 +637,7 @@ keep_biodivNAs <- filter(keep, is.na(biodiv)) %>%
 
 # infill Aisyln
 keep_biodivNAs2 <- 
-q8response <- revalls[[1]] %>%
+  q8response <- revalls[[1]] %>%
   dplyr::select(EBIOReviewer, Number, Title, Q8) %>%
   rename(Number2 = Number) %>%
   rbind(data.frame(EBIOReviewer = "Nick", Number2 = NA, Title = revalls[[2]]$`Q1: Paper Title`, Q8 = revalls[[2]]$`Q8:Biodiversity`)) %>%
@@ -595,7 +661,7 @@ keep_biodivNAs2 <- left_join(keep_biodivNAs, q8response[c("EBIOReviewer", "Numbe
          Title = final_name) %>%
   #sort by reviewer and Number
   arrange(EBIOReviewer, Number)
-  
+
 # # create temp csv file for writing to google drive
 # #tempcsv <- tempfile(fileext = ".csv")
 # write.csv(keep_biodivNAs2, tempcsv, row.names = F)
@@ -678,8 +744,8 @@ sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summa
 # 1/2: Grant, Caitlin, Nick, Laurel done (yay!) .. emailed Aislyn with outstanding paper, Anna is shy by 3 papers.
 
 
-# Laurel also missing one
-#assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Anna" & !assignmentsdf$Title %in% results_clean$final_name]
+# Tim missing two
+assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Tim" & !assignmentsdf$Title %in% results_clean$final_name]
 
 
 # write out still needs review if others want to check it
