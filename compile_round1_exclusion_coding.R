@@ -196,12 +196,26 @@ rowNA <- apply(master[,grep("^Q[0-9]|[?]|Comments",names(master))], 1, function(
 View(master[rowNA,]) #good
 # remove empty rows or rows with NULL, then unlist title values
 master <- master[!rowNA,]
-master$Title <- unlist(master$Title)
+#master$Title <- unlist(master$Title) #1/20 -- no longer works because of NULL in title (if title not entered in google form)
+tempdf <- data.frame(rowid = rownames(master), Timestamp = master$Timestamp, Title2 = NA)
+for(i in 1:nrow(master)){
+  val <- master$Title[[i]] # if someone didn't enter title, response is NULL which creates problems in R code..
+  if(is.null(val)){
+    val <- "Error: No title provided"
+  }
+  tempdf$Title2[i] <- val
+}
+master <- master %>%
+  # to be sure binding with correct row (can use cbind, but being extra cautious..)
+  mutate(rowid = rownames(.)) %>%
+  left_join(tempdf) %>%
+  mutate(Title = Title2) %>%
+  dplyr::select(-c(rowid:Title2))
 str(master) # okay now
 # what are the unique vals in each Q8 col?
 sapply(master[grepl("Q8", names(master))], function(x) summary(as.factor(x))) # there are only 2 NOs in last q8 question, all else na..
-subset(master, `Q8: This paper only measures diversity/abundance but NOT as an explicit proxy for ES/EF` == "No")
-# assign Nos to main Q8
+subset(master, !is.na(`Q8: This paper only measures diversity/abundance but NOT as an explicit proxy for ES/EF`))
+# assign non-NAs to main Q8
 master <- mutate(master,
                  #mouthfull of a colname.. if the alt QA question is not NA, assign answer to main question, else leave main question response be
                  `Q8: This paper only measures biodiversity/abundance but NOT as an explicit proxy for ES/EF` = ifelse(!is.na(`Q8: This paper only measures diversity/abundance but NOT as an explicit proxy for ES/EF`), 
@@ -260,7 +274,7 @@ for(n in namecheck$Title[is.na(namecheck$final_name) & !is.na(namecheck$Title)])
 # who still needs match?
 namecheck$Title[is.na(namecheck$final_name)]
 # what is NA title in master?
-View(master[is.na(master$Title),]) # can ignore, looks like initial testing before launching coding doc
+View(master[is.na(master$Title),])  # can ignore november entries, looks like initial testing before launching coding doc
 # ditch NA title in namecheck
 namecheck <- subset(namecheck, !is.na(Title))
 # manual corrections on the rest..
@@ -327,7 +341,8 @@ summary(is.na(agrees$filename)) #no NAs from joining master, all answers agree, 
 # 2) rbind all q8 responses, remove any NAs in googlesheet, and standardize responses
 q8answers <- revalls[[grep("PotentialRound", names(revalls))]] %>% 
   # remove FirstAuthor to rbind with Aislyn's excel sheet
-  dplyr::select(-FirstAuthor) %>%
+  # get rid of Anna's added column
+  dplyr::select(-c(FirstAuthor, Answered_Q8)) %>%
   # remove Aislyn bc I have her answers elsewhere
   filter(!EBIOReviewer == "Aislyn") %>%
   #rename Q8 to match Aislyn's spreadsheet for rbinding
@@ -473,6 +488,7 @@ View(subset(rescored, flag_tally))
 ## Aislyn changed 2 papers to YES for doesn't directly measure EF or ES, but those papers are in the Meets Criteria folder.. need to follow up?
 ## Sierra changed 2 papers to YES for no EF/ES directly measured
 ## Travis' paper lacks answer for most recent scoring (can infill with earlier version)
+## Anna is only answering q8.. and using an old form...
 conflict_rescore <- subset(rescored, flag_tally) %>%
   grouped_df(c("final_name")) %>%
   mutate(minT= min(Timestamp),
@@ -483,7 +499,7 @@ conflict_rescore[names(conflict_rescore)[13:17]] <- sapply(conflict_rescore[name
 
 # 1/20/20: new way -- use Aislyn's exclude yes/no col to tease which row to keep (she has papers in meets criteria folder, but last score and her excel sheet says to exclude)
 # old way: keep Aislyn's NO to question 3 since those articles are in meets criteria folder (write line to search for authors in files within meets criteria folder, i.e. automate)
-conflict_rescore <- ungroup(conflict_rescore) %>%
+conflict_rescore2 <- ungroup(conflict_rescore) %>%
   dplyr::select(-c("minT", "maxT")) %>%
   left_join(distinct(assignmentsdf[c("Title", "AuthorsFull")]), by = c("final_name" = "Title")) %>%
   # extract First author last name to search Meets Criteria folder
