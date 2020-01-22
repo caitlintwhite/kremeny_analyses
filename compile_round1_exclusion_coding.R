@@ -691,16 +691,16 @@ mutate(keep, EBIOReviewer = ifelse(grepl("Laura", EBIOReviewer), "Caitlin", EBIO
   ggplot(aes(0, papers)) +
   geom_boxplot() +
   geom_point(aes(color = EBIOReviewer), size = 3, position = position_dodge(width = 0.15), alpha = 0.75, show.legend = F) +
-  geom_text(aes(-0.25, 105, label = "Points = unique reviewers"), fontface = "italic", size = 4) +
+  annotate(geom = "text", x = -0.23, y = 105, label = "Points = unique reviewers", fontface = "italic") +
   scale_color_viridis_d() +
   labs(y = "Count", x = NULL,
-       title = paste0("Round 1 summary: number of unexcluded abstracts per reviewer"),
+       title = paste0("Round 1 summary:\nNumber of unexcluded abstracts per reviewer"),
        subtitle = paste0("Last updated: ", Sys.Date(),", ", nrow(keep), " unexcluded of ", nrow(results_clean), " reviewed")) +
   theme(axis.text.x = element_blank(),
         axis.ticks.x = element_blank())
 
 # write out 
-ggsave("figs/kept_abstracts_summary.pdf", width = 4, height = 5, units = "in")
+ggsave("figs/kept_abstracts_summary.pdf", width = 4, height = 5, units = "in", scale = 1.2)
 
   
 # visualize the NAs in keep papers, similar to excluded
