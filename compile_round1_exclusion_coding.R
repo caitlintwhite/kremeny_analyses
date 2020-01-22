@@ -286,6 +286,8 @@ namecheck$final_name[namecheck$Title == "1190"] <- assignmentsdf$Title[assignmen
 namecheck$final_name[grepl("SUDS", namecheck$Title)] <- assignmentsdf$Title[grepl("SUDS", assignmentsdf$Abstract)]
 ## bat comment -- check LD abstracts sheet -- can get it from matching comment in master
 namecheck$final_name[grepl("Only really focused on bat", namecheck$Title)] <- unique(master$Title[grepl("Only really focused on bat", master$`Comments on the paper or any questions that are unclear`)])
+## "kathyrn abstracts" 
+namecheck$final_name[grepl("Kathryn", namecheck$Title)] <- assignmentsdf$Title[grepl("Ecosystem change assessment", assignmentsdf$Title) & assignmentsdf$EBIOReviewer == "Kathryn"]
 ## TRY -- I can't find any paper assigned to LB that's on TRY database.. given it was from first version of coding form and only presents in that one record, maybe was just a test entry.. going to ignore
 ## SOIL CARBON SEQUESTRATION... -- article reviewed by Aislyn is wrong article (correct author, wrong article) -- can ignore
 ## Effects of dams..
@@ -826,6 +828,9 @@ assign_round2 <- rename(assign_round2, round1_reviewer = actual_reviewer, Title 
 # write out
 write.csv(assign_round2, "review_assignments_round2.csv", row.names = F)
 
+# write out to google drive for class (whenever we decide the folder where it lives)
+#drive_upload("review_assignments_round2.csv", path = as_id(abstracts_folder$id[grep("^Round1_NA", abstracts_folder$name)]), type = "spreadsheet", 
+#              name = "ESpapers2review_Round2Jan2020_batch1", overwrite = T)
 
 
 # -- PROGRESS REPORT ----
@@ -835,10 +840,9 @@ sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summa
 # 1/2: Grant, Caitlin, Nick, Laurel done (yay!) .. emailed Aislyn with outstanding paper, Anna is shy by 3 papers.
 
 
-# Tim missing two
-assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Tim" & !assignmentsdf$Title %in% results_clean$final_name]
+# 1/22 AM: Kathryn missing nine, Isabel 2 (emailed Isabel last night)
+assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Kathryn" & !assignmentsdf$Title %in% results_clean$final_name]
 assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Isabel" & !assignmentsdf$Title %in% results_clean$final_name]
-assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Travis" & !assignmentsdf$Title %in% results_clean$final_name]
 
 
 # write out still needs review if others want to check it
