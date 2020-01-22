@@ -67,8 +67,11 @@ abstracts_LD <- read_sheet(drive_find(pattern = "Laura/Caitlin", type = "spreads
 glimpse(abstracts_LD) # read in correct file .. pubdate col is list, header didn't import correctly
 
 # list papers in Meets Criteria folder for cross checking
+# 1/22: we moved this folder from abstracts review to round 2 subfolder
 # > note: drive_ls() doesn't appear to consistently list all files within the meets criteria folder, e.g. ranges from 406-429 (with duplicates listed for the higher end range)
-meetscriteria <- drive_get(id = abstracts_folder$id[abstracts_folder$name == "Meets Criteria"]) %>% 
+round2_folder <-drive_get(id = ES_folder$id[grep("^Round 2", ES_folder$name)]) %>% drive_ls()  
+round2_folder
+meetscriteria <- drive_get(id = round2_folder$id[round2_folder$name == "Meets Criteria"]) %>% 
   drive_ls()
 # remove duplicated files
 meetscriteria <- filter(meetscriteria, !duplicated(id))
@@ -137,8 +140,7 @@ summary(as.factor(revalls[[1]]$Q8_Biodiversity)) # <- when answered, all NO
 # who hasn't answered yet? or who used this form?
 sapply(split(revalls[[1]]$Q8_Biodiversity, revalls[[1]]$EBIOReviewer), function(x) summary(as.factor(x)))
 ## Aislyn added herself -- remove bc using her spreadsheet; 
-## Tim, Julie, Isabel used the form.. Grant has one answer and the rest NA
-## Travis, Laurel, Anna, Kathryn, Grant have all or mostly NAs.. check to see if they rescored in the Google form
+## Anna, Kathryn, Laurel have all NAs.. check to see if they rescored in the Google form
 
 glimpse(revalls[[2]]) # aislyn's
 summary(as.factor(revalls[[2]]$Q8)) # <- when answered, all NO
@@ -649,15 +651,48 @@ summary(results_clean$final_name %in% c(exclude$final_name, questions$final_name
 # check titles against everything read in initially
 summary(results_clean$Title %in% unique(master$Title)) # <-- should also be true 
 
-# check that none of aislyn's excluded are in keep
+# check that none of aislyn's excluded are in keep/keep in excluded
 summary(aislyn_reval$Number[aislyn_reval$`Excluded?` == "yes"] %in% keep$Number)
 summary(aislyn_reval$Number[aislyn_reval$`Excluded?` == "no"] %in% keep$Number)
 
 summary(aislyn_reval$Number[aislyn_reval$`Excluded?` == "no"] %in% exclude$Number)
 summary(aislyn_reval$Number[aislyn_reval$`Excluded?` == "yes"] %in% exclude$Number)
 
-keep$final_name[keep$Number %in% aislyn_reval$Number[aislyn_reval$`Excluded?` == "yes"]]
-exclude$final_name[exclude$Number %in% aislyn_reval$Number[aislyn_reval$`Excluded?` == "no"]]
+AK_keepcheck <- left_join(keep, aislyn_reval) %>% filter(`Excluded?` == "yes")
+AK_keepcheck$final_name
+AK_excludecheck <- left_join(exclude, aislyn_reval) %>% filter(`Excluded?` == "no")
+AK_excludecheck$final_name
+# 1/22/20: CTW emailed AK to ask for clarification
+# 1/22/20: AK emailed CTW these should all be kept for round 2 (except Lal *does* look like a review paper so keeping in exclude), manual edit scores and add to keep df if not already there
+AK_excludetokeep <- filter(AK_excludecheck, FirstAuthor != "Lal") %>%
+  # these all have Yes for meta-analysis
+  mutate(meta = "No") %>%
+  #recrunch tallies and flagging
+  #recrunch tallies
+  mutate(Yes = apply(.,1, function(x) sum(x == "Yes", na.rm = T)),
+         No = apply(.,1, function(x) sum(x == "No", na.rm = T)),
+         # only sum NAs in exclusion questions PLUS comments
+         empty = apply(.[names(.)[grep("meta", names(.)):grep("tool", names(.))]],1, function(x) sum(is.na(x), na.rm = T)),
+         tally = Yes+No) %>%
+  # remove attr names created during apply
+  mutate_at(vars("Yes", "No", "empty", "tally"), as.numeric) %>%
+  data.frame() %>%
+  # create flagging
+  mutate(exclude = Yes > 0,
+         # create flagging
+         ## flag 1 is if only NOs answered and rest are NAs
+         ## flag 2 is any NAs in q1-7
+         flag_NO = No > 0 & Yes == 0 & empty > 0,
+         flag_NA = empty > 0,
+         flag_Q8 = is.na(biodiv),
+         # flag if paper should be in folder and isn't
+         flag_paper = in_meetscriteria == 0 & Yes == 0 & No >= 5) %>%
+  dplyr::select(names(keep))
+
+# append these to keep
+keep <- rbind(keep, AK_excludetokeep)
+# update exclude
+exclude <- filter(exclude, !final_name %in% AK_excludetokeep$final_name)
 
 
 
@@ -859,8 +894,7 @@ sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summa
 # 1/2: Grant, Caitlin, Nick, Laurel done (yay!) .. emailed Aislyn with outstanding paper, Anna is shy by 3 papers.
 
 
-# 1/22 AM: Kathryn missing nine, Isabel 2 (emailed Isabel last night)
-assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Kathryn" & !assignmentsdf$Title %in% results_clean$final_name]
+# 1/22 PM: Isabel 2 (will take care of this afternoon)
 assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Isabel" & !assignmentsdf$Title %in% results_clean$final_name]
 
 
