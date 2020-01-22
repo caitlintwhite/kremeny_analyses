@@ -647,6 +647,16 @@ summary(results_clean$final_name %in% c(exclude$final_name, questions$final_name
 # check titles against everything read in initially
 summary(results_clean$Title %in% unique(master$Title)) # <-- should also be true 
 
+# check that none of aislyn's excluded are in keep
+summary(aislyn_reval$Number[aislyn_reval$`Excluded?` == "yes"] %in% keep$Number)
+summary(aislyn_reval$Number[aislyn_reval$`Excluded?` == "no"] %in% keep$Number)
+
+summary(aislyn_reval$Number[aislyn_reval$`Excluded?` == "no"] %in% exclude$Number)
+summary(aislyn_reval$Number[aislyn_reval$`Excluded?` == "yes"] %in% exclude$Number)
+
+keep$final_name[keep$Number %in% aislyn_reval$Number[aislyn_reval$`Excluded?` == "yes"]]
+exclude$final_name[exclude$Number %in% aislyn_reval$Number[aislyn_reval$`Excluded?` == "no"]]
+
 
 
 # -- SUMMARIZE EXCLUSIONS ---- 
