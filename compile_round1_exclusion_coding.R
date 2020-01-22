@@ -277,6 +277,8 @@ namecheck$Title[is.na(namecheck$final_name)]
 View(master[is.na(master$Title),])  # can ignore november entries, looks like initial testing before launching coding doc
 # ditch NA title in namecheck
 namecheck <- subset(namecheck, !is.na(Title))
+# how many have no title entered?
+master[master$Title == "Error: No title provided",] #2, others are NAs
 # manual corrections on the rest..
 ## 1190 = ref num
 namecheck$final_name[namecheck$Title == "1190"] <- assignmentsdf$Title[assignmentsdf$Number == 1190]
@@ -296,7 +298,7 @@ namecheck <- namecheck[c("Title", "final_name", "reviewed")] %>%
   left_join(dplyr::select(assignmentsdf, EBIOReviewer, Number, Title), by = c("final_name" = "Title")) %>%
   distinct()
 # review what's left with NAs
-subset(namecheck, is.na(final_name)) # okay -- ignore TRY and SOIL CARBON SEQUESTRATION (reviewed wrong paper, not assigned)
+subset(namecheck, is.na(final_name)) # okay -- ignore TRY and SOIL CARBON SEQUESTRATION (reviewed wrong paper, not assigned), nothing to do about no title.. whoever that is will have to re-enter
 
 # distill to unique records
 # select colnames on which to check dups
@@ -330,13 +332,13 @@ names(master3) <- nameref$abbr
 View(revalls[[1]])
 # perhaps iterate through master 3.. if Q8 is NA, then infill with googlesheet by *final_name* (clean title) and EBIOReviewer
 # also review Nick's separately bc he also has answers to questions 1-7, can double check no NAs in those or infill with answers from his excel sheet
+# > infill AS's q8 answers here because if try to triage further down in code run into issues merging comments from multiple scores due to not using the same google form (it's less of a pain to take care of it here)
 
 # 1) check to see if Nick's answers agree with what's in google form.. if so, can append answers to googlesheet
 nick_q8 <- revalls[[grep("Dragone", names(revalls))]] %>% dplyr::select(-Timestamp) %>% rename(Title = 'Q1: Paper Title')
 #bc will join by q1-q7, if nick's answers agree with what's in master, everything will pair
 agrees <- left_join(nick_q8, distinct(master2[master2$EBIOReviewer == "Nick", !colnames(master2) %in% c("Timestamp", names(refdf))])) %>% subset(!is.na(filename)) %>% distinct()
 summary(is.na(agrees$filename)) #no NAs from joining master, all answers agree, can append q8 answers to googlesheet
-
 
 # 2) rbind all q8 responses, remove any NAs in googlesheet, and standardize responses
 q8answers <- revalls[[grep("PotentialRound", names(revalls))]] %>% 
@@ -350,9 +352,16 @@ q8answers <- revalls[[grep("PotentialRound", names(revalls))]] %>%
   rbind(setNames(revalls[[grep("Aislyn", names(revalls))]][c("EBIOReviewer", "Number", "Title", "Q8")], names(.))) %>%
   # append Nick's answers from joined df above (bind Nick's q8 column tho)
   rbind(setNames(agrees[,c("EBIOReviewer", "Number", "final_name", "Q8:Biodiversity")], names(.))) %>%
-  subset(!Q8_Biodiversity == "NA" & !is.na(Q8_Biodiversity)) %>%
+  # append Anna's answers
+  left_join(master3[master3$EBIOReviewer == "Anna" & !is.na(master3$biodiv), c("EBIOReviewer", "Number", "Title", "biodiv")]) %>%
+  mutate(Q8_Biodiversity = ifelse(EBIOReviewer == "Anna", biodiv, Q8_Biodiversity)) %>%
+  #drop biodiv
+  dplyr::select(-biodiv) %>%
+  # clean up data frame
+  subset(Q8_Biodiversity != "NA" & !is.na(Q8_Biodiversity)) %>%
   #standardize character casing (first letter = capital, rest = lowcase)
   mutate(Q8_Biodiversity = paste0(casefold(substr(Q8_Biodiversity, 1,1), upper = T), casefold(substr(Q8_Biodiversity, 2, nchar(Q8_Biodiversity)))))
+
 
 # 3) infill q8 answers
 for(i in 1:nrow(q8answers)){
@@ -360,7 +369,8 @@ for(i in 1:nrow(q8answers)){
     # just in case multiple rows, sort by timestamp and rank, choose first row
     arrange(desc(Timestamp), rank) %>% 
     # choose most recent
-    filter(rank ==min (rank) & Timestamp == max(Timestamp)) %>%
+    filter(rank ==min (rank)) %>%
+    filter(Timestamp == max(Timestamp)) %>%
     data.frame()
   stopifnot(nrow(temprow) == 1)
   # if biodiv in master is NA, infill with response from googlesheet
@@ -456,7 +466,7 @@ singlerev <- singlerev %>%
   dplyr::select(-Reviewer)
 
 # q8 NA vs answered (12/26-- wrote group to ask if people will re-eval or not)
-table(is.na(singlerev$biodiv)) # more not answered than answered
+table(is.na(singlerev$biodiv)) # more answered than not answered
 
 
 
@@ -488,19 +498,16 @@ View(subset(rescored, flag_tally))
 ## Aislyn changed 2 papers to YES for doesn't directly measure EF or ES, but those papers are in the Meets Criteria folder.. need to follow up?
 ## Sierra changed 2 papers to YES for no EF/ES directly measured
 ## Travis' paper lacks answer for most recent scoring (can infill with earlier version)
-## Anna is only answering q8.. and using an old form...
-conflict_rescore <- subset(rescored, flag_tally) %>%
-  grouped_df(c("final_name")) %>%
-  mutate(minT= min(Timestamp),
-         maxT= max(Timestamp))
-# break piping bc can't figure out using mutate_at
-# this line will infill later timestamp NAs with previous version if non-NA value present
-conflict_rescore[names(conflict_rescore)[13:17]] <- sapply(conflict_rescore[names(conflict_rescore)[13:17]], function(x) ifelse(is.na(x) & conflict_rescore$Timestamp == conflict_rescore$maxT, x[conflict_rescore$Timestamp == conflict_rescore$minT], x))
-
+## Anna is only answering q8 in most recent Timestamp, using an old form; appended her q8 answers to more complete records (above)
+conflict_rescore <- subset(rescored, flag_tally) %>% 
+  # sort by title and Timestamp (earlier appears first for filling down NAs)
+  arrange(final_name, Timestamp) %>%
+  group_by(final_name) %>%
+  # infill later Timestamp NAs with earlier values (by paper, by question) if present
+  fill(meta, review, no_efes, tool, valrisk) %>%
+  ungroup() %>%
 # 1/20/20: new way -- use Aislyn's exclude yes/no col to tease which row to keep (she has papers in meets criteria folder, but last score and her excel sheet says to exclude)
 # old way: keep Aislyn's NO to question 3 since those articles are in meets criteria folder (write line to search for authors in files within meets criteria folder, i.e. automate)
-conflict_rescore2 <- ungroup(conflict_rescore) %>%
-  dplyr::select(-c("minT", "maxT")) %>%
   left_join(distinct(assignmentsdf[c("Title", "AuthorsFull")]), by = c("final_name" = "Title")) %>%
   # extract First author last name to search Meets Criteria folder
   mutate(FirstAuthor = word(AuthorsFull, sep = ",")) %>%
@@ -514,28 +521,34 @@ conflict_rescore2 <- ungroup(conflict_rescore) %>%
          empty = apply(.[names(.)[grep("meta", names(.)):grep("comments", names(.))]],1, function(x) sum(is.na(x), na.rm = T)),
          tally = Yes+No) %>% 
   # add in Aislyn's excluded column
-  left_join(revalls[[2]][c("EBIOReviewer", "Number", "Excluded?")]) %>%
-  # rules for choosing:
-  ## 1) has the most questions answered
-  ## 2) if tally tied, and has at least 1 Yes and not in Meets Criteria, keep
-  ## 3) if tally tied, and if all NOs and in Meets Criteria, keep
-  ## 4) choose by most recent Timestamp -- Timestamp not necessarily best filter for this (e.g. see Aislym's Pueyo-Ros example, or Isabel's example)
-  mutate(keep = (tally == max(tally) & ((Yes == 0 & in_meetscriteria == 1) | (Yes > 0 & in_meetscriteria == 0) | (Yes > 0 & grepl("yes", `Excluded?`, ignore.case = T))))) %>%
+  left_join(aislyn_reval[c("EBIOReviewer", "Number", "Excluded?")])
+
+
+# rules for choosing:
+## 1) has the most questions answered
+## 2) if tally tied, and has at least 1 Yes and not in Meets Criteria, keep
+## 3) if tally tied, and if all NOs and in Meets Criteria, keep
+## 4) choose by most recent Timestamp -- Timestamp not necessarily best filter for this (e.g. see Aislym's Pueyo-Ros example, or Isabel's example)
+conflict_select <- conflict_rescore %>%  
   group_by(final_name) %>%
-  mutate(keep2 = ifelse(length(unique(keep)) == 1, 0, 1)) %>%
-  #ungroup() %>%
-  mutate(keep = ifelse((keep2 == 0), ((in_meetscriteria == 1 & Yes == 0) | (in_meetscriteria == 0 & Yes > 0 & empty == min(empty))), keep),
-         # all else being equal, combine comments field and keep the row that has the most recent timestamp
+  mutate(keep = (tally == max(tally) & empty == min(empty) & Timestamp == max(Timestamp)),
          sumcheck = sum(keep),
-         comments = ifelse(sumcheck != 1, str_flatten(comments, collapse = " "), comments),
-         keep = ifelse(sumcheck != 1, Timestamp == max(Timestamp), keep),
-         # redo sumcheck
+         # if nothing selected and all else equal, choose whichever has most answers)
+         keep = ifelse(sumcheck != 1, (tally == max(tally)& empty == min(empty)), keep)) %>%
+  #filter(keep)
+  filter(keep | (!keep & !is.na(comments))) %>%
+  # combine comments that are different (whatever is being dropped comes after what's being kept)
+  mutate(unique_comments = length(unique(comments)),
+         comments = ifelse(unique_comments >1, paste(comments[keep], comments[!keep], sep = "; "), comments),
+         #recrunch sumcheck
          sumcheck = sum(keep)) %>%
   ungroup() %>%
-  # keep only those entries that meet keep criteria
   filter(keep)
+# infill Anna's NAs
+conflict_select[conflict_select$EBIOReviewer == "Anna" & conflict_select$tally < 6 & conflict_select$in_meetscriteria == 1, c("no_efes", "valrisk", "tool")] <- "No"
 
 
+  
 # -- prep unproblematic rescored abstracts -----
 # see if comments for those not CTW-LD should be appended to more recent score
 View(subset(rescored, !flag_tally & EBIOReviewer != "Caitlin")) # looks like people re-entered their comments for re-score (don't append old comments)
@@ -558,7 +571,7 @@ okay_rescored <- subset(rescored, !Number %in% conflict_rescore$Number) %>%
          EBIOReviewer = recode(EBIOReviewer, "Caitlin" ="Laura/Caitlin"))
 
 # stack treated rescored
-final_rescore <- dplyr::select(okay_rescored, -comments2) %>% rbind(conflict_rescore[names(.)])
+final_rescore <- dplyr::select(okay_rescored, -comments2) %>% rbind(conflict_select[names(.)])
 
 
 
@@ -734,7 +747,7 @@ sort(unique(keep_biodivNAs$EBIOReviewer))
 ## add Laura to list of reviewers, Laura should not review Caitlin papers from round 1
 
 # order reviewers by who has most number of round 1 reviewed papers
-reviewers <- c(unique(master2$EBIOReviewer[!is.na(master2$EBIOReviewer)]), "Laura")
+#reviewers <- c(unique(master2$EBIOReviewer[!is.na(master2$EBIOReviewer)]), "Laura")
 reviewersdf <- keep %>%
   #mutate(keep, EBIOReviewer = ifelse(EBIOReviewer == "Laura/Caitlin", "Caitlin", EBIOReviewer)) %>%
   mutate(EBIOReviewer = ifelse(grepl("Laura", EBIOReviewer), "Caitlin", EBIOReviewer)) %>%
@@ -815,6 +828,7 @@ sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summa
 # Tim missing two
 assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Tim" & !assignmentsdf$Title %in% results_clean$final_name]
 assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Isabel" & !assignmentsdf$Title %in% results_clean$final_name]
+assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Travis" & !assignmentsdf$Title %in% results_clean$final_name]
 
 
 # write out still needs review if others want to check it
