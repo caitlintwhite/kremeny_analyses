@@ -766,6 +766,65 @@ keep_biodivNAs <- filter(keep, is.na(biodiv)) %>%
 sort(unique(keep_biodivNAs$EBIOReviewer))
 
 
+# which journals tended to have papers passed to round 2?
+# > there are 128 unique journals of the starting set of abstracts.. visualizing all of that would be bananas
+journaltrends <- left_join(dplyr::select(keep, EBIOReviewer, final_name), distinct(dplyr::select(assignmentsdf, Title, SourcePublication)), by = c("final_name" = "Title"))
+# how many unique journals?
+length(unique(journaltrends$SourcePublication)) # still a lot..
+journalsum <- group_by(journaltrends, SourcePublication) %>%
+  summarise(r2papers = length(final_name)) %>%
+  arrange(desc(r2papers))
+
+boxplot(journalsum$r2papers) # most 10 papers or fewer.. about 10% of the journals have 20 or more papers
+# plot top 10 journals
+journalsum[1:20,] %>%
+  mutate(SourcePublication = factor(SourcePublication, levels = journalsum$SourcePublication[1:20])) %>%
+  ggplot(aes(SourcePublication, r2papers)) +
+  geom_col() +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(x = NULL, y = "Number of round 2 papers", 
+       title = "Round 1 summary: top 20 journals sourcing papers for round 2, ordered by contribution") +
+  coord_flip() +
+  theme(plot.title = element_text(hjust = 1))
+
+# write out 
+ggsave("figs/kept_abstracts_topjournals.pdf", width = 6, height = 5, units = "in", scale = 1.2)
+
+# what about on a percent pass basis?
+gross_journals <- dplyr::select(assignmentsdf, Title, SourcePublication) %>%
+  distinct() %>%
+  # remove anything not yet reviewed
+  filter(Title %in% master3$final_name) %>%
+  # tally total papers
+  group_by(SourcePublication) %>%
+  summarise(tot_papers = length(Title)) %>%
+  # join numbers of round 2 papers
+  left_join(journalsum[c("SourcePublication", "r2papers")]) %>%
+  # any NA means no round 2 papers
+  mutate(r2papers = ifelse(is.na(r2papers), 0, r2papers),
+         passrate = (r2papers/tot_papers)*100)
+
+#look at top starting contributors (most papers to begin round 1)
+subset(gross_journals, tot_papers %in% sort(unique(gross_journals$tot_papers), decreasing = T)[1:20]) %>%
+  arrange(desc(tot_papers)) %>%
+  mutate(jrank = seq(1, nrow(.), 1),
+    SourcePublication = factor(SourcePublication, levels = SourcePublication[ordered(jrank)])) %>%
+  ggplot(aes(SourcePublication, passrate, fill = tot_papers)) +
+  geom_col(col = "grey60") +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(x = NULL, y = "Percent passed to round 2", 
+       title = "Round 1 summary: pass rate for top 20 journals sourcing abstracts for round 1", 
+       subtitle = "Ordered and colored by number of starting abstracts") +
+  scale_fill_viridis_c(name = "# starting\nabstracts", breaks = seq(20, 150, 30)) +
+  coord_flip() +
+  theme(plot.title = element_text(hjust = 1),
+        plot.subtitle = element_text(hjust = 1))
+
+# write out 
+ggsave("figs/kept_abstracts_journalpassrate.pdf", width = 8, height = 6, units = "in", scale = 1.2)
+
+
+
 # -- code here is what I used in class on 1/15 to write out googlesheet in the needs8 folder. don't re-run
 # # infill Aisyln
 # keep_biodivNAs2 <- 
