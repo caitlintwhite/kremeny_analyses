@@ -894,8 +894,7 @@ sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summa
 # 1/2: Grant, Caitlin, Nick, Laurel done (yay!) .. emailed Aislyn with outstanding paper, Anna is shy by 3 papers.
 
 
-# 1/22 PM: Isabel 2 (will take care of this afternoon)
-assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Isabel" & !assignmentsdf$Title %in% results_clean$final_name]
+#assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Isabel" & !assignmentsdf$Title %in% results_clean$final_name]
 
 
 # write out still needs review if others want to check it
