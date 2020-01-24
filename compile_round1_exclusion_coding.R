@@ -812,7 +812,7 @@ subset(gross_journals, tot_papers %in% sort(unique(gross_journals$tot_papers), d
   ggplot(aes(SourcePublication, passrate, fill = tot_papers)) +
   geom_col(col = "grey60") +
   scale_y_continuous(expand = c(0,0)) +
-  labs(x = NULL, y = "Percent passed to round 2", 
+  labs(x = NULL, y = "Percent of abstracts passed to round 2", 
        title = "Round 1 summary: pass rate for top 20 journals sourcing abstracts for round 1", 
        subtitle = "Ordered and colored by number of starting abstracts") +
   scale_fill_viridis_c(name = "# starting\nabstracts", breaks = seq(20, 150, 30)) +
@@ -950,12 +950,12 @@ write.csv(assign_round2, "review_assignments_round2.csv", row.names = F)
 # all abstracts done? who still needs to complete if not?
 summary(unique(assignmentsdf$Title) %in% results_clean$final_name)
 sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summary(x %in% results_clean$final_name))
-# 1/2: Grant, Caitlin, Nick, Laurel done (yay!) .. emailed Aislyn with outstanding paper, Anna is shy by 3 papers.
+# 1/24/20: Everyone done! Huzzah!
 
 
-assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Claire" & !assignmentsdf$Title %in% results_clean$final_name]
+#assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Claire" & !assignmentsdf$Title %in% results_clean$final_name]
 
 
 # write out still needs review if others want to check it
-needs_review <- subset(assignmentsdf, !assignmentsdf$Title %in% results_clean$final_name)
+#needs_review <- subset(assignmentsdf, !assignmentsdf$Title %in% results_clean$final_name)
 
