@@ -7,7 +7,8 @@
 # prioritize more recent scoring for any papers reviewed twice (e.g. papers re-scored to answer Q8)
 # sort: 1) set of papers excluded, 2) final set of papers that make it through to round 2 coding, 3) any scoring that needs follow-up (e.g. conflicting answers)
 # output: 
-## 1) random-assignly equal number of round 2 papers to class list, write out to ... (google drive? in repo for now)
+## 1) random-assignly round 2 papers to class list, write out to repo and GDrive round 2 review subfolder
+### > 1/29/20: we decided to compromise around logistic ease, reduce bias + make worload manageable: rando subsample 50% papers, make rando groups of 3, each person splits 1/2 of their papers with someone else in their group of three (so in total 2 ppl reviewing same paper for every paper subsampled)
 ## 2) summary figure out abstracts excluded and why (figure written out to figs subfolder in repository)
 
 
@@ -510,8 +511,8 @@ conflict_rescore <- subset(rescored, flag_tally) %>%
   # infill later Timestamp NAs with earlier values (by paper, by question) if present
   fill(meta, review, no_efes, tool, valrisk) %>%
   ungroup() %>%
-# 1/20/20: new way -- use Aislyn's exclude yes/no col to tease which row to keep (she has papers in meets criteria folder, but last score and her excel sheet says to exclude)
-# old way: keep Aislyn's NO to question 3 since those articles are in meets criteria folder (write line to search for authors in files within meets criteria folder, i.e. automate)
+  # 1/20/20: new way -- use Aislyn's exclude yes/no col to tease which row to keep (she has papers in meets criteria folder, but last score and her excel sheet says to exclude)
+  # old way: keep Aislyn's NO to question 3 since those articles are in meets criteria folder (write line to search for authors in files within meets criteria folder, i.e. automate)
   left_join(distinct(assignmentsdf[c("Title", "AuthorsFull")]), by = c("final_name" = "Title")) %>%
   # extract First author last name to search Meets Criteria folder
   mutate(FirstAuthor = word(AuthorsFull, sep = ",")) %>%
@@ -552,7 +553,7 @@ conflict_select <- conflict_rescore %>%
 conflict_select[conflict_select$EBIOReviewer == "Anna" & conflict_select$tally < 6 & conflict_select$in_meetscriteria == 1, c("no_efes", "valrisk", "tool")] <- "No"
 
 
-  
+
 # -- prep unproblematic rescored abstracts -----
 # see if comments for those not CTW-LD should be appended to more recent score
 View(subset(rescored, !flag_tally & EBIOReviewer != "Caitlin")) # looks like people re-entered their comments for re-score (don't append old comments)
@@ -737,7 +738,7 @@ mutate(keep, EBIOReviewer = ifelse(grepl("Laura", EBIOReviewer), "Caitlin", EBIO
 # write out 
 ggsave("figs/kept_abstracts_summary.pdf", width = 4, height = 5, units = "in", scale = 1.2)
 
-  
+
 # visualize the NAs in keep papers, similar to excluded
 dplyr::select(keep,Number, meta:biodiv) %>%
   data.frame() %>%
@@ -763,7 +764,7 @@ keep_biodivNAs <- filter(keep, is.na(biodiv)) %>%
   arrange(EBIOReviewer)
 
 # who still has q8 NA vals in kept papers?
-sort(unique(keep_biodivNAs$EBIOReviewer))
+sort(unique(keep_biodivNAs$EBIOReviewer)) # just one NA in Kathryn's paper (didn't fill out GDrive Gsheet, but can assume no)
 
 
 # which journals tended to have papers passed to round 2?
@@ -808,7 +809,7 @@ gross_journals <- dplyr::select(assignmentsdf, Title, SourcePublication) %>%
 subset(gross_journals, tot_papers %in% sort(unique(gross_journals$tot_papers), decreasing = T)[1:20]) %>%
   arrange(desc(tot_papers)) %>%
   mutate(jrank = seq(1, nrow(.), 1),
-    SourcePublication = factor(SourcePublication, levels = SourcePublication[ordered(jrank)])) %>%
+         SourcePublication = factor(SourcePublication, levels = SourcePublication[ordered(jrank)])) %>%
   ggplot(aes(SourcePublication, passrate, fill = tot_papers)) +
   geom_col(col = "grey60") +
   scale_y_continuous(expand = c(0,0)) +
@@ -863,13 +864,96 @@ ggsave("figs/kept_abstracts_journalpassrate.pdf", width = 8, height = 6, units =
 
 
 
+# -- PROGRESS REPORT ----
+# all abstracts done? who still needs to complete if not?
+summary(unique(assignmentsdf$Title) %in% results_clean$final_name)
+sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summary(x %in% results_clean$final_name))
+# 1/24/20: Everyone done! Huzzah!
+
+
+#assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Claire" & !assignmentsdf$Title %in% results_clean$final_name]
+
+
+# write out still needs review if others want to check it
+#needs_review <- subset(assignmentsdf, !assignmentsdf$Title %in% results_clean$final_name)
+
+
+
 # -- RANDOM ASSIGN ROUND 2 PAPERS -----
-# write out to google sheets? or csv?
-# rules: 
+# write out to csv
+# final rules (1/30/20): 
 ## if reviewed paper in round 1, cannot review same paper in round 2
+## add Laura to list of reviewers, Laura should not review Caitlin papers from round 1
+## random subsample 50% of abstracts that made it to round 2
+## > will start with of all papers, but could divide this out based on journals (have more equal journal rep) or round 1 reviewer (have more equal # abstracts per round 1 reviewer)
+## > e.g. trying to avoid lots of abstracts from journal with most abstracts contributed, and lots of abstracts from person who passed on the most abstracts, for example
+## randomize groups of 3, each person splits half of their papers with the other 2 in the group so in total all papers have 2 reviewers for round 2
+
+
+# 1) FINAL WAY (this is what's used and written out to GDrive)
+
+# a) compile reviewers, ordered by number of papers they passed through
+reviewersdf <- keep %>%
+  #mutate(keep, EBIOReviewer = ifelse(EBIOReviewer == "Laura/Caitlin", "Caitlin", EBIOReviewer)) %>%
+  mutate(EBIOReviewer = ifelse(grepl("Laura", EBIOReviewer), "Caitlin", EBIOReviewer)) %>%
+  group_by(EBIOReviewer) %>%
+  summarise(nobs = length(final_name)) %>%
+  ungroup() %>%
+  arrange(desc(nobs))
+reviewers <- c("Laura", reviewersdf$EBIOReviewer)
+
+# b) subsample papers to 50%
+set.seed(8) #mamba
+r2_subsample.50pct <- sample(keep$Number, size = round(nrow(keep)*.5,0))
+# what's the breakdown of abstracts by reviewer?
+subset(keep, Number %in% r2_subsample.50pct) %>%
+  group_by(EBIOReviewer) %>%
+  summarise(nobs = length(Number)) %>%
+  arrange(nobs)
+# what's the breakdown by journal?
+subset(keep, Number %in% r2_subsample.50pct) %>%
+  left_join(distinct(assignmentsdf[c("Number", "SourcePublication")])) %>%
+  group_by(SourcePublication) %>%
+  summarise(nobs = length(Number)) %>%
+  arrange(nobs) %>% # it's actually not too bad.. 80 journals of 92 subsampled
+  ggplot() +
+  geom_bar(aes(nobs)) +
+  labs(x = "Number of abstracts selected", y = "Number of distinct journals in bin")
+
+
+# c) define pairs
+r2_pairs <- data.frame(reviewer1 = reviewers, p1 = NA, p2 = NA)
+choices <- reviewers
+for(r in reviewers){
+    # sample pair
+    set.seed(24) #mamba
+    selectp <- sample(choices[choices!= r], 1)
+    r2_pairs$p1[r2_pairs$reviewer1 == r] <- selectp
+    # udpate choices
+    choices <- choices[choices != selectp]
+}
+# infill p2 with reviewer 1 for p1
+for(r in r2_pairs$p1){
+  r2_pairs$p2[r2_pairs$reviewer1 == r] <- r2_pairs$reviewer1[r2_pairs$p1 == r]
+}
+
+assign_round2 <- dplyr::select(keep, Number, EBIOReviewer, final_name, AuthorsFull, FirstAuthor, comments, in_meetscriteria) %>%
+  subset(Number %in% r2_subsample.50pct) %>%
+  rename(actual_reviewer = EBIOReviewer) %>%
+  mutate(EBIOReviewer = ifelse(grepl("Laura|Caitl", actual_reviewer), "Caitlin", actual_reviewer),
+         round2_reviewer = NA) %>%
+  dplyr::select(round2_reviewer, Number, EBIOReviewer, actual_reviewer, comments, final_name:ncol(.))
+
+
+
+
+# 2) OLD WAY -- keeping code to preserve how random assign to single reviewer would work (just in case needed in future)
+## rules:
+## if reviewed paper in round 1, cannot review same paper in round 2
+## add Laura
 ## everyone gets roughly equal amount of papers to review
 ## random number assign
-## add Laura to list of reviewers, Laura should not review Caitlin papers from round 1
+
 
 # order reviewers by who has most number of round 1 reviewed papers
 #reviewers <- c(unique(master2$EBIOReviewer[!is.na(master2$EBIOReviewer)]), "Laura")
@@ -946,16 +1030,5 @@ write.csv(assign_round2, "review_assignments_round2.csv", row.names = F)
 #              name = "ESpapers2review_Round2Jan2020_batch1", overwrite = T)
 
 
-# -- PROGRESS REPORT ----
-# all abstracts done? who still needs to complete if not?
-summary(unique(assignmentsdf$Title) %in% results_clean$final_name)
-sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summary(x %in% results_clean$final_name))
-# 1/24/20: Everyone done! Huzzah!
 
-
-#assignmentsdf$Title[assignmentsdf$EBIOReviewer == "Claire" & !assignmentsdf$Title %in% results_clean$final_name]
-
-
-# write out still needs review if others want to check it
-#needs_review <- subset(assignmentsdf, !assignmentsdf$Title %in% results_clean$final_name)
 
