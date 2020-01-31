@@ -893,14 +893,7 @@ sapply(split(assignmentsdf$Title, assignmentsdf$EBIOReviewer), function(x) summa
 # 1) FINAL WAY (this is what's used and written out to GDrive)
 
 # a) compile reviewers, ordered by number of papers they passed through
-reviewersdf <- keep %>%
-  #mutate(keep, EBIOReviewer = ifelse(EBIOReviewer == "Laura/Caitlin", "Caitlin", EBIOReviewer)) %>%
-  mutate(EBIOReviewer = ifelse(grepl("Laura", EBIOReviewer), "Caitlin", EBIOReviewer)) %>%
-  group_by(EBIOReviewer) %>%
-  summarise(nobs = length(final_name)) %>%
-  ungroup() %>%
-  arrange(desc(nobs))
-reviewers <- c("Laura", reviewersdf$EBIOReviewer)
+
 
 # b) subsample papers to 50%
 set.seed(8) #mamba
@@ -920,8 +913,25 @@ subset(keep, Number %in% r2_subsample.50pct) %>%
   geom_bar(aes(nobs)) +
   labs(x = "Number of abstracts selected", y = "Number of distinct journals in bin")
 
+# subset keep dataframe to subsampled abstracts
+assign_round2 <- dplyr::select(keep, Number, EBIOReviewer, final_name, AuthorsFull, FirstAuthor, comments, in_meetscriteria) %>%
+  subset(Number %in% r2_subsample.50pct) %>%
+  rename(actual_reviewer = EBIOReviewer) %>%
+  mutate(EBIOReviewer = ifelse(grepl("Laura|Caitl", actual_reviewer), "Caitlin", actual_reviewer),
+         round2_reviewer = NA) %>%
+  dplyr::select(round2_reviewer, Number, EBIOReviewer, actual_reviewer, comments, final_name:ncol(.))
+
 
 # c) define pairs
+reviewersdf <- subset(keep, Number %in% r2_subsample.50pct) %>%
+  #mutate(keep, EBIOReviewer = ifelse(EBIOReviewer == "Laura/Caitlin", "Caitlin", EBIOReviewer)) %>%
+  mutate(EBIOReviewer = ifelse(grepl("Laura", EBIOReviewer), "Caitlin", EBIOReviewer)) %>%
+  group_by(EBIOReviewer) %>%
+  summarise(nobs = length(final_name)) %>%
+  ungroup() %>%
+  arrange(desc(nobs))
+reviewers <- c("Laura", reviewersdf$EBIOReviewer)
+
 r2_pairs <- data.frame(reviewer1 = reviewers, p1 = NA, p2 = NA)
 choices <- reviewers
 for(r in reviewers){
@@ -937,15 +947,72 @@ for(r in r2_pairs$p1){
   r2_pairs$p2[r2_pairs$reviewer1 == r] <- r2_pairs$reviewer1[r2_pairs$p1 == r]
 }
 
-assign_round2 <- dplyr::select(keep, Number, EBIOReviewer, final_name, AuthorsFull, FirstAuthor, comments, in_meetscriteria) %>%
-  subset(Number %in% r2_subsample.50pct) %>%
-  rename(actual_reviewer = EBIOReviewer) %>%
-  mutate(EBIOReviewer = ifelse(grepl("Laura|Caitl", actual_reviewer), "Caitlin", actual_reviewer),
-         round2_reviewer = NA) %>%
-  dplyr::select(round2_reviewer, Number, EBIOReviewer, actual_reviewer, comments, final_name:ncol(.))
 
+# c) assign papers
+# try using old code and see if feasible..
+# start with unique numbers subsampled
+numbers <- as.character(r2_subsample.50pct)
+for(r in reviewers){
+  if(r != "Laura"){
+    # random sample papers in keep not previously reviewed by person r
+    set.seed(24)
+    selectp <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == r]], size = 27) #(floor(nrow(assign_round2)/length(reviewers)))) # leave a little bit of grace in floor, otherwise code will bonk
+  }else{
+    # write different line for Laura
+    set.seed(24)
+    selectp <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == "Caitlin"]], size = 27)
+  }
+  # assign person r to selected numbers
+  assign_round2$round2_reviewer[assign_round2$Number %in% selectp] <- r
+  #update numbers before next iteration (remove papers selected)
+  numbers <- numbers[!numbers %in% selectp]
+  
+}
 
+# finish out last 14
+## define who is left among EBIO Reviewers -- assign those first
+remain <- subset(assign_round2, is.na(round2_reviewer)) %>% group_by(EBIOReviewer) %>% summarise(nobs = length(Number)) %>% arrange(desc(nobs))
 
+for(r in c(remain$EBIOReviewer, reviewers[!reviewers %in% remain$EBIOReviewer])){
+  if(r != "Laura"){
+    # random sample papers in keep not previously reviewed by person r
+    set.seed(24)
+    selectp <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == r]], size = 1) #(floor(nrow(assign_round2)/length(reviewers)))) # leave a little bit of grace in floor, otherwise code will bonk
+  }else{
+    # write different line for Laura
+    set.seed(24)
+    selectp <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == "Caitlin"]], size = 1)
+  }
+  # assign person r to selected numbers
+  assign_round2$round2_reviewer[assign_round2$Number == selectp] <- r
+  #update numbers before next iteration (remove papers selected)
+  numbers <- numbers[!numbers %in% selectp]
+}
+
+# double check everyone has equal number
+sapply(split(assign_round2$Number, assign_round2$round2_reviewer), length) #yes (28)
+
+# within groups, assign 2nd paper
+assign_round2 <- cbind(r2r2 = NA, assign_round2)
+reviewers2 <- reviewers
+for(r in reviewers2){
+  pool <- assign_round2$Number[assign_round2$round2_reviewer == r2_pairs$reviewer1[r2_pairs$p1 == r]]
+  if(r != "Laura"){
+    # random sample papers in keep not previously reviewed by person r
+    set.seed(24)
+    choice <- sample(pool[!pool %in% assign_round2$Number[assign_round2$EBIOReviewer == r]], size = 14) #(floor(nrow(assign_round2)/length(reviewers)))) # leave a little bit of grace in floor, otherwise code will bonk
+  }else{
+    # write different line for Laura
+    set.seed(24)
+    choice <- sample(pool[!pool %in% assign_round2$Number[assign_round2$EBIOReviewer == "Caitlin"]], size = 14)
+  }
+  # assign person r to selected numbers
+  assign_round2$r2r2[assign_round2$Number %in% choice] <- r
+  #by default other person will get the rest
+  assign_round2$r2r2[assign_round2$Number %in% pool[!pool %in% choice]] <- r2_pairs$p2[r2_pairs$p1 == r]
+  #update reviewers 2
+  
+}
 
 # 2) OLD WAY -- keeping code to preserve how random assign to single reviewer would work (just in case needed in future)
 ## rules:
