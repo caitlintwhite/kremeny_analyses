@@ -955,12 +955,12 @@ numbers <- as.character(r2_subsample.50pct)
 for(r in reviewers){
   if(r != "Laura"){
     # random sample papers in keep not previously reviewed by person r
-    set.seed(24)
-    selectp <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == r]], size = 27) #(floor(nrow(assign_round2)/length(reviewers)))) # leave a little bit of grace in floor, otherwise code will bonk
+    set.seed(8)
+    selectp <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer %in% r2_pairs[r2_pairs$reviewer1 == r,]]], size = 27) #(floor(nrow(assign_round2)/length(reviewers)))) # leave a little bit of grace in floor, otherwise code will bonk
   }else{
     # write different line for Laura
-    set.seed(24)
-    selectp <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == "Caitlin"]], size = 27)
+    set.seed(8)
+    selectp <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer %in% c("Caitlin", r2_pairs[r2_pairs$reviewer1 == r,])]], size = 27)
   }
   # assign person r to selected numbers
   assign_round2$round2_reviewer[assign_round2$Number %in% selectp] <- r
@@ -977,11 +977,11 @@ for(r in c(remain$EBIOReviewer, reviewers[!reviewers %in% remain$EBIOReviewer]))
   if(r != "Laura"){
     # random sample papers in keep not previously reviewed by person r
     set.seed(24)
-    selectp <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == r]], size = 1) #(floor(nrow(assign_round2)/length(reviewers)))) # leave a little bit of grace in floor, otherwise code will bonk
+    selectp <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer %in% r2_pairs[r2_pairs$reviewer1 == r,]]], size = 1) #(floor(nrow(assign_round2)/length(reviewers)))) # leave a little bit of grace in floor, otherwise code will bonk
   }else{
     # write different line for Laura
     set.seed(24)
-    selectp <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == "Caitlin"]], size = 1)
+    selectp <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer %in% c("Caitlin", r2_pairs[r2_pairs$reviewer1 == r,])]], size = 1)
   }
   # assign person r to selected numbers
   assign_round2$round2_reviewer[assign_round2$Number == selectp] <- r
@@ -996,23 +996,82 @@ sapply(split(assign_round2$Number, assign_round2$round2_reviewer), length) #yes 
 assign_round2 <- cbind(r2r2 = NA, assign_round2)
 reviewers2 <- reviewers
 for(r in reviewers2){
-  pool <- assign_round2$Number[assign_round2$round2_reviewer == r2_pairs$reviewer1[r2_pairs$p1 == r]]
+  # to be sure
+  if(r %in% unique(assign_round2$r2r2[!is.na(assign_round2$r2r2)])){
+    next
+  }
+  pool1 <- assign_round2$Number[assign_round2$round2_reviewer == r2_pairs$reviewer1[r2_pairs$p1 == r]]
+  pool2 <- assign_round2$Number[assign_round2$round2_reviewer == r2_pairs$reviewer1[r2_pairs$p2 == r]]
   if(r != "Laura"){
     # random sample papers in keep not previously reviewed by person r
     set.seed(24)
-    choice <- sample(pool[!pool %in% assign_round2$Number[assign_round2$EBIOReviewer == r]], size = 14) #(floor(nrow(assign_round2)/length(reviewers)))) # leave a little bit of grace in floor, otherwise code will bonk
+    choice1 <- sample(pool1[!pool1 %in% assign_round2$Number[assign_round2$EBIOReviewer == r]], size = 14) #(floor(nrow(assign_round2)/length(reviewers)))) # leave a little bit of grace in floor, otherwise code will bonk
+    choice2 <- sample(pool2[!pool2 %in% assign_round2$Number[assign_round2$EBIOReviewer == r]], size = 14)
+    }else{
+    # write different line for Laura
+    set.seed(24)
+    choice1 <- sample(pool1[!pool1 %in% assign_round2$Number[assign_round2$EBIOReviewer == "Caitlin"]], size = 14)
+    choice2 <- sample(pool2[!pool2 %in% assign_round2$Number[assign_round2$EBIOReviewer == "Caitlin"]], size = 14)
+  }
+  # assign person r to selected numbers
+  assign_round2$r2r2[assign_round2$Number %in% c(choice1, choice2)] <- r
+  #by default other person will get the rest
+  assign_round2$r2r2[assign_round2$Number %in% pool1[!pool1 %in% choice1]] <- r2_pairs$p2[r2_pairs$p1 == r]
+  assign_round2$r2r2[assign_round2$Number %in% pool2[!pool2 %in% choice2]] <- r2_pairs$p1[r2_pairs$p2 == r]
+  #update reviewers 2
+  #reviewers2 <- reviewers2[!reviewers2 %in% c(r2_pairs$reviewer1[r2_pairs$p1 == r], unique(assign_round2$r2r2[!is.na(assign_round2$r2r2)]))]
+  
+}
+
+needsfill <- unique(assign_round2$round2_reviewer[is.na(assign_round2$r2r2)]) #JL and CK still need r2s assigned
+for(r in needsfill){
+  r1 <- r2_pairs$p1[r2_pairs$reviewer1 == r]
+  r2 <- r2_pairs$p2[r2_pairs$reviewer1 == r]
+  pool <- assign_round2$Number[assign_round2$round2_reviewer == r]
+  if(r != "Laura"){
+    # random sample papers in keep not previously reviewed by person r
+    set.seed(24)
+    choice1 <- sample(pool[!pool %in% assign_round2$Number[assign_round2$EBIOReviewer == r1]], size = 14) #(floor(nrow(assign_round2)/length(reviewers)))) # leave a little bit of grace in floor, otherwise code will bonk
   }else{
     # write different line for Laura
     set.seed(24)
-    choice <- sample(pool[!pool %in% assign_round2$Number[assign_round2$EBIOReviewer == "Caitlin"]], size = 14)
+    choice1 <- sample(pool[!pool %in% assign_round2$Number[assign_round2$EBIOReviewer == "Caitlin"]], size = 14)
   }
   # assign person r to selected numbers
-  assign_round2$r2r2[assign_round2$Number %in% choice] <- r
-  #by default other person will get the rest
-  assign_round2$r2r2[assign_round2$Number %in% pool[!pool %in% choice]] <- r2_pairs$p2[r2_pairs$p1 == r]
-  #update reviewers 2
+  assign_round2$r2r2[assign_round2$Number %in% choice1] <- r1
+  assign_round2$r2r2[assign_round2$Number %in% pool[!pool %in% choice1]] <- r2
   
 }
+
+# check that no one got assigned a paper they read
+summary(assign_round2$round2_reviewer == assign_round2$EBIOReviewer)
+summary(assign_round2$r2r2 == assign_round2$EBIOReviewer) #cooooool
+summary(assign_round2$EBIOReviewer[assign_round2$r2r2 == "Laura"] == "Caitlin") # to be sure, check Laura assignments
+summary(assign_round2$EBIOReviewer[assign_round2$round2_reviewer == "Laura"] == "Caitlin") # yay!
+
+
+# clean up before writing out
+assign_round2 <- rename(assign_round2, round1_reviewer = actual_reviewer, Title = final_name, round2_reviewer1 = round2_reviewer, round2_reviewer2 = r2r2) %>%
+  # join full citation info
+  left_join(assignmentsdf, by = c("EBIOReviewer", "Title", "Number", "AuthorsFull")) %>%
+  # clean up
+  dplyr::select(round2_reviewer1, round2_reviewer2, Number, in_meetscriteria, round1_reviewer, comments, FirstAuthor, Title:PublicationYear) %>%
+  # redo in_meets criteria using first author last name and year of publication
+  mutate(searchterm = ifelse(is.na(PublicationYear), FirstAuthor, paste0("^",FirstAuthor,"(?![a-z]).*(", PublicationYear-1, "|", PublicationYear, "|", PublicationYear+1,")"))) %>%
+  group_by(Number) %>%
+  mutate(in_meetscriteria = sum(grepl(searchterm, meetscriteria$name, ignore.case = T, perl = T))) %>%
+  #in_meetscriteria2 = sum(grepl(paste0("^", FirstAuthor, "(?![a-z])"), meetscriteria$name, ignore.case = T, perl = T))) %>%
+  ungroup() %>%
+  rename(MeetsCriteria_matches = in_meetscriteria) %>%
+  dplyr::select(-searchterm) %>%
+  # capitalize first letter in colnames
+  rename_all(function(x) paste0(casefold(substr(x,1,1), upper = T), substr(x, 2, nchar(x)))) %>%
+  # sort by reviewer 2 name, first author, and year since that's how articles are saved in meets criteria folder
+  arrange(Round2_reviewer1, FirstAuthor, PublicationYear)
+
+# write out
+write.csv(assign_round2, "review_assignments_round2_grpdsubset.csv", row.names = F)
+
 
 # 2) OLD WAY -- keeping code to preserve how random assign to single reviewer would work (just in case needed in future)
 ## rules:
@@ -1033,7 +1092,7 @@ reviewersdf <- keep %>%
   arrange(desc(nobs))
 reviewers <- c("Laura", reviewersdf$EBIOReviewer)
 
-assign_round2 <- dplyr::select(keep, Number, EBIOReviewer, final_name, AuthorsFull, FirstAuthor, comments, in_meetscriteria) %>%
+assign_round2_old <- dplyr::select(keep, Number, EBIOReviewer, final_name, AuthorsFull, FirstAuthor, comments, in_meetscriteria) %>%
   rename(actual_reviewer = EBIOReviewer) %>%
   mutate(EBIOReviewer = ifelse(grepl("Laura|Caitl", actual_reviewer), "Caitlin", actual_reviewer),
          round2_reviewer = NA) %>%
@@ -1044,13 +1103,13 @@ numbers <- unique(keep$Number)
 for(r in reviewers){
   if(r != "Laura"){
     # random sample papers in keep not previously reviewed by person r
-    select <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == r]], size = (floor(nrow(keep)/length(reviewers)))) # leave a little bit of grace in floor, otherwise code will bonk
+    select <- sample(numbers[!numbers %in% assign_round2_old$Number[assign_round2_old$EBIOReviewer == r]], size = (floor(nrow(keep)/length(reviewers)))) # leave a little bit of grace in floor, otherwise code will bonk
   }else{
     # write different line for Laura
-    select <- sample(numbers[!numbers %in% assign_round2$Number[assign_round2$EBIOReviewer == "Caitlin"]], size = (floor(nrow(keep)/length(reviewers))))
+    select <- sample(numbers[!numbers %in% assign_round2_old$Number[assign_round2_old$EBIOReviewer == "Caitlin"]], size = (floor(nrow(keep)/length(reviewers))))
   }
   # assign person r to selected numbers
-  assign_round2$round2_reviewer[assign_round2$Number %in% select] <- r
+  assign_round2_old$round2_reviewer[assign_round2_old$Number %in% select] <- r
   #update numbers before next iteration (remove papers selected)
   numbers <- numbers[!numbers %in% select]
 }
@@ -1058,20 +1117,20 @@ for(r in reviewers){
 # for remaining unassigned papers (if not equal amount), random draw who will review
 for(n in numbers){
   # random sample papers in keep not previously reviewed by person r
-  select <- sample(reviewers[!reviewers == assign_round2$EBIOReviewer[assign_round2$Number == n]], size = 1)
+  select <- sample(reviewers[!reviewers == assign_round2_old$EBIOReviewer[assign_round2_old$Number == n]], size = 1)
   # assign person r to selected numbers
-  assign_round2$round2_reviewer[assign_round2$Number == n] <- select
+  assign_round2_old$round2_reviewer[assign_round2_old$Number == n] <- select
   #update reviewers before next iteration (remove person selected)
   reviewers <- reviewers[!reviewers == select]
 }
 
 # check all assigned
-summary(is.na(assign_round2$round2_reviewer)) # looks good
+summary(is.na(assign_round2_old$round2_reviewer)) # looks good
 # check no one reviewing something they already have
-summary(assign_round2$round2_reviewer == assign_round2$EBIOReviewer) # looks good
+summary(assign_round2_old$round2_reviewer == assign_round2_old$EBIOReviewer) # looks good
 
 # clean up before writing out
-assign_round2 <- rename(assign_round2, round1_reviewer = actual_reviewer, Title = final_name) %>%
+assign_round2_old <- rename(assign_round2_old, round1_reviewer = actual_reviewer, Title = final_name) %>%
   # join full citation info
   left_join(assignmentsdf, by = c("EBIOReviewer", "Title", "Number", "AuthorsFull")) %>%
   # clean up
@@ -1090,7 +1149,7 @@ assign_round2 <- rename(assign_round2, round1_reviewer = actual_reviewer, Title 
   arrange(Round2_reviewer, FirstAuthor, PublicationYear)
 
 # write out
-write.csv(assign_round2, "review_assignments_round2.csv", row.names = F)
+write.csv(assign_round2_old, "review_assignments_round2.csv", row.names = F)
 
 # write out to google drive for class (whenever we decide the folder where it lives)
 #drive_upload("review_assignments_round2.csv", path = as_id(abstracts_folder$id[grep("^Round1_NA", abstracts_folder$name)]), type = "spreadsheet", 
