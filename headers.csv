@@ -1,0 +1,213 @@
+id,fullquestion
+StartDate,Start Date
+EndDate,End Date
+Status,Response Type
+IPAddress,IP Address
+Progress,Progress
+Duration..in.seconds.,Duration (in seconds)
+Finished,Finished
+RecordedDate,Recorded Date
+ResponseId,Response ID
+RecipientLastName,Recipient Last Name
+RecipientFirstName,Recipient First Name
+RecipientEmail,Recipient Email
+ExternalReference,External Data Reference
+LocationLatitude,Location Latitude
+LocationLongitude,Location Longitude
+DistributionChannel,Distribution Channel
+UserLanguage,User Language
+Q27,Q1: Enter Initials (Uppercase)
+Q1,Q2: Title of the paper
+Q2,Q3: This paper only measures biodiversity/abundance but NOT as an explicit proxy for EF/ES
+Q29,Q3b: This paper ONLY focuses on social dimensions of services (no measurement of services or processes)
+Q30,"This paper is a Review, Synthesis, Meta-analysis or a Methods only paper."
+Q4,Q4: Type of Ecosystem - Selected Choice
+Q4_7_TEXT,Q4: Type of Ecosystem - Other - Text
+Q5,Q5: What continent/ocean is the study in?
+Q6,Q6: What methods were used? - Selected Choice
+Q6_5_TEXT,Q6: What methods were used? - Other - Text
+Q3,General Information about the study and its methods (Optional)
+Q7,Q7: Does the study quantify trends over time?
+Q8,Q7b: How many years of data were used for the study?
+Q11,Q8: Does the paper consider or compare multiple spatial scales?
+Q9.1_1,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # plots in whole study - 1m² - 25m²
+Q9.1_2,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # plots in whole study - 26m² - 50m²
+Q9.1_3,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # plots in whole study - 51m² - 100m²
+Q9.1_4,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # plots in whole study - 101m² - 500m²
+Q9.1_5,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # plots in whole study - 501m² - 1km²
+Q9.1_6,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # plots in whole study - 1-10 km²
+Q9.1_7,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # plots in whole study - 10-100 km²
+Q9.1_8,"Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # plots in whole study - 101-1,000 km²"
+Q9.1_9,"Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # plots in whole study - 1,001-100,000 km²"
+Q9.1_10,"Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # plots in whole study - 100,001-1,000,000 km²"
+Q9.1_11,"Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # plots in whole study - >1,000,000 km²"
+Q9.1_12,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # plots in whole study - Unclear or not specified
+Q9.2_1,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # sites in whole study - 1m² - 25m²
+Q9.2_2,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # sites in whole study - 26m² - 50m²
+Q9.2_3,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # sites in whole study - 51m² - 100m²
+Q9.2_4,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # sites in whole study - 101m² - 500m²
+Q9.2_5,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # sites in whole study - 501m² - 1km²
+Q9.2_6,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # sites in whole study - 1-10 km²
+Q9.2_7,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # sites in whole study - 10-100 km²
+Q9.2_8,"Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # sites in whole study - 101-1,000 km²"
+Q9.2_9,"Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # sites in whole study - 1,001-100,000 km²"
+Q9.2_10,"Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # sites in whole study - 100,001-1,000,000 km²"
+Q9.2_11,"Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # sites in whole study - >1,000,000 km²"
+Q9.2_12,Q9: What is the size of the unit of replication? Select multiple if inferences are made at multip... - Total # sites in whole study - Unclear or not specified
+Q28,Notes for Q9
+Q14,"Q10: Does the paper consider connectivity between spatial replicates (sites, plots)?"
+Q13,Q11: What is the distance between replicates?
+Q25.1_1_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Habitat creation and maintenance - Response 1: Separate by commas"
+Q25.1_1_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Habitat creation and maintenance - DO NOT USE Response 2"
+Q25.1_2_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Pollination and dispersal of seeds or other propagules - Response 1: Separate by commas"
+Q25.1_2_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Pollination and dispersal of seeds or other propagules - DO NOT USE Response 2"
+Q25.1_3_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of air quality [e.g. levels of sulphur oxide, nitrogen oxides (N... - Regulation of air quality [e.g. levels of sulphur oxide, nitrogen oxides (NOx), filtration of pollutants] - Response 1: Separate by commas"
+Q25.1_3_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of air quality [e.g. levels of sulphur oxide, nitrogen oxides (N... - Regulation of air quality [e.g. levels of sulphur oxide, nitrogen oxides (NOx), filtration of pollutants] - DO NOT USE Response 2"
+Q25.1_4_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of climate [e.g. biological carbon storage and sequestration; me... - Regulation of climate [e.g. biological carbon storage and sequestration; methane emissions from wetlands] - Response 1: Separate by commas"
+Q25.1_4_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of climate [e.g. biological carbon storage and sequestration; me... - Regulation of climate [e.g. biological carbon storage and sequestration; methane emissions from wetlands] - DO NOT USE Response 2"
+Q25.1_5_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of ocean acidification [e.g. Regulation, by photosynthetic organ... - Regulation of ocean acidification [e.g. Regulation, by photosynthetic organisms (on land or in water), of atmospheric CO2 concentrations and seawater pH] - Response 1: Separate by commas"
+Q25.1_5_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of ocean acidification [e.g. Regulation, by photosynthetic organ... - Regulation of ocean acidification [e.g. Regulation, by photosynthetic organisms (on land or in water), of atmospheric CO2 concentrations and seawater pH] - DO NOT USE Response 2"
+Q25.1_6_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of freshwater quantity, location and timing [e.g. flow of surfac... - Regulation of freshwater quantity, location and timing [e.g. flow of surface and groundwater used for drinking, irrigation] - Response 1: Separate by commas"
+Q25.1_6_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of freshwater quantity, location and timing [e.g. flow of surfac... - Regulation of freshwater quantity, location and timing [e.g. flow of surface and groundwater used for drinking, irrigation] - DO NOT USE Response 2"
+Q25.1_7_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of freshwater and coastal water quality [e.g. filtration of part... - Regulation of freshwater and coastal water quality [e.g. filtration of particles, pathogens, excess nutrients, and other chemicals] - Response 1: Separate by commas"
+Q25.1_7_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of freshwater and coastal water quality [e.g. filtration of part... - Regulation of freshwater and coastal water quality [e.g. filtration of particles, pathogens, excess nutrients, and other chemicals] - DO NOT USE Response 2"
+Q25.1_8_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Formation, protection, and decontamination of soils and sediments [e.g deco... - Formation, protection, and decontamination of soils and sediments [e.g decomposition, erosion control] - Response 1: Separate by commas"
+Q25.1_8_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Formation, protection, and decontamination of soils and sediments [e.g deco... - Formation, protection, and decontamination of soils and sediments [e.g decomposition, erosion control] - DO NOT USE Response 2"
+Q25.1_9_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of hazards and extreme events [e.g. amelioration of floods, wind... - Regulation of hazards and extreme events [e.g. amelioration of floods, wind, storms, hurricanes, seawater intrusion] - Response 1: Separate by commas"
+Q25.1_9_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of hazards and extreme events [e.g. amelioration of floods, wind... - Regulation of hazards and extreme events [e.g. amelioration of floods, wind, storms, hurricanes, seawater intrusion] - DO NOT USE Response 2"
+Q25.1_10_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of detrimental organisms and biological processes [e.g. pests, p... - Regulation of detrimental organisms and biological processes [e.g. pests, pathogens, predators, competitors, etc. that affect humans, plants and animals] - Response 1: Separate by commas"
+Q25.1_10_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Regulation of detrimental organisms and biological processes [e.g. pests, p... - Regulation of detrimental organisms and biological processes [e.g. pests, pathogens, predators, competitors, etc. that affect humans, plants and animals] - DO NOT USE Response 2"
+Q25.1_11_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Energy [e.g.  biomass-based fuels, such as biofuel crops, animal waste, fue... - Energy [e.g.  biomass-based fuels, such as biofuel crops, animal waste, fuelwood] - Response 1: Separate by commas"
+Q25.1_11_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Energy [e.g.  biomass-based fuels, such as biofuel crops, animal waste, fue... - Energy [e.g.  biomass-based fuels, such as biofuel crops, animal waste, fuelwood] - DO NOT USE Response 2"
+Q25.1_12_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Food and feed - Response 1: Separate by commas"
+Q25.1_12_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Food and feed - DO NOT USE Response 2"
+Q25.1_13_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Materials and assistance [e.g. wood, fibers, waxes, paper, resins, dyes, pe... - Materials and assistance [e.g. wood, fibers, waxes, paper, resins, dyes, pearls, shells, ornamental plants, pets, herders] - Response 1: Separate by commas"
+Q25.1_13_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Materials and assistance [e.g. wood, fibers, waxes, paper, resins, dyes, pe... - Materials and assistance [e.g. wood, fibers, waxes, paper, resins, dyes, pearls, shells, ornamental plants, pets, herders] - DO NOT USE Response 2"
+Q25.1_14_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Medicinal, biochemical, and genetic resources [e.g. plant and animal breedi... - Medicinal, biochemical, and genetic resources [e.g. plant and animal breeding, materials derived from plants, animals, microbes] - Response 1: Separate by commas"
+Q25.1_14_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Medicinal, biochemical, and genetic resources [e.g. plant and animal breedi... - Medicinal, biochemical, and genetic resources [e.g. plant and animal breeding, materials derived from plants, animals, microbes] - DO NOT USE Response 2"
+Q25.1_15_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Maintenance of options [e.g. benefits (including those of future generation... - Maintenance of options [e.g. benefits (including those of future generations) associated with the continued existence of a wide variety of species, populations and genotypes] - Response 1: Separate by commas"
+Q25.1_15_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Maintenance of options [e.g. benefits (including those of future generation... - Maintenance of options [e.g. benefits (including those of future generations) associated with the continued existence of a wide variety of species, populations and genotypes] - DO NOT USE Response 2"
+Q25.1_16_1,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Cultural Services, including Physical and psychological experiences ##do we... - Cultural Services, including Physical and psychological experiences ##do we include this?? [e.g. hunting, fishing, hiking] - Response 1: Separate by commas"
+Q25.1_16_2,"Q12: Which Ecosystem Services were considered?  - Write in the response variable used to approx. ES, or EF proxy - Cultural Services, including Physical and psychological experiences ##do we... - Cultural Services, including Physical and psychological experiences ##do we include this?? [e.g. hunting, fishing, hiking] - DO NOT USE Response 2"
+Q25.2_1,Q12: Which Ecosystem Services were considered?  - Environmental Driver - Habitat creation and maintenance
+Q25.2_2,Q12: Which Ecosystem Services were considered?  - Environmental Driver - Pollination and dispersal of seeds or other propagules
+Q25.2_3,"Q12: Which Ecosystem Services were considered?  - Environmental Driver - Regulation of air quality [e.g. levels of sulphur oxide, nitrogen oxides (NOx), filtration of pollutants]"
+Q25.2_4,Q12: Which Ecosystem Services were considered?  - Environmental Driver - Regulation of climate [e.g. biological carbon storage and sequestration; methane emissions from wetlands]
+Q25.2_5,"Q12: Which Ecosystem Services were considered?  - Environmental Driver - Regulation of ocean acidification [e.g. Regulation, by photosynthetic organisms (on land or in water), of atmospheric CO2 concentrations and seawater pH]"
+Q25.2_6,"Q12: Which Ecosystem Services were considered?  - Environmental Driver - Regulation of freshwater quantity, location and timing [e.g. flow of surface and groundwater used for drinking, irrigation]"
+Q25.2_7,"Q12: Which Ecosystem Services were considered?  - Environmental Driver - Regulation of freshwater and coastal water quality [e.g. filtration of particles, pathogens, excess nutrients, and other chemicals]"
+Q25.2_8,"Q12: Which Ecosystem Services were considered?  - Environmental Driver - Formation, protection, and decontamination of soils and sediments [e.g decomposition, erosion control]"
+Q25.2_9,"Q12: Which Ecosystem Services were considered?  - Environmental Driver - Regulation of hazards and extreme events [e.g. amelioration of floods, wind, storms, hurricanes, seawater intrusion]"
+Q25.2_10,"Q12: Which Ecosystem Services were considered?  - Environmental Driver - Regulation of detrimental organisms and biological processes [e.g. pests, pathogens, predators, competitors, etc. that affect humans, plants and animals]"
+Q25.2_11,"Q12: Which Ecosystem Services were considered?  - Environmental Driver - Energy [e.g.  biomass-based fuels, such as biofuel crops, animal waste, fuelwood]"
+Q25.2_12,Q12: Which Ecosystem Services were considered?  - Environmental Driver - Food and feed
+Q25.2_13,"Q12: Which Ecosystem Services were considered?  - Environmental Driver - Materials and assistance [e.g. wood, fibers, waxes, paper, resins, dyes, pearls, shells, ornamental plants, pets, herders]"
+Q25.2_14,"Q12: Which Ecosystem Services were considered?  - Environmental Driver - Medicinal, biochemical, and genetic resources [e.g. plant and animal breeding, materials derived from plants, animals, microbes]"
+Q25.2_15,"Q12: Which Ecosystem Services were considered?  - Environmental Driver - Maintenance of options [e.g. benefits (including those of future generations) associated with the continued existence of a wide variety of species, populations and genotypes]"
+Q25.2_16,"Q12: Which Ecosystem Services were considered?  - Environmental Driver - Cultural Services, including Physical and psychological experiences ##do we include this?? [e.g. hunting, fishing, hiking]"
+Q25.3_1,Q12: Which Ecosystem Services were considered?  - Human Driver - Habitat creation and maintenance
+Q25.3_2,Q12: Which Ecosystem Services were considered?  - Human Driver - Pollination and dispersal of seeds or other propagules
+Q25.3_3,"Q12: Which Ecosystem Services were considered?  - Human Driver - Regulation of air quality [e.g. levels of sulphur oxide, nitrogen oxides (NOx), filtration of pollutants]"
+Q25.3_4,Q12: Which Ecosystem Services were considered?  - Human Driver - Regulation of climate [e.g. biological carbon storage and sequestration; methane emissions from wetlands]
+Q25.3_5,"Q12: Which Ecosystem Services were considered?  - Human Driver - Regulation of ocean acidification [e.g. Regulation, by photosynthetic organisms (on land or in water), of atmospheric CO2 concentrations and seawater pH]"
+Q25.3_6,"Q12: Which Ecosystem Services were considered?  - Human Driver - Regulation of freshwater quantity, location and timing [e.g. flow of surface and groundwater used for drinking, irrigation]"
+Q25.3_7,"Q12: Which Ecosystem Services were considered?  - Human Driver - Regulation of freshwater and coastal water quality [e.g. filtration of particles, pathogens, excess nutrients, and other chemicals]"
+Q25.3_8,"Q12: Which Ecosystem Services were considered?  - Human Driver - Formation, protection, and decontamination of soils and sediments [e.g decomposition, erosion control]"
+Q25.3_9,"Q12: Which Ecosystem Services were considered?  - Human Driver - Regulation of hazards and extreme events [e.g. amelioration of floods, wind, storms, hurricanes, seawater intrusion]"
+Q25.3_10,"Q12: Which Ecosystem Services were considered?  - Human Driver - Regulation of detrimental organisms and biological processes [e.g. pests, pathogens, predators, competitors, etc. that affect humans, plants and animals]"
+Q25.3_11,"Q12: Which Ecosystem Services were considered?  - Human Driver - Energy [e.g.  biomass-based fuels, such as biofuel crops, animal waste, fuelwood]"
+Q25.3_12,Q12: Which Ecosystem Services were considered?  - Human Driver - Food and feed
+Q25.3_13,"Q12: Which Ecosystem Services were considered?  - Human Driver - Materials and assistance [e.g. wood, fibers, waxes, paper, resins, dyes, pearls, shells, ornamental plants, pets, herders]"
+Q25.3_14,"Q12: Which Ecosystem Services were considered?  - Human Driver - Medicinal, biochemical, and genetic resources [e.g. plant and animal breeding, materials derived from plants, animals, microbes]"
+Q25.3_15,"Q12: Which Ecosystem Services were considered?  - Human Driver - Maintenance of options [e.g. benefits (including those of future generations) associated with the continued existence of a wide variety of species, populations and genotypes]"
+Q25.3_16,"Q12: Which Ecosystem Services were considered?  - Human Driver - Cultural Services, including Physical and psychological experiences ##do we include this?? [e.g. hunting, fishing, hiking]"
+Q25.4_1,Q12: Which Ecosystem Services were considered?  - Biotic Driver - Habitat creation and maintenance
+Q25.4_2,Q12: Which Ecosystem Services were considered?  - Biotic Driver - Pollination and dispersal of seeds or other propagules
+Q25.4_3,"Q12: Which Ecosystem Services were considered?  - Biotic Driver - Regulation of air quality [e.g. levels of sulphur oxide, nitrogen oxides (NOx), filtration of pollutants]"
+Q25.4_4,Q12: Which Ecosystem Services were considered?  - Biotic Driver - Regulation of climate [e.g. biological carbon storage and sequestration; methane emissions from wetlands]
+Q25.4_5,"Q12: Which Ecosystem Services were considered?  - Biotic Driver - Regulation of ocean acidification [e.g. Regulation, by photosynthetic organisms (on land or in water), of atmospheric CO2 concentrations and seawater pH]"
+Q25.4_6,"Q12: Which Ecosystem Services were considered?  - Biotic Driver - Regulation of freshwater quantity, location and timing [e.g. flow of surface and groundwater used for drinking, irrigation]"
+Q25.4_7,"Q12: Which Ecosystem Services were considered?  - Biotic Driver - Regulation of freshwater and coastal water quality [e.g. filtration of particles, pathogens, excess nutrients, and other chemicals]"
+Q25.4_8,"Q12: Which Ecosystem Services were considered?  - Biotic Driver - Formation, protection, and decontamination of soils and sediments [e.g decomposition, erosion control]"
+Q25.4_9,"Q12: Which Ecosystem Services were considered?  - Biotic Driver - Regulation of hazards and extreme events [e.g. amelioration of floods, wind, storms, hurricanes, seawater intrusion]"
+Q25.4_10,"Q12: Which Ecosystem Services were considered?  - Biotic Driver - Regulation of detrimental organisms and biological processes [e.g. pests, pathogens, predators, competitors, etc. that affect humans, plants and animals]"
+Q25.4_11,"Q12: Which Ecosystem Services were considered?  - Biotic Driver - Energy [e.g.  biomass-based fuels, such as biofuel crops, animal waste, fuelwood]"
+Q25.4_12,Q12: Which Ecosystem Services were considered?  - Biotic Driver - Food and feed
+Q25.4_13,"Q12: Which Ecosystem Services were considered?  - Biotic Driver - Materials and assistance [e.g. wood, fibers, waxes, paper, resins, dyes, pearls, shells, ornamental plants, pets, herders]"
+Q25.4_14,"Q12: Which Ecosystem Services were considered?  - Biotic Driver - Medicinal, biochemical, and genetic resources [e.g. plant and animal breeding, materials derived from plants, animals, microbes]"
+Q25.4_15,"Q12: Which Ecosystem Services were considered?  - Biotic Driver - Maintenance of options [e.g. benefits (including those of future generations) associated with the continued existence of a wide variety of species, populations and genotypes]"
+Q25.4_16,"Q12: Which Ecosystem Services were considered?  - Biotic Driver - Cultural Services, including Physical and psychological experiences ##do we include this?? [e.g. hunting, fishing, hiking]"
+Q25.5_1,Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Habitat creation and maintenance
+Q25.5_2,Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Pollination and dispersal of seeds or other propagules
+Q25.5_3,"Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Regulation of air quality [e.g. levels of sulphur oxide, nitrogen oxides (NOx), filtration of pollutants]"
+Q25.5_4,Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Regulation of climate [e.g. biological carbon storage and sequestration; methane emissions from wetlands]
+Q25.5_5,"Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Regulation of ocean acidification [e.g. Regulation, by photosynthetic organisms (on land or in water), of atmospheric CO2 concentrations and seawater pH]"
+Q25.5_6,"Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Regulation of freshwater quantity, location and timing [e.g. flow of surface and groundwater used for drinking, irrigation]"
+Q25.5_7,"Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Regulation of freshwater and coastal water quality [e.g. filtration of particles, pathogens, excess nutrients, and other chemicals]"
+Q25.5_8,"Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Formation, protection, and decontamination of soils and sediments [e.g decomposition, erosion control]"
+Q25.5_9,"Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Regulation of hazards and extreme events [e.g. amelioration of floods, wind, storms, hurricanes, seawater intrusion]"
+Q25.5_10,"Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Regulation of detrimental organisms and biological processes [e.g. pests, pathogens, predators, competitors, etc. that affect humans, plants and animals]"
+Q25.5_11,"Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Energy [e.g.  biomass-based fuels, such as biofuel crops, animal waste, fuelwood]"
+Q25.5_12,Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Food and feed
+Q25.5_13,"Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Materials and assistance [e.g. wood, fibers, waxes, paper, resins, dyes, pearls, shells, ornamental plants, pets, herders]"
+Q25.5_14,"Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Medicinal, biochemical, and genetic resources [e.g. plant and animal breeding, materials derived from plants, animals, microbes]"
+Q25.5_15,"Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Maintenance of options [e.g. benefits (including those of future generations) associated with the continued existence of a wide variety of species, populations and genotypes]"
+Q25.5_16,"Q12: Which Ecosystem Services were considered?  - Paper reported Response 1 as: - Cultural Services, including Physical and psychological experiences ##do we include this?? [e.g. hunting, fishing, hiking]"
+Q25.6_1,Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Habitat creation and maintenance
+Q25.6_2,Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Pollination and dispersal of seeds or other propagules
+Q25.6_3,"Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Regulation of air quality [e.g. levels of sulphur oxide, nitrogen oxides (NOx), filtration of pollutants]"
+Q25.6_4,Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Regulation of climate [e.g. biological carbon storage and sequestration; methane emissions from wetlands]
+Q25.6_5,"Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Regulation of ocean acidification [e.g. Regulation, by photosynthetic organisms (on land or in water), of atmospheric CO2 concentrations and seawater pH]"
+Q25.6_6,"Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Regulation of freshwater quantity, location and timing [e.g. flow of surface and groundwater used for drinking, irrigation]"
+Q25.6_7,"Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Regulation of freshwater and coastal water quality [e.g. filtration of particles, pathogens, excess nutrients, and other chemicals]"
+Q25.6_8,"Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Formation, protection, and decontamination of soils and sediments [e.g decomposition, erosion control]"
+Q25.6_9,"Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Regulation of hazards and extreme events [e.g. amelioration of floods, wind, storms, hurricanes, seawater intrusion]"
+Q25.6_10,"Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Regulation of detrimental organisms and biological processes [e.g. pests, pathogens, predators, competitors, etc. that affect humans, plants and animals]"
+Q25.6_11,"Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Energy [e.g.  biomass-based fuels, such as biofuel crops, animal waste, fuelwood]"
+Q25.6_12,Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Food and feed
+Q25.6_13,"Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Materials and assistance [e.g. wood, fibers, waxes, paper, resins, dyes, pearls, shells, ornamental plants, pets, herders]"
+Q25.6_14,"Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Medicinal, biochemical, and genetic resources [e.g. plant and animal breeding, materials derived from plants, animals, microbes]"
+Q25.6_15,"Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Maintenance of options [e.g. benefits (including those of future generations) associated with the continued existence of a wide variety of species, populations and genotypes]"
+Q25.6_16,"Q12: Which Ecosystem Services were considered?  - Direction of Environmental Driver Relationship - Cultural Services, including Physical and psychological experiences ##do we include this?? [e.g. hunting, fishing, hiking]"
+Q25.7_1,Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Habitat creation and maintenance
+Q25.7_2,Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Pollination and dispersal of seeds or other propagules
+Q25.7_3,"Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Regulation of air quality [e.g. levels of sulphur oxide, nitrogen oxides (NOx), filtration of pollutants]"
+Q25.7_4,Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Regulation of climate [e.g. biological carbon storage and sequestration; methane emissions from wetlands]
+Q25.7_5,"Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Regulation of ocean acidification [e.g. Regulation, by photosynthetic organisms (on land or in water), of atmospheric CO2 concentrations and seawater pH]"
+Q25.7_6,"Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Regulation of freshwater quantity, location and timing [e.g. flow of surface and groundwater used for drinking, irrigation]"
+Q25.7_7,"Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Regulation of freshwater and coastal water quality [e.g. filtration of particles, pathogens, excess nutrients, and other chemicals]"
+Q25.7_8,"Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Formation, protection, and decontamination of soils and sediments [e.g decomposition, erosion control]"
+Q25.7_9,"Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Regulation of hazards and extreme events [e.g. amelioration of floods, wind, storms, hurricanes, seawater intrusion]"
+Q25.7_10,"Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Regulation of detrimental organisms and biological processes [e.g. pests, pathogens, predators, competitors, etc. that affect humans, plants and animals]"
+Q25.7_11,"Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Energy [e.g.  biomass-based fuels, such as biofuel crops, animal waste, fuelwood]"
+Q25.7_12,Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Food and feed
+Q25.7_13,"Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Materials and assistance [e.g. wood, fibers, waxes, paper, resins, dyes, pearls, shells, ornamental plants, pets, herders]"
+Q25.7_14,"Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Medicinal, biochemical, and genetic resources [e.g. plant and animal breeding, materials derived from plants, animals, microbes]"
+Q25.7_15,"Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Maintenance of options [e.g. benefits (including those of future generations) associated with the continued existence of a wide variety of species, populations and genotypes]"
+Q25.7_16,"Q12: Which Ecosystem Services were considered?  - Direction of Human Driver Relationship - Cultural Services, including Physical and psychological experiences ##do we include this?? [e.g. hunting, fishing, hiking]"
+Q25.8_1,Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Habitat creation and maintenance
+Q25.8_2,Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Pollination and dispersal of seeds or other propagules
+Q25.8_3,"Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Regulation of air quality [e.g. levels of sulphur oxide, nitrogen oxides (NOx), filtration of pollutants]"
+Q25.8_4,Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Regulation of climate [e.g. biological carbon storage and sequestration; methane emissions from wetlands]
+Q25.8_5,"Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Regulation of ocean acidification [e.g. Regulation, by photosynthetic organisms (on land or in water), of atmospheric CO2 concentrations and seawater pH]"
+Q25.8_6,"Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Regulation of freshwater quantity, location and timing [e.g. flow of surface and groundwater used for drinking, irrigation]"
+Q25.8_7,"Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Regulation of freshwater and coastal water quality [e.g. filtration of particles, pathogens, excess nutrients, and other chemicals]"
+Q25.8_8,"Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Formation, protection, and decontamination of soils and sediments [e.g decomposition, erosion control]"
+Q25.8_9,"Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Regulation of hazards and extreme events [e.g. amelioration of floods, wind, storms, hurricanes, seawater intrusion]"
+Q25.8_10,"Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Regulation of detrimental organisms and biological processes [e.g. pests, pathogens, predators, competitors, etc. that affect humans, plants and animals]"
+Q25.8_11,"Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Energy [e.g.  biomass-based fuels, such as biofuel crops, animal waste, fuelwood]"
+Q25.8_12,Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Food and feed
+Q25.8_13,"Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Materials and assistance [e.g. wood, fibers, waxes, paper, resins, dyes, pearls, shells, ornamental plants, pets, herders]"
+Q25.8_14,"Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Medicinal, biochemical, and genetic resources [e.g. plant and animal breeding, materials derived from plants, animals, microbes]"
+Q25.8_15,"Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Maintenance of options [e.g. benefits (including those of future generations) associated with the continued existence of a wide variety of species, populations and genotypes]"
+Q25.8_16,"Q12: Which Ecosystem Services were considered?  - Direction of Biotic Driver Relationship - Cultural Services, including Physical and psychological experiences ##do we include this?? [e.g. hunting, fishing, hiking]"
+Q17,List Other Environmental Driver from Q12 (sep. with commas)
+Q25,List Other Human Driver from Q12 (sep. with commas)
+Q26,List Other Biotic Driver from Q12 (sep. with commas)
+Q18,Q13: Which of Kremen's Topics does this paper address?
+Q19,"Q14: If the study incorporates a 'Service Provider', which service provider(s) does it utilize?"
+Q20,Notes on Q14
+Q21,Q15: Does the paper measure feedbacks between levels?
+Q22,Q16: Are there explicit discussions of thresholds required for the provisioning of the ES discussed?
+Q23,Note if there is anything interesting this paper does to assess uncertainty:
+Q24,"Notes, Questions, Comments"
