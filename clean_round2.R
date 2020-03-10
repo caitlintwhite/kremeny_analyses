@@ -157,7 +157,7 @@ ytypefig <- select(q25df, Init, Title, ES, abbr, answer) %>%
         strip.text = element_text(face = "bold"),
         legend.position = "bottom",
         legend.justification = c(-1,-1),
-        legend.title = element_text(size = 10),
+        legend.title = element_text(size = 10, face = "bold"),
         axis.title = element_text(face = "bold")) +
   guides(fill = guide_legend(nrow = 2)) +
   coord_flip()
@@ -202,12 +202,15 @@ driversfig <- test %>%
         axis.text.y = element_blank(),
         axis.title.y = element_blank(),
         axis.title.x = element_text(face = "bold"),
-        legend.title = element_text(size = 10)) +
+        legend.title = element_text(size = 10, face = "bold")) +
   guides(guide_legend(byrow = T)) +
   coord_flip()
 
-prelimfig <- plot_grid(ytypefig, driversfig, nrow = 1, labels = "AUTO")
+prelimfig <- plot_grid(ytypefig, driversfig, nrow = 1, labels = "AUTO") #, 
 ggsave("figs/round2_prelimfig.pdf", prelimfig, 
+       width = 8, height = 5, units = "in", scale = 1.1)  
+# google slides doesn't like pdfs
+ggsave("figs/round2_prelimfig.png", prelimfig, 
        width = 8, height = 5, units = "in", scale = 1.1)  
 
 
