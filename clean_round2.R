@@ -80,6 +80,14 @@ headerLUT <- headerLUT %>%
   mutate(abbr = gsub("_[1-9].*|_unk", "", abbr),
          survey_order = parse_number(row.names(.)))
 
+# specify ES type for all ES's considered
+provisioning <- c("Energy", "Food", "Materials")
+regulating <- c("AQReg","ClimReg", "Hazards", "PestPath","SoilProtect", "freshWQReg", "coastWQReg", "OceanReg")
+supporting <- c("HabCreate", "MaintainOpts", "MedGen", "Pollination")
+cultural <- c("CulturePsych")
+# specify ES field as factor for plotting
+ESlevels <- c(provisioning, regulating, supporting, cultural)
+headerLUT$ES <- factor(headerLUT$ES, levels = rev(ESlevels))
 
 
 # -- DIVIDE RESULTS BY QUESTION ---
@@ -141,6 +149,7 @@ ytypefig <- select(q25df, Init, Title, ES, abbr, answer) %>%
          answer = factor(answer, levels = c("EF", "ES,EF", "ES", "ES,ES proxy", "ES proxy"))) %>%
   ggplot(aes(ES, fill = answer)) +
   geom_bar(color = "grey30") +
+  labs(x = "Ecosystem service", y = "# of papers") +
   scale_y_continuous(expand = c(0,0)) +
   scale_fill_viridis_d(name = "Response\ntype") +
   facet_wrap(~"") +
@@ -148,7 +157,8 @@ ytypefig <- select(q25df, Init, Title, ES, abbr, answer) %>%
         strip.text = element_text(face = "bold"),
         legend.position = "bottom",
         legend.justification = c(-1,-1),
-        legend.title = element_text(size = 10)) +
+        legend.title = element_text(size = 10),
+        axis.title = element_text(face = "bold")) +
   guides(fill = guide_legend(nrow = 2)) +
   coord_flip()
 ytypefig
@@ -182,20 +192,22 @@ driversfig <- test %>%
   ungroup()  %>%
   ggplot(aes(ES, fill = as.factor(numberDrivers))) +
   geom_bar(color = "grey30") +
+  labs(y = "# of papers") +
   scale_y_continuous(expand = c(0,0)) +
   scale_fill_brewer(name = "Number of\ndrivers", palette = "Blues") +
-  facet_wrap(~Group) +
+  facet_wrap(~Group, labeller = as_labeller(c("Anthro" = "Human", "Bio" = "Biotic", "Env"="Environmental"))) +
   theme(strip.background = element_blank(),
         strip.text = element_text(face = "bold"),
         legend.position = "bottom",
         axis.text.y = element_blank(),
         axis.title.y = element_blank(),
+        axis.title.x = element_text(face = "bold"),
         legend.title = element_text(size = 10)) +
   guides(guide_legend(byrow = T)) +
   coord_flip()
 
 prelimfig <- plot_grid(ytypefig, driversfig, nrow = 1, labels = "AUTO")
-ggsave("round2_prelimfig.pdf", prelimfig, 
+ggsave("figs/round2_prelimfig.pdf", prelimfig, 
        width = 8, height = 5, units = "in", scale = 1.1)  
 
 
