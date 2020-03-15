@@ -114,6 +114,8 @@ q9df <- dplyr::select(prelim, c(names(keydf), names(prelim)[grep("Q9", names(pre
 
 # make tidy dataset
 prelimlong <- prelim %>%
+  # remove test_remove
+  filter(Q27 != "TEST_REMOVE") %>%
   dplyr::select(StartDate, EndDate, RecordedDate, Q27:ncol(.)) %>%
   gather(id, answer, Q2:ncol(.)) %>%
   left_join(headerLUT) %>%
@@ -156,7 +158,7 @@ ytypefig <- select(q25df, Init, Title, ES, abbr, answer) %>%
   theme(strip.background = element_blank(),
         strip.text = element_text(face = "bold"),
         legend.position = "bottom",
-        legend.justification = c(-1,-1),
+        #legend.justification = c(-1,-1),
         legend.title = element_text(size = 10, face = "bold"),
         axis.title = element_text(face = "bold")) +
   guides(fill = guide_legend(nrow = 2)) +
