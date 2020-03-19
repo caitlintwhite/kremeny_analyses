@@ -4,6 +4,7 @@
 # https://www.rdocumentation.org/packages/qualtRics/versions/3.0
 
 # -- SETUP -----
+library(qualtRics)
 library(tidyverse)
 library(lubridate)
 library(cowplot)
@@ -11,12 +12,26 @@ options(stringsAsFactors = F)
 na_vals <- c("NA", NA, "NaN", NaN, " ", "", ".")
 theme_set(theme_bw())
 
+# cache qualtrics credentials (one time)
+# qualtRics::qualtrics_api_credentials(api_key = "YHLHyYFX7PPSN1XCRnzL7BoBpc7V6600TSmTnenb", 
+#                           base_url = "cuboulder.ca1.qualtrics.com",
+#                           install = TRUE)
+# Your Qualtrics key and base URL have been stored in your .Renviron.  
+# To use now, restart R or run `readRenviron("~/.Renviron")`
+
+
 # find where the prelim results live
+# read in survey dynamically
+#surveys <- all_surveys()
+#qualtrix <- fetch_survey(surveyID = "SV_8A1uHzmFP7yQTWt")
 qualtrix <- read.csv(file.choose(), na.strings = na_vals, skip  = 2) 
 headers <- read.csv(file.choose(), na.strings = na_vals)
 
 # read in header lookup table
 headerLUT <- read.csv("headersLUT.csv", na.strings = na_vals)
+
+# original round 2 assignment
+original <- read.csv("review_assignments_round2_grpdsubset.csv")
 
 
 # -- IDENTIFY DOUBLE-REVIEWED PAPERS -----
@@ -224,3 +239,31 @@ doubleprelim <- subset(prelimlong, Title %in% records$Q1[records$nobs == 2]) %>%
   filter(!(same_answer & is.na(answer))) %>%
   arrange(Title, survey_order, RecordedDate)
 write_csv(doubleprelim, "round2_doublereviewed_tidy.csv")
+
+
+# -- LOOP TO SUSBET PAIRED REVIEWERS
+pairs <- distinct(original[,1:2])
+initials <- c("Aislyn" = "AK", "Anna" = "AIS", "Caitlin" = "CW", "Claire" = "CK",
+              "Grant" = "GV", "Isabel" = "IS", "Julie" = "JL", "Kathryn" = "KG",
+              "Laura" = "LD", "Laurel" = "LB", "Nick" = "NBD", "Sierra" = "SDJ", 
+              "Tim" = "TK", "Travis" = "TM")
+unique(prelimlong$Init)
+
+reviewlist <- data.frame()
+for(r in 1:nrow(pairs)){
+  temp <- subset(original, (Round2_reviewer1 == pairs$Round2_reviewer1[r] & Round2_reviewer2 == pairs$Round2_reviewer2[r]) |
+                   (Round2_reviewer1 == pairs$Round2_reviewer2[r] & Round2_reviewer2 == pairs$Round2_reviewer1[r])) %>%
+    select(Round2_reviewer1, Round2_reviewer2, FirstAuthor, Title, SourcePublication, PublicationYear) %>%
+    mutate(reviewed1 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer1[r]]]),
+           reviewed2 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer2[r]]]))
+    names(temp)[names(temp) == "reviewed1"] <- paste0(initials[[pairs$Round2_reviewer1[r]]], "reviewed")
+    names(temp)[names(temp) == "reviewed2"] <- paste0(initials[[pairs$Round2_reviewer2[r]]], "reviewed")
+  
+  files <- list.files("reviewcheck_20200318") %>% str_flatten()
+  if(grepl(paste0(pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r]), files) | grepl(paste0(pairs$Round2_reviewer2[r], pairs$Round2_reviewer1[r]), files)){
+    next
+  }
+  write_csv(temp, paste0("reviewcheck_20200318/", pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r],"_round2progress_20200318.csv"))
+   
+}
+
