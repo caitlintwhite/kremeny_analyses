@@ -143,6 +143,8 @@ firstreview <- prelimlong %>%
   filter(!duplicated(Title)) %>%
   ungroup()
 
+write_csv(firstreview, "prelim_singlereview.csv")
+
 # exclusion questions
 ggplot(subset(firstreview, qnum == "Q3"), aes(abbr, fill = answer)) +
   geom_bar()
@@ -207,11 +209,11 @@ driversfig <- test %>%
   group_by(Init, Title, ES, Group) %>%
   summarise(numberDrivers = sum(CountDrivers)) %>%
   ungroup()  %>%
-  ggplot(aes(ES, fill = as.factor(numberDrivers))) +
+  ggplot(aes(ES, fill = as.factor(numberDrivers))) + #as.factor(numberDrivers)
   geom_bar(color = "grey30") +
   labs(y = "# of papers") +
   scale_y_continuous(expand = c(0,0)) +
-  scale_fill_brewer(name = "Number of\ndrivers", palette = "Blues") +
+  scale_fill_manual(name = "Number of\ndrivers", values = colors()[591:606]) + #length(unique(test$CountDrivers))
   facet_wrap(~Group, labeller = as_labeller(c("Anthro" = "Human", "Bio" = "Biotic", "Env"="Environmental"))) +
   theme(strip.background = element_blank(),
         strip.text = element_text(face = "bold"),
@@ -223,7 +225,7 @@ driversfig <- test %>%
   guides(guide_legend(byrow = T)) +
   coord_flip()
 
-prelimfig <- plot_grid(ytypefig, driversfig, nrow = 1, labels = "AUTO") #, 
+prelimfig <- plot_grid(ytypefig, driversfig, nrow = 1, labels = "AUTO", align = "v") #, 
 ggsave("figs/round2_prelimfig.pdf", prelimfig, 
        width = 8, height = 5, units = "in", scale = 1.1)  
 # google slides doesn't like pdfs
