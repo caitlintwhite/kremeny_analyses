@@ -60,7 +60,7 @@ records <- dplyr::select(prelim, Q27, Q1) %>%
 forAK <- subset(prelim, Q1 %in% unique(records$Q1[records$nobs == 2])) %>%
   arrange(Q1, StartDate) %>%
   mutate_all(function(x) ifelse(is.na(x), "", x))
-#write.csv(forAK, "round2_doublereviewed.csv", row.names = F)
+write.csv(forAK, "round2_doublereviewed.csv", row.names = F)
 
 
 # -- PREP HEADER LOOKUP TABLE -----
@@ -143,7 +143,7 @@ firstreview <- prelimlong %>%
   filter(!duplicated(Title)) %>%
   ungroup()
 
-write_csv(firstreview, "prelim_singlereview.csv")
+#write_csv(firstreview, "prelim_singlereview.csv")
 
 # exclusion questions
 ggplot(subset(firstreview, qnum == "Q3"), aes(abbr, fill = answer)) +
