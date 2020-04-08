@@ -4,9 +4,11 @@
 # https://www.rdocumentation.org/packages/qualtRics/versions/3.0
 
 # -- SETUP -----
-library(qualtRics)
+rm(list = ls())
+#library(qualtRics)
 library(tidyverse)
 library(lubridate)
+library(wordcloud)
 library(cowplot)
 options(stringsAsFactors = F)
 na_vals <- c("NA", NA, "NaN", NaN, " ", "", ".")
@@ -105,7 +107,23 @@ ESlevels <- c(provisioning, regulating, supporting, cultural)
 headerLUT$ES <- factor(headerLUT$ES, levels = rev(ESlevels))
 
 
-# -- DIVIDE RESULTS BY QUESTION ---
+# -- BASIC DATA TRIAGE ----
+# check reviewers
+unique(prelim$Q27) # remove test
+prelim <- subset(prelim, Q27 != "TEST_REMOVE")
+
+# check for titles that don't match
+needs_match <- unique(prelim$Q1)[!unique(prelim$Q1) %in% original$Title]
+test0 <- str_split(needs_match, "(?<=)")
+test0.5 <- lapply(test0, function(x) x[1:5])
+word()
+# see if we can match on all lowcase, no spaces or punctuation. https is gonna have to be manual matched
+test1 <- str_remove_all(casefold(needs_match), "[:blank:]|[:punct:]") str_
+available_titles <- original$Title[!original$Title %in% unique(prelim$Q27)]
+test2 <- str_remove_all(casefold(original$Title), "[:blank:]|[:punct:]")
+pmatch(test1, test2)
+
+# -- DIVIDE RESULTS BY QUESTION ----
 names(prelim)
 # important ID-key fields to keep across question datasets are:
 ## ResponseID
@@ -117,6 +135,9 @@ keydf <- distinct(dplyr::select(prelim, RecordedDate, ResponseId, Q27, Q1))
 sort(unique(keydf$Q27))
 # how many papers per reviewer?
 sort(sapply(split(keydf$Q1, keydf$Q27), length))
+# how many papers have we gotten through out of initial start?
+summary(unique(prelim$Q1) %in% unique(original$Title)) # 9 either misspelled or have weird punctuation
+summary(unique(original$Title) %in% unique(prelim$Q1)) #117 still to go (4/5)..
 
 # filtering (exclusion) questions are Q2, Q29, (and Q30? not sure what question that is)
 # pull unique question names
@@ -233,6 +254,58 @@ ggsave("figs/round2_prelimfig.png", prelimfig,
        width = 8, height = 5, units = "in", scale = 1.1)  
 
 
+# -- EXTRACT WORDS USED FOR ES RESPONSE AND DRIVERS ----
+# what's been classed as EF?
+# what's been classed as ES?
+
+responses <- subset(q25df, qnum == "Q12" & abbr =="Response")
+yclass <- subset(q25df, qnum == "Q12" & abbr == "Yclass") %>%
+  dplyr::select(StartDate, Title, Init, ES, answer) %>%
+  separate(answer, c("type1", "type2", "type3", "type4"), sep = ",") %>%
+  # remove anything that's all NA
+  dplyr::select(names(.)[sapply(., function(x) !all(is.na(x)))])
+# join EFs and Es
+ESresponses <- left_join(responses, yclass)
+
+response_summary <- responses %>%
+  mutate(answer =  casefold(answer)) %>%
+  group_by(ES, answer) %>% #ES, 
+  # get freq of each answer
+  summarise(count = length(qnum))
+
+response_summary2 <- ESresponses %>%
+  mutate(answer =  casefold(answer)) %>%
+  gather(yclass_num, yclass, type1, type2) %>%
+  mutate(yclass_num = parse_number(yclass_num)) %>%
+  filter(!(yclass_num == 2 & is.na(yclass))) 
+
+response_summary3 <- response_summary2 %>%
+  group_by(ES, yclass, answer) %>% #ES, 
+  # get freq of each answer
+  summarise(count = length(qnum)) %>%
+  ungroup() %>%
+  rename(yresponse = answer) %>%
+  separate(yresponse, paste0("answer", 1:50), ",") %>%
+  # remove anything that's all NA
+  dplyr::select(names(.)[sapply(., function(x) !all(is.na(x)))]) %>%
+  dplyr::select(-count) %>%
+  gather(response_num, yresponse, answer1:ncol(.)) %>%
+  filter(!is.na(yresponse)) %>%
+  mutate(yresponse = trimws(yresponse)) %>%
+  group_by(ES, yclass, yresponse) %>%
+  summarise(count = length(response_num)) %>%
+  ungroup() %>%
+  arrange(yresponse, yclass)
+
+write_csv(response_summary3, "intermediate_data/ESresponse_summary.csv")
+
+subset(response_summary) %>%
+  ggplot(aes(answer, count)) +
+  geom_col() +
+  theme(axis.text.x = element_blank(),
+        panel.grid.major.x = element_blank()) +
+  facet_wrap(~ES, scales = "free_x")
+
 # -- DOUBLE REVIEWED ----
 doubleprelim <- subset(prelimlong, Title %in% records$Q1[records$nobs == 2]) %>%
   group_by(Title, id) %>%
@@ -240,32 +313,41 @@ doubleprelim <- subset(prelimlong, Title %in% records$Q1[records$nobs == 2]) %>%
   ungroup() %>%
   filter(!(same_answer & is.na(answer))) %>%
   arrange(Title, survey_order, RecordedDate)
+# how many double reviewed?
+length(unique(doubleprelim$Title))
+# who?
+sapply(split(doubleprelim$Title, doubleprelim$Init), function(x) length(unique(x)))
 write_csv(doubleprelim, "round2_doublereviewed_tidy.csv")
 
 
-# -- LOOP TO SUSBET PAIRED REVIEWERS
-pairs <- distinct(original[,1:2])
-initials <- c("Aislyn" = "AK", "Anna" = "AIS", "Caitlin" = "CW", "Claire" = "CK",
-              "Grant" = "GV", "Isabel" = "IS", "Julie" = "JL", "Kathryn" = "KG",
-              "Laura" = "LD", "Laurel" = "LB", "Nick" = "NBD", "Sierra" = "SDJ", 
-              "Tim" = "TK", "Travis" = "TM")
-unique(prelimlong$Init)
+# ---- LOOP TO SUSBET PAIRED REVIEWERS <----- only run this one time (pre spring bring)
+# pairs <- distinct(original[,1:2])
+# initials <- c("Aislyn" = "AK", "Anna" = "AIS", "Caitlin" = "CW", "Claire" = "CK",
+#               "Grant" = "GV", "Isabel" = "IS", "Julie" = "JL", "Kathryn" = "KG",
+#               "Laura" = "LD", "Laurel" = "LB", "Nick" = "NBD", "Sierra" = "SDJ", 
+#               "Tim" = "TK", "Travis" = "TM")
+# unique(prelimlong$Init)
+# 
+# reviewlist <- data.frame()
+# for(r in 1:nrow(pairs)){
+#   temp <- subset(original, (Round2_reviewer1 == pairs$Round2_reviewer1[r] & Round2_reviewer2 == pairs$Round2_reviewer2[r]) |
+#                    (Round2_reviewer1 == pairs$Round2_reviewer2[r] & Round2_reviewer2 == pairs$Round2_reviewer1[r])) %>%
+#     select(Round2_reviewer1, Round2_reviewer2, FirstAuthor, Title, SourcePublication, PublicationYear) %>%
+#     mutate(reviewed1 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer1[r]]]),
+#            reviewed2 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer2[r]]]))
+#     names(temp)[names(temp) == "reviewed1"] <- paste0(initials[[pairs$Round2_reviewer1[r]]], "reviewed")
+#     names(temp)[names(temp) == "reviewed2"] <- paste0(initials[[pairs$Round2_reviewer2[r]]], "reviewed")
+#   
+#   files <- list.files("reviewcheck_20200318") %>% str_flatten()
+#   if(grepl(paste0(pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r]), files) | grepl(paste0(pairs$Round2_reviewer2[r], pairs$Round2_reviewer1[r]), files)){
+#     next
+#   }
+#   write_csv(temp, paste0("reviewcheck_20200318/", pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r],"_round2progress_20200318.csv"))
+#    
+# }
 
-reviewlist <- data.frame()
-for(r in 1:nrow(pairs)){
-  temp <- subset(original, (Round2_reviewer1 == pairs$Round2_reviewer1[r] & Round2_reviewer2 == pairs$Round2_reviewer2[r]) |
-                   (Round2_reviewer1 == pairs$Round2_reviewer2[r] & Round2_reviewer2 == pairs$Round2_reviewer1[r])) %>%
-    select(Round2_reviewer1, Round2_reviewer2, FirstAuthor, Title, SourcePublication, PublicationYear) %>%
-    mutate(reviewed1 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer1[r]]]),
-           reviewed2 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer2[r]]]))
-    names(temp)[names(temp) == "reviewed1"] <- paste0(initials[[pairs$Round2_reviewer1[r]]], "reviewed")
-    names(temp)[names(temp) == "reviewed2"] <- paste0(initials[[pairs$Round2_reviewer2[r]]], "reviewed")
-  
-  files <- list.files("reviewcheck_20200318") %>% str_flatten()
-  if(grepl(paste0(pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r]), files) | grepl(paste0(pairs$Round2_reviewer2[r], pairs$Round2_reviewer1[r]), files)){
-    next
-  }
-  write_csv(temp, paste0("reviewcheck_20200318/", pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r],"_round2progress_20200318.csv"))
-   
-}
 
+# -- NITTY GRITTY DATA CLEANING -----
+# potential issues:
+## 1) titles entered incorrectly
+## 2) questions not answered (esp questions added later [e.g. exclusion questions])
