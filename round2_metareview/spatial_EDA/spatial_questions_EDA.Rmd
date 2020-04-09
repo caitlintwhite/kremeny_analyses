@@ -18,10 +18,10 @@ library(gridExtra)
 
 
 ```{r read data, echo=FALSE}
-non_excl_titles = read.csv("prelim_singlereview.csv") %>% 
+non_excl_titles = read.csv("../data/cleaned/prelim_singlereview.csv") %>% 
   filter(qnum =='Q3', !answer=='Yes') %>%
   select(Title)
-spat = read.csv("prelim_singlereview.csv") %>% 
+spat = read.csv("../data/cleaned/prelim_singlereview.csv") %>% 
   filter(Title %in% non_excl_titles$Title) %>%
   filter(qnum %in% c("Q8","Q9","Q10","Q11"))
 ```
