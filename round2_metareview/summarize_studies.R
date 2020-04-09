@@ -32,24 +32,75 @@ glimpse(dat)
 distinct(dat[c("abbr", "qnum")])
 
 
+# function for breaking out comma separated answers
+splitcom <- function(df){
+  df <- df %>% # break out answers by comma
+    dplyr::select(Title, answer) %>%
+    separate(answer, paste0("v",1:20)) %>% # <- this will throw warning, fine. pad with extra cols for up to 20 comma-separated answers just in case
+    # remove cols that are all na
+    dplyr::select(names(.)[sapply(., function(x) !(all(is.na(x))))]) %>%
+    # gather to tidy
+    gather(num, answer, v1:ncol(.)) %>%
+    # make number of answers numeric
+    mutate(num = parse_number(num)) %>%
+    # remove any NAs in answer
+    filter(!is.na(answer)) # dat still tidy at this point
+  return(df)
+}
+
+
 
 # -- SUMMARIZE REVIEW DATA BY QUESTION -----
 # 1) Plot Ecosystem Type -----
 #table(krem$Q4)
 ecotype <- subset(dat, qnum == "Q4")
+View(ecotype)
+unique(ecotype$answer[ecotype$abbr == "Ecosytem"]) #ctw will fix typo later
+# for simplicity, keep only ecosytem checked (ignore notes for now)
+ecotype <- subset(ecotype, abbr == "Ecosytem") %>%
+  # edit "Off-shore" to avoid punctuation issues
+  mutate(answer = gsub("Off-shore", "Offshore", answer)) %>%
+  # apply splitcom
+  splitcom() # end result is still tidy data
+
+# simple bar plot
+ggplot(ecotype, aes(answer)) +
+  geom_bar()
+
 
 
 # 2) Plot Location Type -----
 loc <- subset(dat, qnum == "Q5")
+unique(loc$answer) # deal with commas
+loc <- splitcom(loc)  
+
+# simple bar plot
+ggplot(loc, aes(answer)) +
+  geom_bar()
+
 
 
 # 2) Plot Study Type -----
 studytype <- subset(dat, qnum == "Q6")
+head(studytype) # for simplicity, keep only Methods for now (deal with other and notes later)
+unique(studytype$answer[studytype$abbr == "Methods"]) #remove "(Includes...)", then un-comma
+studytype <- subset(studytype, abbr == "Methods") %>%
+  # remove "(Includes...)" text
+  mutate(answer = gsub(" [(]Includes.*[a-z][)]", "", answer)) %>%
+  # split com-sep answers
+  splitcom()
+
+# simple bar plot
+ggplot(studytype, aes(answer)) +
+  geom_bar()
 
 
 
 # 3) Consideration of multiple years & # of years -----
 temptype <- subset(dat, qnum == "Q7")
+unique(temptype$answer) # no comma splitting needed, but there are two questions to Q7 (time? y/n, and if yes, what?)
+# can separate by abbr if wish
+unique(temptype$abbr)
 
 
 
