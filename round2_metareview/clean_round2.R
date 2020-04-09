@@ -1,7 +1,17 @@
 # clean round 2 results
+# author(s): ctw
+# initiated: mar 2020
 
+
+# script purpose:
+# 1) read in raw qualtrics data *must download manually bc CU qualtrics settings doesn't allow user to authenticate with 'qualtRics' R package 
+
+
+# notes:
 # how to read in qualtrix dynamically
 # https://www.rdocumentation.org/packages/qualtRics/versions/3.0
+
+
 
 # -- SETUP -----
 rm(list = ls())
