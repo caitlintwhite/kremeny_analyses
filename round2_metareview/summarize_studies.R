@@ -14,7 +14,7 @@
 ## > use consistent, intuitive file nomenclature
 
 # notes:
-
+# to order answers on x-axis, can re-assign as factors before plotting
 
 
 
@@ -115,6 +115,14 @@ temptype <- subset(dat, qnum == "Q7")
 unique(temptype$answer) # no comma splitting needed, but there are two questions to Q7 (time? y/n, and if yes, what?)
 # can separate by abbr if wish
 unique(temptype$abbr)
+# does each title have only 1 temporal interval selected?
+sapply(split(temptype$answer, temptype$abbr), function(x) summary(as.factor(x))) #hm..
+
+# widen temptype
+temptype <- dplyr::select(temptype, Title, abbr, answer) %>%
+  spread(abbr, answer)
+
+# plot how you like
 
 
 
