@@ -4,26 +4,26 @@
 
 
 # script purpose:
-# 1) read in raw qualtrics data *must download manually bc CU qualtrics settings doesn't allow user to authenticate with 'qualtRics' R package 
+# 1) read in raw qualtrics data (lives in data/raw/) [.. and eventually reviewer corrections]
+## > must download manually bc CU qualtrics settings doesn't allow user to authenticate with 'qualtRics' R package 
+# 3) tidy
+# 4) apply basic cleaning and logic check flags
+# 5) separate double reviews from single reviews
+# 6) triage double reviews
+## > write out conflicting answers for reviewer QA
+## > incorporate reviewer QA responses
+# 7) write out modular by-question cleaned datasets to data/cleaned
+# > file nomenclature consistent to include qnum
+# > make wide-form for LD and non-tidy coders
 
 
 # notes:
+## cached code for qualtRics## -----
 # how to read in qualtrix dynamically
 # https://www.rdocumentation.org/packages/qualtRics/versions/3.0
-
-
-
-# -- SETUP -----
-rm(list = ls())
+## > unfortunately, this package will not work with CU qualtrics as set up. users cannot authenticate, will throw error.
+## code for had it worked:
 #library(qualtRics)
-library(tidyverse)
-library(lubridate)
-library(wordcloud)
-library(cowplot)
-options(stringsAsFactors = F)
-na_vals <- c("NA", NA, "NaN", NaN, " ", "", ".")
-theme_set(theme_bw())
-
 # cache qualtrics credentials (one time)
 # qualtRics::qualtrics_api_credentials(api_key = "YHLHyYFX7PPSN1XCRnzL7BoBpc7V6600TSmTnenb", 
 #                           base_url = "cuboulder.ca1.qualtrics.com",
@@ -31,23 +31,41 @@ theme_set(theme_bw())
 # Your Qualtrics key and base URL have been stored in your .Renviron.  
 # To use now, restart R or run `readRenviron("~/.Renviron")`
 
-
 # find where the prelim results live
 # read in survey dynamically
 #surveys <- all_surveys()
 #qualtrix <- fetch_survey(surveyID = "SV_8A1uHzmFP7yQTWt")
-qualtrix <- read.csv(file.choose(), na.strings = na_vals, skip  = 2) 
-headers <- read.csv(file.choose(), na.strings = na_vals)
 
-# read in header lookup table
-headerLUT <- read.csv("headersLUT.csv", na.strings = na_vals)
+
+
+
+
+
+
+# -- SETUP -----
+rm(list = ls()) # clean enviro
+library(tidyverse)
+library(lubridate)
+library(cowplot)
+options(stringsAsFactors = F)
+na_vals <- c("NA", NA, "NaN", NaN, " ", "", ".")
+theme_set(theme_bw())
+
+# read in raw data
+## skip first two lines to read data col types correctly
+qualtrix <- read.csv(list.files("round2_metareview/data/raw", full.names = T), na.strings = na_vals, skip  = 2) 
+## re-read, no skipping, for colnames
+headers <- read.csv(list.files("round2_metareview/data/raw", full.names = T), na.strings = na_vals)
+## read in header lookup table (code to make below)
+headerLUT <- read.csv("round2_metareview/data/headersLUT.csv", na.strings = na_vals)
 
 # original round 2 assignment
-original <- read.csv("review_assignments_round2_grpdsubset.csv")
+original <- read.csv("round1_exclusion/output/review_assignments_round2_grpdsubset.csv")
+
 
 
 # -- IDENTIFY DOUBLE-REVIEWED PAPERS -----
-# remove top two header rows
+# assign colnames
 names(qualtrix) <- names(headers)
 
 # remove anything not finished
@@ -72,7 +90,8 @@ records <- dplyr::select(prelim, Q27, Q1) %>%
 forAK <- subset(prelim, Q1 %in% unique(records$Q1[records$nobs == 2])) %>%
   arrange(Q1, StartDate) %>%
   mutate_all(function(x) ifelse(is.na(x), "", x))
-write.csv(forAK, "round2_doublereviewed.csv", row.names = F)
+write.csv(forAK, "round2_metareview/data/intermediate/round2_doublereviewed.csv", row.names = F)
+
 
 
 # -- PREP HEADER LOOKUP TABLE -----
@@ -148,7 +167,7 @@ sort(unique(keydf$Q27))
 sort(sapply(split(keydf$Q1, keydf$Q27), length))
 # how many papers have we gotten through out of initial start?
 summary(unique(prelim$Q1) %in% unique(original$Title)) # 9 either misspelled or have weird punctuation
-summary(unique(original$Title) %in% unique(prelim$Q1)) #117 still to go (4/5)..
+summary(unique(original$Title) %in% unique(prelim$Q1)) #82 still to go (4/9)..
 
 # filtering (exclusion) questions are Q2, Q29, (and Q30? not sure what question that is)
 # pull unique question names
@@ -175,7 +194,7 @@ firstreview <- prelimlong %>%
   filter(!duplicated(Title)) %>%
   ungroup()
 
-#write_csv(firstreview, "prelim_singlereview.csv")
+write_csv(firstreview, "round2_metareview/data/cleaned/prelim_singlereview.csv")
 
 # exclusion questions
 ggplot(subset(firstreview, qnum == "Q3"), aes(abbr, fill = answer)) +
@@ -185,84 +204,6 @@ ggplot(subset(firstreview, qnum == "Q3"), aes(abbr, fill = answer)) +
 # question 25 (response variables)
 q25df <- subset(firstreview, qnum =="Q12") %>%
   filter(!is.na(answer))
-
-select(q25df, Init, Title, ES) %>%
-  filter(!is.na(ES)) %>%
-  distinct() %>%
-  ggplot(aes(ES)) +
-  geom_bar() +
-  coord_flip()
-
-ytypefig <- select(q25df, Init, Title, ES, abbr, answer) %>%
-  filter(abbr == "Yclass") %>%
-  distinct() %>%
-  mutate(answer = gsub("Proxy for ES", "ES proxy", answer),
-         answer = factor(answer, levels = c("EF", "ES,EF", "ES", "ES,ES proxy", "ES proxy"))) %>%
-  ggplot(aes(ES, fill = answer)) +
-  geom_bar(color = "grey30") +
-  labs(x = "Ecosystem service", y = "# of papers") +
-  scale_y_continuous(expand = c(0,0)) +
-  scale_fill_viridis_d(name = "Response\ntype") +
-  facet_wrap(~"") +
-  theme(strip.background = element_blank(),
-        strip.text = element_text(face = "bold"),
-        legend.position = "bottom",
-        #legend.justification = c(-1,-1),
-        legend.title = element_text(size = 10, face = "bold"),
-        axis.title = element_text(face = "bold")) +
-  guides(fill = guide_legend(nrow = 2)) +
-  coord_flip()
-ytypefig
-
-test <- select(q25df, Init, Title, ES, abbr, Group, answer) %>%
-  # for now fill down any NAs with ES above it, grouped by Title
-  group_by(Title) %>%
-  fill(ES) %>%
-  ungroup() %>%
-  filter(grepl("Drive", abbr)) %>%
-  distinct() %>%
-  # remove other from Driver (assume if there was something people answered)
-  mutate(count_driver = str_count(answer, "(,|;)(?!Other)"),
-         #if Exploitation, subtract 1 bc has comma in answer
-         #count_driver = ifelse(grepl("Exploitation [(]hunt", answer), count_driver-1, count_driver),
-         count_driver = ifelse(!grepl("Other|Exploit", answer), count_driver+1, count_driver)) %>%
-  select(-answer) %>%
-  group_by(Init, Title, ES, Group) %>%
-  summarise(CountDrivers = sum(count_driver, na.rm = T)) %>% #IDK if we can use other...
-  ungroup()
-  # count the number of commas in each -- assume there is 1 answer provided if not NA
-  
-ggplot(test, aes(ES, fill = Group)) +
-  geom_bar() +
-  coord_flip()
-
-driversfig <- test %>%
-  mutate(CountDrivers = ifelse(CountDrivers == 0, 1, CountDrivers)) %>%
-  group_by(Init, Title, ES, Group) %>%
-  summarise(numberDrivers = sum(CountDrivers)) %>%
-  ungroup()  %>%
-  ggplot(aes(ES, fill = as.factor(numberDrivers))) + #as.factor(numberDrivers)
-  geom_bar(color = "grey30") +
-  labs(y = "# of papers") +
-  scale_y_continuous(expand = c(0,0)) +
-  scale_fill_manual(name = "Number of\ndrivers", values = colors()[591:606]) + #length(unique(test$CountDrivers))
-  facet_wrap(~Group, labeller = as_labeller(c("Anthro" = "Human", "Bio" = "Biotic", "Env"="Environmental"))) +
-  theme(strip.background = element_blank(),
-        strip.text = element_text(face = "bold"),
-        legend.position = "bottom",
-        axis.text.y = element_blank(),
-        axis.title.y = element_blank(),
-        axis.title.x = element_text(face = "bold"),
-        legend.title = element_text(size = 10, face = "bold")) +
-  guides(guide_legend(byrow = T)) +
-  coord_flip()
-
-prelimfig <- plot_grid(ytypefig, driversfig, nrow = 1, labels = "AUTO", align = "v") #, 
-ggsave("figs/round2_prelimfig.pdf", prelimfig, 
-       width = 8, height = 5, units = "in", scale = 1.1)  
-# google slides doesn't like pdfs
-ggsave("figs/round2_prelimfig.png", prelimfig, 
-       width = 8, height = 5, units = "in", scale = 1.1)  
 
 
 # -- EXTRACT WORDS USED FOR ES RESPONSE AND DRIVERS ----
@@ -308,7 +249,7 @@ response_summary3 <- response_summary2 %>%
   ungroup() %>%
   arrange(yresponse, yclass)
 
-write_csv(response_summary3, "intermediate_data/ESresponse_summary.csv")
+write_csv(response_summary3, "round2_metareview/data/intermediate/ESresponse_summary.csv")
 
 subset(response_summary) %>%
   ggplot(aes(answer, count)) +
@@ -328,7 +269,7 @@ doubleprelim <- subset(prelimlong, Title %in% records$Q1[records$nobs == 2]) %>%
 length(unique(doubleprelim$Title))
 # who?
 sapply(split(doubleprelim$Title, doubleprelim$Init), function(x) length(unique(x)))
-write_csv(doubleprelim, "round2_doublereviewed_tidy.csv")
+write_csv(doubleprelim, "round2_metareview/data/intermediate/round2_doublereviewed_tidy.csv")
 
 
 # ---- LOOP TO SUSBET PAIRED REVIEWERS <----- only run this one time (pre spring bring)
@@ -362,3 +303,84 @@ write_csv(doubleprelim, "round2_doublereviewed_tidy.csv")
 # potential issues:
 ## 1) titles entered incorrectly
 ## 2) questions not answered (esp questions added later [e.g. exclusion questions])
+
+
+# -- PRELIM SUMMARY FIGURE ----
+
+select(q25df, Init, Title, ES) %>%
+  filter(!is.na(ES)) %>%
+  distinct() %>%
+  ggplot(aes(ES)) +
+  geom_bar() +
+  coord_flip()
+
+ytypefig <- select(q25df, Init, Title, ES, abbr, answer) %>%
+  filter(abbr == "Yclass") %>%
+  distinct() %>%
+  mutate(answer = gsub("Proxy for ES", "ES proxy", answer),
+         answer = factor(answer, levels = c("EF", "ES,EF", "ES", "ES,ES proxy", "ES proxy"))) %>%
+  ggplot(aes(ES, fill = answer)) +
+  geom_bar(color = "grey30") +
+  labs(x = "Ecosystem service", y = "# of papers") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_fill_viridis_d(name = "Response\ntype") +
+  facet_wrap(~"") +
+  theme(strip.background = element_blank(),
+        strip.text = element_text(face = "bold"),
+        legend.position = "bottom",
+        #legend.justification = c(-1,-1),
+        legend.title = element_text(size = 10, face = "bold"),
+        axis.title = element_text(face = "bold")) +
+  guides(fill = guide_legend(nrow = 2)) +
+  coord_flip()
+ytypefig
+
+test <- select(q25df, Init, Title, ES, abbr, Group, answer) %>%
+  # for now fill down any NAs with ES above it, grouped by Title
+  group_by(Title) %>%
+  fill(ES) %>%
+  ungroup() %>%
+  filter(grepl("Drive", abbr)) %>%
+  distinct() %>%
+  # remove other from Driver (assume if there was something people answered)
+  mutate(count_driver = str_count(answer, "(,|;)(?!Other)"),
+         #if Exploitation, subtract 1 bc has comma in answer
+         #count_driver = ifelse(grepl("Exploitation [(]hunt", answer), count_driver-1, count_driver),
+         count_driver = ifelse(!grepl("Other|Exploit", answer), count_driver+1, count_driver)) %>%
+  select(-answer) %>%
+  group_by(Init, Title, ES, Group) %>%
+  summarise(CountDrivers = sum(count_driver, na.rm = T)) %>% #IDK if we can use other...
+  ungroup()
+# count the number of commas in each -- assume there is 1 answer provided if not NA
+
+ggplot(test, aes(ES, fill = Group)) +
+  geom_bar() +
+  coord_flip()
+
+driversfig <- test %>%
+  mutate(CountDrivers = ifelse(CountDrivers == 0, 1, CountDrivers)) %>%
+  group_by(Init, Title, ES, Group) %>%
+  summarise(numberDrivers = sum(CountDrivers)) %>%
+  ungroup()  %>%
+  ggplot(aes(ES, fill = as.factor(numberDrivers))) + #as.factor(numberDrivers)
+  geom_bar(color = "grey30") +
+  labs(y = "# of papers") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_fill_manual(name = "Number of\ndrivers", values = colors()[591:606]) + #length(unique(test$CountDrivers))
+  facet_wrap(~Group, labeller = as_labeller(c("Anthro" = "Human", "Bio" = "Biotic", "Env"="Environmental"))) +
+  theme(strip.background = element_blank(),
+        strip.text = element_text(face = "bold"),
+        legend.position = "bottom",
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.title.x = element_text(face = "bold"),
+        legend.title = element_text(size = 10, face = "bold")) +
+  guides(guide_legend(byrow = T)) +
+  coord_flip()
+
+prelimfig <- plot_grid(ytypefig, driversfig, nrow = 1, labels = "AUTO", align = "v") #, 
+ggsave("round2_metareview/figs/round2_prelimfig.pdf", prelimfig, 
+       width = 8, height = 5, units = "in", scale = 1.1)  
+# google slides doesn't like pdfs
+ggsave("round2_metareview/figs/round2_prelimfig.png", prelimfig, 
+       width = 8, height = 5, units = "in", scale = 1.1)  
