@@ -2,16 +2,32 @@
 # author(s): ctw
 # initiated: apr 2020
 
+
 # script purpose:
 # make following figs:
-## 1) word lcoud response (or driver) variables
+## 1) word cloud response (or driver) variables
 ## 2) alluvial diagram ES driver to ES response to ES
+
 
 # notes
 # R package options for wordcloud:
-## > if use gg version, borrow ctw climate QA code to panel ggplots in same graphing window
+# 1) base R-based: wordcloud, wordcloud2
+# https://cran.r-project.org/web/packages/wordcloud/wordcloud.pdf
+# tutorial: https://towardsdatascience.com/create-a-word-cloud-with-r-bde3e7422e8a
 
-# Rpackage options for alluvial:
+# 2) ggplot-based: ggwordcloud, ggwordcloud2
+# https://cran.r-project.org/web/packages/ggwordcloud/vignettes/ggwordcloud.html
+## > if use gg version, borrow ctw climate QA code to panel ggplots in same graphing window
+## > ctw thinks ggwordcloud = more annoying (e.g. need to create col to angle words, but ctw also doesn't like base R plot functionality)
+
+# Rpackage options for alluvial diagram:
+# 1) base R-based: network3D, flipPlots, alluvial (see link in #2 below)
+# network3D: https://www.displayr.com/sankey-diagrams-r/
+# flipPlots: https://www.r-bloggers.com/how-to-create-sankey-diagrams-from-tables-data-frames-using-r/
+
+# 2) ggplot-based: ggalluvial
+# ak has used this and recommends
+# https://www.r-bloggers.com/data-flow-visuals-alluvial-vs-ggalluvial-in-r-2/
 
 # other:
 
@@ -19,9 +35,10 @@
 
 
 # -- SETUP -----
+rm(list=ls()) # clean up environment
 library(tidyverse)
 library(wordcloud)
-library(ggwordcloud)
+#library(ggwordcloud)
 library(ggalluvial)
 options(stringsAsFactors = F)
 na_vals <- c("NA", "NaN", ".", "", " ", NA, NaN)
@@ -55,7 +72,7 @@ splitcom <- function(df, keepcols = c("Title", "answer")){
 
 # for reference, ctw code for paneling ggplots in single window
 # function to panel plot flagged data
-visual_qa <- function(dat, qadat, sorttime = "date", add_fourth = NA){
+#visual_qa <- function(dat, qadat, sorttime = "date", add_fourth = NA){
   # initiate list for storing ggplots
   plot_list <- list()
   # id temperature cols in reference data frame
@@ -111,10 +128,50 @@ rm(checkexcluded)
 
 # remove excluded papers
 dat <- subset(rawdat, !Title %in% excludetitles)
+# pull out q12 only
+q12dat <- subset(dat, qnum == "Q12")
+
 
 
 # -- FIGURES -----
 # 1) WORD CLOUDS ----
+# pull drivers info from q12
+drivers <-  subset(q12dat, grepl("driver", abbr, ignore.case = T)) %>%
+  # for now, ignore ES and "Other" entered in answer for abbr == "Driver" (should be entered in abbr "Other driver")
+  filter(!(answer == "Other" | is.na(answer))) %>%
+  # remove "Other" checked for abbr == "Driver"
+  mutate(answer = gsub("Other,", "", answer),
+         answer = gsub(",Other[,]?", "", answer),
+         # also edit canned "Exploitation (hunting, fishing)" since it has a comma and will mess up counts
+         answer = gsub("hunting, fishing)", "hunting or fishing)", answer),
+         answer = trimws(casefold(answer))) #nailed it
+# remove whitespace in answers and remove any blanks
+
+# now trim cols and un-comma respnoses
+drivers_summary <- splitcom(drivers, keepcols = c("Title", "ES", "Group", "answer")) %>%
+  # rename Group factors
+  #mutate(Group = recode(Group, "Anthro" = "Human", "Bio" = "Biotic", "Env" = "Environmental")) %>%
+  arrange(answer)# ES for "OtherDriver" not supplied..
+ 
+otherdrivers <- subset(q12dat, grepl("Other", answer)) %>%
+  dplyr::select(Title, ES, Group, answer) %>% distinct() %>%
+  rename_at(vars(ES, answer), function(x)paste0("other",x)) %>%
+  left_join(subset(drivers_summary, Title %in% unique(otherdrivers$Title) & is.na(ES))) %>%
+  # get rid of things that shouldn't have been split
+  filter(!answer %in% (c("city 2])", "not esp)"))) %>%
+  # filter any ES that didn't join for simplicity sake
+  filter(!is.na(otherES)) # <--this doesn't work as expected, leaves some vars out (e.g. see Conservation tillage mitigates the negative effect of landscape simplification on biological control)
+# i think that might happen when only one ES? may need to fill down.. revisit
+
+
+# lump unique drivers by group, ignore ES for now..
+drivers_grouped <- drivers_summary %>%
+  mutate(Group = recode(Group, "Anthro" = "Human", "Bio" = "Biotic", "Env" = "Environmental")) %>%
+  group_by(Group, answer) %>%
+  summarise(count = length(Title)) %>%
+  ungroup() %>%
+  # clean up ESP text in answer
+  mutate(answer = gsub(" [(]q17[)]", "", answer))
 
 
 # make single word cloud
@@ -123,10 +180,29 @@ ES <- "SoilProtect"
 response_summary_simple <- group_by(response_summary3, ES, yresponse) %>% summarise(count = sum(count)) %>% ungroup() %>%
   filter(yresponse != "")
 
-wordcloud(words = response_summary_simple$yresponse[response_summary_simple$ES == ES], freq = response_summary_simple$count[response_summary_simple$ES == ES], 
-          min.freq = 1, scale = c(2, 0.4), max.words=200, random.order=FALSE, rot.per=0.35, main = "test title",
-          colors=brewer.pal(8, "Dark2"))
-title(sub = "test title")
+# environmental drivers
+png("round2_metareview/figs/envdrivers_wordcloud.png",width = 5, height = 5, units = "in", res = 300)
+wordcloud(words = drivers_grouped$answer[drivers_grouped$Group == "Environmental"], freq = drivers_grouped$count[drivers_grouped$Group == "Environmental"], 
+          min.freq = 1, max.words=200, random.order=FALSE,
+          colors=brewer.pal(8, "Dark2")) # scale = c(2, 0.4),
+title(sub = "Environmental Drivers")
+dev.off()
+
+# human drivers
+png("round2_metareview/figs/humandrivers_wordcloud.png",width = 5, height = 5, units = "in", res = 300)
+wordcloud(words = drivers_grouped$answer[drivers_grouped$Group == "Human"], freq = drivers_grouped$count[drivers_grouped$Group == "Human"], 
+          min.freq = 1, max.words=200, random.order=FALSE,
+          colors=brewer.pal(8, "Dark2")) # scale = c(2, 0.4),
+title(sub = "Human Drivers")
+dev.off()
+
+# biotic drivers
+png("round2_metareview/figs/bioticdrivers_wordcloud.png",width = 5, height = 5, units = "in", res = 300)
+wordcloud(words = drivers_grouped$answer[drivers_grouped$Group == "Biotic"], freq = drivers_grouped$count[drivers_grouped$Group == "Biotic"], 
+          min.freq = 1, max.words=200, scale = c(3, 0.5), random.order=FALSE,
+          colors=brewer.pal(8, "Dark2")) # scale = c(2, 0.4),
+title(sub = "Biotic Drivers")
+dev.off()
 
 par(mfrow = c(4,4))
 for(v in unique(response_summary_simple$ES)){
