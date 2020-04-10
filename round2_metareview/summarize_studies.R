@@ -280,4 +280,19 @@ ggsave("round2_metareview/figs/q16_thresholds_barplot.png",
 table(tholds$answer)
   
 
+# 6) Kremen Framework summary ----
+kremen <- subset(dat, qnum == "Q13") %>%
+  # clean up text
+  mutate(answer = gsub(" that influence.*$| influencing function", "", answer),
+         answer = gsub("Kremen Topic [1-4] :", "", answer),
+         answer = trimws(answer)) %>%
+  splitcom()
+
+# simple bar plot
+ggplot(kremen, aes(forcats::fct_infreq(answer))) +
+  geom_bar() +
+  labs(subtitle = "Which Kremen Topics?", y = "Number of studies", x = NULL) +
+  scale_y_continuous(breaks = seq(0,400, 20), expand = c(0,0))
+ggsave("round2_metareview/figs/q13_krementopics_barplot.png",
+       width = 3.5, height = 1, units = "in", scale = 3)
 
