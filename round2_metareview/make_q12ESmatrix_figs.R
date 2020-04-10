@@ -251,11 +251,14 @@ response_summary3 <- response_summary2 %>%
   arrange(yresponse, yclass)
 
 response_summary4 <- subset(response_summary, !is.na(answer)) %>%
-  splitcom(keepcols = c("ES", "answer"))
+  splitcom(keepcols = c("ES", "answer")) %>%
+  group_by(ES, answer) %>%
+  summarise(count = length(num)) %>%
+  ungroup()
 
 # soil protection responses
 png("round2_metareview/figs/soilESresponses_wordcloud.png",width = 5, height = 5, units = "in", res = 300)
-wordcloud(words = response_summary4$answer[response_summary4$ES == "SoilProtect"], freq = response_summary4$num[response_summary4$ES == "SoilProtect"], 
+wordcloud(words = response_summary4$answer[response_summary4$ES == "SoilProtect"], freq = response_summary4$count[response_summary4$ES == "SoilProtect"], 
           min.freq = 1, max.words=200, scale = c(2, 0.4),random.order=FALSE, rot.per = 0.35,
           colors=brewer.pal(8, "Dark2")) # 
 title(sub = "Soil Protection ES/EF")
