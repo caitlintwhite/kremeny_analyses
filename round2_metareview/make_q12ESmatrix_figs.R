@@ -27,6 +27,7 @@
 
 # 2) ggplot-based: ggalluvial
 # ak has used this and recommends
+# package vignette: https://cran.r-project.org/web/packages/ggalluvial/vignettes/ggalluvial.html
 # https://www.r-bloggers.com/data-flow-visuals-alluvial-vs-ggalluvial-in-r-2/
 
 # other:
@@ -263,8 +264,8 @@ dev.off()
 
 
 
-par(mfrow = c(4,4))
-for(v in unique(response_summary_simple$ES)){
+#par(mfrow = c(4,4))
+#for(v in unique(response_summary_simple$ES)){
   tempdat <- subset(response_summary_simple, ES == v)
   wordcloud(words = tempdat$yresponse, freq = tempdat$count, main = v, 
             min.freq = 1, scale = c(2, 0.4), max.words=200, random.order=FALSE, rot.per=0.35,
@@ -272,7 +273,7 @@ for(v in unique(response_summary_simple$ES)){
   title(sub = v)
 }
 
-plot_clouds <- function(dat, splitvar){
+#plot_clouds <- function(dat, splitvar){
   # initiate list for storing ggplots
   plot_list <- list()
   
@@ -288,18 +289,6 @@ plot_clouds <- function(dat, splitvar){
   
 }
 
-quartz()
-responseclouds <- plot_clouds(response_summary_simple, unique(response_summary_simple$ES))
-par(mfrow = c(1,1))
-wordtest <- plot_grid(plotlist = responseclouds, nrow = 4, ncol = 4)
-ggsave("figs/wordcloud_response.pdf", wordtest, scale = 3)
-
-quartz()
-ggplot(subset(response_summary_simple, ES %in% c("HabCreate", "CulturePsych")), aes(label = yresponse, size = count/5)) +
-  geom_text_wordcloud(eccentricity = 1) +
-  scale_size_area(max_size = 40) +
-  theme_minimal() +
-  facet_wrap(~ES)
 
 
 # 2) ES DRIVERS FIG -------
@@ -307,4 +296,70 @@ ggplot(subset(response_summary_simple, ES %in% c("HabCreate", "CulturePsych")), 
 
 
 # 3) ALLUVIAL DIAGRAM -----
+testalluvial <- subset(q12dat, !is.na(answer) & abbr %in% c("Response", "Yclass", "Driver", "OtherDriver")) %>%
+  # for now, just to test how ggalluvial works, fill down ES
+  group_by(Title) %>%
+  fill(ES) %>%
+  ungroup() %>%
+  # clean up "Other" entries
+  filter(!(answer == "Other" & abbr == "Driver")) %>%
+  mutate(answer = gsub("Other,", "", answer),
+         answer = gsub(",Other[,]?", "", answer),
+         # also edit canned "Exploitation (hunting, fishing)" since it has a comma and will mess up counts
+         answer = gsub("hunting, fishing)", "hunting or fishing)", answer),
+         answer = trimws(casefold(answer))) %>%
+  #simplify
+  dplyr::select(Title, abbr, Group, ES, answer) %>%
+  distinct()
+
+alluvialresponses <- subset(testalluvial, abbr == "Response") %>%
+  splitcom(keepcols = c("Title", "ES", "answer")) %>%
+  # sum # driver variables per ES per Group per title
+  group_by(Title, ES) %>%
+  summarise(count_yvars = length(answer))
+alluvialEFES <- subset(testalluvial, abbr == "Yclass") %>%
+  splitcom(keepcols = c("Title", "ES", "answer")) %>%
+  rename("ytype"="answer")
+  
+
+# need to bring in # drivers as well
+alluvialdrivers <- subset(testalluvial, grepl("Driver", abbr, ignore.case = T)) %>%
+  splitcom(keepcols = c("Title", "ES", "Group", "answer")) %>%
+  # sum # driver variables per ES per Group per title
+  group_by(Title, ES, Group) %>%
+  summarise(count_drivers = length(answer)) %>%
+  ungroup() 
+  # group_by(ES, Group) %>%
+  # summarise(count_drivers = sum(count_drivers)) %>%
+  # ungroup()
+  spread(Group, count_drivers)
+
+test <- left_join(alluvialresponses, subset(alluvialEFES, num == 1)) %>%
+  #drop any paper that had more than 1 ES type selected
+  filter(!is.na(ytype)) %>%
+  dplyr::select(-num) %>%
+  left_join(alluvialdrivers) %>% #! some drivers not entered :(
+  filter(!is.na(count_drivers))
+
+test2 <- alluvialdrivers %>%
+  group_by(ES, Group, count_drivers) %>%
+  summarise(count_papers = length(Title))
+
+ggplot(test2, aes(y = count_papers, axis1 = Group, axis2 = ES)) +
+    geom_alluvium(aes(fill = count_drivers), width = 1/12) +
+    geom_stratum(width = 1/12, fill = "black", color = "grey") +
+    geom_label(stat = "stratum", infer.label = TRUE) +
+    scale_x_discrete(limits = c("Group", "ES"), expand = c(.05, .05)) +
+    scale_fill_brewer(type = "qual", palette = "Set1")
+    ggtitle("UC Berkeley admissions and rejections, by sex and department")
+  
+ggplot(alluvialdrivers,
+       aes(x = met, stratum = val, alluvium = countpapers,
+           y = count_drivers, label = val)) +
+  scale_x_discrete(expand = c(.1, .1)) +
+  geom_alluvium(aes(fill = count_drivers)) +
+  geom_stratum(alpha = .5) +
+  geom_text(stat = "stratum", size = 3) +
+  theme(legend.position = "none")
+  #ggtitle("vaccination survey responses at three points in time")
 
