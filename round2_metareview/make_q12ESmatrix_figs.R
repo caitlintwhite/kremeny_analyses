@@ -135,6 +135,7 @@ q12dat <- subset(dat, qnum == "Q12")
 
 # -- FIGURES -----
 # 1) WORD CLOUDS ----
+# -- driver clouds ----
 # pull drivers info from q12
 drivers <-  subset(q12dat, grepl("driver", abbr, ignore.case = T)) %>%
   # for now, ignore ES and "Other" entered in answer for abbr == "Driver" (should be entered in abbr "Other driver")
@@ -203,6 +204,64 @@ wordcloud(words = drivers_grouped$answer[drivers_grouped$Group == "Biotic"], fre
           colors=brewer.pal(8, "Dark2")) # scale = c(2, 0.4),
 title(sub = "Biotic Drivers")
 dev.off()
+
+
+# -- response clouds -----
+# just make for one ES as example (e.g. soil formation since has the most)
+
+# copied ugly code -- improve later. just for plotting for apr 8 meeting
+responses <- subset(q12dat, qnum == "Q12" & abbr =="Response")
+yclass <- subset(q12dat, qnum == "Q12" & abbr == "Yclass") %>%
+  dplyr::select(StartDate, Title, Init, ES, answer) %>%
+  separate(answer, c("type1", "type2", "type3", "type4"), sep = ",") %>%
+  # remove anything that's all NA
+  dplyr::select(names(.)[sapply(., function(x) !all(is.na(x)))])
+# join EFs and Es
+ESresponses <- left_join(responses, yclass)
+
+response_summary <- responses %>%
+  mutate(answer =  casefold(answer)) %>%
+  group_by(ES, answer) %>% #ES, 
+  # get freq of each answer
+  summarise(count = length(qnum))
+
+response_summary2 <- ESresponses %>%
+  mutate(answer =  casefold(answer)) %>%
+  gather(yclass_num, yclass, type1, type2) %>%
+  mutate(yclass_num = parse_number(yclass_num)) %>%
+  filter(!(yclass_num == 2 & is.na(yclass))) 
+
+response_summary3 <- response_summary2 %>%
+  group_by(ES, yclass, answer) %>% #ES, 
+  # get freq of each answer
+  summarise(count = length(qnum)) %>%
+  ungroup() %>%
+  rename(yresponse = answer) %>%
+  separate(yresponse, paste0("answer", 1:50), ",") %>%
+  # remove anything that's all NA
+  dplyr::select(names(.)[sapply(., function(x) !all(is.na(x)))]) %>%
+  dplyr::select(-count) %>%
+  gather(response_num, yresponse, answer1:ncol(.)) %>%
+  filter(!is.na(yresponse)) %>%
+  mutate(yresponse = trimws(yresponse)) %>%
+  group_by(ES, yclass, yresponse) %>%
+  summarise(count = length(response_num)) %>%
+  ungroup() %>%
+  arrange(yresponse, yclass)
+
+response_summary4 <- subset(response_summary, !is.na(answer)) %>%
+  splitcom(keepcols = c("ES", "answer"))
+
+# soil protection responses
+png("round2_metareview/figs/soilESresponses_wordcloud.png",width = 5, height = 5, units = "in", res = 300)
+wordcloud(words = response_summary4$answer[response_summary4$ES == "SoilProtect"], freq = response_summary4$num[response_summary4$ES == "SoilProtect"], 
+          min.freq = 1, max.words=200, scale = c(2, 0.4),random.order=FALSE, rot.per = 0.35,
+          colors=brewer.pal(8, "Dark2")) # 
+title(sub = "Soil Protection ES/EF")
+dev.off()
+
+
+
 
 par(mfrow = c(4,4))
 for(v in unique(response_summary_simple$ES)){
