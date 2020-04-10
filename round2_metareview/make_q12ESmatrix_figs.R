@@ -1,14 +1,17 @@
-# mock figs to figure out what's needed for data cleaning vs. what can be done in analysis/figure scripts
-# ctw
+# make q12 ES response/driver matrix figures
+# author(s): ctw
+# initiated: apr 2020
 
-# script purpose
+# script purpose:
 # make following figs:
-## 1) word lcoud response (or driver) var (borrow ctw climate QA code to panel ggplots in same graphing window)
+## 1) word lcoud response (or driver) variables
 ## 2) alluvial diagram ES driver to ES response to ES
-## 3) bar chart summaries: where? type of study? temporal dynamics? feedbacks measured? non-linear/thresholds?
 
 # notes
-# file dependencies:
+# R package options for wordcloud:
+## > if use gg version, borrow ctw climate QA code to panel ggplots in same graphing window
+
+# Rpackage options for alluvial:
 
 # other:
 
@@ -22,12 +25,35 @@ library(ggwordcloud)
 library(ggalluvial)
 options(stringsAsFactors = F)
 na_vals <- c("NA", "NaN", ".", "", " ", NA, NaN)
-theme_set(theme_bw())
+theme_set(theme_classic())
 
 
+# read in latest metareview data
+rawdat <- read.csv("round2_metareview/data/cleaned/prelim_singlereview.csv", na.strings = na_vals)
+# check read in as expected
+glimpse(rawdat)
 
-# -- 1) WORD CLOUDS ----
-# ctw code for paneling ggplots in single window
+
+# function for breaking out comma separated answers
+splitcom <- function(df, keepcols = c("Title", "answer")){
+  df <- df[keepcols] %>%
+    #dplyr::select_vars(keepcols) %>%
+    distinct() %>%
+    # break out answers by comma
+    separate(answer, paste0("v",1:20), ",") %>% # <- this will throw warning, fine. pad with extra cols for up to 20 comma-separated answers just in case
+    # remove cols that are all na
+    dplyr::select(names(.)[sapply(., function(x) !(all(is.na(x))))]) %>%
+    # gather to tidy
+    gather(num, answer, v1:ncol(.)) %>%
+    mutate(answer = trimws(answer)) %>%
+    # make number of answers numeric
+    mutate(num = parse_number(num)) %>%
+    # remove any NAs in answer
+    filter(!(is.na(answer)|answer %in% c("", " "))) # dat still tidy at this point
+  return(df)
+}
+
+# for reference, ctw code for paneling ggplots in single window
 # function to panel plot flagged data
 visual_qa <- function(dat, qadat, sorttime = "date", add_fourth = NA){
   # initiate list for storing ggplots
@@ -74,6 +100,22 @@ visual_qa <- function(dat, qadat, sorttime = "date", add_fourth = NA){
   }
   return(plot_list)
 }
+
+
+
+# -- PREP DATA -----
+# remove any titles that were excluded (yes in q3)
+excludetitles <- with(rawdat, Title[(qnum == "Q3" & grepl("yes", answer, ignore.case = T))]) 
+checkexcluded <- subset(rawdat, Title %in% excludetitles) # looks good
+rm(checkexcluded)
+
+# remove excluded papers
+dat <- subset(rawdat, !Title %in% excludetitles)
+
+
+# -- FIGURES -----
+# 1) WORD CLOUDS ----
+
 
 # make single word cloud
 sort(sapply(split(response_summary3$yresponse, response_summary3$ES), function(x) length(unique(x))))
@@ -123,3 +165,11 @@ ggplot(subset(response_summary_simple, ES %in% c("HabCreate", "CulturePsych")), 
   scale_size_area(max_size = 40) +
   theme_minimal() +
   facet_wrap(~ES)
+
+
+# 2) ES DRIVERS FIG -------
+
+
+
+# 3) ALLUVIAL DIAGRAM -----
+
