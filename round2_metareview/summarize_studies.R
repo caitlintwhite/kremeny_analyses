@@ -14,7 +14,9 @@
 ## > use consistent, intuitive file nomenclature
 
 # notes:
-# to order answers on x-axis, can re-assign as factors before plotting
+# helpful online resources for making study location map figures
+# using rnaturalearth data: https://www.r-spatial.org/r/2018/10/25/ggplot2-sf.html
+# dissolve geometry for sf: https://philmikejones.me/tutorials/2015-09-03-dissolve-polygons-in-r/
 
 
 
@@ -24,7 +26,6 @@ library(forcats)
 library(sf)
 library(rnaturalearth)
 library(rnaturalearthdata)
-library(maps)
 options(stringsAsFactors = F)
 na_vals <- c("NA", "NaN", "", " ", ".", NA, NaN)
 theme_set(theme_classic())
@@ -82,15 +83,25 @@ unique(loc$answer) # deal with commas
 loc <- splitcom(loc, )  
 
 # simple bar plot
-ggplot(loc, aes(forcats::fct_infreq(answer))) +
-  geom_bar()
+## add col for terrestrial or ocean to fill location bars
+loc %>%
+  mutate(loctype = ifelse(grepl("Ocean$|Marine", answer), "Ocean", 
+                          ifelse(answer == "Oceania", "Oceania", "Terrestrial"))) %>%
+  ggplot(aes(forcats::fct_infreq(answer), fill = loctype)) +
+  geom_bar() +
+  labs(y = "Number of studies", x = "Study location") +
+  scale_y_continuous(expand = c(0,0)) +
+  # make oceania color between terrestrial and ocean
+  scale_fill_manual(values = c("Ocean" = "royalblue4", "Oceania" = "lightseagreen", "Terrestrial" = "tan3"), guide =F) 
+ggsave("round2_metareview/figs/q5_location_barplot.png",
+       width = 3, height = 1.75, units = "in", scale = 3.2)
 table(loc$answer)
 table(loc$num)
 
 # map plot <- # come back to this. ctw needs to remember how to use sf (has been a minute)
 # group_by(loc, answer) 
-# ggplot(data = world) +
-#   geom_sf(aes(fill = pop_est)) +
+# ggplot(data = continents) +
+#   geom_sf()
 #   scale_fill_viridis_c()
 
 
