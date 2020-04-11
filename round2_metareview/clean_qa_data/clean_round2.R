@@ -224,7 +224,7 @@ stat_byname <- ggplot(keydf, aes(Name, fill = Round2_reviewer1)) +
   # add line to indicate 28 papers
   geom_hline(aes(yintercept = 28)) +
   guides(fill = guide_legend(title = "R2 rev1")) +
-  labs(title = paste("Round 2 progress:", length(unique(keydf2$Title)), "of", length(original$Title), "unique papers reviewed on", Sys.Date()),
+  labs(title = paste("Round 2 progress:", length(unique(keydf$Title)), "of", length(original$Title), "unique papers reviewed on", Sys.Date()),
        subtitle = "# papers reviewed by person (answered Qualtrics), colored by R2 reviewer 1 assignment")
 # ggplot for status check
 stat_byrev <- ggplot(keydf, aes(Round2_reviewer1, fill = Name)) +
@@ -243,7 +243,7 @@ outstanding <- cbind(assess_date = Sys.Date(), subset(original, !Title %in% uniq
   dplyr::select(Round2_reviewer1, Round2_reviewer2, Round1_reviewer, FirstAuthor, Title, SourcePublication, PublicationYear))
 
 # who remains to reach 28 papers
-effort <- data.frame(Init = unname(initials), Name = names(initials)) %>%
+effort <- data.frame(assess_date = Sys.Date(), Init = unname(initials), Name = names(initials)) %>%
   left_join(data.frame(table(keydf$Name)), by = c("Name" = "Var1")) %>%
   rename(R2_reviewed = Freq) %>%
   # if count is NA, assign 0
@@ -258,8 +258,8 @@ effort <- data.frame(Init = unname(initials), Name = names(initials)) %>%
   mutate(pair = paste0("pair",1:2)) %>%
   ungroup() %>%
   spread(pair, Round2_reviewer2) %>%
-  arrange(desc(R2_reviewed)) %>%
-  mutate(assess_date = Sys.Date())
+  arrange(desc(R2_reviewed))
+  
   
 # write out both for LD to deal with
 write_csv(outstanding, "round2_metareview/clean_qa_data/review_status/outstanding_r2papers.csv")
