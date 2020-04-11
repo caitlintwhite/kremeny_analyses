@@ -235,22 +235,35 @@ stat_byrev <- ggplot(keydf, aes(Round2_reviewer1, fill = Name)) +
   labs(subtitle = "# papers reviewed by R2 reviewer 1 assigned, colored by person who answered Qualtrics")
 # write to repo
 plot_grid(stat_byname, stat_byrev, nrow = 2)
-ggsave("round2_metareview/clean_qa_data/figs/reviewstatus.pdf", 
+ggsave("round2_metareview/clean_qa_data/review_status/reviewstatus.pdf", 
        height = 6, width = 6, units = "in", scale = 1.5)
+
 # what remains?
-outstanding <- subset(original, !Title %in% unique(keydf$Title))
+outstanding <- cbind(assess_date = Sys.Date(), subset(original, !Title %in% unique(keydf$Title)) %>%
+  dplyr::select(Round2_reviewer1, Round2_reviewer2, Round1_reviewer, FirstAuthor, Title, SourcePublication, PublicationYear))
+
 # who remains to reach 28 papers
 effort <- data.frame(Init = unname(initials), Name = names(initials)) %>%
   left_join(data.frame(table(keydf$Name)), by = c("Name" = "Var1")) %>%
+  rename(R2_reviewed = Freq) %>%
   # if count is NA, assign 0
-  replace_na(list(Freq = 0)) %>%
+  replace_na(list(R2_reviewed = 0)) %>%
+  # add number of rev1 outstanding
+  left_join(data.frame(table(outstanding$Round2_reviewer1)), by = c("Name" = "Var1")) %>%
+  replace_na(list(Freq = 0 )) %>%
+  rename(Rev1_remain = Freq) %>%
   # add rev 2
   left_join(distinct(original[,1:2]), by = c("Name" = "Round2_reviewer1")) %>%
   group_by(Name) %>%
   mutate(pair = paste0("pair",1:2)) %>%
   ungroup() %>%
   spread(pair, Round2_reviewer2) %>%
-  arrange(desc(Freq))
+  arrange(desc(R2_reviewed)) %>%
+  mutate(assess_date = Sys.Date())
+  
+# write out both for LD to deal with
+write_csv(outstanding, "round2_metareview/clean_qa_data/review_status/outstanding_r2papers.csv")
+write_csv(effort, "round2_metareview/clean_qa_data/review_status/revieweffort_r2papers.csv")
 
 # make tidy dataset
 prelimlong <- prelim %>%
@@ -281,7 +294,7 @@ prelimlong <- prelim %>%
 #   if(grepl(paste0(pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r]), files) | grepl(paste0(pairs$Round2_reviewer2[r], pairs$Round2_reviewer1[r]), files)){
 #     next
 #   }
-#   write_csv(temp, paste0("reviewcheck_20200318/", pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r],"_round2progress_20200318.csv"))
+#   write_csv(temp, paste0("round2_metareview/clean_qa_data/review_status/reviewcheck_20200318/", pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r],"_round2progress_20200318.csv"))
 #    
 # }
 
