@@ -235,7 +235,7 @@ stat_byrev <- ggplot(keydf, aes(Round2_reviewer1, fill = Name)) +
   labs(subtitle = "# papers reviewed by R2 reviewer 1 assigned, colored by person who answered Qualtrics")
 # write to repo
 plot_grid(stat_byname, stat_byrev, nrow = 2)
-ggsave("round2_metareview/clean_qa_data/review_status/reviewstatus.pdf", 
+ggsave("round2_metareview/clean_qa_data/review_status/reviewstatus_r2papers.pdf", 
        height = 6, width = 6, units = "in", scale = 1.5)
 
 # what remains?
@@ -260,10 +260,10 @@ effort <- data.frame(assess_date = Sys.Date(), Init = unname(initials), Name = n
   spread(pair, Round2_reviewer2) %>%
   arrange(desc(R2_reviewed))
   
-  
 # write out both for LD to deal with
 write_csv(outstanding, "round2_metareview/clean_qa_data/review_status/outstanding_r2papers.csv")
 write_csv(effort, "round2_metareview/clean_qa_data/review_status/revieweffort_r2papers.csv")
+
 
 # make tidy dataset
 prelimlong <- prelim %>%
