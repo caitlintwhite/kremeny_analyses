@@ -191,7 +191,7 @@ headerLUT$ES <- factor(headerLUT$ES, levels = rev(ESlevels))
 
 
 
-# -- TIDY DATA + ASSESS REVIEW STATUS ----
+# -- ASSESS REVIEW STATUS + TIDY DATA ----
 names(prelim)
 # important ID-key fields to keep across question datasets are:
 ## ResponseID
@@ -264,7 +264,6 @@ effort <- data.frame(assess_date = Sys.Date(), Init = unname(initials), Name = n
 write_csv(outstanding, "round2_metareview/clean_qa_data/review_status/outstanding_r2papers.csv")
 write_csv(effort, "round2_metareview/clean_qa_data/review_status/revieweffort_r2papers.csv")
 
-
 # make tidy dataset
 prelimlong <- prelim %>%
   # select cols to keep (drop Q1 -- old/incorrect title)
@@ -297,6 +296,32 @@ prelimlong <- prelim %>%
 #   write_csv(temp, paste0("round2_metareview/clean_qa_data/review_status/reviewcheck_20200318/", pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r],"_round2progress_20200318.csv"))
 #    
 # }
+
+# -- REASSIGN KG PAPERS -----
+# 4/11 update: > after checking with LD, KG will do 18 rev1 that remain, Nick's 5 (she's rev2 anyway), and 5 of Tim's to get to 28
+
+KG_outstanding <- subset(outstanding, Round2_reviewer1 == "Kathryn" | (Round2_reviewer1 == "Nick" & Round2_reviewer2 == "Kathryn"))
+# subsample 5 of Tim's papers
+set.seed(61)
+rTim4KG <- outstanding[sample(row.names(subset(outstanding, Round2_reviewer1 == "Tim")), size = 5, replace = F),]
+# id what's left for Tim so he knows
+Tim_remain <- anti_join(subset(outstanding, Round2_reviewer1 == "Tim"), rTim4KG)
+# papers that remain for Tim on 2020/04/11
+Tim_remain$Title
+# [1] "Landscape-level crop diversity benefits biological pest control" (Redlich)                                                         
+# [2] "Stable nitrogen and carbon isotope ratios in wild native honeybees: the influence of land use and climate" (Taki)                         
+# [3] "Science synthesis for management as a way to advance ecosystem restoration: evaluation of restoration scenarios for the Florida Everglades" (Wetzel)
+
+# clean up cols in KG's to make readability easier
+KG_outstanding <- rbind(KG_outstanding, rTim4KG) %>%
+  # add full authors and abstract back in
+  left_join(original[c("Title", "AuthorsFull", "Abstract", "Comments")]) %>%
+  mutate(Round2_reviewer = "Kathryn") %>%
+  dplyr::select(Round2_reviewer, Round1_reviewer, Comments, FirstAuthor, AuthorsFull, Title:ncol(.)) %>%
+  rename(Round1_comments = Comments) %>%
+  mutate_all(function(x) ifelse(is.na(x), "", x))
+# write out
+write_csv(KG_outstanding, "round2_metareview/clean_qa_data/review_status/ESRound2_reviewpapers_forKG_20200411.csv")
 
 
 
