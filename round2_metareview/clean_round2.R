@@ -211,7 +211,7 @@ initials <- c("Aislyn" = "AK", "Anna" = "AIS", "Caitlin" = "CW", "Claire" = "CK"
               "Grant" = "GV", "Isabel" = "IS", "Julie" = "JL", "Kathryn" = "KG",
               "Laura" = "LD", "Laurel" = "LB", "Nick" = "NBD", "Sierra" = "SDJ",
               "Tim" = "TK", "Travis" = "TM")
-keydf2 <- left_join(keydf, data.frame(Q27 = unname(initials), Name = names(initials))) %>%
+keydf <- left_join(keydf, data.frame(Q27 = unname(initials), Name = names(initials))) %>%
   # append review assignment info to check status on all rev1 papers accounted for
   left_join(original[c("Round2_reviewer1","Round2_reviewer2", "Title")], by = c("clean_title" ="Title")) %>%
   # clean up and re-order cols
@@ -219,7 +219,7 @@ keydf2 <- left_join(keydf, data.frame(Q27 = unname(initials), Name = names(initi
   dplyr::select(RecordedDate, ResponseId, Init, Name, Title:ncol(.))
 # ggplot for status check
 
-stat_byname <- ggplot(keydf2, aes(Name, fill = Round2_reviewer1)) +
+stat_byname <- ggplot(keydf, aes(Name, fill = Round2_reviewer1)) +
   geom_bar() +
   # add line to indicate 28 papers
   geom_hline(aes(yintercept = 28)) +
@@ -227,7 +227,7 @@ stat_byname <- ggplot(keydf2, aes(Name, fill = Round2_reviewer1)) +
   labs(title = paste("Round 2 progress:", length(unique(keydf2$Title)), "of", length(original$Title), "unique papers reviewed on", Sys.Date()),
        subtitle = "# papers reviewed by person (answered Qualtrics), colored by R2 reviewer 1 assignment")
 # ggplot for status check
-stat_byrev <- ggplot(keydf2, aes(Round2_reviewer1, fill = Name)) +
+stat_byrev <- ggplot(keydf, aes(Round2_reviewer1, fill = Name)) +
   geom_bar() +
   # add line to indicate 28 papers
   geom_hline(aes(yintercept = 28)) +
@@ -237,6 +237,20 @@ stat_byrev <- ggplot(keydf2, aes(Round2_reviewer1, fill = Name)) +
 plot_grid(stat_byname, stat_byrev, nrow = 2)
 ggsave("round2_metareview/clean_qa_data/figs/reviewstatus.pdf", 
        height = 6, width = 6, units = "in", scale = 1.5)
+# what remains?
+outstanding <- subset(original, !Title %in% unique(keydf$Title))
+# who remains to reach 28 papers
+effort <- data.frame(Init = unname(initials), Name = names(initials)) %>%
+  left_join(data.frame(table(keydf$Name)), by = c("Name" = "Var1")) %>%
+  # if count is NA, assign 0
+  replace_na(list(Freq = 0)) %>%
+  # add rev 2
+  left_join(distinct(original[,1:2]), by = c("Name" = "Round2_reviewer1")) %>%
+  group_by(Name) %>%
+  mutate(pair = paste0("pair",1:2)) %>%
+  ungroup() %>%
+  spread(pair, Round2_reviewer2) %>%
+  arrange(desc(Freq))
 
 # make tidy dataset
 prelimlong <- prelim %>%
@@ -272,10 +286,6 @@ prelimlong <- prelim %>%
 # }
 
 
-
-
-
-
 # for prelim results, just look at single/first reviewed
 firstreview <- prelimlong %>%
   group_by(Title, abbr, id) %>%
@@ -283,6 +293,11 @@ firstreview <- prelimlong %>%
   ungroup()
 
 write_csv(firstreview, "round2_metareview/data/cleaned/prelim_singlereview.csv")
+
+
+
+
+
 
 # exclusion questions
 ggplot(subset(firstreview, qnum == "Q3"), aes(abbr, fill = answer)) +
