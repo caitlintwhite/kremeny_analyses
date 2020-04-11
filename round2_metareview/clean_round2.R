@@ -56,7 +56,7 @@ theme_set(theme_bw())
 qualtrix <- read.csv(list.files("round2_metareview/data/raw", full.names = T), na.strings = na_vals, skip  = 2) 
 ## re-read, no skipping, for colnames
 headers <- read.csv(list.files("round2_metareview/data/raw", full.names = T), na.strings = na_vals)
-## read in header lookup table (code to make below)
+## read in header lookup table (exported headers and typed in abbreviations and group assignments bc easier doing in Excel than R)
 headerLUT <- read.csv("round2_metareview/data/headersLUT.csv", na.strings = na_vals)
 
 # original round 2 assignment
@@ -64,33 +64,86 @@ original <- read.csv("round1_exclusion/output/review_assignments_round2_grpdsubs
 
 
 
-# -- IDENTIFY DOUBLE-REVIEWED PAPERS -----
+# -- RM JUNK ROWS + ID DOUBLE-REVIEWED PAPERS -----
 # assign colnames
 names(qualtrix) <- names(headers)
+names(headers)
+# assess values for survey parameters to look for screening values
+sapply(qualtrix[c("Status", "Progress", "Finished", "DistributionChannel", "Q27", "Q1")], unique)
+qualtrix[grep("[a-z]", qualtrix$Q27), c("Q1", "Status", "DistributionChannel")] # remove these
 
-# remove anything not finished
-prelim <- subset(qualtrix, Finished == "True" & Status != "Survey Preview" & !is.na(Q1) & Q1 != "dasdas") %>%
+# remove anything not finished or was survey preview
+prelim <- subset(qualtrix, Finished == "True" & Status != "Survey Preview" & !is.na(Q1) & !grepl("[a-z]|TEST_REMOVE", Q27))
+# check pulled correct records
+unwanted <- anti_join(qualtrix, prelim) # looks good. these records are unfinished or test runs
+# continue with prelim column class clean up, title clean up, and ordering
+
+# check for titles that don't match
+needs_match <- unique(prelim$Q1)[!unique(prelim$Q1) %in% original$Title]
+needs_match
+# https:// value = "Assessment of the relationship between ecosystem services and human wellbeing in the social-ecological landscapes of Lefke Region in North Cyprus"
+https <- "Assessment of the relationship between ecosystem services and human wellbeing in the social-ecological landscapes of Lefke Region in North Cyprus"
+# see if we can match on all lowcase, no punctuation, and subset of starting words. https is gonna have to be manual matched
+needs_match <- data.frame(Q1 = needs_match, nmlow = str_remove_all(casefold(needs_match),"[:punct:]")) %>%
+  # manual fix https
+  mutate(nmlow = ifelse(grepl("https://link.springer.com/content/pdf/10.1007/s1", Q1), str_remove_all(casefold(https),"[:punct:]"), nmlow),
+         nm_words = trimws(word(nmlow, 1, 5)),
+         nm_words = ifelse(is.na(nm_words), nmlow, nm_words))
+# repeat for titles
+title_df <- dplyr::select(original, Title) %>%
+  mutate(title_low = str_remove_all(casefold(Title), "[:punct:]"),
+         title_words = trimws(word(title_low, 1, 5))) #[:blank:]|
+# partial match
+needs_match <- mutate(needs_match, match_num = pmatch(nm_words, title_df$title_words)) %>%
+  # for anything that didn't partial match, match on first 25 characters 
+  group_by(Q1) %>%
+  mutate(match_num = ifelse(is.na(match_num), grep(paste0("^", substr(nm_words, 1, 25)), title_df$title_words), match_num)) %>%
+  ungroup() %>%
+  mutate(clean_title = title_df$Title[match_num])
+
+prelim <- prelim %>%
   # make true date time column
   mutate_at(.vars = c("StartDate", "EndDate", "RecordedDate"), function(x) ymd_hms(x)) %>%
   #sort by most recent date first
   arrange(desc(RecordedDate)) %>%
-  group_by(Q27, Q1) %>%
+  # add clean title
+  left_join(needs_match[c("Q1", "clean_title")]) %>%
+  mutate(clean_title = ifelse(is.na(clean_title), Q1, clean_title)) %>%
+  # identify duplicate records
+  group_by(Q27, clean_title) %>%
   mutate(doubleentry = duplicated(Q1)) %>%
   ungroup() %>%
+  # move clean title to behind Q1
+  dplyr::select(names(.)[1]:Q1, clean_title, Q2:ncol(.))
+# screen double entries
+doubles <- subset(prelim, clean_title %in% clean_title[doubleentry]) %>%
+  arrange(clean_title, Q27, desc(RecordedDate))
+# 3 of 4 double entries have more of the Q3 exclusion questions answered in the recent, paper #4 identitical (excluded on first exclusion question)
+# verdict: keep most recent entry for same reviewer-double reviews
+prelim <- prelim %>%
   #remove any doubleentries
   filter(!doubleentry) %>%
   # remove doubleentryrow
   select(-doubleentry)
 # tally papers that have been reviewed more than once (i.e. 2 people reviewed it)
-records <- dplyr::select(prelim, Q27, Q1) %>%
-  group_by(Q1) %>%
-  mutate(nobs = length(Q1)) %>%
-  ungroup()
+records <- dplyr::select(prelim, Q27, clean_title) %>%
+  group_by(clean_title) %>%
+  mutate(nobs = length(clean_title)) %>%
+  ungroup() %>%
+  arrange(desc(nobs), clean_title, Q27)
 # write out double-reviewed for Aislyn to compare results 2020-03-04
-forAK <- subset(prelim, Q1 %in% unique(records$Q1[records$nobs == 2])) %>%
-  arrange(Q1, StartDate) %>%
+forAK <- subset(prelim, clean_title %in% unique(records$clean_title[records$nobs > 1])) %>%
+  arrange(clean_title, StartDate) %>%
   mutate_all(function(x) ifelse(is.na(x), "", x))
 write.csv(forAK, "round2_metareview/data/intermediate/round2_doublereviewed.csv", row.names = F)
+
+# pull titles for screening further down
+doubletitles <- unique(forAK$clean_title)
+# how many papers double-reviewed?
+length(doubletitles)
+
+# clean up environment
+rm(doubles, qualtrix, unwanted, title_df, needs_match, available_titles, https)
 
 
 
@@ -136,10 +189,9 @@ ESlevels <- c(provisioning, regulating, supporting, cultural)
 headerLUT$ES <- factor(headerLUT$ES, levels = rev(ESlevels))
 
 
+
 # -- BASIC DATA TRIAGE ----
-# check reviewers
-unique(prelim$Q27) # remove test
-prelim <- subset(prelim, Q27 != "TEST_REMOVE")
+
 
 # check for titles that don't match
 needs_match <- unique(prelim$Q1)[!unique(prelim$Q1) %in% original$Title]
