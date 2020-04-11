@@ -274,7 +274,7 @@ prelimlong <- prelim %>%
   rename(Init = Q27, Title = clean_title)
 
 
-# ---- LOOP TO SUSBET PAIRED REVIEWERS <----- only run this one time (pre spring bring)
+# ---- 2020/03/18: LOOP TO SUSBET PAIRED REVIEWERS <----- only run this one time (pre spring bring)
 # pairs <- distinct(original[,1:2])
 
 # unique(prelimlong$Init)
@@ -297,7 +297,7 @@ prelimlong <- prelim %>%
 #    
 # }
 
-# -- REASSIGN KG PAPERS -----
+# -- 2020/04/11: Reassign KG Papers (only do this once [2020/04/11]) -----
 # 4/11 update: > after checking with LD, KG will do 18 rev1 that remain, Nick's 5 (she's rev2 anyway), and 5 of Tim's to get to 28
 
 KG_outstanding <- subset(outstanding, Round2_reviewer1 == "Kathryn" | (Round2_reviewer1 == "Nick" & Round2_reviewer2 == "Kathryn"))
@@ -320,8 +320,20 @@ KG_outstanding <- rbind(KG_outstanding, rTim4KG) %>%
   dplyr::select(Round2_reviewer, Round1_reviewer, Comments, FirstAuthor, AuthorsFull, Title:ncol(.)) %>%
   rename(Round1_comments = Comments) %>%
   mutate_all(function(x) ifelse(is.na(x), "", x))
-# write out
+# write out for LD to send to KG
 write_csv(KG_outstanding, "round2_metareview/clean_qa_data/review_status/ESRound2_reviewpapers_forKG_20200411.csv")
+
+# > CTW emailed Tim and Travis 2020/04/11 to let them know of their 3 that remain --
+# Tim's 3 outstanding above, and Travis' are:
+outstanding$Title[outstanding$Round2_reviewer1 == "Travis"]
+# [1] "Decoupled effects (positive to negative) of nutrient enrichment on ecosystem services"                                             
+# [2] "Divergent flows of avian-mediated ecosystem services across forest-matrix interfaces in human-modified landscapes"                 
+# [3] "Restoration potential of threatened ecosystem engineers increases with aridity: broad scale effects on soil nutrients and function"
+
+# > otherwise, as of 2002/04/11, LD has 2 rev1 papers left (is aware), and IS, CK and SDJ know which ones they have left
+
+# clean up environment
+rm(KG_outstanding, rTim4KG, Tim_remain)
 
 
 
@@ -350,7 +362,7 @@ ggplot(subset(firstreview, qnum == "Q3"), aes(abbr, fill = answer)) +
 
 
 # -- DOUBLE REVIEWED ----
-doubleprelim <- subset(prelimlong, Title %in% records$Q1[records$nobs == 2]) %>%
+doubleprelim <- subset(prelimlong, Title %in% doubletitles) %>%
   group_by(Title, id) %>%
   mutate(same_answer = length(unique(answer)) ==1) %>%
   ungroup() %>%
@@ -362,6 +374,12 @@ length(unique(doubleprelim$Title))
 sapply(split(doubleprelim$Title, doubleprelim$Init), function(x) length(unique(x)))
 write_csv(doubleprelim, "round2_metareview/data/intermediate/round2_doublereviewed_tidy.csv")
 
+# where are the most inconsistencies (by question)?
+dplyr::select(doubleprelim, Title, abbr, same_answer) %>%
+  distinct() %>%
+  ggplot(aes(same_answer)) +
+  geom_bar() +
+  facet_wrap(~abbr)
 
 
 
