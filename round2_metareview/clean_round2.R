@@ -40,8 +40,6 @@
 
 
 
-
-
 # -- SETUP -----
 rm(list = ls()) # clean enviro
 library(tidyverse)
@@ -190,55 +188,93 @@ headerLUT$ES <- factor(headerLUT$ES, levels = rev(ESlevels))
 
 
 
-# -- BASIC DATA TRIAGE ----
 
 
-# check for titles that don't match
-needs_match <- unique(prelim$Q1)[!unique(prelim$Q1) %in% original$Title]
-test0 <- str_split(needs_match, "(?<=)")
-test0.5 <- lapply(test0, function(x) x[1:5])
-word()
-# see if we can match on all lowcase, no spaces or punctuation. https is gonna have to be manual matched
-test1 <- str_remove_all(casefold(needs_match), "[:blank:]|[:punct:]") str_
-available_titles <- original$Title[!original$Title %in% unique(prelim$Q27)]
-test2 <- str_remove_all(casefold(original$Title), "[:blank:]|[:punct:]")
-pmatch(test1, test2)
 
-
-# -- DIVIDE RESULTS BY QUESTION ----
+# -- TIDY DATA + ASSESS REVIEW STATUS ----
 names(prelim)
 # important ID-key fields to keep across question datasets are:
 ## ResponseID
 ## Q27 (Reviewer ID)
-## Q1 (Title)
+## clean_title
 
-keydf <- distinct(dplyr::select(prelim, RecordedDate, ResponseId, Q27, Q1))
+keydf <- distinct(dplyr::select(prelim, RecordedDate, ResponseId, Q27, clean_title))
 # who has reviewed?
 sort(unique(keydf$Q27))
 # how many papers per reviewer?
-sort(sapply(split(keydf$Q1, keydf$Q27), length))
+sort(sapply(split(keydf$clean_title, keydf$Q27), length))
 # how many papers have we gotten through out of initial start?
-summary(unique(prelim$Q1) %in% unique(original$Title)) # 9 either misspelled or have weird punctuation
-summary(unique(original$Title) %in% unique(prelim$Q1)) #82 still to go (4/9)..
+summary(unique(prelim$clean_title) %in% unique(original$Title)) # 9 either misspelled or have weird punctuation
+summary(unique(original$Title) %in% unique(prelim$clean_title)) #61 still to go (4/9)..
+# assign names to initals to link with original assigments
+initials <- c("Aislyn" = "AK", "Anna" = "AIS", "Caitlin" = "CW", "Claire" = "CK",
+              "Grant" = "GV", "Isabel" = "IS", "Julie" = "JL", "Kathryn" = "KG",
+              "Laura" = "LD", "Laurel" = "LB", "Nick" = "NBD", "Sierra" = "SDJ",
+              "Tim" = "TK", "Travis" = "TM")
+keydf2 <- left_join(keydf, data.frame(Q27 = unname(initials), Name = names(initials))) %>%
+  # append review assignment info to check status on all rev1 papers accounted for
+  left_join(original[c("Round2_reviewer1","Round2_reviewer2", "Title")], by = c("clean_title" ="Title")) %>%
+  # clean up and re-order cols
+  rename(Init = Q27, Title = clean_title) %>%
+  dplyr::select(RecordedDate, ResponseId, Init, Name, Title:ncol(.))
+# ggplot for status check
 
-# filtering (exclusion) questions are Q2, Q29, (and Q30? not sure what question that is)
-# pull unique question names
-questions <- names(prelim)[grep("^Q", names(prelim))]
-question_numbers <- unique(str_extract(questions, "^Q[:number:]+"))
-# goal is to create tidy data frames for analysis
-# question 9 (scale)
-q9df <- dplyr::select(prelim, c(names(keydf), names(prelim)[grep("Q9", names(prelim))]))
-
+stat_byname <- ggplot(keydf2, aes(Name, fill = Round2_reviewer1)) +
+  geom_bar() +
+  # add line to indicate 28 papers
+  geom_hline(aes(yintercept = 28)) +
+  guides(fill = guide_legend(title = "R2 rev1")) +
+  labs(title = paste("Round 2 progress:", length(unique(keydf2$Title)), "of", length(original$Title), "unique papers reviewed on", Sys.Date()),
+       subtitle = "# papers reviewed by person (answered Qualtrics), colored by R2 reviewer 1 assignment")
+# ggplot for status check
+stat_byrev <- ggplot(keydf2, aes(Round2_reviewer1, fill = Name)) +
+  geom_bar() +
+  # add line to indicate 28 papers
+  geom_hline(aes(yintercept = 28)) +
+  guides(fill = guide_legend(title = "Name")) +
+  labs(subtitle = "# papers reviewed by R2 reviewer 1 assigned, colored by person who answered Qualtrics")
+# write to repo
+plot_grid(stat_byname, stat_byrev, nrow = 2)
+ggsave("round2_metareview/clean_qa_data/figs/reviewstatus.pdf", 
+       height = 6, width = 6, units = "in", scale = 1.5)
 
 # make tidy dataset
 prelimlong <- prelim %>%
-  # remove test_remove
-  filter(Q27 != "TEST_REMOVE") %>%
-  dplyr::select(StartDate, EndDate, RecordedDate, Q27:ncol(.)) %>%
+  # select cols to keep (drop Q1 -- old/incorrect title)
+  dplyr::select(StartDate, EndDate, RecordedDate, Q27, clean_title:ncol(.)) %>%
   gather(id, answer, Q2:ncol(.)) %>%
   left_join(headerLUT) %>%
   arrange(RecordedDate) %>%
-  rename(Init = Q27, Title = Q1)
+  rename(Init = Q27, Title = clean_title)
+
+
+# ---- LOOP TO SUSBET PAIRED REVIEWERS <----- only run this one time (pre spring bring)
+# pairs <- distinct(original[,1:2])
+
+# unique(prelimlong$Init)
+# 
+# reviewlist <- data.frame()
+# for(r in 1:nrow(pairs)){
+#   temp <- subset(original, (Round2_reviewer1 == pairs$Round2_reviewer1[r] & Round2_reviewer2 == pairs$Round2_reviewer2[r]) |
+#                    (Round2_reviewer1 == pairs$Round2_reviewer2[r] & Round2_reviewer2 == pairs$Round2_reviewer1[r])) %>%
+#     select(Round2_reviewer1, Round2_reviewer2, FirstAuthor, Title, SourcePublication, PublicationYear) %>%
+#     mutate(reviewed1 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer1[r]]]),
+#            reviewed2 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer2[r]]]))
+#     names(temp)[names(temp) == "reviewed1"] <- paste0(initials[[pairs$Round2_reviewer1[r]]], "reviewed")
+#     names(temp)[names(temp) == "reviewed2"] <- paste0(initials[[pairs$Round2_reviewer2[r]]], "reviewed")
+#   
+#   files <- list.files("reviewcheck_20200318") %>% str_flatten()
+#   if(grepl(paste0(pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r]), files) | grepl(paste0(pairs$Round2_reviewer2[r], pairs$Round2_reviewer1[r]), files)){
+#     next
+#   }
+#   write_csv(temp, paste0("reviewcheck_20200318/", pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r],"_round2progress_20200318.csv"))
+#    
+# }
+
+
+
+
+
 
 # for prelim results, just look at single/first reviewed
 firstreview <- prelimlong %>%
@@ -323,32 +359,6 @@ length(unique(doubleprelim$Title))
 sapply(split(doubleprelim$Title, doubleprelim$Init), function(x) length(unique(x)))
 write_csv(doubleprelim, "round2_metareview/data/intermediate/round2_doublereviewed_tidy.csv")
 
-
-# ---- LOOP TO SUSBET PAIRED REVIEWERS <----- only run this one time (pre spring bring)
-# pairs <- distinct(original[,1:2])
-# initials <- c("Aislyn" = "AK", "Anna" = "AIS", "Caitlin" = "CW", "Claire" = "CK",
-#               "Grant" = "GV", "Isabel" = "IS", "Julie" = "JL", "Kathryn" = "KG",
-#               "Laura" = "LD", "Laurel" = "LB", "Nick" = "NBD", "Sierra" = "SDJ", 
-#               "Tim" = "TK", "Travis" = "TM")
-# unique(prelimlong$Init)
-# 
-# reviewlist <- data.frame()
-# for(r in 1:nrow(pairs)){
-#   temp <- subset(original, (Round2_reviewer1 == pairs$Round2_reviewer1[r] & Round2_reviewer2 == pairs$Round2_reviewer2[r]) |
-#                    (Round2_reviewer1 == pairs$Round2_reviewer2[r] & Round2_reviewer2 == pairs$Round2_reviewer1[r])) %>%
-#     select(Round2_reviewer1, Round2_reviewer2, FirstAuthor, Title, SourcePublication, PublicationYear) %>%
-#     mutate(reviewed1 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer1[r]]]),
-#            reviewed2 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer2[r]]]))
-#     names(temp)[names(temp) == "reviewed1"] <- paste0(initials[[pairs$Round2_reviewer1[r]]], "reviewed")
-#     names(temp)[names(temp) == "reviewed2"] <- paste0(initials[[pairs$Round2_reviewer2[r]]], "reviewed")
-#   
-#   files <- list.files("reviewcheck_20200318") %>% str_flatten()
-#   if(grepl(paste0(pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r]), files) | grepl(paste0(pairs$Round2_reviewer2[r], pairs$Round2_reviewer1[r]), files)){
-#     next
-#   }
-#   write_csv(temp, paste0("reviewcheck_20200318/", pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r],"_round2progress_20200318.csv"))
-#    
-# }
 
 
 # -- NITTY GRITTY DATA CLEANING -----
