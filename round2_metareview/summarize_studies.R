@@ -110,9 +110,9 @@ table(loc$num)
 #table(krem$Q4)
 ecotype <- subset(dat, qnum == "Q4")
 View(ecotype)
-unique(ecotype$answer[ecotype$abbr == "Ecosytem"]) #ctw will fix typo later
-# for simplicity, keep only ecosytem checked (ignore notes for now)
-ecotype <- subset(ecotype, abbr == "Ecosytem") %>%
+unique(ecotype$answer[ecotype$abbr == "Ecosystem"]) #ctw will fix typo later
+# for simplicity, keep only Ecosystem checked (ignore notes for now)
+ecotype <- subset(ecotype, abbr == "Ecosystem") %>%
   # apply splitcom
   splitcom() # end result is still tidy data
 
