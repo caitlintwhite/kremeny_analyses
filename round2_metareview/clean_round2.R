@@ -286,6 +286,13 @@ prelimlong <- prelim %>%
 # }
 
 
+
+# -- NITTY GRITTY DATA CLEANING -----
+# potential issues:
+## 1) titles entered incorrectly
+## 2) questions not answered (esp questions added later [e.g. exclusion questions])
+
+
 # for prelim results, just look at single/first reviewed
 firstreview <- prelimlong %>%
   group_by(Title, abbr, id) %>%
@@ -303,15 +310,32 @@ write_csv(firstreview, "round2_metareview/data/cleaned/prelim_singlereview.csv")
 ggplot(subset(firstreview, qnum == "Q3"), aes(abbr, fill = answer)) +
   geom_bar()
 
-# ES question
-# question 25 (response variables)
-q25df <- subset(firstreview, qnum =="Q12") %>%
-  filter(!is.na(answer))
+
+# -- DOUBLE REVIEWED ----
+doubleprelim <- subset(prelimlong, Title %in% records$Q1[records$nobs == 2]) %>%
+  group_by(Title, id) %>%
+  mutate(same_answer = length(unique(answer)) ==1) %>%
+  ungroup() %>%
+  filter(!(same_answer & is.na(answer))) %>%
+  arrange(Title, survey_order, RecordedDate)
+# how many double reviewed?
+length(unique(doubleprelim$Title))
+# who?
+sapply(split(doubleprelim$Title, doubleprelim$Init), function(x) length(unique(x)))
+write_csv(doubleprelim, "round2_metareview/data/intermediate/round2_doublereviewed_tidy.csv")
+
+
+
 
 
 # -- EXTRACT WORDS USED FOR ES RESPONSE AND DRIVERS ----
 # what's been classed as EF?
 # what's been classed as ES?
+
+# ES question
+# question 25 (response variables)
+q25df <- subset(firstreview, qnum =="Q12") %>%
+  filter(!is.na(answer))
 
 responses <- subset(q25df, qnum == "Q12" & abbr =="Response")
 yclass <- subset(q25df, qnum == "Q12" & abbr == "Yclass") %>%
@@ -361,25 +385,6 @@ subset(response_summary) %>%
         panel.grid.major.x = element_blank()) +
   facet_wrap(~ES, scales = "free_x")
 
-# -- DOUBLE REVIEWED ----
-doubleprelim <- subset(prelimlong, Title %in% records$Q1[records$nobs == 2]) %>%
-  group_by(Title, id) %>%
-  mutate(same_answer = length(unique(answer)) ==1) %>%
-  ungroup() %>%
-  filter(!(same_answer & is.na(answer))) %>%
-  arrange(Title, survey_order, RecordedDate)
-# how many double reviewed?
-length(unique(doubleprelim$Title))
-# who?
-sapply(split(doubleprelim$Title, doubleprelim$Init), function(x) length(unique(x)))
-write_csv(doubleprelim, "round2_metareview/data/intermediate/round2_doublereviewed_tidy.csv")
-
-
-
-# -- NITTY GRITTY DATA CLEANING -----
-# potential issues:
-## 1) titles entered incorrectly
-## 2) questions not answered (esp questions added later [e.g. exclusion questions])
 
 
 # -- PRELIM SUMMARY FIGURE ----
