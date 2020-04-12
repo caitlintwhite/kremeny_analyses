@@ -372,7 +372,7 @@ rm(KG_outstanding, rTim4KG, Tim_remain)
 # x) at some point will need step to add back in re-reviewed info
 
 
-# -- 1) Check exclusion -----
+## 1) Check exclusion -----
 # look for "exclude" in final notes if answered before Q3b and c created
 prelim$Q24[grep("exclud", prelim$Q24)] # 3 cases so far:
 exclude_notes <- c(
@@ -447,6 +447,43 @@ dplyr::select(prelimlong1b, ResponseId, Title, exclude) %>%
 ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_excludepaper.pdf", width = 4, height = 4, units = "in", scale = 1.5)
 
 
+## 2) Screen notes for possible issues -----
+Qs_wnotes <- headerLUT$qnum[grep("notes", headerLUT$abbr, ignore.case = T)]
+View(subset(headerLUT, qnum %in% Qs_wnotes))
+# 2a) Ecosystem
+sort(with(prelimlong1b, answer[abbr == "EcosystemNotes" & !is.na(answer) & exclude != "Exclude"])) # & exclude == "Keep"
+
+# 2b) Methods
+sort(with(prelimlong1b, answer[abbr == "MethodsNotes" & !is.na(answer)  & exclude != "Exclude"]))
+sort(with(prelimlong1b, answer[abbr == "GenInfo" & !is.na(answer) & exclude != "Exclude"]))
+# not sure if full GenInfo are preserved? might be byte limitation in csv format..
+
+# 2c) Scale
+sort(with(prelimlong1b, answer[abbr == "ScaleNotes" & !is.na(answer)  & exclude != "Exclude"]))
+# punt to Grant!
+
+# 2d) Kremen topics addressed
+sort(with(prelimlong1b, answer[abbr == "KremenNotes" & !is.na(answer)  & exclude != "Exclude"]))
+
+
+# 3) If-then questions -----
+# 1) Time
+
+# 2) Multiple scales
+
+# 3) Connectivity
+
+
+# 4) Kremen topics -----
+# 1) If ESP checked in Biotic, ESP checked in Kremen
+
+# 2) Keyword search variables for Community structure
+
+# 3) If environmental variables checked or listed, Environment checked
+
+# 4) If multiple scales checked (time or space), Scale checked
+
+
 # -- DOUBLE REVIEWED ----
 doubleprelim <- subset(prelimlong, Title %in% doubletitles) %>%
   group_by(Title, id) %>%
@@ -467,7 +504,8 @@ dplyr::select(doubleprelim, Title, abbr, same_answer) %>%
   geom_bar() +
   facet_wrap(~abbr)
 
-
+# add flag for answer inconsistencies:
+# 1) exclusion answers that don't agree
 
 
 # -- EXTRACT WORDS USED FOR ES RESPONSE AND DRIVERS ----
