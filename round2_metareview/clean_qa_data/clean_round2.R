@@ -240,7 +240,7 @@ ggsave("round2_metareview/clean_qa_data/review_status/reviewstatus_r2papers.pdf"
 
 # what remains?
 outstanding <- cbind(assess_date = Sys.Date(), subset(original, !Title %in% unique(keydf$Title)) %>%
-  dplyr::select(Round2_reviewer1, Round2_reviewer2, Round1_reviewer, FirstAuthor, Title, SourcePublication, PublicationYear))
+                       dplyr::select(Round2_reviewer1, Round2_reviewer2, Round1_reviewer, FirstAuthor, Title, SourcePublication, PublicationYear))
 
 # who remains to reach 28 papers
 effort <- data.frame(assess_date = Sys.Date(), Init = unname(initials), Name = names(initials)) %>%
@@ -259,7 +259,7 @@ effort <- data.frame(assess_date = Sys.Date(), Init = unname(initials), Name = n
   ungroup() %>%
   spread(pair, Round2_reviewer2) %>%
   arrange(desc(R2_reviewed))
-  
+
 # write out both for LD to deal with
 write_csv(outstanding, "round2_metareview/clean_qa_data/review_status/outstanding_r2papers.csv")
 write_csv(effort, "round2_metareview/clean_qa_data/review_status/revieweffort_r2papers.csv")
@@ -267,37 +267,45 @@ write_csv(effort, "round2_metareview/clean_qa_data/review_status/revieweffort_r2
 # make tidy dataset
 prelimlong <- prelim %>%
   # select cols to keep (drop Q1 -- old/incorrect title)
-  dplyr::select(StartDate, EndDate, RecordedDate, Q27, clean_title:ncol(.)) %>%
+  dplyr::select(StartDate, EndDate, RecordedDate, ResponseId, Q27, clean_title:ncol(.)) %>%
   gather(id, answer, Q2:ncol(.)) %>%
   left_join(headerLUT) %>%
   arrange(RecordedDate) %>%
   rename(Init = Q27, Title = clean_title)
 
+# for prelim results, just look at single/first reviewed
+firstreview <- prelimlong %>%
+  group_by(Title, abbr, id) %>%
+  filter(!duplicated(Title)) %>%
+  ungroup()
+# write to cleaned data folder for now..
+write_csv(firstreview, "round2_metareview/data/cleaned/prelim_singlereview.csv")
 
-# ---- 2020/03/18: LOOP TO SUSBET PAIRED REVIEWERS <----- only run this one time (pre spring bring)
-# pairs <- distinct(original[,1:2])
 
-# unique(prelimlong$Init)
-# 
-# reviewlist <- data.frame()
-# for(r in 1:nrow(pairs)){
-#   temp <- subset(original, (Round2_reviewer1 == pairs$Round2_reviewer1[r] & Round2_reviewer2 == pairs$Round2_reviewer2[r]) |
-#                    (Round2_reviewer1 == pairs$Round2_reviewer2[r] & Round2_reviewer2 == pairs$Round2_reviewer1[r])) %>%
-#     select(Round2_reviewer1, Round2_reviewer2, FirstAuthor, Title, SourcePublication, PublicationYear) %>%
-#     mutate(reviewed1 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer1[r]]]),
-#            reviewed2 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer2[r]]]))
-#     names(temp)[names(temp) == "reviewed1"] <- paste0(initials[[pairs$Round2_reviewer1[r]]], "reviewed")
-#     names(temp)[names(temp) == "reviewed2"] <- paste0(initials[[pairs$Round2_reviewer2[r]]], "reviewed")
-#   
-#   files <- list.files("reviewcheck_20200318") %>% str_flatten()
-#   if(grepl(paste0(pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r]), files) | grepl(paste0(pairs$Round2_reviewer2[r], pairs$Round2_reviewer1[r]), files)){
-#     next
-#   }
-#   write_csv(temp, paste0("round2_metareview/clean_qa_data/review_status/reviewcheck_20200318/", pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r],"_round2progress_20200318.csv"))
-#    
-# }
+## -- 2020/03/18: LOOP TO SUSBET PAIRED REVIEWERS [only run this one time (pre spring bring)] -----
+pairs <- distinct(original[,1:2])
 
-# -- 2020/04/11: Reassign KG Papers (only do this once [2020/04/11]) -----
+unique(prelimlong$Init)
+
+reviewlist <- data.frame()
+for(r in 1:nrow(pairs)){
+  temp <- subset(original, (Round2_reviewer1 == pairs$Round2_reviewer1[r] & Round2_reviewer2 == pairs$Round2_reviewer2[r]) |
+                   (Round2_reviewer1 == pairs$Round2_reviewer2[r] & Round2_reviewer2 == pairs$Round2_reviewer1[r])) %>%
+    select(Round2_reviewer1, Round2_reviewer2, FirstAuthor, Title, SourcePublication, PublicationYear) %>%
+    mutate(reviewed1 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer1[r]]]),
+           reviewed2 = Title %in% unique(prelimlong$Title[prelimlong$Init == initials[pairs$Round2_reviewer2[r]]]))
+  names(temp)[names(temp) == "reviewed1"] <- paste0(initials[[pairs$Round2_reviewer1[r]]], "reviewed")
+  names(temp)[names(temp) == "reviewed2"] <- paste0(initials[[pairs$Round2_reviewer2[r]]], "reviewed")
+  
+  files <- list.files("reviewcheck_20200318") %>% str_flatten()
+  if(grepl(paste0(pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r]), files) | grepl(paste0(pairs$Round2_reviewer2[r], pairs$Round2_reviewer1[r]), files)){
+    next
+  }
+  write_csv(temp, paste0("round2_metareview/clean_qa_data/review_status/reviewcheck_20200318/", pairs$Round2_reviewer1[r], pairs$Round2_reviewer2[r],"_round2progress_20200318.csv"))
+  
+}
+
+## -- 2020/04/11: Reassign KG Papers (only do this once [2020/04/11]) -----
 # 4/11 update: > after checking with LD, KG will do 18 rev1 that remain, Nick's 5 (she's rev2 anyway), and 5 of Tim's to get to 28
 
 KG_outstanding <- subset(outstanding, Round2_reviewer1 == "Kathryn" | (Round2_reviewer1 == "Nick" & Round2_reviewer2 == "Kathryn"))
@@ -337,28 +345,106 @@ rm(KG_outstanding, rTim4KG, Tim_remain)
 
 
 
+
+
+
 # -- NITTY GRITTY DATA CLEANING -----
 # potential issues:
-## 1) titles entered incorrectly
+## 1) inconsistent answers *within* reviewed papers
 ## 2) questions not answered (esp questions added later [e.g. exclusion questions])
+## 3) check for "exclude" in notes if person reviewed papers before all of the Q3 questions were made
+## 4) inconsistent answers between double reviewed-papers [need to resolve]
+## x) more to come I'm sure..
+
+# suggested workflow..
+# 1) flagging and logic checks:
+# > 1a) exclude? (one of Q3 answered "Yes", check for "exclude in notes too)
+# > 1b) errors/inconsistencies *within* reviews first [e.g. Kremen topics with how reviewers answered q12 and q19]
+# 2) subset-double reviewed papers and screen:
+# > 2a) if answer same, dissolve to one entry
+# > 2b) if answers different, but answers nested (e.g. rev1 chose option a, rev2 chose options a and b, go with the more complete answer)
+# > 2c) if entered notes, preserve all notes
+# > 2d) if answers conflict, and can't resolve on logic checks, defer to reviewers to resolve
+# 4) write out records that need reviewer feedback (put in holding)
+# > double reviews AND single reviews that are inconsistent in their answers or flagging
+# 5) for double-reviews that can be dissolved to one answer per question, rbind back to master (single-reviewed dataset)
+# 6) write out cleaned data to data/cleaned subfolder
+# x) at some point will need step to add back in re-reviewed info
 
 
-# for prelim results, just look at single/first reviewed
-firstreview <- prelimlong %>%
-  group_by(Title, abbr, id) %>%
-  filter(!duplicated(Title)) %>%
-  ungroup()
+# -- 1) Check exclusion -----
+# look for "exclude" in final notes if answered before Q3b and c created
+prelim$Q24[grep("exclud", prelim$Q24)] # 3 cases so far:
+exclude_notes <- c(
+  "I think this paper should have been excluded in round 1 since it does not directly measure an EF/ES or a proxy, only human perception of ES",
+  "Consider excluding? I'm really not sure if this paper fits....I had a really hard time filling out this form since it was more of a synthesis. They also use/mention tons of indicators so I wasn't sure how to fill out the table in Q12",
+  "The ES table is not filled out because the paper is only an ecosystem service valuation paper (no drivers). I believe that it thus would have been excluded in round 1, but there were no questions to explicitly exclude it in round 2, so I filled it out (plus it may address some interesting scale questions). Specifically, the paper maps 'forest ecosystem services' by using land cover data to estimate ES provision based on forest age, contiguity, and size, assuming that old, connected and larger forests provide more ES's. It measures no services directly, nor looks at any drivers that are not already implicit in their valuation approach."
+)
 
-write_csv(firstreview, "round2_metareview/data/cleaned/prelim_singlereview.csv")
+prelim$Q24[!is.na(prelim$Q24)] # maybe also have value for "unsure" in exclude 
+## Examples: 
+maybe_exclude_notes <- c(
+  "main focus of paper is on demographic processes, so considered excluding at first",
+  "almost marked \"yes\" on Q3",
+  "Honestly, this was a bit confusing. The paper mainly focused on the benefits of the model and the details of it.",
+  "I wasn't sure if this paper should've been included. It almost seems like it stops at biodiversity but it mentions implications for ES. Also - the paper quantified diversity for animal groups based on weed index.",
+  "This paper was tricky to evaluate", 
+  "I'm not totally sure this paper should count towards our tallies for figure",
+  "Didn't actually MEASURE services, but had expert panel weigh in on whether ES were improving or not based on land use change",
+  "This paper was confusing...The response variables I listed were also drivers of change in well-being",
+  "This paper is terrible science",
+  "This was a challenging paper for me to read. Its main message is proposing a framework, but the authors also apply this framework to a case study, which I based my answers in this survey off of.",
+  "Had lots of variables, but only experts' assessment of the influence of the driver (intervention/management strategy) on the service.",
+  "Barely a data paper but did include one really small study that has barely any connection to ES. Not sure it should have made it through, but it is tough. Weird paper.",
+  "The ES table is not filled out because the paper is only an ecosystem service valuation paper (no drivers). I believe that it thus would have been excluded in round 1, but there were no questions to explicitly exclude it in round 2, so I filled it out (plus it may address some interesting scale questions). Specifically, the paper maps 'forest ecosystem services' by using land cover data to estimate ES provision based on forest age, contiguity, and size, assuming that old, connected and larger forests provide more ES's. It measures no services directly, nor looks at any drivers that are not already implicit in their valuation approach.",
+  "May want Laura to review if this actually includes enough ecology to retain (on the fence about whether it is only the social dimension)",
+  "this paper didn't explicitly talk about ecosystem functions or ecosystem services in general nor in terms of their measured variables so that is why I left the q12 'paper reported response variables as...' blank; it did stay in since it didn't quite fall into the initial exclusion questions in this qualtrics survey",
+  "This one was really tough. The main goal was determining the source of the resilience of the particular ecosystem."
+)
 
+# grab unique response ID 
+# > note, can't pull by title because some double reviews have conflicting answers for whether to exclude or not
+exclude_notes_ids <- prelim$ResponseId[pmatch(exclude_notes, prelim$Q24)]
+maybe_exclude_ids <- prelim$ResponseId[pmatch(maybe_exclude_notes, prelim$Q24)]
+prelim$Q24[pmatch(maybe_exclude_notes, prelim$Q24)]
+# check it got all
+# should be TRUE, if not, go back and see what got missed
+length(c(exclude_notes, maybe_exclude_notes)) == length(c(exclude_notes_ids, maybe_exclude_ids))
 
+# apply flag
+# designate 1b for level 1b data (not yet corrected, but flags applied)
+prelimlong1b <- prelimlong %>%
+  group_by(ResponseId) %>%
+  mutate(exclude = grepl("yes", str_flatten(unique(answer[qnum == "Q3" & !is.na(answer)])), ignore.case = T)) %>%
+  ungroup() %>%
+  mutate(exclude = ifelse(ResponseId %in% exclude_notes_ids, "Exclude",
+                          ifelse(ResponseId %in% maybe_exclude_ids, "Maybe", exclude)))
+# qualify exclusion
+prelimlong1b$exclude_notes[prelimlong1b$exclude == "TRUE"] <- "by Q3"
+prelimlong1b$exclude_notes[prelimlong1b$exclude == "Exclude"] <- "by survey notes"
+prelimlong1b$exclude_notes[prelimlong1b$exclude == "Maybe"] <- "uncertainy in survey notes"
+# clean up exclude values
+prelimlong1b <- mutate(prelimlong1b, exclude = recode(exclude, "TRUE" = "Exclude", "FALSE" = "Keep"))
 
-
-
-
-# exclusion questions
-ggplot(subset(firstreview, qnum == "Q3"), aes(abbr, fill = answer)) +
-  geom_bar()
+# how many papers excluded?
+dplyr::select(prelimlong1b, ResponseId, Title, exclude) %>%
+  distinct() %>%
+  # make exclusion cats factor
+  mutate(exclude = factor(exclude, levels = c("Keep", "Maybe", "Exclude"))) %>%
+  group_by(Title) %>%
+  mutate(reviews = length(ResponseId)) %>%
+  #mutate(unique_paper = 1:nrow(prelim)) %>%
+  ungroup() %>%
+  ggplot(aes(exclude, Title, group = Title)) +
+  geom_line() +
+  geom_point(alpha = 0.6) +
+  theme(axis.text.y = element_blank(),
+        panel.grid.major.y = element_blank()) +
+  labs(y = "Unique paper", x = "Exclude?",
+       title = "Round 2 data QA:\nExclude paper? (arrayed by # of reviewers per paper)") +
+  facet_wrap(~reviews)
+# I think either way, whether paper is a maybe exclude or definite exclude, answers that don't agree should be flagged for consesus among reviewers
+ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_excludepaper.pdf", width = 4, height = 4, units = "in", scale = 1.5)
 
 
 # -- DOUBLE REVIEWED ----
