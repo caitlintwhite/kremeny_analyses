@@ -555,12 +555,12 @@ scalenotes <- prelimlong1b %>%
   group_by(ResponseId) %>%
   filter(ResponseId %in% ResponseId[(abbr == "ScaleNotes" & !is.na(answer)) | ((abbr == "GenInfo" & !is.na(answer)))]) %>%
   ungroup() %>%
-  subset(abbr == "GenInfo" | qnum %in% c("Q8", "Q9")) %>%
+  subset(abbr == "GenInfo" | qnum %in% c("Q8", "Q9", "Q10", "Q11")) %>%
   #replace_na(list(Group = "")) %>%
   unite(abbr,abbr, Group) %>%
   mutate(abbr = gsub("_NA", "", abbr)) %>%
   dplyr::select(ResponseId, Init, Title, abbr, answer) %>%
-  spread(abbr, answer) %>%
+  spread(abbr, answer)
   # gather sites and plots
   gather(met, val, names(.)[grep("^Sites|^Plots", names(.))]) %>%
   separate(met, into =c("abbr", "Group"), sep = "_") %>%
@@ -587,6 +587,7 @@ write_csv(scalenotes, "round2_metareview/clean_qa_data/needs_classreview/scaleno
 
 # 2d) Kremen topics addressed
 sort(with(prelimlong1b, answer[abbr == "KremenNotes" & !is.na(answer)  & exclude != "Exclude"]))
+
 
 
 # 3) If-then questions -----
