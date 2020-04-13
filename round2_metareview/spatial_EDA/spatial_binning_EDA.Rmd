@@ -1,0 +1,128 @@
+---
+title: "Spatial binning EDA"
+output: html_document
+---
+```{r packages, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+```
+
+Data used:
+```{r read data, echo=FALSE}
+data_path = "../data/cleaned/prelim_singlereview.csv"
+non_excl_titles = read.csv(data_path) %>% 
+  filter(qnum =='Q3', !answer=='Yes') %>%
+  select(Title)
+spat = read.csv(data_path) %>% 
+  filter(Title %in% non_excl_titles$Title) %>%
+  filter(qnum %in% c("Q8","Q9","Q10","Q11"))
+
+print(data_path)
+```
+
+
+# Spatial binning to fit scale figure
+
+The end result of these numbers may just be displayed as n=X in the existing scale figure, but there are other potential ways to display these things, too. 
+
+Key for binning:
+```{r, echo = FALSE}
+smalls = c('25m','50m','100m','500m', '1km')
+mediums = c('10km', '100km', '1000km')
+larges = c('100Mgm','100Gm','101Gm')
+
+scale_fig_df = spat %>% 
+  filter(qnum == 'Q9', !is.na(answer), !answer==0, !is.na(Group)) %>% 
+  group_by(Title) %>%
+  summarise(scales = paste0(unique(Group), collapse = ',')) %>%
+  separate_rows(scales, sep = ",") %>% 
+  mutate(scales_binned = case_when(
+    scales %in% smalls ~ 'Small',
+    scales %in% mediums ~ 'Medium',
+    scales %in% larges ~ 'Large',
+    scales == 'unk' ~ 'unk'
+  )) %>%
+  group_by(Title) %>%
+  summarise(cross_grps = paste0(unique(scales_binned), collapse = ',')) %>% 
+  ungroup() %>%
+  group_by(cross_grps) %>%
+  summarise(count = n()) %>%
+  mutate(Scale_groups = gsub("unk,","",cross_grps)) %>%
+  mutate(Scale_groups = gsub(",unk","",Scale_groups)) %>%
+  group_by(Scale_groups) %>%
+  summarise(count = sum(count)) %>%
+  mutate(Scale_groups = factor(Scale_groups, levels = c("Small", "Small,Medium","Medium","Medium,Large","Large","Small,Large","Small,Medium,Large","unk")))
+
+
+key_df = data.frame("Scale_binned" = c('Small','Medium', 'Large'), "scales" = c(paste0(smalls,collapse = ","), paste0(mediums,collapse = ","), paste0(larges,collapse = ",")))
+print(key_df)
+```
+
+Number of papers in each bin:
+```{r, echo=FALSE}
+print(arrange(scale_fig_df, Scale_groups))
+# These numbers are not double counting papers. Each paper gets put into exactly one bin depending on which scales it examines. Other plots could include the total number of papers within each scale - if we ignore the between scale patterns it might make sense to double count some papers if what we care about is the individual scale.
+```
+
+
+```{r, echo = FALSE}
+ggplot(data = scale_fig_df, aes(x = Scale_groups, y = count, label = count)) +
+  geom_col() +
+  geom_label() +
+  xlab('Scale of study') +
+  ylab('Number of papers') +
+  theme_bw()
+```
+
+
+## Just for those studies with a 'Yes' for *Q8: Does the paper consider or compare multiple spatial scales?*
+```{r, echo=FALSE}
+crossscale_titles = spat %>% filter(qnum == "Q8") %>% filter(answer=='Yes') %>% pull(Title)
+
+smalls = c('25m','50m','100m','500m', '1km')
+mediums = c('10km', '100km', '1000km')
+larges = c('100Mgm','100Gm','101Gm')
+
+scale_fig_df_cross_sc = spat %>% 
+  filter(qnum == 'Q9', !is.na(answer), !answer==0, !is.na(Group), Title %in% crossscale_titles) %>% 
+  group_by(Title) %>%
+  summarise(scales = paste0(unique(Group), collapse = ',')) %>%
+  separate_rows(scales, sep = ",") %>% 
+  mutate(scales_binned = case_when(
+    scales %in% smalls ~ 'Small',
+    scales %in% mediums ~ 'Medium',
+    scales %in% larges ~ 'Large',
+    scales == 'unk' ~ 'unk'
+  )) %>%
+  group_by(Title) %>%
+  summarise(cross_grps = paste0(unique(scales_binned), collapse = ',')) %>% 
+  ungroup() %>%
+  group_by(cross_grps) %>%
+  summarise(count = n()) %>%
+  mutate(Scale_groups = gsub("unk,","",cross_grps)) %>%
+  mutate(Scale_groups = gsub(",unk","",Scale_groups)) %>%
+  group_by(Scale_groups) %>%
+  summarise(count = sum(count)) %>%
+  mutate(Scale_groups = factor(Scale_groups, levels = c("Small", "Small,Medium","Medium","Medium,Large","Large","Small,Large","Small,Medium,Large","unk")))
+
+
+key_df = data.frame("Scale_binned" = c('Small','Medium', 'Large'), "scales" = c(paste0(smalls,collapse = ","), paste0(mediums,collapse = ","), paste0(larges,collapse = ",")))
+print(key_df)
+
+```
+
+Number of papers in each bin:
+```{r, echo=FALSE}
+print(arrange(scale_fig_df_cross_sc, Scale_groups))
+# These numbers are not double counting papers. Each paper gets put into exactly one bin depending on which scales it examines. Other plots could include the total number of papers within each scale - if we ignore the between scale patterns it might make sense to double count some papers if what we care about is the individual scale.
+```
+
+
+```{r, echo = FALSE}
+ggplot(data = scale_fig_df_cross_sc, aes(x = Scale_groups, y = count, label = count)) +
+  geom_col() +
+  geom_label() +
+  xlab('Scale of study') +
+  ylab('Number of papers') +
+  theme_bw()
+```
+
