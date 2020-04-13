@@ -462,7 +462,7 @@ dplyr::select(prelimlong1b, ResponseId, Title, exclude) %>%
   theme(axis.text.y = element_blank(),
         panel.grid.major.y = element_blank()) +
   labs(y = "Unique paper", x = "Exclude?",
-       title = paste("Round 2 data QA:\nExclude paper? (arrayed by # of reviewers per paper),", Sys.Date())) +
+       title = paste("Round 2 data QA, Q3 vs. final notes:\nExclude paper? (arrayed by # of reviewers per paper),", Sys.Date())) +
   facet_wrap(~reviews)
 # I think either way, whether paper is a maybe exclude or definite exclude, answers that don't agree should be flagged for consesus among reviewers
 ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q3excludepaper.pdf", width = 4, height = 4, units = "in", scale = 1.5)
