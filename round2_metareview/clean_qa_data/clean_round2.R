@@ -72,7 +72,7 @@ splitcom <- function(df, keepcols = c("Title", "answer"), splitcol = "answer"){
     # remove cols that are all na
     dplyr::select(names(.)[sapply(., function(x) !(all(is.na(x))))]) %>%
     # gather to tidy
-    gather(num, answer, v1:ncol(.)) %>%
+    gather(num, answer, names(.)[grep("^v[0-9]$", names(.))]) %>% #v1:ncol(.)
     mutate(answer = trimws(answer)) %>%
     # make number of answers numeric
     mutate(num = parse_number(num)) %>%
@@ -497,10 +497,34 @@ q4_qa %>%
 ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q4ecosystemnotes.pdf", width = 5, height = 4, units = "in", scale = 1.5)
 
 
-# 2b) Methods
+# 2b) Methods (Q6)
 sort(with(prelimlong1b, answer[abbr == "MethodsNotes" & !is.na(answer)  & exclude != "Exclude"]))
 sort(with(prelimlong1b, answer[abbr == "GenInfo" & !is.na(answer) & exclude != "Exclude"]))
 # not sure if full GenInfo are preserved? might be byte limitation in csv format..
+# > important to address in data cleaning (let class decide)
+# GenInfo: [2] "*** THIS STUDY DID NOT TAKE PLACE IN AUSTRALIA. It was in New Zealand (Oceania)"
+methodsnotes <- group_by(prelimlong1b, ResponseId) %>%
+  filter(ResponseId %in% ResponseId[(abbr == "MethodsNotes" & !is.na(answer)) | ((abbr == "GenInfo" & !is.na(answer)))]) %>%
+  ungroup() %>%
+  subset(abbr %in% c("Ecosystem", "TimeTrends","MultiScale", "MethodsNotes", "GenInfo","Methods")) %>%
+  dplyr::select(ResponseId, Title, abbr, answer) %>%
+  spread(abbr, answer) %>%
+  # edit comma in observational answer so doesn't split
+  # also shorten time trends for readability
+  mutate(Methods = gsub("Observational .* directly)", "Observational", Methods),
+         Methods = gsub("/", "_", Methods),
+         TimeTrends = gsub(" \\(e.g.*$", "", TimeTrends)) %>%
+  # break out answers by comma
+  splitcom(keepcols = names(.), splitcol = "Methods") %>%
+  # make wide for easier class review
+  mutate(num = 1) %>%
+  spread(answer, num, fill = "") %>%
+  # add in assess date
+  mutate(assess_date = Sys.Date()) %>%
+  # reorder cols
+  dplyr::select(assess_date, ResponseId, Title, GenInfo, MethodsNotes, Observational, Experimental, `Model_Data Simulation`, 'Social survey_Interview', Other, Ecosystem, MultiScale, TimeTrends)
+# write out for review
+write_csv(methodsnotes, "round2_metareview/clean_qa_data/needs_classreview/methodsnotes_review.csv")
 
 # 2c) Scale
 sort(with(prelimlong1b, answer[abbr == "ScaleNotes" & !is.na(answer)  & exclude != "Exclude"]))
