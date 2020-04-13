@@ -503,7 +503,10 @@ sort(with(prelimlong1b, answer[abbr == "GenInfo" & !is.na(answer) & exclude != "
 # not sure if full GenInfo are preserved? might be byte limitation in csv format..
 # > important to address in data cleaning (let class decide)
 # GenInfo: [2] "*** THIS STUDY DID NOT TAKE PLACE IN AUSTRALIA. It was in New Zealand (Oceania)"
-methodsnotes <- group_by(prelimlong1b, ResponseId) %>%
+methodsnotes <- prelimlong1b %>%
+  # remove papers to exclude
+  subset(exclude != "Exclude") %>%
+  group_by(ResponseId) %>%
   filter(ResponseId %in% ResponseId[(abbr == "MethodsNotes" & !is.na(answer)) | ((abbr == "GenInfo" & !is.na(answer)))]) %>%
   ungroup() %>%
   subset(abbr %in% c("Ecosystem", "TimeTrends","MultiScale", "MethodsNotes", "GenInfo","Methods")) %>%
@@ -523,12 +526,64 @@ methodsnotes <- group_by(prelimlong1b, ResponseId) %>%
   mutate(assess_date = Sys.Date()) %>%
   # reorder cols
   dplyr::select(assess_date, ResponseId, Title, GenInfo, MethodsNotes, Observational, Experimental, `Model_Data Simulation`, 'Social survey_Interview', Other, Ecosystem, MultiScale, TimeTrends)
+# make all text so no "NA" in csv
+methodsnotes[is.na(methodsnotes)] <- ""  
 # write out for review
 write_csv(methodsnotes, "round2_metareview/clean_qa_data/needs_classreview/methodsnotes_review.csv")
 
-# 2c) Scale
+# 2c) Scale (Q9)
 sort(with(prelimlong1b, answer[abbr == "ScaleNotes" & !is.na(answer)  & exclude != "Exclude"]))
 # punt to Grant!
+# except correct these:
+#[120] "need to update this bc cant unselect . These three radii (2 km, 1 km and 300 m) were considered three different spatial scales in order to cover the “scales of effect” of bees with different foraging distances"
+#[108] "ignore the 0 under 501m2. there were 19 sites, 3 large treatment plots per site, and 9 1m2 plots within each treatment plot"
+#[171] "They consider how ES quantity and quality changes when you look at just local scales vs including regional scales; Data are remotely sensed, continuously over the landscape (meaning no 'sites' or 'plots'), but the size of the land areas included in the two scales is also unclear"
+# > CTW considered pixel as "plot" (i think?)
+#"Plot size is less than 1m^2!!
+# "from table 1 in paper - **** delete the unclear or not specified and 1-10 km2***"
+# "couldn't unclick the 100-1000km row there so just selected 0."
+#"accidentally typed 0 for the # of plots 1-25m2 and for the number of sites at 101-500m2"
+
+# write out scale notes, along with multiscale answer, sites and plots checked (ignore number checked?)
+# pull actual scale intervals for review clarity
+scaleintervals <- subset(headerLUT, qnum == "Q9" & !is.na(Group)) %>%
+  mutate(interval = trimws(gsub("^.* whole study -", "", fullquestion, perl = T)))
+
+scalenotes <- prelimlong1b %>%
+  # remove papers to exclude
+  subset(exclude != "Exclude") %>%
+  group_by(ResponseId) %>%
+  filter(ResponseId %in% ResponseId[(abbr == "ScaleNotes" & !is.na(answer)) | ((abbr == "GenInfo" & !is.na(answer)))]) %>%
+  ungroup() %>%
+  subset(abbr == "GenInfo" | qnum %in% c("Q8", "Q9")) %>%
+  #replace_na(list(Group = "")) %>%
+  unite(abbr,abbr, Group) %>%
+  mutate(abbr = gsub("_NA", "", abbr)) %>%
+  dplyr::select(ResponseId, Init, Title, abbr, answer) %>%
+  spread(abbr, answer) %>%
+  # gather sites and plots
+  gather(met, val, names(.)[grep("^Sites|^Plots", names(.))]) %>%
+  separate(met, into =c("abbr", "Group"), sep = "_") %>%
+  # remove any NAs or 0 vals
+  filter(!is.na(val) & !val == "0") %>%
+  left_join(scaleintervals[c("abbr", "Group", "interval")]) %>%
+  mutate(Group = factor(Group, levels = headerLUT$Group[headerLUT$abbr == "Plots"])) %>%
+  arrange(Title, ResponseId, abbr, Group) %>%
+  group_by(ResponseId) %>%
+  mutate(entered = str_flatten(unique(abbr))) %>%
+  ungroup() %>%
+  mutate(nothing_entered = ifelse(entered == "PlotsSites", NA, entered),
+         nothing_entered = recode(nothing_entered, "Sites" = "Plots", "Plots" = "Sites")) %>%
+  group_by(ResponseId, abbr) %>%
+  mutate(group_levels = 1:length(Group),
+         assess_date = Sys.Date()) %>%
+  ungroup() %>%
+  rename(interval_abbr = Group, group = abbr, count = val) %>%
+  dplyr::select(assess_date, ResponseId:ScaleNotes, group, group_levels, interval_abbr, interval, count, nothing_entered)
+# make all text so no "NA" in csv
+scalenotes[is.na(scalenotes)] <- ""  
+# write out for review
+write_csv(scalenotes, "round2_metareview/clean_qa_data/needs_classreview/scalenotes_review.csv")
 
 # 2d) Kremen topics addressed
 sort(with(prelimlong1b, answer[abbr == "KremenNotes" & !is.na(answer)  & exclude != "Exclude"]))
