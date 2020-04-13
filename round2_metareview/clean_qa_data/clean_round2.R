@@ -560,7 +560,7 @@ scalenotes <- prelimlong1b %>%
   unite(abbr,abbr, Group) %>%
   mutate(abbr = gsub("_NA", "", abbr)) %>%
   dplyr::select(ResponseId, Init, Title, abbr, answer) %>%
-  spread(abbr, answer)
+  spread(abbr, answer) %>%
   # gather sites and plots
   gather(met, val, names(.)[grep("^Sites|^Plots", names(.))]) %>%
   separate(met, into =c("abbr", "Group"), sep = "_") %>%
@@ -579,7 +579,7 @@ scalenotes <- prelimlong1b %>%
          assess_date = Sys.Date()) %>%
   ungroup() %>%
   rename(interval_abbr = Group, group = abbr, count = val) %>%
-  dplyr::select(assess_date, ResponseId:ScaleNotes, group, group_levels, interval_abbr, interval, count, nothing_entered)
+  dplyr::select(assess_date, ResponseId:Title, GenInfo:group, group_levels, interval_abbr, interval, count, nothing_entered, Connect, ConnectDist)
 # make all text so no "NA" in csv
 scalenotes[is.na(scalenotes)] <- ""  
 # write out for review
