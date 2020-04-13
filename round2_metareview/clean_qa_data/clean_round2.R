@@ -60,6 +60,27 @@ headerLUT <- read.csv("round2_metareview/data/headersLUT.csv", na.strings = na_v
 # original round 2 assignment
 original <- read.csv("round1_exclusion/output/review_assignments_round2_grpdsubset.csv")
 
+# function for breaking out comma separated answers
+splitcom <- function(df, keepcols = c("Title", "answer"), splitcol = "answer"){
+  df <- df[keepcols] %>%
+    # rename column to split as answer
+    rename_at(splitcol, function(x) x <- "answer") %>%
+    #dplyr::select_vars(keepcols) %>%
+    distinct() %>%
+    # break out answers by comma
+    separate(answer, paste0("v",1:20), ",") %>% # <- this will throw warning, fine. pad with extra cols for up to 20 comma-separated answers just in case
+    # remove cols that are all na
+    dplyr::select(names(.)[sapply(., function(x) !(all(is.na(x))))]) %>%
+    # gather to tidy
+    gather(num, answer, v1:ncol(.)) %>%
+    mutate(answer = trimws(answer)) %>%
+    # make number of answers numeric
+    mutate(num = parse_number(num)) %>%
+    # remove any NAs in answer
+    filter(!(is.na(answer)|answer %in% c("", " "))) # dat still tidy at this point
+  return(df)
+}
+
 
 
 # -- RM JUNK ROWS + ID DOUBLE-REVIEWED PAPERS -----
@@ -141,7 +162,7 @@ doubletitles <- unique(forAK$clean_title)
 length(doubletitles)
 
 # clean up environment
-rm(doubles, qualtrix, unwanted, title_df, needs_match, available_titles, https)
+rm(doubles, qualtrix, unwanted, title_df, needs_match, https)
 
 
 
@@ -441,17 +462,40 @@ dplyr::select(prelimlong1b, ResponseId, Title, exclude) %>%
   theme(axis.text.y = element_blank(),
         panel.grid.major.y = element_blank()) +
   labs(y = "Unique paper", x = "Exclude?",
-       title = "Round 2 data QA:\nExclude paper? (arrayed by # of reviewers per paper)") +
+       title = paste("Round 2 data QA:\nExclude paper? (arrayed by # of reviewers per paper),", Sys.Date())) +
   facet_wrap(~reviews)
 # I think either way, whether paper is a maybe exclude or definite exclude, answers that don't agree should be flagged for consesus among reviewers
-ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_excludepaper.pdf", width = 4, height = 4, units = "in", scale = 1.5)
+ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q3excludepaper.pdf", width = 4, height = 4, units = "in", scale = 1.5)
 
 
 ## 2) Screen notes for possible issues -----
 Qs_wnotes <- headerLUT$qnum[grep("notes", headerLUT$abbr, ignore.case = T)]
 View(subset(headerLUT, qnum %in% Qs_wnotes))
-# 2a) Ecosystem
+# 2a) Ecosystem (Q4)
 sort(with(prelimlong1b, answer[abbr == "EcosystemNotes" & !is.na(answer) & exclude != "Exclude"])) # & exclude == "Keep"
+# how did they code these?
+q4_qa <- group_by(prelimlong1b, ResponseId) %>%
+  filter(ResponseId %in% ResponseId[abbr == "EcosystemNotes" & !is.na(answer) & exclude != "Exclude"]) %>%
+  ungroup() %>%
+  filter(qnum == "Q4") %>%
+  dplyr::select(ResponseId, Title, abbr, answer) %>%
+  spread(abbr, answer) %>%
+  splitcom(keepcols = c("ResponseId", "Title", "EcosystemNotes", "Ecosystem"), splitcol = "Ecosystem") %>%
+  rename(Ecosystem = answer)
+# set responseID as factor so ecosystem types will plot alphabetically
+q4_qa %>%
+  mutate(ResponseId = factor(ResponseId, levels = unique(ResponseId[order(EcosystemNotes)]))) %>%
+  ggplot(aes(ResponseId, fill = Ecosystem)) +
+  geom_bar(alpha = 0.65) +
+  geom_text(aes(y = 0, label = EcosystemNotes), size = 2.8, color = "black", hjust = 0) +
+  scale_y_discrete(expand = c(0.01,0.01)) +
+  labs(title = paste("Round 2 data QA, Q4:\nOf answers with notes, ecosystem(s) selected,", Sys.Date()),
+       subtitle = "Black text = entered note, ordered on y alphabetically to compare systems selected") +
+  coord_flip() +
+  theme(axis.text.y = element_blank())
+# write out for class review
+ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q4ecosystemnotes.pdf", width = 5, height = 4, units = "in", scale = 1.5)
+
 
 # 2b) Methods
 sort(with(prelimlong1b, answer[abbr == "MethodsNotes" & !is.na(answer)  & exclude != "Exclude"]))
@@ -468,6 +512,7 @@ sort(with(prelimlong1b, answer[abbr == "KremenNotes" & !is.na(answer)  & exclude
 
 # 3) If-then questions -----
 # 1) Time
+
 
 # 2) Multiple scales
 
