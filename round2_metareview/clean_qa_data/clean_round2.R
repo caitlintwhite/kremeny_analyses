@@ -670,12 +670,19 @@ write_csv(kremennotes, "round2_metareview/clean_qa_data/needs_classreview/kremen
 
 
 # visualize kremen topics for QA
+# scale: space and time
 ggplot(kremennotes, aes(MultiScale, fill = as.factor(KT_Scale))) +
-  geom_bar()
-# of those where ESP selected in Biotic Driver, how did they answer ESP_type?
-ggplot(subset(kremennotes, grepl("Service Provider", Driver_Bio)), aes(forcats::fct_infreq(ESP_type))) +
   geom_bar() +
-  coord_flip()
+  labs(title = "Round 2 data QA, Kremen Scale:",
+  subtitle = "MultiScale (Q9) answer (x-axis) vs. Time Trends (Q7) (panel), vs. Kremen Scale topic (Q13)",
+  x = "MultiScale (spatial)") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_fill_grey(name = "KT4 (scale) checked?", labels = c("0" = "No", "1" = "Yes")) +
+  theme(legend.position = "bottom") +
+  facet_wrap(~TimeTrends)
+ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_kremenscale.pdf",
+       width = 6, height = 6, units = "in", scale = 1.2)
+
 
 # of those where ESP selected in Biotic Driver, how did they answer ESP_type?
 # clean up kremen ESPs for simplicity in plotting
@@ -687,18 +694,17 @@ mutate(kremennotes, ESP_type = str_replace_all(ESP_type, " \\[e.g.,? ([:alpha:]|
   ggplot(aes(forcats::fct_infreq(ESP_type), fill = as.factor(KT_Community_structure))) +
   geom_bar() +
   coord_flip() +
-  labs(x = "ESP type(s) selected", 
-       title = "Round 2 data QA, Kremen ESPs (Q13 + 14):\nWhen Kremen T1 (ESP) selected (Q13), what ESP types selected (Q14)?",
+  labs(x = "(Q13) ESP type(s) selected", 
+       title = "Round 2 data QA, Kremen ESPs (Q12 v. 13 v. 14):\nWhen Kremen T1 (ESP) selected (Q13), what ESP types selected (Q14)?",
        subtitle = "Colored by whether KT2 (Community structure) checked (Q13)") +
   scale_y_continuous(expand = c(0.0,0.01)) +
-  scale_fill_grey(name = "Community\nStructure?", labels = c("0" = "No", "1" = "Yes")) +
+  scale_fill_grey(name = "(Q13)\nCommunity\nStructure?", labels = c("0" = "No", "1" = "Yes")) +
   theme(legend.position = c(0.99,0.99),
-        legend.justification = c(1,1)) 
+        legend.justification = c(1,1)) +
+  facet_wrap(~grepl("Service Provider", Driver_Bio), nrow = 2, scale = "free_y", labeller= labeller('grepl("Service Provider", Driver_Bio)' = c("FALSE" = "Q12 Biotic Driver: No ESP", "TRUE"= "Q12 Biotic Driver: Yes ESP")))
 ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q14kremenESPs.pdf",
-       width = 7, height = 4, units = "in", scale = 1.2)
+       width = 8, height = 5, units = "in", scale = 1.2)
 
-# if Environment selected in Q12, did they check Kremen Environmental factors? If MultiScale, scale?
-ggplot(kremen)
 
 
 
