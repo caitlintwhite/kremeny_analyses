@@ -637,6 +637,11 @@ kremennotes <-  prelimlong1b %>%
   # join scale info to assess KT scale topic
   left_join(prelimlong[prelimlong$abbr == "MultiScale", c("ResponseId", "Title", "answer")]) %>%
   rename(MultiScale = answer) %>%
+  # join time info to assess KT scale topic
+  left_join(prelimlong[prelimlong$abbr == "TimeTrends", c("ResponseId", "Title", "answer")]) %>%
+  rename(TimeTrends = answer) %>%
+  # clean up TimeTrends answers for readability
+  mutate(TimeTrends = gsub(" [(]e.g.*[)]$", "", TimeTrends)) %>%
   # add col for double reviews for comparison
   group_by(Title) %>%
   mutate(doublerev = Title %in% Title[duplicated(Title)]) %>%
@@ -650,7 +655,7 @@ kremennotes <-  prelimlong1b %>%
                 # KT topic 3 cols
                 Environmental_factors, Driver_Env, flag_otherEnv, OtherDriver_Env,
                 # KT topic 4 cols
-                Scale, MultiScale, 
+                Scale, MultiScale, TimeTrends,
                 # human drivers
                 Driver_Anthro, flag_otherAnthro, OtherDriver_Anthro) %>%
   # arrange by Title for comparison
@@ -691,6 +696,10 @@ mutate(kremennotes, ESP_type = str_replace_all(ESP_type, " \\[e.g.,? ([:alpha:]|
         legend.justification = c(1,1)) 
 ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q14kremenESPs.pdf",
        width = 7, height = 4, units = "in", scale = 1.2)
+
+# if Environment selected in Q12, did they check Kremen Environmental factors? If MultiScale, scale?
+ggplot(kremen)
+
 
 
 
