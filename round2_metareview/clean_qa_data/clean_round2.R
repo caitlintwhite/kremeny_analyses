@@ -510,7 +510,7 @@ methodsnotes <- prelimlong1b %>%
   filter(ResponseId %in% ResponseId[(abbr == "MethodsNotes" & !is.na(answer)) | ((abbr == "GenInfo" & !is.na(answer)))]) %>%
   ungroup() %>%
   subset(abbr %in% c("Ecosystem", "TimeTrends","MultiScale", "MethodsNotes", "GenInfo","Methods")) %>%
-  dplyr::select(ResponseId, Title, abbr, answer) %>%
+  dplyr::select(ResponseId, Init, Title, abbr, answer) %>%
   spread(abbr, answer) %>%
   # edit comma in observational answer so doesn't split
   # also shorten time trends for readability
@@ -524,8 +524,14 @@ methodsnotes <- prelimlong1b %>%
   spread(answer, num, fill = "") %>%
   # add in assess date
   mutate(assess_date = Sys.Date()) %>%
+  # add col for double reviews for comparison
+  group_by(Title) %>%
+  mutate(doublerev = Title %in% Title[duplicated(Title)]) %>%
+  ungroup() %>%
   # reorder cols
-  dplyr::select(assess_date, ResponseId, Title, GenInfo, MethodsNotes, Observational, Experimental, `Model_Data Simulation`, 'Social survey_Interview', Other, Ecosystem, MultiScale, TimeTrends)
+  dplyr::select(assess_date, doublerev, ResponseId, Init, Title, GenInfo, MethodsNotes, Observational, Experimental, `Model_Data Simulation`, 'Social survey_Interview', Other, Ecosystem, MultiScale, TimeTrends) %>%
+  # order by by title for easier comparison
+  arrange(Title, Init)
 # make all text so no "NA" in csv
 methodsnotes[is.na(methodsnotes)] <- ""  
 # write out for review
@@ -579,7 +585,13 @@ scalenotes <- prelimlong1b %>%
          assess_date = Sys.Date()) %>%
   ungroup() %>%
   rename(interval_abbr = Group, group = abbr, count = val) %>%
-  dplyr::select(assess_date, ResponseId:Title, GenInfo:group, group_levels, interval_abbr, interval, count, nothing_entered, Connect, ConnectDist)
+  # add col for double reviews for comparison
+  group_by(Title) %>%
+  mutate(doublerev = length(unique(Init)) >1) %>%
+  ungroup() %>%
+  dplyr::select(assess_date, doublerev, ResponseId:Title, GenInfo:group, group_levels, interval_abbr, interval, count, nothing_entered, Connect, ConnectDist) %>%
+  # order by title for easier comparison
+  arrange(Title, Init, group)
 # make all text so no "NA" in csv
 scalenotes[is.na(scalenotes)] <- ""  
 # write out for review
@@ -587,6 +599,71 @@ write_csv(scalenotes, "round2_metareview/clean_qa_data/needs_classreview/scaleno
 
 # 2d) Kremen topics addressed
 sort(with(prelimlong1b, answer[abbr == "KremenNotes" & !is.na(answer)  & exclude != "Exclude"]))
+# think we want to review response and drivers listed, regardless of ES specified, along with kremen answers
+kremennotes <-  prelimlong1b %>%
+  # remove papers to exclude
+  subset(exclude != "Exclude") %>%
+  # select variables of interest
+  subset(grepl("Drive|Response|Kremen", abbr, ignore.case = T)| qnum =="Q14") %>%
+  # add in assessment date
+  mutate(assess_date = Sys.Date()) %>%
+  # ignore ES and collapse to distinct
+  dplyr::select(assess_date, ResponseId, Init, Title, abbr, Group, answer) %>%
+  distinct() %>%
+  # remove NA answers
+  filter(!is.na(answer)) %>%
+  # bind driver group to abbr
+  unite(abbr, abbr, Group) %>%
+  mutate(abbr = gsub("_NA", "", abbr)) %>%
+  #collapse answers by abbr so can spread (e.g. multiple responses across ES's won't spread) %>%
+  group_by(ResponseId, abbr) %>%
+  mutate(answer = str_flatten(unique(answer), collapse = ",")) %>%
+  ungroup() %>%
+  distinct() %>%
+  spread(abbr, answer) %>%
+  # clean up kremen topics for splitting (make less wordy)
+  mutate(KremenTopics = gsub("Kremen Topic [1-4] : | influencing function| that.*[)]", "", KremenTopics)) %>%
+  # split Kremen Topics selected
+  splitcom(keepcols = names(.), splitcol = "KremenTopics") %>%
+  # make positive selection = 1
+  mutate(num = 1) %>%
+  # spread out KT's
+  spread(answer, num, fill = 0) %>%
+  rename_all(function(x) gsub(" ", "_", x)) %>%
+  # screen for other checked in Q12 before joining other text listed
+  mutate(flag_otherEnv =  (!grepl("Other", Driver_Env, ignore.case = T) & !is.na(OtherDriver_Env)), # (grepl("Other", Driver_Env, ignore.case = T) & !is.na(OtherDriver_Env) |
+         flag_otherBio = (!grepl("Other", Driver_Bio, ignore.case = T)  & !is.na(OtherDriver_Bio)),
+         flag_otherAnthro = (!grepl("Other", Driver_Anthro, ignore.case = T)  & !is.na(OtherDriver_Anthro))) %>%
+  # join scale info to assess KT scale topic
+  left_join(prelimlong[prelimlong$abbr == "MultiScale", c("ResponseId", "Title", "answer")]) %>%
+  rename(MultiScale = answer) %>%
+  # add col for double reviews for comparison
+  group_by(Title) %>%
+  mutate(doublerev = Title %in% Title[duplicated(Title)]) %>%
+  ungroup() %>%
+  # reorder cols
+  dplyr::select(assess_date, doublerev, ResponseId, Init, Title, KremenNotes, None, Response, 
+                # KT topic 1 cols (ESP)
+                ESPs, Driver_Bio, flag_otherBio, OtherDriver_Bio, ESP_type,
+                # KT topic 2 cols (community structure)
+                Community_structure, 
+                # KT topic 3 cols
+                Environmental_factors, Driver_Env, flag_otherEnv, OtherDriver_Env,
+                # KT topic 4 cols
+                Scale, MultiScale, 
+                # human drivers
+                Driver_Anthro, flag_otherAnthro, OtherDriver_Anthro) %>%
+  # arrange by Title for comparison
+  arrange(Title, Init) %>%
+  # rename Kremen Topics cols to indicate source of data
+  rename_at(.vars = c("None", "ESPs", "Community_structure", "Environmental_factors", "Scale"), function(x) paste0("KT_", x))
+  # unite main and other drivers
+# make all text so no "NA" in csv
+kremennotes[is.na(kremennotes)] <- ""  
+# write out for review
+write_csv(kremennotes, "round2_metareview/clean_qa_data/needs_classreview/kremennotes_review.csv")
+
+  
 
 
 
