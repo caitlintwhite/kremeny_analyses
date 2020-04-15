@@ -4,20 +4,33 @@ output: html_document
 ---
 ```{r packages, echo=FALSE, warning=FALSE, message=FALSE}
 library(tidyverse)
+library(reshape2)
+library(plotly)
 ```
 
 Data used:
 ```{r read data, echo=FALSE}
 data_path = "../data/cleaned/prelim_singlereview.csv"
-non_excl_titles = read.csv(data_path) %>% 
+df = read.csv(data_path)
+non_excl_titles = df %>% 
   filter(qnum =='Q3', !answer=='Yes') %>%
   select(Title)
-spat = read.csv(data_path) %>% 
+spat = df %>% 
   filter(Title %in% non_excl_titles$Title) %>%
   filter(qnum %in% c("Q8","Q9","Q10","Q11"))
 
 print(data_path)
 ```
+
+### Summary
+From the preliminary data:
+
+ * Lots of studies with 'unk' spatial scale (this means that no plot nor site scales were reported by coders). 
+ * Lots of small scale studies, some large scale studies
+ * Relatively few medium scale, and medium-large scale papers
+ * Not that many papers cross the scale bins we've used
+ 
+My takeaway (Grant): A fair amount of small scale studies reach up into the medium scale category, but hardly any large scale studies have smaller scale components. Way too many studies do not report (or we couldn't find) the spatial scale at which they are operating...maybe a lot of these are simulations? - doesn't look like it, see below
 
 
 # Spatial binning to fit scale figure
@@ -74,6 +87,169 @@ ggplot(data = scale_fig_df, aes(x = Scale_groups, y = count, label = count)) +
 ```
 
 
+```{r, echo=FALSE, warning=FALSE}
+cross_sc_tab = spat %>% 
+  filter(qnum == 'Q9', !is.na(answer), !answer==0, !is.na(Group)) %>% 
+  group_by(Title) %>%
+  summarise(scales = paste0(unique(Group), collapse = ',')) %>%
+  separate_rows(scales, sep = ",") %>% 
+  mutate(scales_binned = case_when(
+    scales %in% c('25m','50m','100m','500m', '1km') ~ 'Small',
+    scales %in% c('10km', '100km', '1000km') ~ 'Medium',
+    scales %in% c('100Mgm','100Gm','101Gm') ~ 'Large',
+    scales == 'unk' ~ 'unk'
+  )) %>%
+  group_by(Title) %>%
+  summarise(cross_grps = paste0(unique(scales_binned), collapse = ',')) %>% 
+  ungroup() %>%
+  group_by(cross_grps) %>%
+  summarise(count = n()) %>%
+  mutate(cross_grps_nounk = gsub("unk,","",cross_grps)) %>%
+  mutate(cross_grps_nounk = gsub(",unk","",cross_grps_nounk)) %>%
+  group_by(cross_grps_nounk) %>%
+  summarise(count = sum(count)) %>%
+  mutate(cross_grps_nounk = factor(cross_grps_nounk, levels = c("Small", "Small,Medium","Medium","Medium,Large","Large","Small,Large","Small,Medium,Large","unk"))) %>%
+  filter(!cross_grps_nounk %in% c("Small,Medium,Large","unk")) %>%
+  separate(cross_grps_nounk, into = c('scale1','scale2'), sep = ",") %>%
+  mutate(scale2 = ifelse(is.na(scale2),scale1,scale2))
+  
+
+# matrix for heatmap
+mat = matrix(nrow = length(unique(cross_sc_tab$scale1)), ncol = length(unique(cross_sc_tab$scale1)), dimnames = list(unique(cross_sc_tab$scale1),unique(cross_sc_tab$scale2)))
+
+for (i in 1:nrow(mat)) {
+  r_ = unique(cross_sc_tab$scale1)[i]
+  for(j in 1:i){
+    c_ = unique(cross_sc_tab$scale2)[j]
+    mat[r_,c_] = cross_sc_tab %>% filter(scale1 == r_, scale2 == c_) %>% pull(count)
+  }
+  
+}
+
+p1 = 
+  t(mat) %>% 
+  melt() %>%
+  mutate(Var1 = factor(Var1, levels = c("Small", "Medium","Large")),
+         Var2 = factor(Var2, levels = c("Small", "Medium","Large")),
+         label_ = ifelse(Var1==Var2, paste0('only ', Var1), NA)) %>%
+  ggplot(aes(x = Var1, y = Var2, fill = value, label = label_)) +
+  geom_raster() +
+  geom_label() + # doesn't work with plotly
+  theme(axis.text.x = element_text(angle = 45)) +
+  labs(fill = "Number of papers", x = "", y = "", title = "Scales of study") +
+  theme_bw() 
+# the numbers from this plot should be able to directly fill in the numbers from the scale plot
+# as long as we remember to add the unknown scale and s-m-l numbers, since they don't fit on this plot
+
+
+ggplotly(p1)
+```
+
+
+### Unknown scale studies...
+
+```{r, echo=FALSE, warning=FALSE}
+methods_used_df = df %>%
+  filter(qnum=="Q6", !abbr %in% c('GenInfo','MethodsNotes')) %>%
+  separate_rows(answer, sep = ",") %>%
+  mutate(answer = ifelse(answer=="Observational (Includes data observed in situ OR via remote sensing", "Observational", as.character(answer))) %>%
+  mutate(answer = ifelse(answer==" if used directly)", NA, as.character(answer))) %>%
+  group_by(Title) %>%
+  summarise(methods_used = paste0(unique(answer), collapse = ","))
+
+
+spat %>% 
+  filter(qnum == 'Q9', !is.na(answer), !answer==0, !is.na(Group)) %>% 
+  group_by(Title) %>%
+  summarise(scales = paste0(unique(Group), collapse = ',')) %>%
+  left_join(methods_used_df, by = "Title") %>%
+  separate_rows(scales, sep = ",") %>%
+  mutate(methods_used = gsub(",NA","",methods_used)) %>%
+  mutate(scales_binned = case_when(
+    scales %in% smalls ~ 'Small',
+    scales %in% mediums ~ 'Medium',
+    scales %in% larges ~ 'Large',
+    scales == 'unk' ~ 'unk'
+  )) %>% 
+  group_by(Title) %>%
+  mutate(scales_binned = paste0(scales_binned, collapse = ",")) %>%
+  filter(scales_binned == 'unk') %>%
+  group_by(methods_used) %>%
+  summarise(unk_count = n()) %>%
+  mutate(methods_used = fct_reorder(methods_used, -unk_count)) %>%
+  ggplot() +
+  geom_col(aes(x = methods_used, y = unk_count)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  xlab("") +
+  ylab("Number of papers") +
+  ggtitle("For papers with unknown spatial scale, what type?")
+```
+
+Unclear what explains why so many studies had unknown spatial scale...
+
+### Small scale studies...
+
+```{r, echo=FALSE, warning=FALSE}
+spat %>% 
+  filter(qnum == 'Q9', !is.na(answer), !answer==0, !is.na(Group)) %>% 
+  group_by(Title) %>%
+  summarise(scales = paste0(unique(Group), collapse = ',')) %>%
+  left_join(methods_used_df, by = "Title") %>%
+  separate_rows(scales, sep = ",") %>%
+  mutate(methods_used = gsub(",NA","",methods_used)) %>%
+  mutate(scales_binned = case_when(
+    scales %in% smalls ~ 'Small',
+    scales %in% mediums ~ 'Medium',
+    scales %in% larges ~ 'Large',
+    scales == 'unk' ~ 'unk'
+  )) %>% 
+  group_by(Title) %>%
+  mutate(scales_binned = paste0(scales_binned, collapse = ",")) %>%
+  filter(scales_binned == 'Small') %>%
+  group_by(methods_used) %>%
+  summarise(small_count = n()) %>%
+  mutate(methods_used = fct_reorder(methods_used, -small_count)) %>%
+  ggplot() +
+  geom_col(aes(x = methods_used, y = small_count)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  xlab("") +
+  ylab("Number of papers") +
+  ggtitle("For papers with small spatial scale, what type?")
+```
+
+### And large scale studies
+
+```{r, echo=FALSE, warning=FALSE}
+spat %>% 
+  filter(qnum == 'Q9', !is.na(answer), !answer==0, !is.na(Group)) %>% 
+  group_by(Title) %>%
+  summarise(scales = paste0(unique(Group), collapse = ',')) %>%
+  left_join(methods_used_df, by = "Title") %>%
+  separate_rows(scales, sep = ",") %>%
+  mutate(methods_used = gsub(",NA","",methods_used)) %>%
+  mutate(scales_binned = case_when(
+    scales %in% smalls ~ 'Small',
+    scales %in% mediums ~ 'Medium',
+    scales %in% larges ~ 'Large',
+    scales == 'unk' ~ 'unk'
+  )) %>% 
+  group_by(Title) %>%
+  mutate(scales_binned = paste0(scales_binned, collapse = ",")) %>%
+  filter(scales_binned == 'Large') %>%
+  group_by(methods_used) %>%
+  summarise(small_count = n()) %>%
+  mutate(methods_used = fct_reorder(methods_used, -small_count)) %>%
+  ggplot() +
+  geom_col(aes(x = methods_used, y = small_count)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  xlab("") +
+  ylab("Number of papers") +
+  ggtitle("For papers with large spatial scale, what type?")
+```
+
 ## Just for those studies with a 'Yes' for *Q8: Does the paper consider or compare multiple spatial scales?*
 ```{r, echo=FALSE}
 crossscale_titles = spat %>% filter(qnum == "Q8") %>% filter(answer=='Yes') %>% pull(Title)
@@ -126,3 +302,60 @@ ggplot(data = scale_fig_df_cross_sc, aes(x = Scale_groups, y = count, label = co
   theme_bw()
 ```
 
+```{r, echo=FALSE, warning=FALSE}
+cross_sc_tab = spat %>% 
+  filter(qnum == 'Q9', !is.na(answer), !answer==0, !is.na(Group), Title %in% crossscale_titles) %>% 
+  group_by(Title) %>%
+  summarise(scales = paste0(unique(Group), collapse = ',')) %>%
+  separate_rows(scales, sep = ",") %>% 
+  mutate(scales_binned = case_when(
+    scales %in% c('25m','50m','100m','500m', '1km') ~ 'Small',
+    scales %in% c('10km', '100km', '1000km') ~ 'Medium',
+    scales %in% c('100Mgm','100Gm','101Gm') ~ 'Large',
+    scales == 'unk' ~ 'unk'
+  )) %>%
+  group_by(Title) %>%
+  summarise(cross_grps = paste0(unique(scales_binned), collapse = ',')) %>% 
+  ungroup() %>%
+  group_by(cross_grps) %>%
+  summarise(count = n()) %>%
+  mutate(cross_grps_nounk = gsub("unk,","",cross_grps)) %>%
+  mutate(cross_grps_nounk = gsub(",unk","",cross_grps_nounk)) %>%
+  group_by(cross_grps_nounk) %>%
+  summarise(count = sum(count)) %>%
+  mutate(cross_grps_nounk = factor(cross_grps_nounk, levels = c("Small", "Small,Medium","Medium","Medium,Large","Large","Small,Large","Small,Medium,Large","unk"))) %>%
+  filter(!cross_grps_nounk %in% c("Small,Medium,Large","unk")) %>%
+  separate(cross_grps_nounk, into = c('scale1','scale2'), sep = ",") %>%
+  mutate(scale2 = ifelse(is.na(scale2),scale1,scale2))
+  
+
+# matrix for heatmap
+mat = matrix(nrow = length(unique(cross_sc_tab$scale1)), ncol = length(unique(cross_sc_tab$scale1)), dimnames = list(unique(cross_sc_tab$scale1),unique(cross_sc_tab$scale2)))
+
+for (i in 1:nrow(mat)) {
+  r_ = unique(cross_sc_tab$scale1)[i]
+  for(j in 1:i){
+    c_ = unique(cross_sc_tab$scale2)[j]
+    mat[r_,c_] = cross_sc_tab %>% filter(scale1 == r_, scale2 == c_) %>% pull(count)
+  }
+  
+}
+
+p1 = 
+  t(mat) %>% 
+  melt() %>%
+  mutate(Var1 = factor(Var1, levels = c("Small", "Medium","Large")),
+         Var2 = factor(Var2, levels = c("Small", "Medium","Large")),
+         label_ = ifelse(Var1==Var2, paste0('only ', Var1), NA)) %>%
+  ggplot(aes(x = Var1, y = Var2, fill = value, label = label_)) +
+  geom_raster() +
+  geom_label() + # doesn't work with plotly
+  theme(axis.text.x = element_text(angle = 45)) +
+  labs(fill = "Number of papers", x = "", y = "", title = "Scales of study") +
+  theme_bw() 
+# the numbers from this plot should be able to directly fill in the numbers from the scale plot
+# as long as we remember to add the unknown scale and s-m-l numbers, since they don't fit on this plot
+
+
+ggplotly(p1)
+```
