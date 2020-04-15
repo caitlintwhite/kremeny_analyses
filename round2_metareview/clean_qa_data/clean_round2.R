@@ -500,8 +500,12 @@ possibleexclude_df <- dplyr::select(prelimlong1b, ResponseId, Init, Title, exclu
   rename(SurveyNotes = answer) %>%
   #add assess_date and reorder cols
   mutate(assess_date = Sys.Date()) %>%
+  # join study info for review convenience
+  left_join(original[c("Title", "FirstAuthor",  "PublicationYear", "SourcePublication","Abstract")]) %>%
   dplyr::select(assess_date, ResponseId:exclude_notes, flag_inconsistent:ncol(.)) %>%
   arrange(Title, Init)
+# change NAs to blanks so not annoying in Excel
+possibleexclude_df[is.na(possibleexclude_df)] <- ""
 # write out
 write_csv(possibleexclude_df, "round2_metareview/clean_qa_data/needs_classreview/excludenotes_review.csv")
 
