@@ -480,6 +480,31 @@ dplyr::select(prelimlong1b, ResponseId, Title, exclude) %>%
   facet_wrap(~reviews)
 # I think either way, whether paper is a maybe exclude or definite exclude, answers that don't agree should be flagged for consesus among reviewers
 ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q3excludepaper.pdf", width = 4, height = 4, units = "in", scale = 1.5)
+# write out potential exclusion set for LD to judge
+possibleexclude_df <- dplyr::select(prelimlong1b, ResponseId, Init, Title, exclude, exclude_notes) %>%
+  distinct() %>%
+  # make exclusion cats factor
+  mutate(exclude = factor(exclude, levels = c("Keep", "Maybe", "Exclude"))) %>%
+  group_by(Title) %>%
+  mutate(reviews = length(ResponseId),
+  # add flag for inconsistent exclusion answer
+    flag_inconsistent = (reviews >1 & length(unique(exclude)) > 1)) %>%
+  #mutate(unique_paper = 1:nrow(prelim)) %>%
+  ungroup() %>%
+  # remove anything that is clear exclude on Q3 or is to keep
+  filter((exclude %in% c("Exclude", "Maybe") & exclude_notes != "by Q3") |
+           # keep papers with inconsistent reviews
+           flag_inconsistent) %>%
+  # join survey notes
+  left_join(distinct(prelimlong1b[prelimlong1b$abbr == "SurveyNotes", c("ResponseId", "Title", "answer")])) %>%
+  rename(SurveyNotes = answer) %>%
+  #add assess_date and reorder cols
+  mutate(assess_date = Sys.Date()) %>%
+  dplyr::select(assess_date, ResponseId:exclude_notes, flag_inconsistent:ncol(.)) %>%
+  arrange(Title, Init)
+# write out
+write_csv(possibleexclude_df, "round2_metareview/clean_qa_data/needs_classreview/excludenotes_review.csv")
+
 
 
 ## 2) Screen notes for possible issues -----
@@ -492,10 +517,15 @@ q4_qa <- group_by(prelimlong1b, ResponseId) %>%
   filter(ResponseId %in% ResponseId[abbr == "EcosystemNotes" & !is.na(answer) & exclude != "Exclude"]) %>%
   ungroup() %>%
   filter(qnum == "Q4") %>%
-  dplyr::select(ResponseId, Title, abbr, answer) %>%
+  dplyr::select(ResponseId, Init, Title, abbr, answer) %>%
   spread(abbr, answer) %>%
-  splitcom(keepcols = c("ResponseId", "Title", "EcosystemNotes", "Ecosystem"), splitcol = "Ecosystem") %>%
-  rename(Ecosystem = answer)
+  splitcom(keepcols = c("ResponseId", "Init", "Title", "EcosystemNotes", "Ecosystem"), splitcol = "Ecosystem") %>%
+  rename(Ecosystem = answer) %>%
+  # add col to indicate double review for comparison
+  group_by(Title) %>%
+  mutate(doublerev = length(unique(ResponseId))>1) %>%
+  ungroup()
+
 # set responseID as factor so ecosystem types will plot alphabetically
 q4_qa %>%
   mutate(ResponseId = factor(ResponseId, levels = unique(ResponseId[order(EcosystemNotes)]))) %>%
@@ -509,6 +539,7 @@ q4_qa %>%
   theme(axis.text.y = element_blank())
 # write out for class review
 ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q4ecosystemnotes.pdf", width = 5, height = 4, units = "in", scale = 1.5)
+# write out ecosystem notes for review
 
 
 # 2b) Methods (Q6)
