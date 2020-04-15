@@ -607,7 +607,11 @@ scalenotes <- prelimlong1b %>%
   # order by title for easier comparison
   arrange(Title, Init, group) %>%
   # add "." in front of range so excel doesn't read it as date
-  mutate(count = paste0(".", count))
+  mutate(count = paste0(".", count)) %>%
+  # add in their response for KT4
+  left_join(distinct(cbind(prelimlong1b[prelimlong1b$abbr == "KremenTopics" & grepl("Topic 4", prelimlong1b$answer),c("ResponseId", "Title")], KT4_scale = 1))) %>%
+  replace_na(list("KT4_scale"=0))
+
 # make all text so no "NA" in csv
 scalenotes[is.na(scalenotes)] <- ""  
 # write out for review
