@@ -82,6 +82,11 @@ splitcom <- function(df, keepcols = c("Title", "answer"), splitcol = "answer"){
 }
 
 
+# read in reviewer revisions/comments/corrections
+corrections <- list.files("round2_metareview/data/reviewer_revisions/", full.names = T)
+IS <- read.csv(corrections[grep("IS", corrections)], na.strings = na_vals)
+
+
 
 # -- RM JUNK ROWS + ID DOUBLE-REVIEWED PAPERS -----
 # assign colnames
@@ -119,6 +124,11 @@ needs_match <- mutate(needs_match, match_num = pmatch(nm_words, title_df$title_w
   mutate(match_num = ifelse(is.na(match_num), grep(paste0("^", substr(nm_words, 1, 25)), title_df$title_words), match_num)) %>%
   ungroup() %>%
   mutate(clean_title = title_df$Title[match_num])
+# does everything have a match?
+needs_match$Q1[is.na(needs_match$clean_title)] # this is a comment to paper, can pull title from original
+# Service measured: bird predation on insect pest in agroforestry system
+needs_match$clean_title[grep("Service measured: ", needs_match$Q1)] <- original$Title[grep("^Service measured: bird", original$Comments)]
+
 
 prelim <- prelim %>%
   # make true date time column
@@ -261,7 +271,11 @@ ggsave("round2_metareview/clean_qa_data/review_status/reviewstatus_r2papers.pdf"
 
 # what remains?
 outstanding <- cbind(assess_date = Sys.Date(), subset(original, !Title %in% unique(keydf$Title)) %>%
-                       dplyr::select(Round2_reviewer1, Round2_reviewer2, Round1_reviewer, FirstAuthor, Title, SourcePublication, PublicationYear))
+                       dplyr::select(Round2_reviewer1, Round2_reviewer2, Round1_reviewer, FirstAuthor, Title, SourcePublication, PublicationYear)) %>%
+  # re-assign KG to any remaining Tim and Nick papers since they're done as of 4/15
+  mutate(Round2_reviewer1 = gsub("Nick|Tim", "Kathryn*", Round2_reviewer1)) %>%
+  arrange(Round2_reviewer1, Title)
+  
 
 # who remains to reach 28 papers
 effort <- data.frame(assess_date = Sys.Date(), Init = unname(initials), Name = names(initials)) %>%
@@ -270,7 +284,7 @@ effort <- data.frame(assess_date = Sys.Date(), Init = unname(initials), Name = n
   # if count is NA, assign 0
   replace_na(list(R2_reviewed = 0)) %>%
   # add number of rev1 outstanding
-  left_join(data.frame(table(outstanding$Round2_reviewer1)), by = c("Name" = "Var1")) %>%
+  left_join(data.frame(table(gsub("[*]", "", outstanding$Round2_reviewer1))), by = c("Name" = "Var1")) %>%
   replace_na(list(Freq = 0 )) %>%
   rename(Rev1_remain = Freq) %>%
   # add rev 2
@@ -395,7 +409,7 @@ rm(KG_outstanding, rTim4KG, Tim_remain)
 
 ## 1) Check exclusion -----
 # look for "exclude" in final notes if answered before Q3b and c created
-prelim$Q24[grep("exclud", prelim$Q24)] # 3 cases so far:
+prelim$Q24[grep("exclud", prelim$Q24)] # 3 cases so far (4 returns):
 exclude_notes <- c(
   "I think this paper should have been excluded in round 1 since it does not directly measure an EF/ES or a proxy, only human perception of ES",
   "Consider excluding? I'm really not sure if this paper fits....I had a really hard time filling out this form since it was more of a synthesis. They also use/mention tons of indicators so I wasn't sure how to fill out the table in Q12",
