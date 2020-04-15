@@ -605,7 +605,9 @@ scalenotes <- prelimlong1b %>%
   ungroup() %>%
   dplyr::select(assess_date, doublerev, ResponseId:Title, GenInfo:group, group_levels, interval_abbr, interval, count, nothing_entered, Connect, ConnectDist) %>%
   # order by title for easier comparison
-  arrange(Title, Init, group)
+  arrange(Title, Init, group) %>%
+  # add "." in front of range so excel doesn't read it as date
+  mutate(count = paste0(".", count))
 # make all text so no "NA" in csv
 scalenotes[is.na(scalenotes)] <- ""  
 # write out for review
