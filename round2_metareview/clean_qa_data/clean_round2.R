@@ -521,14 +521,17 @@ q4_qa <- group_by(prelimlong1b, ResponseId) %>%
   filter(ResponseId %in% ResponseId[abbr == "EcosystemNotes" & !is.na(answer) & exclude != "Exclude"]) %>%
   ungroup() %>%
   filter(qnum == "Q4") %>%
-  dplyr::select(ResponseId, Init, Title, abbr, answer) %>%
+  # add in assess_date
+  mutate(assess_date = Sys.Date()) %>%
+  dplyr::select(assess_date, ResponseId, Init, Title, abbr, answer) %>%
   spread(abbr, answer) %>%
-  splitcom(keepcols = c("ResponseId", "Init", "Title", "EcosystemNotes", "Ecosystem"), splitcol = "Ecosystem") %>%
+  splitcom(keepcols = c("assess_date", "ResponseId", "Init", "Title", "EcosystemNotes", "Ecosystem"), splitcol = "Ecosystem") %>%
   rename(Ecosystem = answer) %>%
   # add col to indicate double review for comparison
   group_by(Title) %>%
   mutate(doublerev = length(unique(ResponseId))>1) %>%
-  ungroup()
+  ungroup() %>%
+  arrange(EcosystemNotes, Title)
 
 # set responseID as factor so ecosystem types will plot alphabetically
 q4_qa %>%
@@ -544,7 +547,9 @@ q4_qa %>%
 # write out for class review
 ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q4ecosystemnotes.pdf", width = 5, height = 4, units = "in", scale = 1.5)
 # write out ecosystem notes for review
-
+## change NA's to blanks so easier for reading in Excel
+q4_qa[is.na(q4_qa)] <- ""
+write_csv(q4_qa, "round2_metareview/clean_qa_data/needs_classreview/ecosystemnotes_review.csv")
 
 # 2b) Methods (Q6)
 sort(with(prelimlong1b, answer[abbr == "MethodsNotes" & !is.na(answer)  & exclude != "Exclude"]))
