@@ -531,7 +531,9 @@ q4_qa <- group_by(prelimlong1b, ResponseId) %>%
   group_by(Title) %>%
   mutate(doublerev = length(unique(ResponseId))>1) %>%
   ungroup() %>%
-  arrange(EcosystemNotes, Title)
+  arrange(EcosystemNotes, Title) %>%
+  # add citation info in case want to look at paper
+  left_join(dplyr::select(original, Title, FirstAuthor, PublicationYear, SourcePublication))
 
 # set responseID as factor so ecosystem types will plot alphabetically
 q4_qa %>%
