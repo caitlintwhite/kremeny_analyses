@@ -239,7 +239,7 @@ summary(unique(prelim$clean_title) %in% unique(original$Title)) # 9 either missp
 summary(unique(original$Title) %in% unique(prelim$clean_title)) #61 still to go (4/9)..
 # assign names to initals to link with original assigments
 initials <- c("Aislyn" = "AK", "Anna" = "AIS", "Caitlin" = "CW", "Claire" = "CK",
-              "Grant" = "GV", "Isabel" = "IS", "Julie" = "JL", "Kathryn" = "KG",
+              "Grant" = "GV", "Isabel" = "IS", "Julie" = "JL", "Kathryn" = "KCG",
               "Laura" = "LD", "Laurel" = "LB", "Nick" = "NBD", "Sierra" = "SDJ",
               "Tim" = "TK", "Travis" = "TM")
 keydf <- left_join(keydf, data.frame(Q27 = unname(initials), Name = names(initials))) %>%
