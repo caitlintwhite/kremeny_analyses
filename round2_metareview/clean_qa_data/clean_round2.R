@@ -163,7 +163,8 @@ records <- dplyr::select(prelim, Q27, clean_title) %>%
 # write out double-reviewed for Aislyn to compare results 2020-03-04
 forAK <- subset(prelim, clean_title %in% unique(records$clean_title[records$nobs > 1])) %>%
   arrange(clean_title, StartDate) %>%
-  mutate_all(function(x) ifelse(is.na(x), "", x))
+  mutate_all(function(x) ifelse(is.na(x), "", x)) %>%
+  distinct()
 write.csv(forAK, "round2_metareview/data/intermediate/round2_doublereviewed.csv", row.names = F)
 
 # pull titles for screening further down
@@ -419,6 +420,18 @@ exclude_notes <- c(
 prelim$Q24[!is.na(prelim$Q24)] # maybe also have value for "unsure" in exclude 
 ## Examples: 
 maybe_exclude_notes <- c(
+  "tough paper to review because defining what were their response variables was difficult",
+  "almost included at q3 with the thinking that abundance of crab burrows ",
+  "paper didn’t do a great job at analyzing/showing the specific effects of env drivers ",
+  "Looked at overall benefit/value ($) over time given land use change,",
+  "This paper was confusing...",
+  "it reads like a valuation of ES provision rather than a study of the ecology",
+  "I don't think it clearly tests any other ecological questions about ES's",
+  "I really don't know if this paper should be included",
+  "No measurement of services/function except community structure",
+  " (this study is in an econ journal).",
+  "This paper didn't really have \"response variables\". Instead they looked at people's perceptions of services in urban parks, so everything was qualitative/descriptive. Wasn't sure how to express this in the big table!",
+  "very hard to code- answers to survey about forest recovery's impact on water purification",
   "main focus of paper is on demographic processes, so considered excluding at first",
   "almost marked \"yes\" on Q3",
   "Honestly, this was a bit confusing. The paper mainly focused on the benefits of the model and the details of it.",
@@ -481,6 +494,9 @@ dplyr::select(prelimlong1b, ResponseId, Title, exclude) %>%
 # I think either way, whether paper is a maybe exclude or definite exclude, answers that don't agree should be flagged for consesus among reviewers
 ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q3excludepaper.pdf", width = 4, height = 4, units = "in", scale = 1.5)
 # write out potential exclusion set for LD to judge
+# read in current to indicate whether LD might have already reviewed
+current_possibleexclude <- read.csv("round2_metareview/clean_qa_data/needs_classreview/excludenotes_review.csv", na.strings = na_vals)
+
 possibleexclude_df <- dplyr::select(prelimlong1b, ResponseId, Init, Title, exclude, exclude_notes) %>%
   distinct() %>%
   # make exclusion cats factor
@@ -503,7 +519,11 @@ possibleexclude_df <- dplyr::select(prelimlong1b, ResponseId, Init, Title, exclu
   # join study info for review convenience
   left_join(original[c("Title", "FirstAuthor",  "PublicationYear", "SourcePublication","Abstract")]) %>%
   dplyr::select(assess_date, ResponseId:exclude_notes, flag_inconsistent:ncol(.)) %>%
-  arrange(Title, Init)
+  arrange(Title, Init) %>%
+  # add col for already pulled just in case LD has already reviewed
+  mutate(newcase = !Title %in% unique(current_possibleexclude$Title)) %>%
+  # move new case to after assess_date
+  dplyr::select(assess_date, newcase, ResponseId:ncol(.))
 # change NAs to blanks so not annoying in Excel
 possibleexclude_df[is.na(possibleexclude_df)] <- ""
 # write out
