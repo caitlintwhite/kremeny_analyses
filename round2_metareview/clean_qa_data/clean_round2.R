@@ -493,8 +493,9 @@ dplyr::select(prelimlong1b, ResponseId, Title, exclude) %>%
   facet_wrap(~reviews)
 # I think either way, whether paper is a maybe exclude or definite exclude, answers that don't agree should be flagged for consesus among reviewers
 ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q3excludepaper.pdf", width = 4, height = 4, units = "in", scale = 1.5)
+
 # write out potential exclusion set for LD to judge
-# read in current to indicate whether LD might have already reviewed
+## read in current to indicate whether LD might have already reviewed
 current_possibleexclude <- read.csv("round2_metareview/clean_qa_data/needs_classreview/excludenotes_review.csv", na.strings = na_vals)
 
 possibleexclude_df <- dplyr::select(prelimlong1b, ResponseId, Init, Title, exclude, exclude_notes) %>%
@@ -532,6 +533,9 @@ write_csv(possibleexclude_df, "round2_metareview/clean_qa_data/needs_classreview
 
 
 ## 2) Screen notes for possible issues -----
+## read in current to indicate whether LD/IS might have already reviewed
+current_ecosystemnotes <- read.csv("round2_metareview/clean_qa_data/needs_classreview/ecosystemnotes_review.csv", na.strings = na_vals)
+
 Qs_wnotes <- headerLUT$qnum[grep("notes", headerLUT$abbr, ignore.case = T)]
 View(subset(headerLUT, qnum %in% Qs_wnotes))
 # 2a) Ecosystem (Q4)
@@ -553,7 +557,11 @@ q4_qa <- group_by(prelimlong1b, ResponseId) %>%
   ungroup() %>%
   arrange(EcosystemNotes, Title) %>%
   # add citation info in case want to look at paper
-  left_join(dplyr::select(original, Title, FirstAuthor, PublicationYear, SourcePublication))
+  left_join(dplyr::select(original, Title, FirstAuthor, PublicationYear, SourcePublication)) %>%
+  # indicate whether new case
+  mutate(newcase = !Title %in% unique(current_ecosystemnotes$Title)) %>%
+  # reorder cols
+  dplyr::select(assess_date, newcase, ResponseId:ncol(.))
 
 # set responseID as factor so ecosystem types will plot alphabetically
 q4_qa %>%
@@ -573,7 +581,10 @@ ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q4ecosystemnotes.pdf", width
 q4_qa[is.na(q4_qa)] <- ""
 write_csv(q4_qa, "round2_metareview/clean_qa_data/needs_classreview/ecosystemnotes_review.csv")
 
+
 # 2b) Methods (Q6)
+# read in current methods notes
+current_methodsnotes <- read.csv("round2_metareview/clean_qa_data/needs_classreview/methodsnotes_review.csv", na.strings = na_vals)
 sort(with(prelimlong1b, answer[abbr == "MethodsNotes" & !is.na(answer)  & exclude != "Exclude"]))
 sort(with(prelimlong1b, answer[abbr == "GenInfo" & !is.na(answer) & exclude != "Exclude"]))
 # not sure if full GenInfo are preserved? might be byte limitation in csv format..
@@ -607,13 +618,18 @@ methodsnotes <- prelimlong1b %>%
   # reorder cols
   dplyr::select(assess_date, doublerev, ResponseId, Init, Title, GenInfo, MethodsNotes, Observational, Experimental, `Model_Data Simulation`, 'Social survey_Interview', Other, Ecosystem, MultiScale, TimeTrends) %>%
   # order by by title for easier comparison
-  arrange(Title, Init)
+  arrange(Title, Init) %>%
+  # add col for newcases and reorder cols
+  mutate(newcase = !Title %in% unique(current_methodsnotes$Title)) %>%
+  dplyr::select(assess_date, newcase, doublerev:ncol(.))
 # make all text so no "NA" in csv
 methodsnotes[is.na(methodsnotes)] <- ""  
 # write out for review
 write_csv(methodsnotes, "round2_metareview/clean_qa_data/needs_classreview/methodsnotes_review.csv")
 
 # 2c) Scale (Q9)
+# read in current scalenotes to check for new titles added
+current_scalenotes <- read.csv("round2_metareview/clean_qa_data/needs_classreview/scalenotes_review.csv", na.strings = na_vals)
 sort(with(prelimlong1b, answer[abbr == "ScaleNotes" & !is.na(answer)  & exclude != "Exclude"]))
 # punt to Grant!
 # except correct these:
@@ -672,7 +688,15 @@ scalenotes <- prelimlong1b %>%
   mutate(count = paste0(".", count)) %>%
   # add in their response for KT4
   left_join(distinct(cbind(prelimlong1b[prelimlong1b$abbr == "KremenTopics" & grepl("Topic 4", prelimlong1b$answer),c("ResponseId", "Title")], KT4_scale = 1))) %>%
-  replace_na(list("KT4_scale"=0))
+  replace_na(list("KT4_scale"=0)) %>%
+  # indicate new titles added with updates, reorder cols
+  mutate(newcase = !Title %in% unique(current_scalenotes$Title)) %>%
+  dplyr::select(assess_date, newcase, doublerev:ncol(.)) %>%
+  # also get TimeTrends in there.. should have been
+  left_join(distinct(prelimlong1b[prelimlong1b$abbr == "TimeTrends", c("ResponseId", "Title","answer")])) %>%
+  # clean up time trends
+  rename(TimeTrends = answer) %>%
+  mutate(TimeTrends = gsub(" \\(e.g.*$", "", TimeTrends))
 
 # make all text so no "NA" in csv
 scalenotes[is.na(scalenotes)] <- ""  
@@ -680,6 +704,8 @@ scalenotes[is.na(scalenotes)] <- ""
 write_csv(scalenotes, "round2_metareview/clean_qa_data/needs_classreview/scalenotes_review.csv")
 
 # 2d) Kremen topics addressed
+# read in current to ID new cases
+current_kremennotes <- read.csv("round2_metareview/clean_qa_data/needs_classreview/kremennotes_review.csv", na.strings = na_vals)
 sort(with(prelimlong1b, answer[abbr == "KremenNotes" & !is.na(answer)  & exclude != "Exclude"]))
 # think we want to review response and drivers listed, regardless of ES specified, along with kremen answers
 kremennotes <-  prelimlong1b %>%
@@ -743,7 +769,10 @@ kremennotes <-  prelimlong1b %>%
   # arrange by Title for comparison
   arrange(Title, Init) %>%
   # rename Kremen Topics cols to indicate source of data
-  rename_at(.vars = c("None", "ESPs", "Community_structure", "Environmental_factors", "Scale"), function(x) paste0("KT_", x))
+  rename_at(.vars = c("None", "ESPs", "Community_structure", "Environmental_factors", "Scale"), function(x) paste0("KT_", x)) %>%
+  # add col to ID new case
+  mutate(newcase = !Title %in% unique(current_kremennotes$Title)) %>%
+  dplyr::select(assess_date, newcase, doublerev:ncol(.))
   # unite main and other drivers
 # make all text so no "NA" in csv
 kremennotes[is.na(kremennotes)] <- ""  
@@ -756,14 +785,14 @@ write_csv(kremennotes, "round2_metareview/clean_qa_data/needs_classreview/kremen
 ggplot(kremennotes, aes(MultiScale, fill = as.factor(KT_Scale))) +
   geom_bar() +
   labs(title = "Round 2 data QA, Kremen Scale:",
-  subtitle = "MultiScale (Q9) answer (x-axis) vs. Time Trends (Q7) (panel), vs. Kremen Scale topic (Q13)",
+  subtitle = paste("MultiScale (Q9) answer (x-axis) vs. Time Trends (Q7) (panel), vs. Kremen Scale topic (Q13),",Sys.Date()),
   x = "MultiScale (spatial)") +
   scale_y_continuous(expand = c(0,0)) +
   scale_fill_grey(name = "KT4 (scale) checked?", labels = c("0" = "No", "1" = "Yes")) +
   theme(legend.position = "bottom") +
   facet_wrap(~TimeTrends)
 ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_kremenscale.pdf",
-       width = 6, height = 6, units = "in", scale = 1.2)
+       width = 6.5, height = 6, units = "in", scale = 1.2)
 
 
 # of those where ESP selected in Biotic Driver, how did they answer ESP_type?
@@ -778,7 +807,7 @@ mutate(kremennotes, ESP_type = str_replace_all(ESP_type, " \\[e.g.,? ([:alpha:]|
   coord_flip() +
   labs(x = "(Q13) ESP type(s) selected", 
        title = "Round 2 data QA, Kremen ESPs (Q12 v. 13 v. 14):\nWhen Kremen T1 (ESP) selected (Q13), what ESP types selected (Q14)?",
-       subtitle = "Colored by whether KT2 (Community structure) checked (Q13)") +
+       subtitle = paste("Colored by whether KT2 (Community structure) checked (Q13),", Sys.Date())) +
   scale_y_continuous(expand = c(0.0,0.01)) +
   scale_fill_grey(name = "(Q13)\nCommunity\nStructure?", labels = c("0" = "No", "1" = "Yes")) +
   theme(legend.position = c(0.99,0.99),
