@@ -703,6 +703,8 @@ scalenotes[is.na(scalenotes)] <- ""
 # write out for review
 write_csv(scalenotes, "round2_metareview/clean_qa_data/needs_classreview/scalenotes_review.csv")
 
+
+
 # 2d) Kremen topics addressed
 # read in current to ID new cases
 current_kremennotes <- read.csv("round2_metareview/clean_qa_data/needs_classreview/kremennotes_review.csv", na.strings = na_vals)
@@ -712,7 +714,7 @@ kremennotes <-  prelimlong1b %>%
   # remove papers to exclude
   subset(exclude != "Exclude") %>%
   # select variables of interest
-  subset(grepl("Drive|Response|Kremen", abbr, ignore.case = T)| qnum =="Q14") %>%
+  subset(grepl("Drive|Response|Kremen|GenInfo|SurveyNotes", abbr, ignore.case = T)| qnum =="Q14") %>%
   # add in assessment date
   mutate(assess_date = Sys.Date()) %>%
   # ignore ES and collapse to distinct
@@ -755,7 +757,7 @@ kremennotes <-  prelimlong1b %>%
   mutate(doublerev = Title %in% Title[duplicated(Title)]) %>%
   ungroup() %>%
   # reorder cols
-  dplyr::select(assess_date, doublerev, ResponseId, Init, Title, KremenNotes, None, Response, 
+  dplyr::select(assess_date, doublerev, ResponseId, Init, Title, GenInfo, SurveyNotes, KremenNotes, None, Response, 
                 # KT topic 1 cols (ESP)
                 ESPs, Driver_Bio, flag_otherBio, OtherDriver_Bio, ESP_type,
                 # KT topic 2 cols (community structure)
@@ -772,7 +774,9 @@ kremennotes <-  prelimlong1b %>%
   rename_at(.vars = c("None", "ESPs", "Community_structure", "Environmental_factors", "Scale"), function(x) paste0("KT_", x)) %>%
   # add col to ID new case
   mutate(newcase = !Title %in% unique(current_kremennotes$Title)) %>%
-  dplyr::select(assess_date, newcase, doublerev:ncol(.))
+  # join exclude col just in case we only want to review things we definitely will keep
+  left_join(distinct(prelimlong1b[c("ResponseId", "Title", "exclude")])) %>%
+  dplyr::select(assess_date, newcase, exclude, doublerev:ncol(.))
   # unite main and other drivers
 # make all text so no "NA" in csv
 kremennotes[is.na(kremennotes)] <- ""  
@@ -817,7 +821,7 @@ ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q14kremenESPs.pdf",
        width = 8, height = 5, units = "in", scale = 1.2)
 
 
-
+# pull ESP
 
 
 # 3) If-then questions -----
@@ -830,17 +834,46 @@ ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q14kremenESPs.pdf",
 
 
 # 4) Kremen topics -----
+# 0) pull NO Kremen checked (usually at least 1 should be? probably some cases where they really didn't, and those would be interesting to pull out)
+noKremen <- subset(kremennotes, KT_None == 1)
+
 # 1) If ESP checked in Biotic, ESP checked in Kremen
+## kremennotes includes ALL papers not excluded (even "maybe" exclude)
+## just need to pull ESP answers, and add GenInfo and SurveyNotes to screen for ESPs mentioned
+## flag if ESP checked in biotic driver (or other.. keyword search?, or spp checked in ESP types?) but KT ESP NOT checked, or no service provider in biotic driver (and none indicated in ESP types Q) but KT ESP *IS* checked
+ESPcheck <- dplyr::select(kremennotes, assess_date:ESP_type) %>% distinct()
+  left_join(prelimlong1b[prelimlong1b$abbr == "GenInfo", ])
 
 # 2) Keyword search variables for Community structure
+# keywords to screen in driver variables (or geninfo and survey notes).. don't think we should code based response vars if end point is diversity or abundance and not actually function
+# structure in kremen is about structure influecing function
+# name keywords
+structurewords <- c("abund|richn|shannon|divers|biodiv|evenn|size|mass")
+structurecheck <- dplyr::select(kremennotes, assess_date:KT_Community_structure) %>% distinct() %>%
+  # flag for papers where structure NOT checked, but ESP type indicates otherwise
+  mutate(not_checked = (KT_Community_structure==0 & (grepl("Multiple|Across|Within", ESP_type) | grepl(structurewords, OtherDriver_Bio))),
+  false_checked = KT_Community_structure==1 & (!grepl("Multiple|Across|Within", ESP_type) & !grepl(structurewords, OtherDriver_Bio)),
+  # combine flags
+  flag_KTstructure = (not_checked | false_checked),
+  flag_structure_explanation = ifelse(not_checked, "Not checked; ESP type or keywords suggest structure",
+                                      ifelse(false_checked, "Structure checked; ESP type and driver keywords do NOT suggest structure",
+                                      ""))) %>%
+  # drop not_checked and false_checked
+  dplyr::select(-c(not_checked, false_checked))
+# write out for IS
+write_csv(structurecheck, "round2_metareview/clean_qa_data/needs_classreview/KTstructure_check.csv")
+
 
 # 3) If environmental variables checked or listed, Environment checked
+envcheck <- dplyr::select(kremennotes, assess_date:Response, KT_Environmental_factors:flag_otherEnv) %>% distinct()
 
 # 4) If multiple scales checked (time or space), Scale checked
+## > Grant and Julie handling this. Will define rules for flag, CTW will incorp in code
+
 
 
 # -- DOUBLE REVIEWED ----
-doubleprelim <- subset(prelimlong, Title %in% doubletitles) %>%
+doubleprelim <- subset(prelimlong1b, Title %in% doubletitles) %>%
   group_by(Title, id) %>%
   mutate(same_answer = length(unique(answer)) ==1) %>%
   ungroup() %>%
