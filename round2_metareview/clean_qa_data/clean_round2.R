@@ -859,7 +859,11 @@ structurecheck <- dplyr::select(kremennotes, assess_date:KT_Community_structure)
                                       ifelse(false_checked, "Structure checked; ESP type and driver keywords do NOT suggest structure",
                                       ""))) %>%
   # drop not_checked and false_checked
-  dplyr::select(-c(not_checked, false_checked))
+  dplyr::select(-c(not_checked, false_checked)) %>%
+  # subset flag == TRUE
+  subset(flag_KTstructure | Title %in% doubletitles) %>%
+  # add paper citation info for reference
+  left_join(original[c("Title", "FirstAuthor", "SourcePublication", "PublicationYear", "Abstract")])
 # write out for IS
 write_csv(structurecheck, "round2_metareview/clean_qa_data/needs_classreview/KTstructure_check.csv")
 
