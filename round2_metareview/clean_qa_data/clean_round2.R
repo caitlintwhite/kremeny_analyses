@@ -68,11 +68,11 @@ splitcom <- function(df, keepcols = c("Title", "answer"), splitcol = "answer"){
     #dplyr::select_vars(keepcols) %>%
     distinct() %>%
     # break out answers by comma
-    separate(answer, paste0("v",1:20), ",") %>% # <- this will throw warning, fine. pad with extra cols for up to 20 comma-separated answers just in case
+    separate(answer, paste0("v",1:30), ",") %>% # <- this will throw warning, fine. pad with extra cols for up to 20 comma-separated answers just in case
     # remove cols that are all na
     dplyr::select(names(.)[sapply(., function(x) !(all(is.na(x))))]) %>%
     # gather to tidy
-    gather(num, answer, names(.)[grep("^v[0-9]$", names(.))]) %>% #v1:ncol(.)
+    gather(num, answer, names(.)[grep("^v[[:digit:]]+$", names(.))]) %>% #v1:ncol(.)
     mutate(answer = trimws(answer)) %>%
     # make number of answers numeric
     mutate(num = parse_number(num)) %>%
@@ -926,62 +926,58 @@ write_csv(envcheck, "round2_metareview/clean_qa_data/needs_classreview/KTenviron
 
 
 # -- PULL UNIQUE DRIVERS AND RESPONSES FOR REVIEW -----
-
-
-
-
-# -- APPLY CORRECTIONS -----
-
-
-# -- CONDENSE DOUBLE REVIEWED ----
-doubleprelim <- subset(prelimlong1b, Title %in% doubletitles) %>%
-  group_by(Title, id) %>%
-  mutate(same_answer = length(unique(answer)) ==1) %>%
-  ungroup() %>%
-  filter(!(same_answer & is.na(answer))) %>%
-  arrange(Title, survey_order, RecordedDate)
-# how many double reviewed?
-length(unique(doubleprelim$Title))
-# who?
-sapply(split(doubleprelim$Title, doubleprelim$Init), function(x) length(unique(x)))
-write_csv(doubleprelim, "round2_metareview/data/intermediate/round2_doublereviewed_tidy.csv")
-
-# where are the most inconsistencies (by question)?
-dplyr::select(doubleprelim, Title, abbr, same_answer) %>%
-  distinct() %>%
-  ggplot(aes(same_answer)) +
-  geom_bar() +
-  facet_wrap(~abbr)
-
-# add flag for answer inconsistencies:
-# 1) exclusion answers that don't agree
-
-
-# -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
-
-
-
-# -- WRITE OUT CLEANED L1 DATASET FOR POST-PROCESSING AND ANALYSIS -----
-
-
-
-# -- EXTRACT WORDS USED FOR ES RESPONSE AND DRIVERS ----
 # what's been classed as EF?
 # what's been classed as ES?
+# I think we also also interested in reviewing which drivers and responses have been used with which ecosystem services?
 
 # ES question
-# question 25 (response variables)
-q25df <- subset(firstreview, qnum =="Q12") %>%
+# question 12 (response variables)
+q12df <- subset(prelimlong1b, qnum =="Q12" & exclude != "Exclude") %>%
   filter(!is.na(answer))
 
-responses <- subset(q25df, qnum == "Q12" & abbr =="Response")
-yclass <- subset(q25df, qnum == "Q12" & abbr == "Yclass") %>%
-  dplyr::select(StartDate, Title, Init, ES, answer) %>%
-  separate(answer, c("type1", "type2", "type3", "type4"), sep = ",") %>%
-  # remove anything that's all NA
-  dplyr::select(names(.)[sapply(., function(x) !all(is.na(x)))])
-# join EFs and Es
-ESresponses <- left_join(responses, yclass)
+responses <- subset(q12df, abbr %in% c("Response", "Yclass")) %>%
+  dplyr::select(ResponseId:Title, answer, abbr, Group, ES, exclude) %>%
+  distinct() %>%
+  # enumerate Group to spread response and Yclass
+  group_by(ResponseId, Title, ES, abbr) %>%
+  mutate(Group = 1:length(answer)) %>%
+  ungroup() %>%
+  unite(abbr, abbr, Group, sep = "") %>%
+  spread(abbr, answer) %>%
+  rename(Yclass = Yclass1) %>%
+  #combine response 1 and response 2
+  unite(Response, Response1, Response2, sep = ", ") %>%
+  #remove NAs
+  mutate(Response = gsub(", NA", "", Response)) %>%
+  #gather response and yclass then comma split
+  gather(abbr, answer, Response, Yclass) %>%
+  # split commas
+  splitcom(keepcols = names(.), splitcol = "answer") %>%
+  # spread out cols
+  unite(abbr, abbr, num, sep = "") %>%
+  spread(abbr, answer) %>%
+  gather(ResponseCount, Response, names(.)[grep("^Response[0-9]+", names(.))]) %>%
+  mutate(ResponseCount = parse_number(ResponseCount)) %>%
+  filter(!is.na(Response)) %>%
+  arrange(Title, ES, Init, ResponseCount) %>%
+  # add in double review info and assess date
+  mutate(doublerev = Title %in% doubletitles,
+         assess_date = Sys.Date(),
+         # clean up Response
+         Response = trimws(Response)) %>%
+  #reorder cols
+  dplyr::select(assess_date, doublerev, exclude, ResponseId:ES, ResponseCount, Response, Yclass1:ncol(.)) %>%
+  # add col to count overall yvar freq
+  group_by(casefold(Response)) %>%
+  # only want to count single use by reviewer-title (ignore duplications across ES within same paper)
+  mutate(Yvar_studyfreq = length(unique(ResponseId))) %>%
+  ungroup() %>%
+  # drop casefold col
+  dplyr::select(-'casefold(Response)')
+# change NAs to blanks for easier viewing in Excel
+responses[is.na(responses)] <- ""
+#write out
+write_csv(responses, "round2_metareview/clean_qa_data/needs_classreview/ESresponse_review.csv")
 
 response_summary <- responses %>%
   mutate(answer =  casefold(answer)) %>%
@@ -1024,16 +1020,56 @@ subset(response_summary) %>%
 
 
 
+
+
+# -- APPLY CORRECTIONS -----
+
+
+# -- CONDENSE DOUBLE REVIEWED ----
+doubleprelim <- subset(prelimlong1b, Title %in% doubletitles) %>%
+  group_by(Title, id) %>%
+  mutate(same_answer = length(unique(answer)) ==1) %>%
+  ungroup() %>%
+  filter(!(same_answer & is.na(answer))) %>%
+  arrange(Title, survey_order, RecordedDate)
+# how many double reviewed?
+length(unique(doubleprelim$Title))
+# who?
+sapply(split(doubleprelim$Title, doubleprelim$Init), function(x) length(unique(x)))
+write_csv(doubleprelim, "round2_metareview/data/intermediate/round2_doublereviewed_tidy.csv")
+
+# where are the most inconsistencies (by question)?
+dplyr::select(doubleprelim, Title, abbr, same_answer) %>%
+  distinct() %>%
+  ggplot(aes(same_answer)) +
+  geom_bar() +
+  facet_wrap(~abbr)
+
+# add flag for answer inconsistencies:
+# 1) exclusion answers that don't agree
+
+
+# -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
+
+
+
+# -- WRITE OUT CLEANED L1 DATASET FOR POST-PROCESSING AND ANALYSIS -----
+
+
+
+# -- EXTRACT WORDS USED FOR ES RESPONSE AND DRIVERS ----
+
+
 # -- PRELIM SUMMARY FIGURE ----
 
-select(q25df, Init, Title, ES) %>%
+select(q12df, Init, Title, ES) %>%
   filter(!is.na(ES)) %>%
   distinct() %>%
   ggplot(aes(ES)) +
   geom_bar() +
   coord_flip()
 
-ytypefig <- select(q25df, Init, Title, ES, abbr, answer) %>%
+ytypefig <- select(q12df, Init, Title, ES, abbr, answer) %>%
   filter(abbr == "Yclass") %>%
   distinct() %>%
   mutate(answer = gsub("Proxy for ES", "ES proxy", answer),
@@ -1054,7 +1090,7 @@ ytypefig <- select(q25df, Init, Title, ES, abbr, answer) %>%
   coord_flip()
 ytypefig
 
-test <- select(q25df, Init, Title, ES, abbr, Group, answer) %>%
+test <- select(q12df, Init, Title, ES, abbr, Group, answer) %>%
   # for now fill down any NAs with ES above it, grouped by Title
   group_by(Title) %>%
   fill(ES) %>%
