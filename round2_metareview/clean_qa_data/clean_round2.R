@@ -276,7 +276,7 @@ outstanding <- cbind(assess_date = Sys.Date(), subset(original, !Title %in% uniq
   # re-assign KG to any remaining Tim and Nick papers since they're done as of 4/15
   mutate(Round2_reviewer1 = gsub("Nick|Tim", "Kathryn*", Round2_reviewer1)) %>%
   arrange(Round2_reviewer1, Title)
-  
+
 
 # who remains to reach 28 papers
 effort <- data.frame(assess_date = Sys.Date(), Init = unname(initials), Name = names(initials)) %>%
@@ -504,8 +504,8 @@ possibleexclude_df <- dplyr::select(prelimlong1b, ResponseId, Init, Title, exclu
   mutate(exclude = factor(exclude, levels = c("Keep", "Maybe", "Exclude"))) %>%
   group_by(Title) %>%
   mutate(reviews = length(ResponseId),
-  # add flag for inconsistent exclusion answer
-    flag_inconsistent = (reviews >1 & length(unique(exclude)) > 1)) %>%
+         # add flag for inconsistent exclusion answer
+         flag_inconsistent = (reviews >1 & length(unique(exclude)) > 1)) %>%
   #mutate(unique_paper = 1:nrow(prelim)) %>%
   ungroup() %>%
   # remove anything that is clear exclude on Q3 or is to keep
@@ -777,7 +777,7 @@ kremennotes <-  prelimlong1b %>%
   # join exclude col just in case we only want to review things we definitely will keep
   left_join(distinct(prelimlong1b[c("ResponseId", "Title", "exclude")])) %>%
   dplyr::select(assess_date, newcase, exclude, doublerev:ncol(.))
-  # unite main and other drivers
+# unite main and other drivers
 # make all text so no "NA" in csv
 kremennotes[is.na(kremennotes)] <- ""  
 # write out for review
@@ -789,8 +789,8 @@ write_csv(kremennotes, "round2_metareview/clean_qa_data/needs_classreview/kremen
 ggplot(kremennotes, aes(MultiScale, fill = as.factor(KT_Scale))) +
   geom_bar() +
   labs(title = "Round 2 data QA, Kremen Scale:",
-  subtitle = paste("MultiScale (Q9) answer (x-axis) vs. Time Trends (Q7) (panel), vs. Kremen Scale topic (Q13),",Sys.Date()),
-  x = "MultiScale (spatial)") +
+       subtitle = paste("MultiScale (Q9) answer (x-axis) vs. Time Trends (Q7) (panel), vs. Kremen Scale topic (Q13),",Sys.Date()),
+       x = "MultiScale (spatial)") +
   scale_y_continuous(expand = c(0,0)) +
   scale_fill_grey(name = "KT4 (scale) checked?", labels = c("0" = "No", "1" = "Yes")) +
   theme(legend.position = "bottom") +
@@ -835,14 +835,34 @@ ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q14kremenESPs.pdf",
 
 # 4) Kremen topics -----
 # 0) pull NO Kremen checked (usually at least 1 should be? probably some cases where they really didn't, and those would be interesting to pull out)
-noKremen <- subset(kremennotes, KT_None == 1)
+noKremen <- kremennotes %>%
+  subset(Title %in% Title[KT_None == 1]) %>%
+  dplyr::select(-newcase)
 
 # 1) If ESP checked in Biotic, ESP checked in Kremen
 ## kremennotes includes ALL papers not excluded (even "maybe" exclude)
 ## just need to pull ESP answers, and add GenInfo and SurveyNotes to screen for ESPs mentioned
 ## flag if ESP checked in biotic driver (or other.. keyword search?, or spp checked in ESP types?) but KT ESP NOT checked, or no service provider in biotic driver (and none indicated in ESP types Q) but KT ESP *IS* checked
-ESPcheck <- dplyr::select(kremennotes, assess_date:ESP_type) %>% distinct()
-  left_join(prelimlong1b[prelimlong1b$abbr == "GenInfo", ])
+ESPcheck <- dplyr::select(kremennotes, assess_date, exclude:ESP_type, KT_Community_structure) %>% distinct() %>%
+  # > we weren't clear for ESP question whether we referred to ESP as driver or (as driver OR response) 
+  # > can't use Q14 so easily to auto-assign 1 to kremen ESP when Q14 has species indicated
+  # > BUT does seem like if Service Provider entered in Biotic driver, Kremen ESP topic should be checked
+  # flag and write out for someone else to volunteer dealing with
+  # case where Kremen ESP checked but Service Provider not in Driver
+  mutate(flag_ktESP_noSerPro = (KT_ESPs == 1 & !grepl("Service", Driver_Bio)),
+         # Service provider not selected in biotic driver but ESP indicated in ESP Type (Q14)
+         flag_BioDrive_ESPtypehasESP = grepl("ESP", ESP_type) & !grepl("Service", Driver_Bio),
+         # KT ESP not checked but service provider in biotic drivers
+         flag_ktESP_unchecked = (KT_ESPs == 0 & grepl("Service",Driver_Bio))) %>%
+  # only keep paper titles flagged
+  filter(Title %in% Title[c(flag_ktESP_noSerPro, flag_BioDrive_ESPtypehasESP, flag_ktESP_unchecked)]) %>%
+  # join paper citation info
+  left_join(original[c("Title", "SourcePublication", "PublicationYear", "Abstract")])
+# change any NAs to "
+ESPcheck[is.na(ESPcheck)] <- ""
+# write out
+write_csv(ESPcheck, "round2_metareview/clean_qa_data/needs_classreview/KTesp_check.csv")
+
 
 # 2) Keyword search variables for Community structure
 # keywords to screen in driver variables (or geninfo and survey notes).. don't think we should code based response vars if end point is diversity or abundance and not actually function
@@ -851,32 +871,52 @@ ESPcheck <- dplyr::select(kremennotes, assess_date:ESP_type) %>% distinct()
 structurewords <- c("abund|richn|shannon|divers|biodiv|evenn|size|mass")
 structurecheck <- dplyr::select(kremennotes, assess_date:KT_Community_structure) %>% distinct() %>%
   # flag for papers where structure NOT checked, but ESP type indicates otherwise
-  mutate(not_checked = (KT_Community_structure==0 & (grepl("Multiple|Across|Within", ESP_type) | grepl(structurewords, OtherDriver_Bio))),
-  false_checked = KT_Community_structure==1 & (!grepl("Multiple|Across|Within", ESP_type) & !grepl(structurewords, OtherDriver_Bio)),
-  # combine flags
-  flag_KTstructure = (not_checked | false_checked),
-  flag_structure_explanation = ifelse(not_checked, "Not checked; ESP type or keywords suggest structure",
-                                      ifelse(false_checked, "Structure checked; ESP type and driver keywords do NOT suggest structure",
-                                      ""))) %>%
+  mutate(not_checked = (KT_Community_structure==0 & (grepl("Multiple|Across|Within", ESP_type) | grepl(structurewords, OtherDriver_Bio, ignore.case = T))),
+         false_checked = KT_Community_structure==1 & (!grepl("Multiple|Across|Within", ESP_type) & !grepl(structurewords, OtherDriver_Bio, ignore.case = T)),
+         # combine flags
+         flag_KTstructure = (not_checked | false_checked),
+         flag_structure_explanation = ifelse(not_checked, "Not checked; ESP type or keywords suggest structure",
+                                             ifelse(false_checked, "Structure checked; ESP type and driver keywords do NOT suggest structure",
+                                                    ""))) %>%
   # drop not_checked and false_checked
-  dplyr::select(-c(not_checked, false_checked)) %>%
-  # subset flag == TRUE
-  subset(flag_KTstructure | Title %in% doubletitles) %>%
+  dplyr::select(-c(newcase, not_checked, false_checked)) %>%
+  # subset to titles where flag == TRUE
+  subset(Title %in% Title[flag_KTstructure]) %>%
   # add paper citation info for reference
   left_join(original[c("Title", "FirstAuthor", "SourcePublication", "PublicationYear", "Abstract")])
+# convert NAs to blank cells
+structurecheck[is.na(structurecheck)] <- ""
 # write out for IS
 write_csv(structurecheck, "round2_metareview/clean_qa_data/needs_classreview/KTstructure_check.csv")
 
 
 # 3) If environmental variables checked or listed, Environment checked
-envcheck <- dplyr::select(kremennotes, assess_date:Response, KT_Environmental_factors:flag_otherEnv) %>% distinct()
+envcheck <- dplyr::select(kremennotes, assess_date, exclude:Response, KT_Environmental_factors:OtherDriver_Env) %>% distinct() %>%
+  # case where KT Environmental factors not selected, but environmental drivers entered
+  mutate(flag_KTenv_uncheck = (nchar(Driver_Env)>0 | nchar(OtherDriver_Env) > 0) & KT_Environmental_factors == 0,
+         # case where KT Env Fac selected, but no environmental drivers entered [*but could be that env var is in response.. should that count as addressing a KT topic?]
+         flag_KTenv_checked = (nchar(Driver_Env) == 0 & nchar(OtherDriver_Env) == 0) & KT_Environmental_factors == 1) %>%
+  # subset to flagged papers only
+  # subset to titles where flag == TRUE
+  subset(Title %in% Title[c(flag_KTenv_uncheck, flag_KTenv_checked)]) %>%
+  # add paper citation info for reference
+  left_join(original[c("Title", "FirstAuthor", "SourcePublication", "PublicationYear", "Abstract")])
+# convert NAs to blank cells
+envcheck[is.na(envcheck)] <- ""
+# write out for IS
+write_csv(envcheck, "round2_metareview/clean_qa_data/needs_classreview/KTenvironment_check.csv")
+
 
 # 4) If multiple scales checked (time or space), Scale checked
 ## > Grant and Julie handling this. Will define rules for flag, CTW will incorp in code
 
 
 
-# -- DOUBLE REVIEWED ----
+
+# -- APPLY CORRECTIONS -----
+
+
+# -- CONDENSE DOUBLE REVIEWED ----
 doubleprelim <- subset(prelimlong1b, Title %in% doubletitles) %>%
   group_by(Title, id) %>%
   mutate(same_answer = length(unique(answer)) ==1) %>%
@@ -898,6 +938,14 @@ dplyr::select(doubleprelim, Title, abbr, same_answer) %>%
 
 # add flag for answer inconsistencies:
 # 1) exclusion answers that don't agree
+
+
+# -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
+
+
+
+# -- WRITE OUT CLEANED L1 DATASET FOR POST-PROCESSING AND ANALYSIS -----
+
 
 
 # -- EXTRACT WORDS USED FOR ES RESPONSE AND DRIVERS ----
