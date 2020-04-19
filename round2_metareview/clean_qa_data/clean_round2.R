@@ -837,7 +837,20 @@ ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q14kremenESPs.pdf",
 # 0) pull NO Kremen checked (usually at least 1 should be? probably some cases where they really didn't, and those would be interesting to pull out)
 noKremen <- kremennotes %>%
   subset(Title %in% Title[KT_None == 1]) %>%
-  dplyr::select(-newcase)
+  dplyr::select(-newcase) %>%
+  # add flags for potential Kremen topics
+  mutate(flag_KTesp = KT_None == 1 & (grepl("Service", Driver_Bio) | grepl("ESP", ESP_type)),
+         flag_KTstructure = KT_None == 1 & grepl("Multiple|Within|Across", ESP_type),
+         flag_KTenv = KT_None == 1 & (nchar(Driver_Env) > 0 | nchar(OtherDriver_Env) > 0),
+         flag_KTscale = KT_None == 1 & (MultiScale == "No" | TimeTrends != "No")) %>%
+  # add citation info
+  # join paper citation info
+  left_join(original[c("Title", "SourcePublication", "PublicationYear", "Abstract")])
+# change any NAs to "
+noKremen[is.na(noKremen)] <- ""
+# write out
+write_csv(noKremen, "round2_metareview/clean_qa_data/needs_classreview/KTnone_check.csv")
+
 
 # 1) If ESP checked in Biotic, ESP checked in Kremen
 ## kremennotes includes ALL papers not excluded (even "maybe" exclude)
@@ -909,6 +922,10 @@ write_csv(envcheck, "round2_metareview/clean_qa_data/needs_classreview/KTenviron
 
 # 4) If multiple scales checked (time or space), Scale checked
 ## > Grant and Julie handling this. Will define rules for flag, CTW will incorp in code
+
+
+
+# -- PULL UNIQUE DRIVERS AND RESPONSES FOR REVIEW -----
 
 
 
