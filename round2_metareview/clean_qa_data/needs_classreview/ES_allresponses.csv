@@ -60,13 +60,13 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,TRUE,Maybe,R_SMB94nDu1Rxnw89,AK,An integrated ecological modeling system for assessing impacts of multiple stressors on stream and riverine ecosystem services within river basins,CulturePsych,1,fish productivity,Proxy for ES,,1
 2020-04-19,TRUE,Maybe,R_SMB94nDu1Rxnw89,AK,An integrated ecological modeling system for assessing impacts of multiple stressors on stream and riverine ecosystem services within river basins,CulturePsych,2,habitat suitability,Proxy for ES,,1
 2020-04-19,TRUE,Keep,R_2dfNb7wNwTVi3Kg,AIS,An integrated ecological modeling system for assessing impacts of multiple stressors on stream and riverine ecosystem services within river basins,Food,1,total fish biomass,Proxy for ES,,2
-2020-04-19,TRUE,Maybe,R_SMB94nDu1Rxnw89,AK,An integrated ecological modeling system for assessing impacts of multiple stressors on stream and riverine ecosystem services within river basins,Food,1,mercury residues in fish,,,1
+2020-04-19,TRUE,Maybe,R_SMB94nDu1Rxnw89,AK,An integrated ecological modeling system for assessing impacts of multiple stressors on stream and riverine ecosystem services within river basins,Food,1,mercury residues in fish,no selection,,1
 2020-04-19,TRUE,Keep,R_2dfNb7wNwTVi3Kg,AIS,An integrated ecological modeling system for assessing impacts of multiple stressors on stream and riverine ecosystem services within river basins,freshWQReg,1,streamflow,Proxy for ES,,1
 2020-04-19,TRUE,Keep,R_2dfNb7wNwTVi3Kg,AIS,An integrated ecological modeling system for assessing impacts of multiple stressors on stream and riverine ecosystem services within river basins,HabCreate,1,game fish habitat suitability index,Proxy for ES,,1
-2020-04-19,FALSE,Keep,R_20Mf8RGMTVC488G,LB,An integrated ecosystem service assessment in an artificial desert oasis of northwestern China,ClimReg,1,Net primary production,,,1
-2020-04-19,FALSE,Keep,R_20Mf8RGMTVC488G,LB,An integrated ecosystem service assessment in an artificial desert oasis of northwestern China,ClimReg,2,carbon sequestration,,,7
-2020-04-19,FALSE,Keep,R_20Mf8RGMTVC488G,LB,An integrated ecosystem service assessment in an artificial desert oasis of northwestern China,ClimReg,3,net oxygen production,,,1
-2020-04-19,FALSE,Keep,R_20Mf8RGMTVC488G,LB,An integrated ecosystem service assessment in an artificial desert oasis of northwestern China,Food,1,grain production,,,2
+2020-04-19,FALSE,Keep,R_20Mf8RGMTVC488G,LB,An integrated ecosystem service assessment in an artificial desert oasis of northwestern China,ClimReg,1,Net primary production,no selection,,1
+2020-04-19,FALSE,Keep,R_20Mf8RGMTVC488G,LB,An integrated ecosystem service assessment in an artificial desert oasis of northwestern China,ClimReg,2,carbon sequestration,no selection,,7
+2020-04-19,FALSE,Keep,R_20Mf8RGMTVC488G,LB,An integrated ecosystem service assessment in an artificial desert oasis of northwestern China,ClimReg,3,net oxygen production,no selection,,1
+2020-04-19,FALSE,Keep,R_20Mf8RGMTVC488G,LB,An integrated ecosystem service assessment in an artificial desert oasis of northwestern China,Food,1,grain production,no selection,,2
 2020-04-19,TRUE,Keep,R_Uszlh1FFsBKprBn,AIS,An invasive ant reduces diversity but does not disrupt a key ecosystem function in an African savanna,PestPath,1,dung decomposition,Proxy for ES,,4
 2020-04-19,TRUE,Keep,R_1jIdgURwZ6A6iOu,AK,An invasive ant reduces diversity but does not disrupt a key ecosystem function in an African savanna,PestPath,1,arthropod diversity and abundance,EF,,1
 2020-04-19,TRUE,Keep,R_1jIdgURwZ6A6iOu,AK,An invasive ant reduces diversity but does not disrupt a key ecosystem function in an African savanna,PestPath,2,dung-decomposing beetle diversity and abundance,EF,,1
@@ -124,14 +124,14 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Keep,R_2S6ohGUwujQ2CTu,NBD,Avian functional responses to landscape recovery,PestPath,1,bird functional diversity,EF,,1
 2020-04-19,FALSE,Keep,R_2S6ohGUwujQ2CTu,NBD,Avian functional responses to landscape recovery,Pollination,1,bird functional diversity,EF,,1
 2020-04-19,FALSE,Keep,R_1pMUi8TKDBRwWHH,AIS,Avian pest control in vineyards is driven by interactions between bird functional diversity and landscape heterogeneity,PestPath,1,bird predation rates on plasticene insects,Proxy for ES,,1
-2020-04-19,FALSE,Keep,R_2YSxgZguzQF3xzT,NBD,Balancing water supply and old-growth forest conservation in the lowlands of south-central Chile through adaptive co-management,CulturePsych,1,opnion,,,1
+2020-04-19,FALSE,Keep,R_2YSxgZguzQF3xzT,NBD,Balancing water supply and old-growth forest conservation in the lowlands of south-central Chile through adaptive co-management,CulturePsych,1,opnion,no selection,,1
 2020-04-19,FALSE,Keep,R_2YSxgZguzQF3xzT,NBD,Balancing water supply and old-growth forest conservation in the lowlands of south-central Chile through adaptive co-management,freshWQReg,1,runoff coefficient (runoff/rainfall),Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_2YSxgZguzQF3xzT,NBD,Balancing water supply and old-growth forest conservation in the lowlands of south-central Chile through adaptive co-management,HabCreate,1,Tree composition,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_2XgrJFKeKnMspj5,KCG,Balancing yield with resilience and conservation objectives in harvested predator-prey communities,Food,1,fish yield,Proxy for ES,,2
 2020-04-19,FALSE,Keep,R_3QVN7sk2L6ezbxj,TK,Bat diversity in Carajas National Forest (Eastern Amazon) and potential impacts on ecosystem services under climate change,PestPath,1,persistence of insectivore bat species,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_3QVN7sk2L6ezbxj,TK,Bat diversity in Carajas National Forest (Eastern Amazon) and potential impacts on ecosystem services under climate change,Pollination,1,persistence of nectar of frugivorous bat species,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_3QVN7sk2L6ezbxj,TK,Bat diversity in Carajas National Forest (Eastern Amazon) and potential impacts on ecosystem services under climate change,Pollination,2,persistence of nectarivorous bat species,Proxy for ES,,1
-2020-04-19,FALSE,Keep,R_21BMgTOWkP6cBkH,TK,Belowground response of prairie restoration and resiliency to drought,MaintainOpts,1,resilience,,,1
+2020-04-19,FALSE,Keep,R_21BMgTOWkP6cBkH,TK,Belowground response of prairie restoration and resiliency to drought,MaintainOpts,1,resilience,no selection,,1
 2020-04-19,FALSE,Keep,R_21BMgTOWkP6cBkH,TK,Belowground response of prairie restoration and resiliency to drought,SoilProtect,1,soil enzyme levels,ES,,2
 2020-04-19,FALSE,Maybe,R_12LTy7jbBE8ZpVJ,CW,"BIMBY's first steps: a pilot study on the contribution of residential front-yards in Phoenix and Maastricht to biodiversity, ecosystem services and urban sustainability",CulturePsych,1,Disturbance (artificial light,Proxy for ES,,1
 2020-04-19,FALSE,Maybe,R_12LTy7jbBE8ZpVJ,CW,"BIMBY's first steps: a pilot study on the contribution of residential front-yards in Phoenix and Maastricht to biodiversity, ecosystem services and urban sustainability",CulturePsych,2,lawn furniture,Proxy for ES,,1
@@ -151,7 +151,7 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Keep,R_d6fQShhgN9RzJPb,IS,Biophysical and anthropogenous determinants of landscape patterns and degradation of plant communities in Mo hilly basin (Togo),ClimReg,1,total soil nitrogen,EF,,1
 2020-04-19,FALSE,Keep,R_d6fQShhgN9RzJPb,IS,Biophysical and anthropogenous determinants of landscape patterns and degradation of plant communities in Mo hilly basin (Togo),ClimReg,2,soil organic carbon,EF,,4
 2020-04-19,FALSE,Keep,R_2tznpl4ftHu3Krw,JL,Both rare and common species support ecosystem services in scavenger communities,PestPath,1,carrion consumption rate,ES,,1
-2020-04-19,FALSE,Keep,R_1mI3PjUP02Mv2LX,JL,Butterfly-plant network in urban landscape: Implication for conservation and urban greening,Pollination,1,butterfly presence/abundance,,,1
+2020-04-19,FALSE,Keep,R_1mI3PjUP02Mv2LX,JL,Butterfly-plant network in urban landscape: Implication for conservation and urban greening,Pollination,1,butterfly presence/abundance,no selection,,1
 2020-04-19,FALSE,Keep,R_bOWOoggowV387XX,TM,Can carbon credits fund riparian forest restoration?,ClimReg,1,Carbon storage,ES,,16
 2020-04-19,FALSE,Keep,R_3COsBpr7qPSk0pE,LB,Can landscape-scale approaches to conservation management resolve biodiversity-ecosystem service trade-offs?,ClimReg,1,Carbon storage,ES,,16
 2020-04-19,FALSE,Keep,R_3COsBpr7qPSk0pE,LB,Can landscape-scale approaches to conservation management resolve biodiversity-ecosystem service trade-offs?,CulturePsych,1,aesthetic value,ES,,4
@@ -170,9 +170,9 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,TRUE,Keep,R_3HTv5CGg1jUKNEG,AK,"Changes in landuse alter ant diversity, assemblage composition and dominant functional groups in African savannas",SoilProtect,1,ant species richness,EF,,1
 2020-04-19,TRUE,Keep,R_3HTv5CGg1jUKNEG,AK,"Changes in landuse alter ant diversity, assemblage composition and dominant functional groups in African savannas",SoilProtect,2,functional diversity,EF,,1
 2020-04-19,FALSE,Maybe,R_10xsOIClKEhKIFq,IS,"Check dam infilling archives elucidate historical sedimentary dynamics in a semiarid landscape of the Loess Plateau, China",SoilProtect,1,sedimentation,ES,,1
-2020-04-19,FALSE,Maybe,R_7P3SpB4PEitCRrP,IS,China's progress towards sustainable land degradation control: Insights from the northwest arid regions,HabCreate,1,wind erosion,,,1
-2020-04-19,FALSE,Maybe,R_7P3SpB4PEitCRrP,IS,China's progress towards sustainable land degradation control: Insights from the northwest arid regions,HabCreate,2,vegetation cover,,,3
-2020-04-19,FALSE,Maybe,R_7P3SpB4PEitCRrP,IS,China's progress towards sustainable land degradation control: Insights from the northwest arid regions,HabCreate,3,NDVI,,,1
+2020-04-19,FALSE,Maybe,R_7P3SpB4PEitCRrP,IS,China's progress towards sustainable land degradation control: Insights from the northwest arid regions,HabCreate,1,wind erosion,no selection,,1
+2020-04-19,FALSE,Maybe,R_7P3SpB4PEitCRrP,IS,China's progress towards sustainable land degradation control: Insights from the northwest arid regions,HabCreate,2,vegetation cover,no selection,,3
+2020-04-19,FALSE,Maybe,R_7P3SpB4PEitCRrP,IS,China's progress towards sustainable land degradation control: Insights from the northwest arid regions,HabCreate,3,NDVI,no selection,,1
 2020-04-19,TRUE,Maybe,R_22WbXqkXbhN02fD,AK,"Citizens' voice: A case study about perceived ecosystem services by urban park users in Rotterdam, the Netherlands",AQReg,1,Relaxation,ES,,1
 2020-04-19,TRUE,Maybe,R_22WbXqkXbhN02fD,AK,"Citizens' voice: A case study about perceived ecosystem services by urban park users in Rotterdam, the Netherlands",CulturePsych,1,Love of nature,ES,,1
 2020-04-19,TRUE,Maybe,R_22WbXqkXbhN02fD,AK,"Citizens' voice: A case study about perceived ecosystem services by urban park users in Rotterdam, the Netherlands",CulturePsych,2,Recreation,ES,,1
@@ -256,8 +256,8 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Keep,R_26gxhxEXPK8xtep,NBD,Do landscape patterns reflect ecosystem service provision? - A comparison between protected and unprotected areas throughout the Lake Neusiedl region,Hazards,1,Broader habitat type,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_26gxhxEXPK8xtep,NBD,Do landscape patterns reflect ecosystem service provision? - A comparison between protected and unprotected areas throughout the Lake Neusiedl region,MedGen,1,Broader habitat type,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_2BmMjKWoMUbWOAx,CK,Do riparian reserves support dung beetle biodiversity and ecosystem services in oil palm- dominated tropical landscapes?,SoilProtect,1,dung removal rate,ES,,1
-2020-04-19,FALSE,Keep,R_3DpVGJZ0nGWNLi7,AK,Does Tree Species Composition Affect Productivity in a Tropical Planted Forest?,ClimReg,1,basal area,,,2
-2020-04-19,FALSE,Keep,R_3DpVGJZ0nGWNLi7,AK,Does Tree Species Composition Affect Productivity in a Tropical Planted Forest?,Materials,1,basal area,,,2
+2020-04-19,FALSE,Keep,R_3DpVGJZ0nGWNLi7,AK,Does Tree Species Composition Affect Productivity in a Tropical Planted Forest?,ClimReg,1,basal area,no selection,,2
+2020-04-19,FALSE,Keep,R_3DpVGJZ0nGWNLi7,AK,Does Tree Species Composition Affect Productivity in a Tropical Planted Forest?,Materials,1,basal area,no selection,,2
 2020-04-19,TRUE,Keep,R_72hVNdE3uC9KDa9,AIS,Early eclosion of overwintering cotton bollworm moths from warming temperatures accentuates yield loss in wheat,Food,1,crop yield,ES,,5
 2020-04-19,TRUE,Keep,R_3EEdwsrEF3Odhec,AK,Early eclosion of overwintering cotton bollworm moths from warming temperatures accentuates yield loss in wheat,Food,1,wheat biomass,ES,,1
 2020-04-19,FALSE,Keep,R_en5BX7SvN0WYOd3,NBD,"Earthworm functional traits, landscape degradation and ecosystem services in the Brazilian Amazon deforestation arc",SoilProtect,1,Earthworm physical properties,Proxy for ES,,1
@@ -335,39 +335,39 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Maybe,R_26hhXZOzq4brDdp,AK,Effects of land-use change on wetland ecosystem services: A case study in the Donana marshes (SW Spain),Pollination,1,pollination,ES,,4
 2020-04-19,FALSE,Maybe,R_26hhXZOzq4brDdp,AK,Effects of land-use change on wetland ecosystem services: A case study in the Donana marshes (SW Spain),SoilProtect,1,soil fertility,ES,,1
 2020-04-19,FALSE,Keep,R_RP0TqDs7gK75AMV,CW,Effects of Morella faya tree invasion on aboveground carbon storage in Hawaii,ClimReg,1,Aboveground biomass,ES,,3
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,coastWQReg,1,forest,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,coastWQReg,2,riparian wetland,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,coastWQReg,3,downstream,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,1,forest,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,2,riparian wetland,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,3,crop land,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,4,orchard,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,5,range farm,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,6,aquaculture,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,7,upstream downstream,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,Food,1,paddy rice field,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,Food,2,crop land,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,Food,3,orchard,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,Food,4,range farm,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,Food,5,aquaculture,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,freshWQReg,1,forest,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,freshWQReg,2,upstream,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,SoilProtect,1,forest,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,SoilProtect,2,crop land,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,SoilProtect,3,orchard,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,SoilProtect,4,fallow,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,SoilProtect,5,riparian wetland,,,1
-2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,SoilProtect,6,crop land,,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,coastWQReg,1,forest,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,coastWQReg,2,riparian wetland,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,coastWQReg,3,downstream,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,1,forest,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,2,riparian wetland,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,3,crop land,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,4,orchard,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,5,range farm,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,6,aquaculture,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,CulturePsych,7,upstream downstream,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,Food,1,paddy rice field,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,Food,2,crop land,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,Food,3,orchard,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,Food,4,range farm,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,Food,5,aquaculture,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,freshWQReg,1,forest,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,freshWQReg,2,upstream,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,SoilProtect,1,forest,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,SoilProtect,2,crop land,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,SoilProtect,3,orchard,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,SoilProtect,4,fallow,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,SoilProtect,5,riparian wetland,no selection,,1
+2020-04-19,FALSE,Keep,R_2pMM6OVFDfUEU5m,SDJ,Emergy-based evaluation of pen-urban ecosystem services,SoilProtect,6,crop land,no selection,,1
 2020-04-19,FALSE,Keep,R_2BqwFfxEDQ05vo0,SDJ,Enhancing Soil Organic Matter as a Route to the Ecological Intensification of European Arable Systems,Food,1,grain weight (tonnes per hectare per plot),Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_2BqwFfxEDQ05vo0,SDJ,Enhancing Soil Organic Matter as a Route to the Ecological Intensification of European Arable Systems,Food,2,tiller mass,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_2BqwFfxEDQ05vo0,SDJ,Enhancing Soil Organic Matter as a Route to the Ecological Intensification of European Arable Systems,Food,3,ear mass,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_2BqwFfxEDQ05vo0,SDJ,Enhancing Soil Organic Matter as a Route to the Ecological Intensification of European Arable Systems,Food,4,aboveground biomass,Proxy for ES,,3
 2020-04-19,FALSE,Keep,R_2BqwFfxEDQ05vo0,SDJ,Enhancing Soil Organic Matter as a Route to the Ecological Intensification of European Arable Systems,PestPath,1,aphid days,Proxy for ES,,1
-2020-04-19,FALSE,Maybe,R_31WydZ14DUuPl2O,AK,Environmental Conservation and Social Benefits of Charcoal Production in Mozambique,Food,1,livestock owned,,,1
-2020-04-19,FALSE,Maybe,R_31WydZ14DUuPl2O,AK,Environmental Conservation and Social Benefits of Charcoal Production in Mozambique,Food,2,farmland,,,1
-2020-04-19,FALSE,Maybe,R_31WydZ14DUuPl2O,AK,Environmental Conservation and Social Benefits of Charcoal Production in Mozambique,Materials,1,charcoal production,,,1
+2020-04-19,FALSE,Maybe,R_31WydZ14DUuPl2O,AK,Environmental Conservation and Social Benefits of Charcoal Production in Mozambique,Food,1,livestock owned,no selection,,1
+2020-04-19,FALSE,Maybe,R_31WydZ14DUuPl2O,AK,Environmental Conservation and Social Benefits of Charcoal Production in Mozambique,Food,2,farmland,no selection,,1
+2020-04-19,FALSE,Maybe,R_31WydZ14DUuPl2O,AK,Environmental Conservation and Social Benefits of Charcoal Production in Mozambique,Materials,1,charcoal production,no selection,,1
 2020-04-19,TRUE,Keep,R_AFgyKn3Ie5am7v3,AK,Environmental context and magnitude of disturbance influence trait-mediated community responses to wastewater in streams,coastWQReg,1,invertebrate community,Proxy for ES,,1
-2020-04-19,FALSE,Keep,R_3ENlsKCYcpReEQq,CW,"Evaluating carbon storage, timber harvest, and habitat possibilities for a Western Cascades (USA) forest landscape",ClimReg,1,Mg C per ha,,,1
+2020-04-19,FALSE,Keep,R_3ENlsKCYcpReEQq,CW,"Evaluating carbon storage, timber harvest, and habitat possibilities for a Western Cascades (USA) forest landscape",ClimReg,1,Mg C per ha,no selection,,1
 2020-04-19,FALSE,Keep,R_3ENlsKCYcpReEQq,CW,"Evaluating carbon storage, timber harvest, and habitat possibilities for a Western Cascades (USA) forest landscape",HabCreate,1,Habitat capability index,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_1Kr0DWHqKe0fkiX,CK,Evaluating changes in marine communities that provide ecosystem services through comparative assessments of community indicators,Food,1,Proportion of non-declining exploited species of fish,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_10JCEQrvNM6VbWH,KCG,Evaluating management strategies to optimise coral reef ecosystem services,CulturePsych,1,dive tourism,ES,,1
@@ -394,14 +394,14 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,TRUE,Keep,R_1INs5d4lozmezrt,AK,Evaluating the effectiveness of urban trees to mitigate storm water runoff via transpiration and stemflow,freshWQReg,1,rates of water uptake,Proxy for ES,,1
 2020-04-19,TRUE,Keep,R_1INs5d4lozmezrt,AK,Evaluating the effectiveness of urban trees to mitigate storm water runoff via transpiration and stemflow,freshWQReg,2,stemflow and  throughfall,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_3esPgdspKhK6aom,LB,Evaluating the relative influence on population health of domestic gardens and green space along a rural-urban gradient,CulturePsych,1,health deprivation,ES,,1
-2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",freshWQReg,1,water discharge,,,1
-2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",freshWQReg,2,water depth,,,1
+2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",freshWQReg,1,water discharge,no selection,,1
+2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",freshWQReg,2,water depth,no selection,,1
 2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",HabCreate,1,Plant species composition,ES,,1
 2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",HabCreate,2,seed deposition,ES,,2
-2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",Hazards,1,number over tides,,,1
-2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",Hazards,2,total hours tidal submergence,,,1
-2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",Hazards,3,average rate of falling tide,,,1
-2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",Hazards,4,maximum continuous period of tidal submergence,,,1
+2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",Hazards,1,number over tides,no selection,,1
+2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",Hazards,2,total hours tidal submergence,no selection,,1
+2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",Hazards,3,average rate of falling tide,no selection,,1
+2020-04-19,FALSE,Keep,R_31vpwKIjDaWZd1S,KCG,"Evaluation of salt marsh restoration by means of self-regulating tidal gate - Avon estuary, South Devon, UK",Hazards,4,maximum continuous period of tidal submergence,no selection,,1
 2020-04-19,FALSE,Keep,R_33wdvswusYd68LW,CK,Evidence of sustainable intensification among British farms,ClimReg,1,CO2 emissions,ES,,1
 2020-04-19,FALSE,Keep,R_33wdvswusYd68LW,CK,Evidence of sustainable intensification among British farms,coastWQReg,1,Ammonia and nitrate loss,ES,,1
 2020-04-19,FALSE,Keep,R_33wdvswusYd68LW,CK,Evidence of sustainable intensification among British farms,Food,1,Agricultural production,ES,,3
@@ -475,8 +475,8 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Keep,R_2aWvKeu2mLdTrPs,GV,Forest fragments modulate the provision of multiple ecosystem services,SoilProtect,1,proportion of buried cotton fabric decomposed,ES,,1
 2020-04-19,FALSE,Keep,R_2aWvKeu2mLdTrPs,GV,Forest fragments modulate the provision of multiple ecosystem services,SoilProtect,2,proportion of buried leaf litter decomposed,ES,,1
 2020-04-19,FALSE,Keep,R_2aWvKeu2mLdTrPs,GV,Forest fragments modulate the provision of multiple ecosystem services,SoilProtect,3,percent nitrogen in soil by weight,ES,,1
-2020-04-19,FALSE,Keep,R_3hxA8So00kGLUsN,AIS,From the stand scale to the landscape scale: predicting the spatial patterns of forest regeneration after disturbance,MaintainOpts,1,conifer seedling abundance,,,1
-2020-04-19,FALSE,Keep,R_3hxA8So00kGLUsN,AIS,From the stand scale to the landscape scale: predicting the spatial patterns of forest regeneration after disturbance,MaintainOpts,2,fire regeneration after fire,,,1
+2020-04-19,FALSE,Keep,R_3hxA8So00kGLUsN,AIS,From the stand scale to the landscape scale: predicting the spatial patterns of forest regeneration after disturbance,MaintainOpts,1,conifer seedling abundance,no selection,,1
+2020-04-19,FALSE,Keep,R_3hxA8So00kGLUsN,AIS,From the stand scale to the landscape scale: predicting the spatial patterns of forest regeneration after disturbance,MaintainOpts,2,fire regeneration after fire,no selection,,1
 2020-04-19,FALSE,Keep,R_3HUOPNUqbNDRseR,IS,Fruit Supplementation Affects Birds but not Arthropod Predation by Birds in Costa Rican Agroforestry Systems,PestPath,1,arthropod removal by birds,ES,,1
 2020-04-19,FALSE,Keep,R_3HUOPNUqbNDRseR,IS,Fruit Supplementation Affects Birds but not Arthropod Predation by Birds in Costa Rican Agroforestry Systems,PestPath,2,bird species richness,ES,,1
 2020-04-19,FALSE,Keep,R_3HUOPNUqbNDRseR,IS,Fruit Supplementation Affects Birds but not Arthropod Predation by Birds in Costa Rican Agroforestry Systems,PestPath,3,bird species density,ES,,1
@@ -494,7 +494,7 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,TRUE,Keep,R_PHulZzM2LZv9eTv,TK,Global evidence of positive impacts of freshwater biodiversity on fishery yields,Food,1,fisheries yield,ES,,1
 2020-04-19,FALSE,Keep,R_3qEctJJfVXyMhua,GV,Global patterns in lake ecosystem responses to warming based on the temperature dependence of metabolism,ClimReg,1,Freshwater metabolism,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_3qEctJJfVXyMhua,GV,Global patterns in lake ecosystem responses to warming based on the temperature dependence of metabolism,coastWQReg,1,Freshwater metabolism,Proxy for ES,,1
-2020-04-19,FALSE,Keep,R_3Egt3obQaZ6mXF7,AIS,Global warming affects the occurrence of stem borers in ecological engineering-based diversified farming ecosystems,PestPath,1,number of borers,,,1
+2020-04-19,FALSE,Keep,R_3Egt3obQaZ6mXF7,AIS,Global warming affects the occurrence of stem borers in ecological engineering-based diversified farming ecosystems,PestPath,1,number of borers,no selection,,1
 2020-04-19,FALSE,Keep,R_1hFIQDO7vOb5mrM,KCG,Grape moth density in Bordeaux vineyards depends on local habitat management despite effects of landscape heterogeneity on their biological control,Pollination,1,Predation of pests by entomopathogenic fungi,ES,,1
 2020-04-19,FALSE,Keep,R_1hFIQDO7vOb5mrM,KCG,Grape moth density in Bordeaux vineyards depends on local habitat management despite effects of landscape heterogeneity on their biological control,Pollination,2,parasitoids,ES,,2
 2020-04-19,FALSE,Keep,R_1hFIQDO7vOb5mrM,KCG,Grape moth density in Bordeaux vineyards depends on local habitat management despite effects of landscape heterogeneity on their biological control,Pollination,3,arthropod predators and birds during winter,ES,,1
@@ -543,7 +543,7 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Keep,R_3iJ7TYXKR0uV1hE,IS,How Do Biota Respond to Additional Physical Restoration of Restored Streams?,SoilProtect,3,pH,EF,,1
 2020-04-19,FALSE,Keep,R_3iJ7TYXKR0uV1hE,IS,How Do Biota Respond to Additional Physical Restoration of Restored Streams?,SoilProtect,4,total organic carbon,EF,,1
 2020-04-19,TRUE,Keep,R_dbeWQX6viySWF69,TK,How good are tropical forest patches for ecosystem services provisioning?,HabCreate,1,"author created ""ecosystem services potential'general ecosystem services",Proxy for ES,,1
-2020-04-19,FALSE,Keep,R_3hlsZ0d4CkK75nD,AK,Hydrological controls of fisheries production in a major Amazonian tributary,Food,1,fish landings,,,1
+2020-04-19,FALSE,Keep,R_3hlsZ0d4CkK75nD,AK,Hydrological controls of fisheries production in a major Amazonian tributary,Food,1,fish landings,no selection,,1
 2020-04-19,FALSE,Keep,R_1rHxSk1Sq7DqnNI,CW,Identifying suitable multifunctional restoration areas for Forest Landscape Restoration in Central Chile,ClimReg,1,Potential carbon sequestration,ES,,1
 2020-04-19,FALSE,Keep,R_1rHxSk1Sq7DqnNI,CW,Identifying suitable multifunctional restoration areas for Forest Landscape Restoration in Central Chile,HabCreate,1,Potential habitat function,ES,,1
 2020-04-19,FALSE,Keep,R_1rHxSk1Sq7DqnNI,CW,Identifying suitable multifunctional restoration areas for Forest Landscape Restoration in Central Chile,HabCreate,2,multifunctional hotspots,ES,,1
@@ -593,7 +593,7 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Keep,R_XujBXxCgrGnVKaB,GV,Integrating spatially explicit molecular and ecological methods to explore the significance of non-crop vegetation to predators of brassica pests,PestPath,1,distribution of pest predators,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_XujBXxCgrGnVKaB,GV,Integrating spatially explicit molecular and ecological methods to explore the significance of non-crop vegetation to predators of brassica pests,PestPath,2,predator movement from non-crop to crop vegetation,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_XujBXxCgrGnVKaB,GV,Integrating spatially explicit molecular and ecological methods to explore the significance of non-crop vegetation to predators of brassica pests,PestPath,3,predator diet,Proxy for ES,,1
-2020-04-19,FALSE,Keep,R_21oBK2K7yoVbxOc,CK,Intra- and interspecific differences in nutrient recycling by European freshwater fish,coastWQReg,1,N and P excretion rates,,,1
+2020-04-19,FALSE,Keep,R_21oBK2K7yoVbxOc,CK,Intra- and interspecific differences in nutrient recycling by European freshwater fish,coastWQReg,1,N and P excretion rates,no selection,,1
 2020-04-19,FALSE,Keep,R_2aF6YKXPmZ0wmBC,KCG,"Invasive grasses, climate change, and exposure to storm-wave overtopping in coastal dune ecosystems",HabCreate,1,dune height,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_2fxRDXaFoLn1PsM,SDJ,Invasive Species Impacts on Human Well-being Using the Life Satisfaction Index,CulturePsych,1,life satisfaction,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_2aWinKCKWEa91Ae,IS,Land use affects dung beetle communities and their ecosystem service in forests and grasslands,PestPath,1,dung removal,ES,,1
@@ -620,19 +620,19 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Keep,R_XU5tRLURPTloTzH,CW,Large frugivorous birds facilitate functional connectivity of fragmented landscapes,HabCreate,1,Potential patch dispersal events,EF,,1
 2020-04-19,FALSE,Keep,R_XU5tRLURPTloTzH,CW,Large frugivorous birds facilitate functional connectivity of fragmented landscapes,HabCreate,2,dispersal distance,EF,,1
 2020-04-19,FALSE,Keep,R_O27m3gk8c7WxsOJ,TM,Large herbivores affect forest ecosystem functions by altering the structure of dung beetle communities,SoilProtect,1,Dung decomposition,EF,,4
-2020-04-19,FALSE,Keep,R_3D5Ov1aket6ac1D,TM,Large- scale trade- off between agricultural intensification and crop pollination services,Food,1,Crop yield,,,5
-2020-04-19,FALSE,Keep,R_3D5Ov1aket6ac1D,TM,Large- scale trade- off between agricultural intensification and crop pollination services,Food,2,crop variation,,,1
+2020-04-19,FALSE,Keep,R_3D5Ov1aket6ac1D,TM,Large- scale trade- off between agricultural intensification and crop pollination services,Food,1,Crop yield,no selection,,5
+2020-04-19,FALSE,Keep,R_3D5Ov1aket6ac1D,TM,Large- scale trade- off between agricultural intensification and crop pollination services,Food,2,crop variation,no selection,,1
 2020-04-19,FALSE,Keep,R_3rHzypBwpvVvybG,IS,Larger Area Facilitates Richness-Function Effects in Experimental Microcosms,coastWQReg,1,community respiration,EF,,1
 2020-04-19,FALSE,Keep,R_3rHzypBwpvVvybG,IS,Larger Area Facilitates Richness-Function Effects in Experimental Microcosms,coastWQReg,2,total carbon content,EF,,1
 2020-04-19,FALSE,Keep,R_3rHzypBwpvVvybG,IS,Larger Area Facilitates Richness-Function Effects in Experimental Microcosms,coastWQReg,3,total nitrogen content,EF,,1
 2020-04-19,FALSE,Keep,R_3oYksXrdT2fdlb8,TM,Late flowering time enhances insect pollination of turnip rape,Food,1,Yield,ES,,6
 2020-04-19,FALSE,Keep,R_3oYksXrdT2fdlb8,TM,Late flowering time enhances insect pollination of turnip rape,Pollination,1,Flower visits,ES,,1
-2020-04-19,FALSE,Keep,R_1FwXaTC0G9o2yWG,TM,"Linking ecosystem services supply, social demand and human well-being in a typical mountain-oasis-desert area, Xinjiang, China",ClimReg,1,Carbon sequestration,,,7
-2020-04-19,FALSE,Keep,R_1FwXaTC0G9o2yWG,TM,"Linking ecosystem services supply, social demand and human well-being in a typical mountain-oasis-desert area, Xinjiang, China",coastWQReg,1,Water yield,,,6
-2020-04-19,FALSE,Keep,R_1FwXaTC0G9o2yWG,TM,"Linking ecosystem services supply, social demand and human well-being in a typical mountain-oasis-desert area, Xinjiang, China",Food,1,Crop production,,,4
-2020-04-19,FALSE,Keep,R_1FwXaTC0G9o2yWG,TM,"Linking ecosystem services supply, social demand and human well-being in a typical mountain-oasis-desert area, Xinjiang, China",HabCreate,1,Habitat quality,,,6
-2020-04-19,FALSE,Keep,R_1FwXaTC0G9o2yWG,TM,"Linking ecosystem services supply, social demand and human well-being in a typical mountain-oasis-desert area, Xinjiang, China",SoilProtect,1,Soil retention,,,4
-2020-04-19,FALSE,Keep,R_1FwXaTC0G9o2yWG,TM,"Linking ecosystem services supply, social demand and human well-being in a typical mountain-oasis-desert area, Xinjiang, China",SoilProtect,2,Sand fixation,,,1
+2020-04-19,FALSE,Keep,R_1FwXaTC0G9o2yWG,TM,"Linking ecosystem services supply, social demand and human well-being in a typical mountain-oasis-desert area, Xinjiang, China",ClimReg,1,Carbon sequestration,no selection,,7
+2020-04-19,FALSE,Keep,R_1FwXaTC0G9o2yWG,TM,"Linking ecosystem services supply, social demand and human well-being in a typical mountain-oasis-desert area, Xinjiang, China",coastWQReg,1,Water yield,no selection,,6
+2020-04-19,FALSE,Keep,R_1FwXaTC0G9o2yWG,TM,"Linking ecosystem services supply, social demand and human well-being in a typical mountain-oasis-desert area, Xinjiang, China",Food,1,Crop production,no selection,,4
+2020-04-19,FALSE,Keep,R_1FwXaTC0G9o2yWG,TM,"Linking ecosystem services supply, social demand and human well-being in a typical mountain-oasis-desert area, Xinjiang, China",HabCreate,1,Habitat quality,no selection,,6
+2020-04-19,FALSE,Keep,R_1FwXaTC0G9o2yWG,TM,"Linking ecosystem services supply, social demand and human well-being in a typical mountain-oasis-desert area, Xinjiang, China",SoilProtect,1,Soil retention,no selection,,4
+2020-04-19,FALSE,Keep,R_1FwXaTC0G9o2yWG,TM,"Linking ecosystem services supply, social demand and human well-being in a typical mountain-oasis-desert area, Xinjiang, China",SoilProtect,2,Sand fixation,no selection,,1
 2020-04-19,FALSE,Keep,R_28Hx1jkuZaaLrHN,AIS,Linking environmental variables with regional-scale variability in ecological structure and standing stock of carbon within UK kelp forests,ClimReg,1,canopy biomass,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_28Hx1jkuZaaLrHN,AIS,Linking environmental variables with regional-scale variability in ecological structure and standing stock of carbon within UK kelp forests,ClimReg,2,canopy carbon,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_3r31WJ3iAdCuzSy,TK,Linking wind erosion to ecosystem services in drylands: a landscape ecological approach,ClimReg,1,carbon storage,ES,,16
@@ -744,9 +744,9 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Keep,R_1nZ3zam9eKzkMiG,KCG,Non-native fruit trees facilitate colonization of native forest on abandoned farmland,MaintainOpts,1,Biodiversity of seedlings,Proxy for ES,,1
 2020-04-19,TRUE,Keep,R_pbD8d5yt7CDK0Nj,TK,"Optimizing agri-environment schemes for biodiversity, ecosystem services or both?",Food,1,crop yield,ES,,5
 2020-04-19,FALSE,Keep,R_1QbdAK3Yg6hMMt8,CW,Optimizing intermediate ecosystem services in agriculture using rules based on landscape composition and configuration indices,Pollination,1,Pollination potential,ES,,2
-2020-04-19,FALSE,Keep,R_1fkB1rwYxOTFPbB,JL,Organic farming and host density affect parasitism rates of tortricid moths in vineyards,PestPath,1,pest attack rate,,,1
-2020-04-19,FALSE,Keep,R_1fkB1rwYxOTFPbB,JL,Organic farming and host density affect parasitism rates of tortricid moths in vineyards,PestPath,2,pest community composition,,,1
-2020-04-19,FALSE,Keep,R_1fkB1rwYxOTFPbB,JL,Organic farming and host density affect parasitism rates of tortricid moths in vineyards,PestPath,3,pest parasitism rate (i.e. biocontrol success),,,1
+2020-04-19,FALSE,Keep,R_1fkB1rwYxOTFPbB,JL,Organic farming and host density affect parasitism rates of tortricid moths in vineyards,PestPath,1,pest attack rate,no selection,,1
+2020-04-19,FALSE,Keep,R_1fkB1rwYxOTFPbB,JL,Organic farming and host density affect parasitism rates of tortricid moths in vineyards,PestPath,2,pest community composition,no selection,,1
+2020-04-19,FALSE,Keep,R_1fkB1rwYxOTFPbB,JL,Organic farming and host density affect parasitism rates of tortricid moths in vineyards,PestPath,3,pest parasitism rate (i.e. biocontrol success),no selection,,1
 2020-04-19,FALSE,Keep,R_28ZM6opDBGwIGCX,CK,Organic farming at local and landscape scales fosters biological pest control in vineyards,PestPath,1,Egg predation,ES,,1
 2020-04-19,FALSE,Keep,R_28ZM6opDBGwIGCX,CK,Organic farming at local and landscape scales fosters biological pest control in vineyards,PestPath,2,larval removal,ES,,1
 2020-04-19,FALSE,Keep,R_28ZM6opDBGwIGCX,CK,Organic farming at local and landscape scales fosters biological pest control in vineyards,PestPath,3,weed seed removal,ES,,1
@@ -760,7 +760,7 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Keep,R_1OkkByuhMddu0Wk,AK,Pattern and scale in latitude-production relationships for freshwater fishes,Food,1,Field derived production,ES,Proxy for ES,1
 2020-04-19,FALSE,Keep,R_1OkkByuhMddu0Wk,AK,Pattern and scale in latitude-production relationships for freshwater fishes,Food,2,Biomass,ES,Proxy for ES,5
 2020-04-19,FALSE,Keep,R_3lGsECDKNHdCy31,LD,"Perennial, species-rich wildflower strips enhance pest control and crop yield",Food,1,crop yield,ES,,5
-2020-04-19,FALSE,Keep,R_3lGsECDKNHdCy31,LD,"Perennial, species-rich wildflower strips enhance pest control and crop yield",HabCreate,1,wildflower strips,,,1
+2020-04-19,FALSE,Keep,R_3lGsECDKNHdCy31,LD,"Perennial, species-rich wildflower strips enhance pest control and crop yield",HabCreate,1,wildflower strips,no selection,,1
 2020-04-19,FALSE,Keep,R_3lGsECDKNHdCy31,LD,"Perennial, species-rich wildflower strips enhance pest control and crop yield",PestPath,1,crop damage,ES,Proxy for ES,1
 2020-04-19,FALSE,Keep,R_3lGsECDKNHdCy31,LD,"Perennial, species-rich wildflower strips enhance pest control and crop yield",PestPath,2,cereal leaf beetle density,ES,Proxy for ES,1
 2020-04-19,FALSE,Keep,R_3lGsECDKNHdCy31,LD,"Perennial, species-rich wildflower strips enhance pest control and crop yield",PestPath,3,cereal leaf beetle larvae,ES,Proxy for ES,1
@@ -780,7 +780,7 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Keep,R_A0pVseRO7YOYYkF,CK,Positive effects of wheat variety mixtures on aboveground arthropods are weak and variable,PestPath,1,Biological control by natural predators,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_2Qzl81Ly2xgf1DU,LD,Potential tree and soil carbon storage in a major historical floodplain forest with disrupted ecological function,ClimReg,1,soil carbon,ES,,8
 2020-04-19,FALSE,Keep,R_2Qzl81Ly2xgf1DU,LD,Potential tree and soil carbon storage in a major historical floodplain forest with disrupted ecological function,ClimReg,2,tree above ground carbon,ES,,1
-2020-04-19,FALSE,Keep,R_25GVqWoXalwGCgT,GV,Practical Challenges in Private Stewardship of Rangeland Ecosystems: Yellow Starthistle Control in Sierra Nevadan Foothills,PestPath,1,ranchers' assessment of effectiveness of invasive species control,,,1
+2020-04-19,FALSE,Keep,R_25GVqWoXalwGCgT,GV,Practical Challenges in Private Stewardship of Rangeland Ecosystems: Yellow Starthistle Control in Sierra Nevadan Foothills,PestPath,1,ranchers' assessment of effectiveness of invasive species control,no selection,,1
 2020-04-19,FALSE,Keep,R_1FlK59iMMGusSTn,TM,Practices of conservation agriculture prevail over cropping systems and landscape heterogeneity in understanding the ecosystem service of aphid biocontrol,PestPath,1,Pest Abundance,ES,,2
 2020-04-19,FALSE,Keep,R_1FlK59iMMGusSTn,TM,Practices of conservation agriculture prevail over cropping systems and landscape heterogeneity in understanding the ecosystem service of aphid biocontrol,PestPath,2,predator abundance,ES,,1
 2020-04-19,FALSE,Keep,R_1FlK59iMMGusSTn,TM,Practices of conservation agriculture prevail over cropping systems and landscape heterogeneity in understanding the ecosystem service of aphid biocontrol,PestPath,3,predation rate,ES,,1
@@ -812,7 +812,7 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Keep,R_BLCcWj9QyFkEovL,TM,Realizing ecosystem services: wetland hydrologic function along a gradient of ecosystem condition,freshWQReg,1,Hydrologic regime,EF,,1
 2020-04-19,FALSE,Keep,R_BLCcWj9QyFkEovL,TM,Realizing ecosystem services: wetland hydrologic function along a gradient of ecosystem condition,freshWQReg,2,groundwater exchange,EF,,1
 2020-04-19,FALSE,Keep,R_BLCcWj9QyFkEovL,TM,Realizing ecosystem services: wetland hydrologic function along a gradient of ecosystem condition,freshWQReg,3,evapotranspiration,EF,,2
-2020-04-19,TRUE,Keep,R_2EAiqa9K0npqYVG,JL,Reconciling community ecology and ecosystem services: Cultural services and benefits from birds in South African National Parks,CulturePsych,1,birding experience (satisfaction),,,1
+2020-04-19,TRUE,Keep,R_2EAiqa9K0npqYVG,JL,Reconciling community ecology and ecosystem services: Cultural services and benefits from birds in South African National Parks,CulturePsych,1,birding experience (satisfaction),no selection,,1
 2020-04-19,FALSE,Keep,R_3rULja18msv3iLs,AK,Reconciling opposing soil processes in row-crop agroecosystems via soil functional zone management,SoilProtect,1,nutrient provisioning,ES,,1
 2020-04-19,FALSE,Keep,R_3rULja18msv3iLs,AK,Reconciling opposing soil processes in row-crop agroecosystems via soil functional zone management,SoilProtect,2,soil building,ES,,1
 2020-04-19,FALSE,Keep,R_r6E6mB4UetxpnAR,CW,Recovery Debts Can Be Revealed by Ecosystem Network-Based Approaches,Energy,1,Indicators (12 different indices),ES,EF,1
@@ -848,15 +848,15 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Keep,R_1zVWubZxnLTq21H,LD,Restoration of ecosystem carbon and nitrogen storage and microbial biomass after grazing exclusion in semi-arid grasslands of Inner Mongolia,SoilProtect,2,litter biomass,EF,,1
 2020-04-19,FALSE,Keep,R_1zVWubZxnLTq21H,LD,Restoration of ecosystem carbon and nitrogen storage and microbial biomass after grazing exclusion in semi-arid grasslands of Inner Mongolia,SoilProtect,3,root biomass,EF,,3
 2020-04-19,FALSE,Keep,R_0VeP4WYR1jeZwHL,LB,Restricting new forests to conservation lands severely constrains carbon and biodiversity gains in New Zealand,ClimReg,1,carbon gain,ES,,1
-2020-04-19,FALSE,Keep,R_0VeP4WYR1jeZwHL,LB,Restricting new forests to conservation lands severely constrains carbon and biodiversity gains in New Zealand,HabCreate,1,restored significance,,,1
+2020-04-19,FALSE,Keep,R_0VeP4WYR1jeZwHL,LB,Restricting new forests to conservation lands severely constrains carbon and biodiversity gains in New Zealand,HabCreate,1,restored significance,no selection,,1
 2020-04-19,FALSE,Keep,R_1MRiI2YOAbSpzJu,IS,Rewiring of experimentally disturbed seed dispersal networks might lead to unexpected network configurations,Pollination,1,seed dispersal,ES,,2
 2020-04-19,TRUE,Keep,R_3NWd3QmEMj1LFsb,JL,Riparian buffer strips: Their role in the conservation of insect pollinators in intensive grassland systems,Pollination,1,pollinator abundance,Proxy for ES,,2
 2020-04-19,TRUE,Keep,R_3NWd3QmEMj1LFsb,JL,Riparian buffer strips: Their role in the conservation of insect pollinators in intensive grassland systems,Pollination,2,pollinator richness,Proxy for ES,,2
 2020-04-19,TRUE,Keep,R_3NWd3QmEMj1LFsb,JL,Riparian buffer strips: Their role in the conservation of insect pollinators in intensive grassland systems,Pollination,3,pollinator diversity,Proxy for ES,,2
 2020-04-19,TRUE,Keep,R_3NWd3QmEMj1LFsb,JL,Riparian buffer strips: Their role in the conservation of insect pollinators in intensive grassland systems,Pollination,4,pollinator evenness,Proxy for ES,,1
 2020-04-19,TRUE,Keep,R_uybIHoZdPUK4Fbz,LD,"Riparian canopy expansion in an urban landscape: Multiple drivers of vegetation change along headwater streams near Sacramento, California",freshWQReg,1,Peak stream flows,Proxy for ES,,1
-2020-04-19,TRUE,Keep,R_uybIHoZdPUK4Fbz,LD,"Riparian canopy expansion in an urban landscape: Multiple drivers of vegetation change along headwater streams near Sacramento, California",HabCreate,1,Riparian canopy width,,,1
-2020-04-19,TRUE,Keep,R_uybIHoZdPUK4Fbz,LD,"Riparian canopy expansion in an urban landscape: Multiple drivers of vegetation change along headwater streams near Sacramento, California",HabCreate,2,Riparian canopy density,,,1
+2020-04-19,TRUE,Keep,R_uybIHoZdPUK4Fbz,LD,"Riparian canopy expansion in an urban landscape: Multiple drivers of vegetation change along headwater streams near Sacramento, California",HabCreate,1,Riparian canopy width,no selection,,1
+2020-04-19,TRUE,Keep,R_uybIHoZdPUK4Fbz,LD,"Riparian canopy expansion in an urban landscape: Multiple drivers of vegetation change along headwater streams near Sacramento, California",HabCreate,2,Riparian canopy density,no selection,,1
 2020-04-19,FALSE,Keep,R_xfGKvyEFJqhjDIR,IS,Seascape architecture - incorporating ecological considerations in design of coastal and marine infrastructure,Hazards,1,species richness,Proxy for ES,,5
 2020-04-19,FALSE,Keep,R_xfGKvyEFJqhjDIR,IS,Seascape architecture - incorporating ecological considerations in design of coastal and marine infrastructure,Hazards,2,shannon diversity,Proxy for ES,,2
 2020-04-19,FALSE,Keep,R_2qa54DZKDXSFqR5,AIS,Seasonal complementary in pollinators of soft-fruit crops,Food,1,fruit quality,Proxy for ES,,1
@@ -872,9 +872,9 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,FALSE,Keep,R_2ylRSlx7CtiASez,NBD,"Seeds in farmland food-webs: Resource importance, distribution and the impacts of farm management",PestPath,2,parasitoids,Proxy for ES,,2
 2020-04-19,FALSE,Keep,R_2ylRSlx7CtiASez,NBD,"Seeds in farmland food-webs: Resource importance, distribution and the impacts of farm management",Pollination,1,seed abundance,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_2ylRSlx7CtiASez,NBD,"Seeds in farmland food-webs: Resource importance, distribution and the impacts of farm management",Pollination,2,diversity,Proxy for ES,,1
-2020-04-19,TRUE,Keep,R_1CKCAHQtZDm3n6y,AIS,Seeing the light: urban stream restoration affects stream metabolism and nitrate uptake via changes in canopy cover,ClimReg,1,GPP,,,1
-2020-04-19,TRUE,Keep,R_1CKCAHQtZDm3n6y,AIS,Seeing the light: urban stream restoration affects stream metabolism and nitrate uptake via changes in canopy cover,ClimReg,2,ER,,,1
-2020-04-19,TRUE,Keep,R_1CKCAHQtZDm3n6y,AIS,Seeing the light: urban stream restoration affects stream metabolism and nitrate uptake via changes in canopy cover,coastWQReg,1,nitrate  spiraling rates,,,1
+2020-04-19,TRUE,Keep,R_1CKCAHQtZDm3n6y,AIS,Seeing the light: urban stream restoration affects stream metabolism and nitrate uptake via changes in canopy cover,ClimReg,1,GPP,no selection,,1
+2020-04-19,TRUE,Keep,R_1CKCAHQtZDm3n6y,AIS,Seeing the light: urban stream restoration affects stream metabolism and nitrate uptake via changes in canopy cover,ClimReg,2,ER,no selection,,1
+2020-04-19,TRUE,Keep,R_1CKCAHQtZDm3n6y,AIS,Seeing the light: urban stream restoration affects stream metabolism and nitrate uptake via changes in canopy cover,coastWQReg,1,nitrate  spiraling rates,no selection,,1
 2020-04-19,TRUE,Keep,R_vxI3KdgnI625Mgp,AK,Seeing the light: urban stream restoration affects stream metabolism and nitrate uptake via changes in canopy cover,coastWQReg,1,nitrate spiraling rates,Proxy for ES,,1
 2020-04-19,TRUE,Keep,R_vxI3KdgnI625Mgp,AK,Seeing the light: urban stream restoration affects stream metabolism and nitrate uptake via changes in canopy cover,HabCreate,1,gross primary production,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_2ZUdRbkK9CTfiWt,IS,Shadow conservation and the persistence of sacred church forests in northern Ethiopia,MaintainOpts,1,change in forest area,Proxy for ES,,1
@@ -889,10 +889,10 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,TRUE,Keep,R_C7kgqKX006aV1Cx,GV,Simulation of ecosystem service responses to multiple disturbances from an earthquake and several typhoons,freshWQReg,4,Sediment retention,ES,,4
 2020-04-19,TRUE,Keep,R_1inzjZZX9lualBg,AK,Simulation of ecosystem service responses to multiple disturbances from an earthquake and several typhoons,HabCreate,1,biodiversity,Proxy for ES,,5
 2020-04-19,FALSE,Keep,R_4YmhUEHo6b7MQHD,IS,Site-specific factors in the production of local urban ecosystem services: A case study of community-managed green space,ClimReg,1,vegetation cover,Proxy for ES,,3
-2020-04-19,FALSE,Keep,R_4YmhUEHo6b7MQHD,IS,Site-specific factors in the production of local urban ecosystem services: A case study of community-managed green space,CulturePsych,1,volunteer input(education),,,1
-2020-04-19,FALSE,Keep,R_4YmhUEHo6b7MQHD,IS,Site-specific factors in the production of local urban ecosystem services: A case study of community-managed green space,CulturePsych,2,site size(well-being),,,1
-2020-04-19,FALSE,Keep,R_4YmhUEHo6b7MQHD,IS,Site-specific factors in the production of local urban ecosystem services: A case study of community-managed green space,Food,1,food cultivation area,,,1
-2020-04-19,FALSE,Keep,R_4YmhUEHo6b7MQHD,IS,Site-specific factors in the production of local urban ecosystem services: A case study of community-managed green space,Food,2,genera richness,,,1
+2020-04-19,FALSE,Keep,R_4YmhUEHo6b7MQHD,IS,Site-specific factors in the production of local urban ecosystem services: A case study of community-managed green space,CulturePsych,1,volunteer input(education),no selection,,1
+2020-04-19,FALSE,Keep,R_4YmhUEHo6b7MQHD,IS,Site-specific factors in the production of local urban ecosystem services: A case study of community-managed green space,CulturePsych,2,site size(well-being),no selection,,1
+2020-04-19,FALSE,Keep,R_4YmhUEHo6b7MQHD,IS,Site-specific factors in the production of local urban ecosystem services: A case study of community-managed green space,Food,1,food cultivation area,no selection,,1
+2020-04-19,FALSE,Keep,R_4YmhUEHo6b7MQHD,IS,Site-specific factors in the production of local urban ecosystem services: A case study of community-managed green space,Food,2,genera richness,no selection,,1
 2020-04-19,FALSE,Keep,R_1LifUe6pTeDZbVA,CK,Social-ecological drivers of multiple ecosystem services: what variables explain patterns of ecosystem services across the Norrstrom drainage basin?,coastWQReg,1,Standing water quality,ES,,1
 2020-04-19,FALSE,Keep,R_1LifUe6pTeDZbVA,CK,Social-ecological drivers of multiple ecosystem services: what variables explain patterns of ecosystem services across the Norrstrom drainage basin?,coastWQReg,2,Running water quality,ES,,1
 2020-04-19,FALSE,Keep,R_1LifUe6pTeDZbVA,CK,Social-ecological drivers of multiple ecosystem services: what variables explain patterns of ecosystem services across the Norrstrom drainage basin?,CulturePsych,1,moose hunting,ES,,2
@@ -930,8 +930,8 @@ assess_date,doublerev,exclude,ResponseId,Init,Title,ES,ResponseCount,Response,Yc
 2020-04-19,TRUE,Keep,R_1rcDzM4YxztMLHz,JL,Soil microbial restoration strategies for promoting climate-ready prairie ecosystems,SoilProtect,9,soil N,ES,Proxy for ES,2
 2020-04-19,TRUE,Keep,R_2XpuO7DUfMRWCt6,TK,Soil microbial restoration strategies for promoting climate-ready prairie ecosystems,SoilProtect,1,soil enzyme levels,EF,,2
 2020-04-19,TRUE,Keep,R_1jPa3Lxzg9RVdQk,JL,Soils Determine Early Revegetation Establishment with and without Cover Crops in Northern Mixed Grass Prairie after Energy Development,freshWQReg,1,Hydrologic function score (rangeland health assessment),Proxy for ES,,1
-2020-04-19,TRUE,Keep,R_1jPa3Lxzg9RVdQk,JL,Soils Determine Early Revegetation Establishment with and without Cover Crops in Northern Mixed Grass Prairie after Energy Development,HabCreate,1,biotic integrity score (rangeland health assessment),,,1
-2020-04-19,TRUE,Keep,R_1jPa3Lxzg9RVdQk,JL,Soils Determine Early Revegetation Establishment with and without Cover Crops in Northern Mixed Grass Prairie after Energy Development,PestPath,1,Invasive species cover,,,1
+2020-04-19,TRUE,Keep,R_1jPa3Lxzg9RVdQk,JL,Soils Determine Early Revegetation Establishment with and without Cover Crops in Northern Mixed Grass Prairie after Energy Development,HabCreate,1,biotic integrity score (rangeland health assessment),no selection,,1
+2020-04-19,TRUE,Keep,R_1jPa3Lxzg9RVdQk,JL,Soils Determine Early Revegetation Establishment with and without Cover Crops in Northern Mixed Grass Prairie after Energy Development,PestPath,1,Invasive species cover,no selection,,1
 2020-04-19,TRUE,Keep,R_1jPa3Lxzg9RVdQk,JL,Soils Determine Early Revegetation Establishment with and without Cover Crops in Northern Mixed Grass Prairie after Energy Development,SoilProtect,1,Soil & site stability score (rangeland health assessment),Proxy for ES,,1
 2020-04-19,TRUE,Keep,R_1jPa3Lxzg9RVdQk,JL,Soils Determine Early Revegetation Establishment with and without Cover Crops in Northern Mixed Grass Prairie after Energy Development,SoilProtect,2,plant density,Proxy for ES,,1
 2020-04-19,FALSE,Keep,R_1jC9B6WLP5Fmbar,LB,"Spatial assessment of the impact of land use and land cover change on supply of ecosystem services in Phewa watershed, Nepal",ClimReg,1,carbon stock,ES,,4

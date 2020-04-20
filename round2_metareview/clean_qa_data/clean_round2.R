@@ -933,7 +933,9 @@ write_csv(envcheck, "round2_metareview/clean_qa_data/needs_classreview/KTenviron
 # ES question
 # question 12 (response variables)
 q12df <- subset(prelimlong1b, qnum =="Q12" & exclude != "Exclude") %>%
-  filter(!is.na(answer))
+  filter(!is.na(answer)) %>%
+  # change ES to not factor
+  mutate(ES = as.character(ES))
 
 responses <- subset(q12df, abbr %in% c("Response", "Yclass")) %>%
   dplyr::select(ResponseId:Title, answer, abbr, Group, ES, exclude) %>%
@@ -973,52 +975,119 @@ responses <- subset(q12df, abbr %in% c("Response", "Yclass")) %>%
   mutate(Yvar_studyfreq = length(unique(ResponseId))) %>%
   ungroup() %>%
   # drop casefold col
-  dplyr::select(-'casefold(Response)')
+  dplyr::select(-'casefold(Response)') %>%
+  # for any Yclass1 with no answer, replace with "no selection"
+  replace_na(list(Yclass1 = "no selection"))
+
+# summarize responses by their Yclass type and ES use..
+response_summary <- dplyr::select(responses, ResponseId, ES, Response, Yclass1, Yclass2) %>%
+  gather(Yclass, answer, Yclass1:Yclass2) %>%
+  filter(!is.na(answer)) %>%
+  group_by(ES, Response, answer) %>%
+  summarise(typefreq = length(Yclass)) %>%
+  ungroup() %>%
+  rename(EcoServ = ES) %>%
+  spread(answer, typefreq, fill = 0) %>%
+  arrange(Response, EcoServ)
+  
+
 # change NAs to blanks for easier viewing in Excel
 responses[is.na(responses)] <- ""
 #write out
-write_csv(responses, "round2_metareview/clean_qa_data/needs_classreview/ESresponse_review.csv")
+write_csv(responses, "round2_metareview/clean_qa_data/needs_classreview/ES_allresponses.csv")
+write_csv(response_summary, "round2_metareview/clean_qa_data/needs_classreview/ES_responseclass_review.csv")
 
-response_summary <- responses %>%
-  mutate(answer =  casefold(answer)) %>%
-  group_by(ES, answer) %>% #ES, 
-  # get freq of each answer
-  summarise(count = length(qnum))
 
-response_summary2 <- ESresponses %>%
-  mutate(answer =  casefold(answer)) %>%
-  gather(yclass_num, yclass, type1, type2) %>%
-  mutate(yclass_num = parse_number(yclass_num)) %>%
-  filter(!(yclass_num == 2 & is.na(yclass))) 
-
-response_summary3 <- response_summary2 %>%
-  group_by(ES, yclass, answer) %>% #ES, 
-  # get freq of each answer
-  summarise(count = length(qnum)) %>%
+# compile drivers 
+# other drivers will be tricky because other not always checked (or notes added in "other drivers" field)
+drivers <- subset(q12df, abbr %in% c("Driver", "OtherDriver")) %>%
+  dplyr::select(ResponseId:Title, exclude, Group, ES, abbr, answer) %>%
+  group_by(Group, ResponseId) %>%
+  # lookup ES where "Other" checked 
+  mutate(OtherES = ifelse(abbr == "OtherDriver", str_flatten(ES[grepl("Other", answer) & abbr == "Driver"], collapse = ", "), NA),
+         # if "Other" not checked, pull whatever ES's are filled out for that Driver Group
+         ## > this will pull ES's for honest Other Drivers where "Other" not checked (accident) but also where reviewer used "Other" as notes and not truly just for Other Drivers
+         SingleES = ifelse(nchar(OtherES) == 0 & abbr == "OtherDriver", str_flatten(unique(ES[abbr == "Driver"]), collapse = ", "), OtherES)) %>%
+         ## > if other not checked and no other drivers entered, there will be no ES pulled
+         ## > this could be from honest error (forgot to check "Other"), but also unwanted human error (e.g. entered other driver in wrong box, or used other field for notes)  
   ungroup() %>%
-  rename(yresponse = answer) %>%
-  separate(yresponse, paste0("answer", 1:50), ",") %>%
-  # remove anything that's all NA
-  dplyr::select(names(.)[sapply(., function(x) !all(is.na(x)))]) %>%
-  dplyr::select(-count) %>%
-  gather(response_num, yresponse, answer1:ncol(.)) %>%
-  filter(!is.na(yresponse)) %>%
-  mutate(yresponse = trimws(yresponse)) %>%
-  group_by(ES, yclass, yresponse) %>%
-  summarise(count = length(response_num)) %>%
+  mutate(Other_checked = OtherES == SingleES)
+
+# all we care about for now (4/19) is reviewing drivers by their ES group.. can deal with mistakes later.. or someone else can deal with it
+# pull out other drivers, then add on to standard drivers
+stddrivers <- subset(drivers, abbr == "Driver") %>%
+  dplyr::select(ResponseId:answer) %>%
+  mutate(Other_checked = grepl("Other", answer),
+         # remove , from exploitation answer
+         answer = gsub("hunting, fishing", "hunting or fishing", answer)) %>%
+  splitcom(names(.), splitcol = "answer") %>%
+  # drop enumeration
+  dplyr::select(-num)
+  
+
+# prep other drivers to join with std drivers in wide format
+# separate problem records from the rest
+otherdrivers_errors <- subset(drivers, abbr == "OtherDriver" & nchar(SingleES) == 0)
+otherdrivers <- subset(drivers, abbr == "OtherDriver") %>%
+  anti_join(otherdrivers_errors) %>%
+  mutate(ES = SingleES) %>%
+  rename(OtherDriver = answer) %>%
+  dplyr::select(-c(OtherES, SingleES)) %>%
+  # first split ES's
+  splitcom(keepcols = names(.), splitcol = "ES") %>%
+  rename(ES = answer) %>%
+  # drop ES number count col
+  dplyr::select(-num) %>%
+  #split Other drivers
+  # spot correct a few answers so doesn't split by splitcom
+  mutate(OtherDriver = gsub("\\[city 1, city 2\\]", "\\[city 1; city 2\\]", OtherDriver),
+         OtherDriver = gsub("system function, not ESP", "system function not ESP", OtherDriver),
+         OtherDriver = gsub("current and previous years min,max,mean", "current and previous years min max mean", OtherDriver)) %>%
+  splitcom(names(.), splitcol = "OtherDriver") %>%
+  mutate(answer = trimws(answer)) %>%
+  # drop count col
+  dplyr::select(-num)
+
+# clean up other driver errors
+otherdrivers_errors <- mutate(otherdrivers_errors, Other_checked = FALSE) %>%
+  # drop ES col
+  dplyr::select(-ES) %>%
+  # join ES info from response vars
+  left_join(distinct(dplyr::select(responses, ResponseId, Init, Title, ES))) %>%
+  # for any ESs still blank, fill "none selected" (applies to Sierras's 82-var model paper)
+  replace_na(list(ES = "no ES selected")) %>%
+  #mutate(ES = ifelse(is.na(ES), "no ES selected", ES))
+  # I think Aislyn's trout entry should be Bio not Env (she has Service Provider entered as Bio driver) .. think this entry is probably more akin to notes on that
+  mutate(Group = ifelse(grepl("various trout", answer), "Bio", Group))
+
+# rbind other drivers and add back to std drivers
+alldrivers <- rbind(otherdrivers, otherdrivers_errors[names(otherdrivers)]) %>%
+  rbind(stddrivers[names(.)]) %>%
+  mutate(assess_date = Sys.Date(), doublerev = Title %in% doubletitles) %>% 
+  # reorder cols
+  dplyr::select(assess_date, doublerev, exclude, ResponseId:ncol(.)) %>%
+  group_by(ResponseId, Group, ES) %>%
+  mutate(OtherEntry = (answer == "Other" & length(answer[abbr == "OtherDriver"]) > 0)) %>%
   ungroup() %>%
-  arrange(yresponse, yclass)
+  mutate(OtherEntry = ifelse((answer != "Other" & abbr == "Driver") | abbr == "OtherDriver", NA, OtherEntry)) %>%
+  # not sure the best way to arrange this so most helpful to reviewers..
+  arrange(Title, ES,  Init, Group, abbr)
+  
 
-write_csv(response_summary3, "round2_metareview/data/intermediate/ESresponse_summary.csv")
+# summarize drivers for review, similar to response summary
+# just ES, driver, and frequency
+alldrivers_summary <- group_by(alldrivers, ES, Group, casefold(answer)) %>%
+  mutate(count = length(unique(ResponseId))) %>%
+  ungroup() %>%
+  dplyr::select(ES, Group, answer, count) %>%
+  distinct() %>%
+  arrange(answer, ES, Group, desc(count))
 
-subset(response_summary) %>%
-  ggplot(aes(answer, count)) +
-  geom_col() +
-  theme(axis.text.x = element_blank(),
-        panel.grid.major.x = element_blank()) +
-  facet_wrap(~ES, scales = "free_x")
-
-
+# write out both
+## change NAs to blanks so reads easier in Excel
+alldrivers[is.na(alldrivers)] <- "" 
+write_csv(alldrivers, "round2_metareview/clean_qa_data/needs_classreview/ES_alldrivers.csv")
+write_csv(alldrivers_summary, "round2_metareview/clean_qa_data/needs_classreview/ES_driversfreq_review.csv")
 
 
 
