@@ -128,7 +128,10 @@ needs_match <- mutate(needs_match, match_num = pmatch(nm_words, title_df$title_w
 needs_match$Q1[is.na(needs_match$clean_title)] # this is a comment to paper, can pull title from original
 # Service measured: bird predation on insect pest in agroforestry system
 needs_match$clean_title[grep("Service measured: ", needs_match$Q1)] <- original$Title[grep("^Service measured: bird", original$Comments)]
-
+# effects paper of dams paper is one where  web of science title is incorrect/weird (happened in R1 too). Correct title is the one entered in qualtrics 
+## correct the original lookup table so pairs correctly
+original$Title[grep("^eEde", original$Title)] <- needs_match$Q1[grep("Effects", needs_match$Q1)]
+needs_match$clean_title[grep("Effects", needs_match$Q1)] <- needs_match$Q1[grep("Effects", needs_match$Q1)]
 
 prelim <- prelim %>%
   # make true date time column
@@ -237,7 +240,7 @@ sort(unique(keydf$Q27))
 sort(sapply(split(keydf$clean_title, keydf$Q27), length))
 # how many papers have we gotten through out of initial start?
 summary(unique(prelim$clean_title) %in% unique(original$Title)) # 9 either misspelled or have weird punctuation
-summary(unique(original$Title) %in% unique(prelim$clean_title)) #61 still to go (4/9)..
+summary(unique(original$Title) %in% unique(prelim$clean_title)) #5 still to go (4/22)..
 # assign names to initals to link with original assigments
 initials <- c("Aislyn" = "AK", "Anna" = "AIS", "Caitlin" = "CW", "Claire" = "CK",
               "Grant" = "GV", "Isabel" = "IS", "Julie" = "JL", "Kathryn" = "KCG",
