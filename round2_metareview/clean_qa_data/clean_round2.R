@@ -146,7 +146,8 @@ prelim <- prelim %>%
   mutate(doubleentry = duplicated(Q1)) %>%
   ungroup() %>%
   # move clean title to behind Q1
-  dplyr::select(names(.)[1]:Q1, clean_title, Q2:ncol(.))
+  dplyr::select(names(.)[1]:Q1, clean_title, Q2:ncol(.)) %>%
+  data.frame()
 # screen double entries
 doubles <- subset(prelim, clean_title %in% clean_title[doubleentry]) %>%
   arrange(clean_title, Q27, desc(RecordedDate))
@@ -162,18 +163,19 @@ tm_papers <- subset(doubles, Q27 == "TM") %>%
   arrange(qnum)
 # these are not quite the same answers.. check which paper is Oceania and which is in S. America (TM missing one paper as of 4/22 so one of these is probably the missing paper, just with a wrong title)
 ## "Restoration potential of threatened ecosystem engineers increases with aridity: broad scale effects on soil nutrients and function" (Decker et al. 2019)
-## > after reviewing, Barros paper corresponds to entry where Q5 == S. America, and Decker at paper corresponds to entry where Q5 == Oceania (was Australia.. I guess Australia wasn't an option on the survey?)
+## > after reviewing, Barros paper corresponds to entry where Q5 == S. America, and Decker et al paper corresponds to entry where Q5 == Oceania (was Australia.. I guess Australia wasn't an option on the survey?)
 # verdict: update the title in prelim and update doubleentry value for that paper so it doesn't get excluded
 # use the responseID to update title
 tm_update <- unique(tm_papers$ResponseId[tm_papers$qnum == 5 & tm_papers$answer == "Oceania"])
 prelim$clean_title[prelim$ResponseId == tm_update] <- original$Title[(grepl("^Restoration potential", original$Title) & original$Round2_reviewer1 == "Travis")]
-prelim$doubleentry[prelim$ResponseId %in% unique(tm_papers$ResponseId)] <- FALSE
+prelim$doubleentry[prelim$ResponseId %in% unique(tm_papers$ResponseId)] <- FALSE # both should be false
 
 prelim <- prelim %>%
   #remove any doubleentries
   filter(!doubleentry) %>%
   # remove doubleentryrow
-  select(-doubleentry)
+  select(-doubleentry) %>%
+  data.frame()
 # tally papers that have been reviewed more than once (i.e. 2 people reviewed it)
 records <- dplyr::select(prelim, Q27, clean_title) %>%
   group_by(clean_title) %>%
@@ -327,7 +329,8 @@ prelimlong <- prelim %>%
   gather(id, answer, Q2:ncol(.)) %>%
   left_join(headerLUT) %>%
   arrange(RecordedDate) %>%
-  rename(Init = Q27, Title = clean_title)
+  rename(Init = Q27, Title = clean_title) %>%
+  data.frame()
 
 # for prelim results, just look at single/first reviewed
 firstreview <- prelimlong %>%
@@ -443,13 +446,13 @@ maybe_exclude_notes <- c(
   "tough paper to review because defining what were their response variables was difficult",
   "almost included at q3 with the thinking that abundance of crab burrows ",
   "paper didn’t do a great job at analyzing/showing the specific effects of env drivers ",
-  "Looked at overall benefit/value ($) over time given land use change,",
-  "This paper was confusing...",
+  "Looked at overall benefit", #/value ($) over time given land use change
+  "This paper was confusing",
   "it reads like a valuation of ES provision rather than a study of the ecology",
   "I don't think it clearly tests any other ecological questions about ES's",
   "I really don't know if this paper should be included",
   "No measurement of services/function except community structure",
-  " (this study is in an econ journal).",
+  "(this study is in an econ journal)",
   "This paper didn't really have \"response variables\". Instead they looked at people's perceptions of services in urban parks, so everything was qualitative/descriptive. Wasn't sure how to express this in the big table!",
   "very hard to code- answers to survey about forest recovery's impact on water purification",
   "main focus of paper is on demographic processes, so considered excluding at first",
@@ -467,17 +470,33 @@ maybe_exclude_notes <- c(
   "The ES table is not filled out because the paper is only an ecosystem service valuation paper (no drivers). I believe that it thus would have been excluded in round 1, but there were no questions to explicitly exclude it in round 2, so I filled it out (plus it may address some interesting scale questions). Specifically, the paper maps 'forest ecosystem services' by using land cover data to estimate ES provision based on forest age, contiguity, and size, assuming that old, connected and larger forests provide more ES's. It measures no services directly, nor looks at any drivers that are not already implicit in their valuation approach.",
   "May want Laura to review if this actually includes enough ecology to retain (on the fence about whether it is only the social dimension)",
   "this paper didn't explicitly talk about ecosystem functions or ecosystem services in general nor in terms of their measured variables so that is why I left the q12 'paper reported response variables as...' blank; it did stay in since it didn't quite fall into the initial exclusion questions in this qualtrics survey",
-  "This one was really tough. The main goal was determining the source of the resilience of the particular ecosystem."
+  "This one was really tough. The main goal was determining the source of the resilience of the particular ecosystem.",
+  "We may want to re-assess this paper to see if we want to keep it",
+  "but I don't think it clearly tests any other ecological questions about ES's",
+  "The \"function\" was a human-mediated invasion pressure\". So kind of the opposite of a function"
 )
 
 # grab unique response ID 
 # > note, can't pull by title because some double reviews have conflicting answers for whether to exclude or not
 exclude_notes_ids <- prelim$ResponseId[pmatch(exclude_notes, prelim$Q24)]
+# did it pull ids for all?
+exclude_notes_ids # yes
+
 maybe_exclude_ids <- prelim$ResponseId[pmatch(maybe_exclude_notes, prelim$Q24)]
-prelim$Q24[pmatch(maybe_exclude_notes, prelim$Q24)]
+# did it pull ids for all?
+maybe_exclude_ids # no..
+needs_match <- maybe_exclude_notes[is.na(maybe_exclude_ids)]
+needs_match
+# use for loop to append..
+for(i in needs_match){
+  maybe_exclude_ids <- c(maybe_exclude_ids, prelim$ResponseId[grep(i, prelim$Q24)])
+}
+# remove NAs
+maybe_exclude_ids <- maybe_exclude_ids[!is.na(maybe_exclude_ids)]
+
 # check it got all
 # should be TRUE, if not, go back and see what got missed
-length(c(exclude_notes, maybe_exclude_notes)) == length(c(exclude_notes_ids, maybe_exclude_ids))
+length(na.exclude(c(exclude_notes, maybe_exclude_notes))) == length(na.exclude(c(exclude_notes_ids, maybe_exclude_ids)))
 
 # apply flag
 # designate 1b for level 1b data (not yet corrected, but flags applied)
@@ -542,7 +561,9 @@ possibleexclude_df <- dplyr::select(prelimlong1b, ResponseId, Init, Title, exclu
   dplyr::select(assess_date, ResponseId:exclude_notes, flag_inconsistent:ncol(.)) %>%
   arrange(Title, Init) %>%
   # add col for already pulled just in case LD has already reviewed
-  mutate(newcase = !Title %in% unique(current_possibleexclude$Title)) %>%
+  #mutate(newcase = !Title %in% unique(current_possibleexclude$Title)) %>%
+  left_join(distinct(current_possibleexclude[c("Title", "newcase")])) %>% # join so don't overwrite new cases added on 4/17
+  replace_na(list(newcase = TRUE)) %>%
   # move new case to after assess_date
   dplyr::select(assess_date, newcase, ResponseId:ncol(.))
 # change NAs to blanks so not annoying in Excel
@@ -579,9 +600,11 @@ q4_qa <- group_by(prelimlong1b, ResponseId) %>%
   # add citation info in case want to look at paper
   left_join(dplyr::select(original, Title, FirstAuthor, PublicationYear, SourcePublication)) %>%
   # indicate whether new case
-  mutate(newcase = !Title %in% unique(current_ecosystemnotes$Title)) %>%
+  #mutate(newcase = !Title %in% unique(current_ecosystemnotes$Title)) %>%
+  left_join(distinct(current_ecosystemnotes[c("Title", "ResponseId", "newcase")])) %>% # join so don't overwrite new cases added on 4/17
+  replace_na(list(newcase = TRUE)) %>%
   # reorder cols
-  dplyr::select(assess_date, newcase, ResponseId:ncol(.))
+  dplyr::select(assess_date, newcase, doublerev, ResponseId:ncol(.))
 
 # set responseID as factor so ecosystem types will plot alphabetically
 q4_qa %>%
@@ -610,11 +633,14 @@ sort(with(prelimlong1b, answer[abbr == "GenInfo" & !is.na(answer) & exclude != "
 # not sure if full GenInfo are preserved? might be byte limitation in csv format..
 # > important to address in data cleaning (let class decide)
 # GenInfo: [2] "*** THIS STUDY DID NOT TAKE PLACE IN AUSTRALIA. It was in New Zealand (Oceania)"
+Datapapers <- with(prelimlong1b, ResponseId[(abbr == "Method" & grepl("Model", answer))])
 methodsnotes <- prelimlong1b %>%
   # remove papers to exclude
   subset(exclude != "Exclude") %>%
   group_by(ResponseId) %>%
-  filter(ResponseId %in% ResponseId[(abbr == "MethodsNotes" & !is.na(answer)) | ((abbr == "GenInfo" & !is.na(answer)))]) %>%
+  filter(ResponseId %in% ResponseId[(abbr == "MethodsNotes" & !is.na(answer)) | 
+                                      ((abbr == "GenInfo" & !is.na(answer))) | #]) %>% # |
+                                      ((abbr == "Methods" & grepl("Model|Other", answer)))]) %>%
   ungroup() %>%
   subset(abbr %in% c("Ecosystem", "TimeTrends","MultiScale", "MethodsNotes", "GenInfo","Methods")) %>%
   dplyr::select(ResponseId, Init, Title, abbr, answer) %>%
@@ -640,8 +666,14 @@ methodsnotes <- prelimlong1b %>%
   # order by by title for easier comparison
   arrange(Title, Init) %>%
   # add col for newcases and reorder cols
-  mutate(newcase = !Title %in% unique(current_methodsnotes$Title)) %>%
-  dplyr::select(assess_date, newcase, doublerev:ncol(.))
+  #mutate(newcase = !Title %in% unique(current_methodsnotes$Title)) %>%
+  left_join(distinct(current_methodsnotes[c("Title", "ResponseId", "newcase")])) %>% # join so don't overwrite new cases added on 4/17
+  replace_na(list(newcase = TRUE)) %>%
+  dplyr::select(assess_date, newcase, doublerev:ncol(.)) %>%
+  # remove spaces from colnames
+  rename_all(function(x) gsub(" ", "_", x)) %>%
+  # since want to pull papers add citation info
+  left_join(original[c("Title", "FirstAuthor", "SourcePublication", "PublicationYear", "Abstract")])
 # make all text so no "NA" in csv
 methodsnotes[is.na(methodsnotes)] <- ""  
 # write out for review
@@ -710,7 +742,9 @@ scalenotes <- prelimlong1b %>%
   left_join(distinct(cbind(prelimlong1b[prelimlong1b$abbr == "KremenTopics" & grepl("Topic 4", prelimlong1b$answer),c("ResponseId", "Title")], KT4_scale = 1))) %>%
   replace_na(list("KT4_scale"=0)) %>%
   # indicate new titles added with updates, reorder cols
-  mutate(newcase = !Title %in% unique(current_scalenotes$Title)) %>%
+  #mutate(newcase = !Title %in% unique(current_scalenotes$Title)) %>%
+  left_join(distinct(current_scalenotes[c("Title", "ResponseId", "newcase")])) %>% # join so don't overwrite new cases added on 4/17
+  replace_na(list(newcase = TRUE)) %>%
   dplyr::select(assess_date, newcase, doublerev:ncol(.)) %>%
   # also get TimeTrends in there.. should have been
   left_join(distinct(prelimlong1b[prelimlong1b$abbr == "TimeTrends", c("ResponseId", "Title","answer")])) %>%
@@ -793,7 +827,9 @@ kremennotes <-  prelimlong1b %>%
   # rename Kremen Topics cols to indicate source of data
   rename_at(.vars = c("None", "ESPs", "Community_structure", "Environmental_factors", "Scale"), function(x) paste0("KT_", x)) %>%
   # add col to ID new case
-  mutate(newcase = !Title %in% unique(current_kremennotes$Title)) %>%
+  #mutate(newcase = !Title %in% unique(current_kremennotes$Title)) %>%
+  left_join(distinct(current_kremennotes[c("Title", "ResponseId", "newcase")])) %>% # join so don't overwrite new cases added on 4/17
+  replace_na(list(newcase = TRUE)) %>%
   # join exclude col just in case we only want to review things we definitely will keep
   left_join(distinct(prelimlong1b[c("ResponseId", "Title", "exclude")])) %>%
   dplyr::select(assess_date, newcase, exclude, doublerev:ncol(.))

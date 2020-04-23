@@ -15,6 +15,7 @@ coastWQReg,Bio,Adjacent forest fragment size and isolation,1
 Food,Bio,Adjacent forest fragment size and isolation,1
 PestPath,Bio,Adjacent forest fragment size and isolation,1
 SoilProtect,Bio,Adjacent forest fragment size and isolation,1
+ClimReg,Anthro,age,1
 CulturePsych,Anthro,age,1
 Food,Anthro,age,1
 CulturePsych,Anthro,age began harvesting,1
@@ -38,7 +39,9 @@ HabCreate,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods
 Hazards,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods AND human drivers that are marked alongside this 'other' environmental driver (see Q12),1
 MaintainOpts,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods AND human drivers that are marked alongside this 'other' environmental driver (see Q12),1
 Materials,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods AND human drivers that are marked alongside this 'other' environmental driver (see Q12),1
+PestPath,Anthro,agrochemical use,1
 SoilProtect,Env,air temperature,1
+MaintainOpts,Env,also include temperature and precipitation (water stress) as a natural filter for all plants in the region,1
 ClimReg,Env,altitude,1
 Food,Env,Amount of 'semi natural vegetation',1
 PestPath,Env,Amount of 'semi natural vegetation',1
@@ -52,6 +55,7 @@ CulturePsych,Anthro,and city-level [city 1; city 2]),1
 HabCreate,Anthro,and city-level [city 1; city 2]),1
 MaintainOpts,Anthro,and city-level [city 1; city 2]),1
 SoilProtect,Anthro,and city-level [city 1; city 2]),1
+MaintainOpts,Anthro,and structure of the homogenization. the driver in all cases is human preference/selection of vegetation for yards,1
 SoilProtect,Env,Annual Precipitation,1
 Food,Bio,aphid abundance,1
 PestPath,Bio,aphid abundance,1
@@ -64,6 +68,7 @@ MedGen,Anthro,area of a corridor of an apartment,1
 Pollination,Anthro,area of a corridor of an apartment,1
 Pollination,Bio,Area of flowers,1
 Pollination,Env,area of nearest potential habitat,1
+ClimReg,Env,aspect,1
 MaintainOpts,Env,aspect,2
 Materials,Env,aspect,1
 SoilProtect,Env,aspect,1
@@ -87,7 +92,9 @@ freshWQReg,Anthro,building density,1
 MaintainOpts,Anthro,building density,1
 Materials,Env,Burn regime,1
 MaintainOpts,Env,burn severity,1
+freshWQReg,Anthro,but land use intensification. management scenarios for stormwater and riparian development,1
 ClimReg,Bio,canopy cover,1
+PestPath,Anthro,canopy cover,1
 coastWQReg,Bio,Canopy cover,1
 HabCreate,Bio,Canopy cover,1
 Pollination,Env,Canopy density,1
@@ -98,6 +105,7 @@ HabCreate,Anthro,channel modifications,1
 MaintainOpts,Anthro,channel modifications,1
 coastWQReg,Env,Chemical (NH4,1
 Food,Env,Chemical (NH4,1
+Food,Anthro,chemical pest control); socioeconomics (farmer gender,1
 coastWQReg,Bio,Chlorophyll-a,1
 Food,Bio,Chlorophyll-a,1
 AQReg,Env,Climate,3
@@ -117,6 +125,7 @@ Pollination,Env,Climate,3
 SoilProtect,Env,Climate,15
 Food,Env,cloud cover,1
 Pollination,Env,cloud cover,1
+MaintainOpts,Anthro,composition,1
 HabCreate,Env,conductivity,1
 MaintainOpts,Env,conductivity,1
 CulturePsych,Anthro,corridor geometry,1
@@ -130,6 +139,7 @@ SoilProtect,Env,cosine and sine of aspect,1
 Food,Bio,cotton bollworm pest,1
 PestPath,Bio,Crop diversity,1
 Food,Anthro,Crop intensification,1
+ClimReg,Anthro,cultural background,1
 ClimReg,Env,daytime light,1
 SoilProtect,Bio,Deer density,1
 ClimReg,Env,DEM,1
@@ -137,6 +147,7 @@ freshWQReg,Env,DEM,1
 SoilProtect,Env,DEM,1
 Food,Bio,Density of honeybee hives,1
 Pollination,Bio,Density of honeybee hives,1
+HabCreate,Env,"different olive grove types could be considered land use or management type (organic, conventional, abandoned, natural areas)",1
 coastWQReg,Anthro,direct impacts to natural stream channel,1
 HabCreate,Anthro,direct impacts to natural stream channel,1
 MaintainOpts,Anthro,direct impacts to natural stream channel,1
@@ -177,7 +188,7 @@ Food,Anthro,education,1
 Materials,Anthro,education,1
 Pollination,Anthro,education,1
 SoilProtect,Anthro,education,1
-ClimReg,Env,elevation,1
+ClimReg,Env,elevation,2
 CulturePsych,Env,elevation,1
 Food,Env,elevation,2
 HabCreate,Env,elevation,2
@@ -237,6 +248,7 @@ Food,Anthro,gender,1
 PestPath,Bio,Genetic diversity,1
 coastWQReg,Env,Geographic (latitude,1
 Food,Env,Geographic (latitude,1
+Pollination,Anthro,golf course disturbance caused fewer flower visits,1
 ClimReg,Anthro,grazing,2
 freshWQReg,Anthro,grazing,1
 SoilProtect,Anthro,grazing,2
@@ -262,6 +274,7 @@ ClimReg,Anthro,Household income,1
 CulturePsych,Anthro,Household income,1
 freshWQReg,Anthro,Household income,1
 MaintainOpts,Anthro,Household income,1
+ClimReg,Anthro,household size,1
 ClimReg,Anthro,housing density,1
 freshWQReg,Anthro,housing density,1
 HabCreate,Anthro,housing density,1
@@ -275,6 +288,7 @@ SoilProtect,Env,Hypothetical stressors (abstract and vague),1
 Food,Anthro,Implementation of greening measures,1
 PestPath,Anthro,Implementation of greening measures,1
 Pollination,Anthro,Implementation of greening measures,1
+ClimReg,Anthro,income,1
 coastWQReg,Anthro,Income,1
 CulturePsych,Anthro,Income,1
 Food,Anthro,Income,1
@@ -287,6 +301,7 @@ PestPath,Anthro,insecticide,1
 Food,Anthro,Insecticide spraying,1
 Pollination,Anthro,Insecticide spraying,1
 PestPath,Anthro,intercrop characteristics,1
+Food,Anthro,intercropping,1
 ClimReg,Env,inundation,1
 SoilProtect,Env,inundation,1
 PestPath,Bio,invasive species,1
@@ -301,21 +316,22 @@ Pollination,Bio,Land cover,1
 SoilProtect,Bio,Land cover,1
 MaintainOpts,Env,land cover type,1
 Materials,Env,land cover type,1
+Food,Anthro,land ownership),1
 AQReg,Anthro,Land use change,5
-ClimReg,Anthro,Land use change,27
+ClimReg,Anthro,Land use change,29
 coastWQReg,Anthro,Land use change,14
-CulturePsych,Anthro,Land use change,16
+CulturePsych,Anthro,Land use change,17
 Energy,Anthro,Land use change,3
-Food,Anthro,Land use change,23
-freshWQReg,Anthro,Land use change,11
-HabCreate,Anthro,Land use change,21
+Food,Anthro,Land use change,24
+freshWQReg,Anthro,Land use change,12
+HabCreate,Anthro,Land use change,24
 Hazards,Anthro,Land use change,6
 MaintainOpts,Anthro,Land use change,6
 Materials,Anthro,Land use change,5
 MedGen,Anthro,Land use change,2
 OceanReg,Anthro,Land use change,1
-PestPath,Anthro,Land use change,14
-Pollination,Anthro,Land use change,13
+PestPath,Anthro,Land use change,15
+Pollination,Anthro,Land use change,14
 SoilProtect,Anthro,Land use change,17
 HabCreate,Anthro,Land use change=% Developed land,1
 PestPath,Anthro,Land use change=Landscape homogeneity,1
@@ -345,10 +361,16 @@ HabCreate,Anthro,Location (neighborhood-level [8 neighborhoods],1
 MaintainOpts,Anthro,Location (neighborhood-level [8 neighborhoods],1
 SoilProtect,Anthro,Location (neighborhood-level [8 neighborhoods],1
 Food,Env,Location of reef (distance from fishing home/shore),1
+ClimReg,Env,Longitudinal position,1
+CulturePsych,Env,Longitudinal position,1
+Food,Env,Longitudinal position,1
+HabCreate,Env,Longitudinal position,1
 coastWQReg,Env,longitudinal river length,1
 Pollination,Bio,loss of seed source species,1
 MaintainOpts,Bio,macroinvertebrate and fish population,1
 coastWQReg,Bio,Maintenance,1
+CulturePsych,Anthro,management practice was burning. service would be recreational hunting,1
+HabCreate,Anthro,management practice was burning. service would be recreational hunting,1
 Food,Anthro,Management practice=fertilizer,1
 PestPath,Anthro,Management practice=fertilizer,1
 Food,Anthro,Management practice=insecticide (indirectly via effects on aphids),1
@@ -357,29 +379,36 @@ HabCreate,Anthro,Management practice=Shoreline condition (bulkhead;riprap;natura
 HabCreate,Anthro,Management practice=Soil surface treatment,1
 PestPath,Anthro,Management practice=Soil surface treatment,1
 AQReg,Anthro,Management Practices,5
-ClimReg,Anthro,Management Practices,27
+ClimReg,Anthro,Management Practices,28
 coastWQReg,Anthro,Management Practices,15
-CulturePsych,Anthro,Management Practices,12
+CulturePsych,Anthro,Management Practices,13
 Energy,Anthro,Management Practices,4
-Food,Anthro,Management Practices,33
+Food,Anthro,Management Practices,34
 freshWQReg,Anthro,Management Practices,10
-HabCreate,Anthro,Management Practices,18
+HabCreate,Anthro,Management Practices,21
 Hazards,Anthro,Management Practices,4
-MaintainOpts,Anthro,Management Practices,8
+MaintainOpts,Anthro,Management Practices,9
 Materials,Anthro,Management Practices,7
 MedGen,Anthro,Management Practices,1
-PestPath,Anthro,Management Practices,28
+PestPath,Anthro,Management Practices,29
 Pollination,Anthro,Management Practices,20
-SoilProtect,Anthro,Management Practices,25
+SoilProtect,Anthro,Management Practices,26
 Pollination,Anthro,Management Practices=near or away from non-fenced/narrow-fenced/wide-fenced riparian buffer strips,1
 PestPath,Anthro,Management practices=organic vs conventional farming,1
 Pollination,Anthro,Management practices=organic vs conventional farming,1
+Food,Anthro,management strategies (field size,1
 Food,Anthro,management type,1
 Pollination,Anthro,management type,1
+Food,Anthro,market orientation,1
+ClimReg,Anthro,mean dwelling density,1
+ClimReg,Anthro,mean edge/area ratio,1
+ClimReg,Anthro,mean lot size,1
+ClimReg,Anthro,mean patch size,1
 no ES selected,Bio,measured 82 different ecosystem function variables ,1
 Food,Env,mid-channel nodes,1
 Food,Bio,modeled influences of 3 organisms: 2 beneficial insects,1
 Food,Anthro,Municipality (this mixes a bit with geographic location),1
+Food,Anthro,N inputs,1
 Food,Bio,native bee  diversity (Shannon index),1
 Food,Bio,native bee abundance,1
 Food,Bio,native bee richness,1
@@ -397,6 +426,7 @@ Pollination,Env,Nitrogen availability,1
 coastWQReg,Env,nitrogen deposition,1
 HabCreate,Env,NO2 + NO3,1
 MaintainOpts,Env,NO2 + NO3,1
+freshWQReg,Anthro,not just land use change,1
 HabCreate,Anthro,Note: human exploitation driver is oil exploitation,1
 Food,Bio,number of bumblebee colonies used per year,1
 Pollination,Bio,number of bumblebee colonies used per year,1
@@ -409,35 +439,37 @@ MaintainOpts,Env,nutrient-supplying capacity of the soil,1
 Materials,Env,nutrient-supplying capacity of the soil,1
 coastWQReg,Env,Oceanographical (area volume,1
 Food,Env,Oceanographical (area volume,1
+Food,Env,organic carbon),1
+Food,Anthro,organic fertilizer,1
 PestPath,Env,organic matter,1
 AQReg,Bio,Other,1
 AQReg,Env,Other,3
-ClimReg,Anthro,Other,8
+ClimReg,Anthro,Other,9
 ClimReg,Bio,Other,9
-ClimReg,Env,Other,14
+ClimReg,Env,Other,16
 coastWQReg,Anthro,Other,7
 coastWQReg,Bio,Other,5
 coastWQReg,Env,Other,11
 CulturePsych,Anthro,Other,8
 CulturePsych,Bio,Other,2
-CulturePsych,Env,Other,7
+CulturePsych,Env,Other,8
 Energy,Anthro,Other,2
 Energy,Bio,Other,1
 Energy,Env,Other,3
 Food,Anthro,Other,9
 Food,Bio,Other,14
-Food,Env,Other,18
+Food,Env,Other,20
 freshWQReg,Anthro,Other,5
 freshWQReg,Bio,Other,2
 freshWQReg,Env,Other,6
 HabCreate,Anthro,Other,10
 HabCreate,Bio,Other,5
-HabCreate,Env,Other,7
+HabCreate,Env,Other,8
 Hazards,Anthro,Other,1
 Hazards,Env,Other,1
 MaintainOpts,Anthro,Other,5
 MaintainOpts,Bio,Other,1
-MaintainOpts,Env,Other,5
+MaintainOpts,Env,Other,6
 Materials,Anthro,Other,2
 Materials,Bio,Other,2
 Materials,Env,Other,5
@@ -447,7 +479,7 @@ MedGen,Env,Other,1
 PestPath,Anthro,Other,4
 PestPath,Bio,Other,9
 PestPath,Env,Other,10
-Pollination,Anthro,Other,4
+Pollination,Anthro,Other,5
 Pollination,Bio,Other,4
 Pollination,Env,Other,8
 SoilProtect,Anthro,Other,7
@@ -462,6 +494,8 @@ CulturePsych,Env,Other=Diverse landscape (perceived by users),1
 Food,Env,Other=soil organic carbon,1
 PestPath,Env,Other=soil organic carbon,1
 freshWQReg,Env,Other=soil variables(salts;Fe;Mn;pH),1
+Food,Anthro,P inputs,1
+ClimReg,Anthro,parkland proportion,1
 ClimReg,Bio,pathogen attack,1
 CulturePsych,Bio,pathogen attack,1
 MedGen,Bio,pathogen attack,1
@@ -478,8 +512,9 @@ HabCreate,Env,ph,1
 MaintainOpts,Env,ph,1
 AQReg,Env,pH,2
 coastWQReg,Env,pH,1
+Food,Env,pH,2
 PestPath,Env,pH,1
-Food,Env,Ph,1
+Food,Env,Ph,2
 HabCreate,Env,physical site variables = slope,1
 MaintainOpts,Env,physical site variables = slope,1
 ClimReg,Bio,plant productivity,1
@@ -515,6 +550,7 @@ PestPath,Bio,Predator dispersal distance,1
 Food,Bio,Predator of prey (yield item),1
 Pollination,Env,Productivity,1
 PestPath,Bio,proportion of natural habitat surrounding farms,1
+ClimReg,Anthro,proportion treed,1
 CulturePsych,Anthro,Proximity to roads,1
 Pollination,Env,radiation index,1
 Food,Env,rain,1
@@ -531,6 +567,7 @@ coastWQReg,Anthro,Restoration,1
 HabCreate,Anthro,Restoration,1
 Pollination,Env,rewiring,1
 freshWQReg,Bio,riparian canopy,1
+PestPath,Anthro,road edge effects,1
 Food,Anthro,roads within 1 km,1
 Pollination,Anthro,roads within 1 km,1
 SoilProtect,Env,rock fragment cover,1
@@ -539,12 +576,13 @@ coastWQReg,Env,salinity),1
 Food,Env,salinity),1
 ClimReg,Env,sediment type,1
 SoilProtect,Env,sediment type,1
+MaintainOpts,Anthro,separately assess diversity,1
 AQReg,Bio,Service Provider (Q17),5
 ClimReg,Bio,Service Provider (Q17),19
 coastWQReg,Bio,Service Provider (Q17),11
 CulturePsych,Bio,Service Provider (Q17),7
 Energy,Bio,Service Provider (Q17),5
-Food,Bio,Service Provider (Q17),13
+Food,Bio,Service Provider (Q17),14
 freshWQReg,Bio,Service Provider (Q17),2
 HabCreate,Bio,Service Provider (Q17),13
 Hazards,Bio,Service Provider (Q17),6
@@ -553,10 +591,11 @@ Materials,Bio,Service Provider (Q17),5
 OceanReg,Bio,Service Provider (Q17),2
 PestPath,Bio,Service Provider (Q17),16
 Pollination,Bio,Service Provider (Q17),19
-SoilProtect,Bio,Service Provider (Q17),21
+SoilProtect,Bio,Service Provider (Q17),22
 PestPath,Bio,Service provider(aphid)=rove beetles;wolf spiders;vegetation-dwelling predators,1
 PestPath,Bio,Service provider(yield)=aphid growth,1
 SoilProtect,Bio,Service provider=Shrub (as compared to grass),1
+PestPath,Anthro,shade,1
 coastWQReg,Env,shade effect of riparian ecosystem,1
 HabCreate,Env,shade effect of riparian ecosystem,1
 MaintainOpts,Env,shade effect of riparian ecosystem,1
@@ -567,7 +606,7 @@ freshWQReg,Anthro,silviculture practices (as the type of management),1
 SoilProtect,Anthro,silviculture practices (as the type of management),1
 HabCreate,Bio,Single species polychaete (worm) that lives in sediment and eats seeds (not described as an service provider in the paper so didn't record it as one),1
 ClimReg,Env,Site slope (inclination),1
-ClimReg,Env,slope,1
+ClimReg,Env,slope,2
 coastWQReg,Env,slope,2
 CulturePsych,Env,slope,2
 Food,Env,slope,2
@@ -590,6 +629,7 @@ coastWQReg,Anthro,socioeconomic wealth,1
 freshWQReg,Anthro,socioeconomic wealth,1
 Food,Env,Soil,1
 SoilProtect,Env,Soil Hardness,1
+ClimReg,Env,soil organic carbon,1
 Food,Env,soil organic carbon,1
 PestPath,Env,soil organic carbon,1
 Food,Env,Soil Organic Matter,1
@@ -597,10 +637,12 @@ PestPath,Env,Soil P,1
 ClimReg,Env,soil properties,1
 freshWQReg,Env,soil properties,1
 SoilProtect,Env,soil properties,1
+Food,Env,soil properties (CEC,1
 ClimReg,Env,soil submersion,1
 Food,Env,Soil texture,1
 ClimReg,Env,soil type,1
 freshWQReg,Env,solar radiation,1
+ClimReg,Anthro,spatial aggregation,1
 PestPath,Env,Spatial arrangement of landscape,1
 ClimReg,Bio,species composition,1
 Materials,Bio,species composition,1
@@ -613,6 +655,7 @@ HabCreate,Env,stream flow; chemical variables = alkalinity,1
 MaintainOpts,Env,stream flow; chemical variables = alkalinity,1
 HabCreate,Env,stream width,1
 MaintainOpts,Env,stream width,1
+ClimReg,Anthro,street density,1
 ClimReg,Env,summer max temp,1
 Food,Env,surface area of inland waters,1
 PestPath,Bio,Syrphid diversity,1
@@ -628,6 +671,8 @@ SoilProtect,Env,temperature,1
 coastWQReg,Env,Temperature,1
 Food,Env,Temperature,1
 ClimReg,Env,Terrain slope,1
+CulturePsych,Env,this one was creating habitat for grouse and the management practice was burning,1
+HabCreate,Env,this one was creating habitat for grouse and the management practice was burning,1
 ClimReg,Env,tides,1
 PestPath,Anthro,Tillage and plow practices,1
 SoilProtect,Anthro,Tillage system,1
@@ -647,6 +692,7 @@ ClimReg,Env,topography,1
 coastWQReg,Env,total N,1
 Food,Env,total N,1
 PestPath,Env,total N,1
+ClimReg,Env,total nitrogen and phosphorous content,1
 coastWQReg,Env,total P),1
 Food,Env,total P),1
 SoilProtect,Bio,total vegetation ground cover,1
@@ -683,6 +729,7 @@ MaintainOpts,Anthro,Volume of water deviation between current flow regime natura
 HabCreate,Anthro,Volume of water regulated,1
 MaintainOpts,Anthro,Volume of water regulated,1
 coastWQReg,Anthro,Wastewater,1
+ClimReg,Env,water capacity,1
 HabCreate,Env,water depth,1
 MaintainOpts,Env,water depth,1
 Food,Env,Water level (current and previous years min max mean),1

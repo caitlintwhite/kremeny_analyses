@@ -7,6 +7,7 @@ Energy,Aboveground annual net primary productivity,0,0,0,1
 Food,aboveground biomass,0,0,0,1
 ClimReg,Aboveground biomass,1,2,0,0
 ClimReg,aboveground carbon pool,0,1,0,1
+ClimReg,aboveground carbon storage,0,1,0,0
 ClimReg,aboveground live biomass,1,0,0,0
 HabCreate,aboveground production,0,0,0,1
 Pollination,abundance,0,1,0,0
@@ -26,9 +27,10 @@ CulturePsych,Aesthetic heritage,0,1,0,0
 CulturePsych,aesthetic value,0,4,0,0
 CulturePsych,Aesthetics,0,1,0,0
 ClimReg,AGB,0,1,0,0
-Food,agricultural production,0,1,0,0
+Food,agricultural production,0,2,0,0
 Food,Agricultural production,0,2,0,0
 Food,Agricultural revenue,0,1,0,1
+AQReg,air quality improvement,0,1,0,0
 coastWQReg,Ammonia and nitrate loss,0,1,0,0
 MaintainOpts,amount of disturbance,0,0,0,1
 Pollination,and diversity of wild bees visiting flowers,0,1,0,0
@@ -61,6 +63,7 @@ ClimReg,basal area,1,1,1,0
 Materials,basal area,0,0,1,0
 CulturePsych,basal area increment,0,1,0,0
 freshWQReg,base flow,0,1,0,0
+HabCreate,Bat and bird habitat,0,1,0,0
 Food,biodiversity,0,0,0,1
 HabCreate,biodiversity,0,0,0,2
 PestPath,biodiversity,0,0,0,1
@@ -126,6 +129,7 @@ ClimReg,carbon seq. CO2 equivalent,0,1,0,0
 OceanReg,carbon sequestation,0,1,0,0
 ClimReg,carbon sequestration,0,2,1,2
 ClimReg,Carbon sequestration,1,0,1,0
+ClimReg,carbon sequestration in soils and biomass,0,1,0,0
 ClimReg,carbon stock,0,2,0,0
 ClimReg,Carbon stock,1,0,0,1
 ClimReg,Carbon stocks,0,1,0,0
@@ -202,6 +206,7 @@ SoilProtect,decomposition rate,0,0,0,1
 CulturePsych,decrease in spring litter,0,0,0,1
 CulturePsych,deer hunting,0,1,0,0
 coastWQReg,denitrification,1,0,0,0
+PestPath,density of anole,0,0,0,1
 SoilProtect,detrital P,0,0,0,1
 SoilProtect,Detritivore feeding rate,0,0,0,1
 ClimReg,Dilution and sequestration,0,1,0,0
@@ -240,10 +245,14 @@ MaintainOpts,ecosystem functionality,0,0,0,1
 MaintainOpts,ecosystem integrity,0,0,0,1
 HabCreate,Ecosystem stability,0,1,0,0
 Food,Edible mushroom yield,0,1,0,0
+CulturePsych,effect on estate value,0,1,0,0
+PestPath,efficacy of beetle removal by Anole,0,0,0,1
 PestPath,Egg predation,0,1,0,0
 HabCreate,energy flow,0,0,0,1
+HabCreate,environmental quality,0,0,0,1
 ClimReg,ER,0,0,1,0
 SoilProtect,erosion,1,0,0,0
+SoilProtect,erosion control,0,1,0,0
 SoilProtect,erosion control capacity,0,0,0,1
 SoilProtect,erosion mitigation,0,1,0,0
 SoilProtect,Erosion modulus,0,1,0,0
@@ -265,6 +274,7 @@ Materials,firewood use,0,1,0,0
 CulturePsych,fish,0,1,0,0
 MaintainOpts,fish abundances,1,0,0,0
 Food,fish aquaculture,0,1,0,0
+HabCreate,fish capacity,0,1,0,0
 Food,Fish community diversity,0,1,0,0
 HabCreate,fish community index (FCI),1,0,0,0
 MaintainOpts,Fish Community Index (FCI),1,0,0,0
@@ -274,6 +284,7 @@ CulturePsych,fish density (adults per ha),0,0,0,1
 CulturePsych,Fish density (young-of-year per ha),0,0,0,1
 HabCreate,fish functional group,0,0,0,1
 CulturePsych,fish functional group biodiversity,0,1,0,0
+HabCreate,fish habitat,0,1,0,0
 Food,fish harvesting,0,1,0,0
 Food,fish landings,0,0,1,0
 CulturePsych,fish productivity,0,0,0,1
@@ -291,6 +302,7 @@ Hazards,Flood regulation,0,1,0,0
 Food,flor,0,1,0,0
 CulturePsych,flora and fauna,0,1,0,0
 HabCreate,Floral cover,1,0,0,0
+Pollination,flower visits,0,0,0,1
 Pollination,Flower visits,0,1,0,0
 AQReg,fluorescence),0,0,0,1
 Food,Food,1,1,0,0
@@ -362,6 +374,7 @@ HabCreate,Habitat sensitivity,1,0,0,0
 CulturePsych,habitat suitability,0,0,0,1
 Materials,harvestable timber,0,1,0,0
 CulturePsych,health deprivation,0,1,0,0
+CulturePsych,health effects (physical - mental),0,1,0,0
 HabCreate,herbivore fish biomass,0,1,0,0
 CulturePsych,horseback riding,0,1,0,0
 CulturePsych,human and agricultural water consumption(access),0,0,0,1
@@ -376,6 +389,7 @@ SoilProtect,impact intensity (tons of soil),0,1,0,0
 MaintainOpts,index of rarity,1,0,0,0
 Energy,Indicators (12 different indices),1,1,0,0
 MaintainOpts,Indicators (12 different indices),0,1,0,0
+freshWQReg,infiltration,0,1,0,0
 CulturePsych,information and knowledge,0,1,0,0
 Food,inland fisheries yields,0,1,0,0
 SoilProtect,inorganic N supply,0,1,0,0
@@ -457,6 +471,7 @@ ClimReg,net primary productivity,0,0,0,1
 coastWQReg,nitrate  spiraling rates,0,0,1,0
 coastWQReg,nitrate conc.,0,0,0,1
 coastWQReg,nitrate spiraling rates,0,0,0,1
+SoilProtect,Nitrate supply rate,0,0,1,0
 coastWQReg,nitrate/nitrite/phosphorous/BOD5/O2 concentrations in water,0,1,0,0
 coastWQReg,nitrite conc.,0,0,0,1
 ClimReg,nitrogen,0,1,0,0
@@ -465,6 +480,7 @@ coastWQReg,nitrogen and phosphorus retention,0,0,0,1
 coastWQReg,nitrogen concentration,0,0,0,1
 SoilProtect,nitrogen retention,0,1,0,0
 ClimReg,Nitrogen storage,0,1,0,0
+SoilProtect,nitrogen storage in SOM,0,1,0,0
 AQReg,nitrous oxide emission,0,0,0,1
 AQReg,Nitrous oxide emissions,1,0,0,0
 AQReg,nitrous oxide flux,0,1,0,0
@@ -472,6 +488,7 @@ AQReg,NO measurements,0,1,0,0
 AQReg,NO2 concentration levels,0,0,0,1
 AQReg,No2 dry deposition velocity,0,0,0,1
 coastWQReg,NO3-N concentrations,1,0,0,0
+CulturePsych,noise reduction,0,1,0,0
 ClimReg,NPP,0,2,0,0
 Food,NPP,0,1,0,0
 PestPath,number of borers,0,0,1,0
@@ -490,16 +507,19 @@ MaintainOpts,number of species 'in danger',0,0,0,1
 Pollination,number of visitors),0,1,0,0
 Hazards,number over tides,0,0,1,0
 SoilProtect,nutrient provisioning,0,1,0,0
+SoilProtect,nutrient removal,0,1,0,0
 SoilProtect,Nutrient transformation and cycling,0,1,0,0
 HabCreate,nutrient uptake,0,0,0,1
 ClimReg,nutrient use efficiency,0,1,0,1
 coastWQReg,nutrients,1,0,0,0
 coastWQReg,O2 conc.,0,0,0,1
+Food,okra yield,0,0,0,1
 Food,open space,0,1,0,0
 CulturePsych,opnion,0,0,1,0
 CulturePsych,orchard,0,0,1,0
 Food,orchard,0,0,1,0
 SoilProtect,orchard,0,0,1,0
+Food,orchard and forage production,0,1,0,0
 ClimReg,Organic Carbon,0,0,0,1
 coastWQReg,organic matter,0,0,0,1
 SoilProtect,organic matter content,0,0,0,1
@@ -514,6 +534,7 @@ Food,Oyster size,0,1,0,0
 SoilProtect,P,1,0,0,0
 freshWQReg,P retention,0,1,0,0
 SoilProtect,P retention,0,1,0,0
+CulturePsych,paddle routes,0,1,0,0
 Food,paddy rice field,0,0,1,0
 Food,palatability,0,0,0,1
 Food,palatable (to livestock) plant richness,0,1,0,0
@@ -544,8 +565,10 @@ PestPath,Pest Abundance,0,1,0,0
 PestPath,Pest and disease control,0,1,0,0
 PestPath,pest attack rate,0,0,1,0
 PestPath,pest community composition,0,0,1,0
+ClimReg,Pest control,0,1,0,0
 PestPath,pest diversity index,0,0,0,1
 Food,pest load,0,0,0,1
+PestPath,pest management by spiders (only spider abundance and richness),0,0,0,1
 PestPath,Pest parasitism,0,1,0,0
 PestPath,pest parasitism rate (i.e. biocontrol success),0,0,1,0
 PestPath,Pest population,1,1,0,0
@@ -555,6 +578,7 @@ SoilProtect,pH,1,0,0,0
 ClimReg,phosphatase activity,1,0,0,0
 coastWQReg,phosphate concentration,0,1,0,0
 coastWQReg,Phosphorous,0,0,0,1
+SoilProtect,phosphorous storage in SOM,0,1,0,0
 coastWQReg,phosphorus conc.,0,0,0,1
 coastWQReg,Phosphorus concentration,1,0,0,0
 AQReg,photosynthesis (gas exchange,0,0,0,1
@@ -577,8 +601,8 @@ HabCreate,Plant species composition,0,1,0,0
 MaintainOpts,Plant species richness,0,0,0,1
 SoilProtect,plant-available N,1,0,0,0
 Pollination,pollen deposition (grains),0,1,0,0
-Pollination,pollination,0,3,0,0
-Pollination,Pollination,0,1,0,0
+Pollination,pollination,0,4,0,0
+Pollination,Pollination,0,2,0,0
 Pollination,Pollination potential,0,2,0,0
 Pollination,pollinator abbundance,0,0,0,1
 Pollination,pollinator abundance,0,0,0,1
@@ -652,12 +676,14 @@ CulturePsych,recreation (public access,0,1,0,0
 CulturePsych,recreation and community activities,0,1,0,0
 CulturePsych,Recreation and culture,1,1,0,0
 CulturePsych,recreation and ecotourism,0,1,0,0
+CulturePsych,recreation and tourism,0,1,0,0
 CulturePsych,recreation capacity,0,0,0,1
 CulturePsych,recreation potential,0,1,0,0
 CulturePsych,recreation value,0,2,0,0
 CulturePsych,recreational demand,0,0,0,1
 CulturePsych,recreational potential,0,0,0,1
 CulturePsych,recreational value,0,1,0,0
+CulturePsych,red grouse breeding success,0,0,0,1
 PestPath,reduction of coffee berry borer (CBB) presence,0,1,0,0
 HabCreate,regeneration potential,0,1,0,0
 CulturePsych,relative basal area increment,0,1,0,0
@@ -707,6 +733,7 @@ SoilProtect,sedimentation,0,1,0,0
 Pollination,seed abundance,0,0,0,1
 HabCreate,seed deposition,1,1,0,0
 Pollination,seed dispersal,0,2,0,0
+Pollination,Seed dispersal,0,1,0,0
 Pollination,seed dispersal distance,1,0,0,0
 Pollination,seed dispersal distribution,0,0,0,1
 Pollination,seed dispersal shadow size,0,1,0,0
@@ -821,6 +848,7 @@ coastWQReg,Standing water quality,0,1,0,0
 ClimReg,stem relative growth rate,0,1,0,0
 freshWQReg,stemflow and  throughfall,0,0,0,1
 CulturePsych,stocked walleye length,0,0,0,1
+freshWQReg,stormwater quantity and quality,0,0,0,1
 Hazards,stormwater retention,0,0,0,1
 freshWQReg,streamflow,0,0,0,1
 freshWQReg,streamwater flow,0,0,0,1
@@ -901,6 +929,10 @@ PestPath,vector mosquitoe abundance,0,0,0,1
 ClimReg,vegetation cover,0,0,0,1
 Energy,vegetation cover,0,0,0,1
 HabCreate,vegetation cover,0,0,1,0
+HabCreate,vegetation diversity/richness,1,0,0,0
+ClimReg,vegetation height,1,0,0,0
+HabCreate,vegetation height,1,0,0,0
+MaintainOpts,vegetation homogenization,1,0,0,0
 Materials,Vegetative production,0,1,0,0
 MaintainOpts,vertebrate diversity,0,1,0,0
 HabCreate,Vertical diversity,0,0,0,1
@@ -924,6 +956,7 @@ freshWQReg,water for consumption,0,0,0,1
 freshWQReg,Water for human consumption,0,1,0,0
 freshWQReg,water for industrial and energy use,0,1,0,0
 Hazards,Water infiltration rate,0,0,0,1
+freshWQReg,water provisioning,0,1,0,0
 coastWQReg,Water Purification and Provision,0,1,0,0
 coastWQReg,water quality,0,2,0,0
 freshWQReg,water quality,0,1,0,0
@@ -933,7 +966,7 @@ freshWQReg,water quality regulation,0,1,0,0
 coastWQReg,Water quality regulation,0,1,0,0
 freshWQReg,Water quantity,0,1,0,0
 freshWQReg,water regulation,0,1,0,0
-freshWQReg,water retention,0,1,0,0
+freshWQReg,water retention,0,2,0,0
 freshWQReg,water supply,0,2,0,0
 freshWQReg,Water supply,1,1,0,0
 freshWQReg,water supply for human consumption,0,1,0,0
@@ -943,6 +976,7 @@ coastWQReg,Water yield,0,0,1,0
 freshWQReg,Water yield,0,1,0,0
 SoilProtect,Water yield,1,1,0,0
 freshWQReg,wateryield production,0,1,0,0
+Food,weed community structure,0,0,0,1
 SoilProtect,weed seed predation,0,1,0,0
 PestPath,weed seed removal,0,1,0,0
 PestPath,weed suppression,0,1,0,0
@@ -958,7 +992,7 @@ HabCreate,wildflower strips,0,0,1,0
 HabCreate,wind erosion,0,0,1,0
 Hazards,windbreak function,0,1,0,0
 Food,winter wheat yield,0,1,0,0
-Materials,wood production,0,1,0,0
+Materials,wood production,0,2,0,0
 Materials,wood raw materials,0,1,0,0
 Energy,Woody biomass,0,1,0,0
 Food,yield,0,1,0,0
