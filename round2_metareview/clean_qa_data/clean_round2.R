@@ -560,12 +560,14 @@ possibleexclude_df <- dplyr::select(prelimlong1b, ResponseId, Init, Title, exclu
   left_join(original[c("Title", "FirstAuthor",  "PublicationYear", "SourcePublication","Abstract")]) %>%
   dplyr::select(assess_date, ResponseId:exclude_notes, flag_inconsistent:ncol(.)) %>%
   arrange(Title, Init) %>%
+  # add doublerev
+  mutate(doublerev = Title %in% doubletitles) %>%
   # add col for already pulled just in case LD has already reviewed
   #mutate(newcase = !Title %in% unique(current_possibleexclude$Title)) %>%
   left_join(distinct(current_possibleexclude[c("Title", "newcase")])) %>% # join so don't overwrite new cases added on 4/17
   replace_na(list(newcase = TRUE)) %>%
   # move new case to after assess_date
-  dplyr::select(assess_date, newcase, ResponseId:ncol(.))
+  dplyr::select(assess_date, newcase, doublerev, ResponseId:ncol(.))
 # change NAs to blanks so not annoying in Excel
 possibleexclude_df[is.na(possibleexclude_df)] <- ""
 # write out
