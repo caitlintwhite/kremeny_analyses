@@ -151,7 +151,24 @@ prelim <- prelim %>%
 doubles <- subset(prelim, clean_title %in% clean_title[doubleentry]) %>%
   arrange(clean_title, Q27, desc(RecordedDate))
 # 3 of 4 double entries have more of the Q3 exclusion questions answered in the recent, paper #4 identitical (excluded on first exclusion question)
-# verdict: keep most recent entry for same reviewer-double reviews
+# verdict: keep most recent entry for same reviewer-double reviews except for TM double entries:
+# pull travis' double entries to see if same paper or not (same title, but are answers the same?)
+tm_papers <- subset(doubles, Q27 == "TM") %>%
+  gather(q, answer, Q2:ncol(.)) %>%
+  mutate(qnum = str_extract(q,"^Q[0-9]+"),
+         qnum = parse_number(qnum)) %>%
+  filter(!is.na(answer)) %>%
+  dplyr::select(ResponseId, RecordedDate, clean_title:ncol(.)) %>%
+  arrange(qnum)
+# these are not quite the same answers.. check which paper is Oceania and which is in S. America (TM missing one paper as of 4/22 so one of these is probably the missing paper, just with a wrong title)
+## "Restoration potential of threatened ecosystem engineers increases with aridity: broad scale effects on soil nutrients and function" (Decker et al. 2019)
+## > after reviewing, Barros paper corresponds to entry where Q5 == S. America, and Decker at paper corresponds to entry where Q5 == Oceania (was Australia.. I guess Australia wasn't an option on the survey?)
+# verdict: update the title in prelim and update doubleentry value for that paper so it doesn't get excluded
+# use the responseID to update title
+tm_update <- unique(tm_papers$ResponseId[tm_papers$qnum == 5 & tm_papers$answer == "Oceania"])
+prelim$clean_title[prelim$ResponseId == tm_update] <- original$Title[(grepl("^Restoration potential", original$Title) & original$Round2_reviewer1 == "Travis")]
+prelim$doubleentry[prelim$ResponseId %in% unique(tm_papers$ResponseId)] <- FALSE
+
 prelim <- prelim %>%
   #remove any doubleentries
   filter(!doubleentry) %>%
@@ -176,7 +193,7 @@ doubletitles <- unique(forAK$clean_title)
 length(doubletitles)
 
 # clean up environment
-rm(doubles, qualtrix, unwanted, title_df, needs_match, https)
+rm(doubles, qualtrix, unwanted, title_df, needs_match, https, tm_papers, tm_update)
 
 
 
