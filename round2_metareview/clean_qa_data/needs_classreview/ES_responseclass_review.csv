@@ -630,6 +630,7 @@ ClimReg,Potential carbon sequestration,0,1,0,0
 SoilProtect,Potential erosion potential,0,1,0,0
 HabCreate,Potential habitat function,0,1,0,0
 HabCreate,Potential patch dispersal events,1,0,0,0
+CulturePsych,potential tourism (12 types),0,0,0,1
 SoilProtect,pre-rill erosion %,0,1,0,0
 PestPath,predation index,0,1,0,0
 Pollination,Predation of pests by entomopathogenic fungi,0,1,0,0
