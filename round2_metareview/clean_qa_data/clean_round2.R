@@ -43,6 +43,7 @@
 # -- SETUP -----
 rm(list = ls()) # clean enviro
 library(tidyverse)
+library(readxl)
 library(lubridate)
 library(cowplot)
 options(stringsAsFactors = F)
@@ -83,9 +84,13 @@ splitcom <- function(df, keepcols = c("Title", "answer"), splitcol = "answer"){
 
 
 # read in reviewer revisions/comments/corrections
-corrections <- list.files("round2_metareview/data/reviewer_revisions/", full.names = T)
+corrections <- list.files("round2_metareview/data/reviewer_revisions", full.names = T)
 IS <- read.csv(corrections[grep("IS", corrections)], na.strings = na_vals)
-
+excludecorrections <- read.csv(corrections[grep("exclude", corrections)], na.strings = na_vals)
+systemcorrections <- read.csv(corrections[grep("ecosystem_class", corrections)], na.strings = na_vals)
+biodrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Bio")
+anthdrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Anthro")
+envdrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Environ")
 
 
 # -- RM JUNK ROWS + ID DOUBLE-REVIEWED PAPERS -----
@@ -292,12 +297,12 @@ plot_grid(stat_byname, stat_byrev, nrow = 2)
 ggsave("round2_metareview/clean_qa_data/review_status/reviewstatus_r2papers.pdf", 
        height = 6, width = 6, units = "in", scale = 1.5)
 
-# what remains?
-outstanding <- cbind(assess_date = Sys.Date(), subset(original, !Title %in% unique(keydf$Title)) %>%
-                       dplyr::select(Round2_reviewer1, Round2_reviewer2, Round1_reviewer, FirstAuthor, Title, SourcePublication, PublicationYear)) %>%
-  # re-assign KG to any remaining Tim and Nick papers since they're done as of 4/15
-  mutate(Round2_reviewer1 = gsub("Nick|Tim", "Kathryn*", Round2_reviewer1)) %>%
-  arrange(Round2_reviewer1, Title)
+# what remains? (# comment out this code bc throws error when all papers done)
+# outstanding <- cbind(assess_date = Sys.Date(), subset(original, !Title %in% unique(keydf$Title)) %>%
+#                        dplyr::select(Round2_reviewer1, Round2_reviewer2, Round1_reviewer, FirstAuthor, Title, SourcePublication, PublicationYear)) %>%
+#   # re-assign KG to any remaining Tim and Nick papers since they're done as of 4/15
+#   mutate(Round2_reviewer1 = gsub("Nick|Tim", "Kathryn*", Round2_reviewer1)) %>%
+#   arrange(Round2_reviewer1, Title)
 
 
 # who remains to reach 28 papers
@@ -319,7 +324,7 @@ effort <- data.frame(assess_date = Sys.Date(), Init = unname(initials), Name = n
   arrange(desc(R2_reviewed))
 
 # write out both for LD to deal with
-write_csv(outstanding, "round2_metareview/clean_qa_data/review_status/outstanding_r2papers.csv")
+#write_csv(outstanding, "round2_metareview/clean_qa_data/review_status/outstanding_r2papers.csv")
 write_csv(effort, "round2_metareview/clean_qa_data/review_status/revieweffort_r2papers.csv")
 
 # make tidy dataset
