@@ -1155,6 +1155,14 @@ write.csv(assign_round2_old, "review_assignments_round2.csv", row.names = F)
 #drive_upload("review_assignments_round2.csv", path = as_id(abstracts_folder$id[grep("^Round1_NA", abstracts_folder$name)]), type = "spreadsheet", 
 #              name = "ESpapers2review_Round2Jan2020_batch1", overwrite = T)
 
+# also write out all keep results and all exclude results in case anyone wants to plot those
+# quote anything that's NA
+exclude2 <- exclude
+exclude2[is.na(exclude2)] <- ""
 
+keep2 <- keep
+keep2[is.na(keep2)] <- ""
 
+write_csv(exclude2, "round1_exclusion/output/exclude_round1.csv")
+write_csv(keep2, "round1_exclusion/output/keep_round1.csv")
 
