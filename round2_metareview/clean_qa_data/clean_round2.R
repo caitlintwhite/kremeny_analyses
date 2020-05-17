@@ -298,8 +298,8 @@ ggsave("round2_metareview/clean_qa_data/review_status/reviewstatus_r2papers.pdf"
        height = 6, width = 6, units = "in", scale = 1.5)
 
 # what remains? (# comment out this code bc throws error when all papers done)
-# outstanding <- cbind(assess_date = Sys.Date(), subset(original, !Title %in% unique(keydf$Title)) %>%
-#                        dplyr::select(Round2_reviewer1, Round2_reviewer2, Round1_reviewer, FirstAuthor, Title, SourcePublication, PublicationYear)) %>%
+# outstanding <- cbind(assess_date = Sys.Date(), subset(original, !Title %in% unique(keydf$Title))) %>%
+#                        dplyr::select(Round2_reviewer1, Round2_reviewer2, Round1_reviewer, FirstAuthor, Title, SourcePublication, PublicationYear)
 #   # re-assign KG to any remaining Tim and Nick papers since they're done as of 4/15
 #   mutate(Round2_reviewer1 = gsub("Nick|Tim", "Kathryn*", Round2_reviewer1)) %>%
 #   arrange(Round2_reviewer1, Title)
@@ -311,10 +311,10 @@ effort <- data.frame(assess_date = Sys.Date(), Init = unname(initials), Name = n
   rename(R2_reviewed = Freq) %>%
   # if count is NA, assign 0
   replace_na(list(R2_reviewed = 0)) %>%
-  # add number of rev1 outstanding
-  left_join(data.frame(table(gsub("[*]", "", outstanding$Round2_reviewer1))), by = c("Name" = "Var1")) %>%
-  replace_na(list(Freq = 0 )) %>%
-  rename(Rev1_remain = Freq) %>%
+  # add number of rev1 outstanding [no more]
+  # left_join(data.frame(table(gsub("[*]", "", outstanding$Round2_reviewer1))), by = c("Name" = "Var1")) %>%
+  # replace_na(list(Freq = 0 )) %>%
+  # rename(Rev1_remain = Freq) %>%
   # add rev 2
   left_join(distinct(original[,1:2]), by = c("Name" = "Round2_reviewer1")) %>%
   group_by(Name) %>%
@@ -576,7 +576,7 @@ possibleexclude_df <- dplyr::select(prelimlong1b, ResponseId, Init, Title, exclu
 # change NAs to blanks so not annoying in Excel
 possibleexclude_df[is.na(possibleexclude_df)] <- ""
 # write out
-write_csv(possibleexclude_df, "round2_metareview/clean_qa_data/needs_classreview/excludenotes_review.csv")
+#write_csv(possibleexclude_df, "round2_metareview/clean_qa_data/needs_classreview/excludenotes_review.csv")
 
 
 
@@ -629,7 +629,7 @@ ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q4ecosystemnotes.pdf", width
 # write out ecosystem notes for review
 ## change NA's to blanks so easier for reading in Excel
 q4_qa[is.na(q4_qa)] <- ""
-write_csv(q4_qa, "round2_metareview/clean_qa_data/needs_classreview/ecosystemnotes_review.csv")
+#write_csv(q4_qa, "round2_metareview/clean_qa_data/needs_classreview/ecosystemnotes_review.csv")
 
 
 # 2b) Methods (Q6)
@@ -684,7 +684,7 @@ methodsnotes <- prelimlong1b %>%
 # make all text so no "NA" in csv
 methodsnotes[is.na(methodsnotes)] <- ""  
 # write out for review
-write_csv(methodsnotes, "round2_metareview/clean_qa_data/needs_classreview/methodsnotes_review.csv")
+#write_csv(methodsnotes, "round2_metareview/clean_qa_data/needs_classreview/methodsnotes_review.csv")
 
 # 2c) Scale (Q9)
 # read in current scalenotes to check for new titles added

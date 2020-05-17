@@ -57,6 +57,10 @@ MaintainOpts,Anthro,and city-level [city 1; city 2]),1
 SoilProtect,Anthro,and city-level [city 1; city 2]),1
 MaintainOpts,Anthro,and structure of the homogenization. the driver in all cases is human preference/selection of vegetation for yards,1
 SoilProtect,Env,Annual Precipitation,1
+ClimReg,Env,annual wind speed,1
+freshWQReg,Env,annual wind speed,1
+Hazards,Env,annual wind speed,1
+SoilProtect,Env,annual wind speed,1
 Food,Bio,aphid abundance,1
 PestPath,Bio,aphid abundance,1
 SoilProtect,Bio,Aphodius beetles,1
@@ -109,7 +113,7 @@ Food,Anthro,chemical pest control); socioeconomics (farmer gender,1
 coastWQReg,Bio,Chlorophyll-a,1
 Food,Bio,Chlorophyll-a,1
 AQReg,Env,Climate,3
-ClimReg,Env,Climate,20
+ClimReg,Env,Climate,21
 coastWQReg,Env,Climate,5
 CulturePsych,Env,Climate,6
 Energy,Env,Climate,2
@@ -142,6 +146,11 @@ Food,Anthro,Crop intensification,1
 ClimReg,Anthro,cultural background,1
 ClimReg,Env,daytime light,1
 SoilProtect,Bio,Deer density,1
+ClimReg,Anthro,deforestation,1
+coastWQReg,Anthro,deforestation,1
+freshWQReg,Anthro,deforestation,1
+MaintainOpts,Anthro,deforestation,1
+Pollination,Anthro,deforestation,1
 ClimReg,Env,DEM,1
 freshWQReg,Env,DEM,1
 SoilProtect,Env,DEM,1
@@ -158,6 +167,11 @@ HabCreate,Env,distance from rivers,1
 SoilProtect,Env,distance from rivers,1
 coastWQReg,Env,distance to baseline),1
 Food,Env,distance to baseline),1
+ClimReg,Env,distance to forest,1
+coastWQReg,Env,distance to forest,1
+freshWQReg,Env,distance to forest,1
+MaintainOpts,Env,distance to forest,1
+Pollination,Env,distance to forest,1
 ClimReg,Anthro,distance to primary paved roads,1
 HabCreate,Anthro,distance to primary paved roads,1
 SoilProtect,Anthro,distance to primary paved roads,1
@@ -170,8 +184,17 @@ SoilProtect,Anthro,distance to secondary roads,1
 ClimReg,Anthro,distance to villages and towns with less than 20000 in habitants,1
 HabCreate,Anthro,distance to villages and towns with less than 20000 in habitants,1
 SoilProtect,Anthro,distance to villages and towns with less than 20000 in habitants,1
+ClimReg,Env,distance to water,1
+coastWQReg,Env,distance to water,1
+freshWQReg,Env,distance to water,1
+MaintainOpts,Env,distance to water,1
+Pollination,Env,distance to water,1
 HabCreate,Anthro,ditching,1
 MaintainOpts,Anthro,ditching,1
+ClimReg,Env,drought (SPEI),1
+freshWQReg,Env,drought (SPEI),1
+Hazards,Env,drought (SPEI),1
+SoilProtect,Env,drought (SPEI),1
 SoilProtect,Bio,earthworms,1
 Food,Bio,Eclosion time of pest,1
 ClimReg,Anthro,ecological rehabilitation,1
@@ -214,8 +237,8 @@ ClimReg,Env,Extreme Events,2
 CulturePsych,Env,Extreme Events,1
 Energy,Env,Extreme Events,1
 Food,Env,Extreme Events,2
-freshWQReg,Env,Extreme Events,1
-Hazards,Env,Extreme Events,1
+freshWQReg,Env,Extreme Events,2
+Hazards,Env,Extreme Events,2
 MaintainOpts,Env,Extreme Events,2
 Materials,Env,Extreme Events,1
 SoilProtect,Env,Extreme Events,1
@@ -318,21 +341,21 @@ MaintainOpts,Env,land cover type,1
 Materials,Env,land cover type,1
 Food,Anthro,land ownership),1
 AQReg,Anthro,Land use change,5
-ClimReg,Anthro,Land use change,29
-coastWQReg,Anthro,Land use change,14
+ClimReg,Anthro,Land use change,31
+coastWQReg,Anthro,Land use change,15
 CulturePsych,Anthro,Land use change,17
 Energy,Anthro,Land use change,3
 Food,Anthro,Land use change,24
-freshWQReg,Anthro,Land use change,12
+freshWQReg,Anthro,Land use change,14
 HabCreate,Anthro,Land use change,24
-Hazards,Anthro,Land use change,6
-MaintainOpts,Anthro,Land use change,6
+Hazards,Anthro,Land use change,7
+MaintainOpts,Anthro,Land use change,7
 Materials,Anthro,Land use change,5
 MedGen,Anthro,Land use change,2
 OceanReg,Anthro,Land use change,1
 PestPath,Anthro,Land use change,15
-Pollination,Anthro,Land use change,14
-SoilProtect,Anthro,Land use change,17
+Pollination,Anthro,Land use change,15
+SoilProtect,Anthro,Land use change,18
 HabCreate,Anthro,Land use change=% Developed land,1
 PestPath,Anthro,Land use change=Landscape homogeneity,1
 Pollination,Anthro,Land use change=Landscape homogeneity,1
@@ -413,8 +436,11 @@ Food,Bio,native bee  diversity (Shannon index),1
 Food,Bio,native bee abundance,1
 Food,Bio,native bee richness,1
 Food,Bio,Natural enemy presences,1
-ClimReg,Env,NDVI,1
-freshWQReg,Env,NDVI,1
+ClimReg,Env,NDVI,2
+coastWQReg,Env,NDVI,1
+freshWQReg,Env,NDVI,2
+MaintainOpts,Env,NDVI,1
+Pollination,Env,NDVI,1
 SoilProtect,Env,NDVI,1
 MaintainOpts,Env,NDWI,1
 Materials,Env,NDWI,1
@@ -444,32 +470,32 @@ Food,Anthro,organic fertilizer,1
 PestPath,Env,organic matter,1
 AQReg,Bio,Other,1
 AQReg,Env,Other,3
-ClimReg,Anthro,Other,9
+ClimReg,Anthro,Other,11
 ClimReg,Bio,Other,9
-ClimReg,Env,Other,16
-coastWQReg,Anthro,Other,7
+ClimReg,Env,Other,18
+coastWQReg,Anthro,Other,8
 coastWQReg,Bio,Other,5
-coastWQReg,Env,Other,11
+coastWQReg,Env,Other,12
 CulturePsych,Anthro,Other,8
 CulturePsych,Bio,Other,2
 CulturePsych,Env,Other,8
 Energy,Anthro,Other,2
 Energy,Bio,Other,1
 Energy,Env,Other,3
-Food,Anthro,Other,9
+Food,Anthro,Other,10
 Food,Bio,Other,14
 Food,Env,Other,20
-freshWQReg,Anthro,Other,5
+freshWQReg,Anthro,Other,7
 freshWQReg,Bio,Other,2
-freshWQReg,Env,Other,6
+freshWQReg,Env,Other,8
 HabCreate,Anthro,Other,10
 HabCreate,Bio,Other,5
 HabCreate,Env,Other,8
-Hazards,Anthro,Other,1
-Hazards,Env,Other,1
-MaintainOpts,Anthro,Other,5
+Hazards,Anthro,Other,2
+Hazards,Env,Other,2
+MaintainOpts,Anthro,Other,6
 MaintainOpts,Bio,Other,1
-MaintainOpts,Env,Other,6
+MaintainOpts,Env,Other,7
 Materials,Anthro,Other,2
 Materials,Bio,Other,2
 Materials,Env,Other,5
@@ -479,12 +505,12 @@ MedGen,Env,Other,1
 PestPath,Anthro,Other,4
 PestPath,Bio,Other,9
 PestPath,Env,Other,10
-Pollination,Anthro,Other,5
-Pollination,Bio,Other,4
-Pollination,Env,Other,8
-SoilProtect,Anthro,Other,7
+Pollination,Anthro,Other,6
+Pollination,Bio,Other,5
+Pollination,Env,Other,9
+SoilProtect,Anthro,Other,8
 SoilProtect,Bio,Other,9
-SoilProtect,Env,Other,17
+SoilProtect,Env,Other,18
 SoilProtect,Env,Other(soils)=elevation,1
 SoilProtect,Env,Other(soils)=rainfall erosivity,1
 SoilProtect,Env,Other(soils)=slope,1
@@ -523,7 +549,13 @@ HabCreate,Bio,plant-soil feedbacks,1
 SoilProtect,Bio,plant-soil feedbacks,1
 HabCreate,Env,PO4,1
 MaintainOpts,Env,PO4,1
+ClimReg,Anthro,policy change (‘Grain for Green Program'),1
+Food,Anthro,policy change (‘Grain for Green Program'),1
+freshWQReg,Anthro,policy change (‘Grain for Green Program'),1
+Hazards,Anthro,policy change (‘Grain for Green Program'),1
+SoilProtect,Anthro,policy change (‘Grain for Green Program'),1
 Food,Bio,Pollination dependence,1
+Pollination,Bio,pollinator richness,1
 coastWQReg,Anthro,pollution,1
 Materials,Anthro,population density,1
 ClimReg,Anthro,Population growth,4
@@ -606,19 +638,21 @@ freshWQReg,Anthro,silviculture practices (as the type of management),1
 SoilProtect,Anthro,silviculture practices (as the type of management),1
 HabCreate,Bio,Single species polychaete (worm) that lives in sediment and eats seeds (not described as an service provider in the paper so didn't record it as one),1
 ClimReg,Env,Site slope (inclination),1
-ClimReg,Env,slope,2
-coastWQReg,Env,slope,2
+ClimReg,Env,slope,3
+coastWQReg,Env,slope,3
 CulturePsych,Env,slope,2
 Food,Env,slope,2
+freshWQReg,Env,slope,1
 HabCreate,Env,slope,2
-MaintainOpts,Env,slope,2
+MaintainOpts,Env,slope,3
 Materials,Env,slope,2
+Pollination,Env,slope,2
 SoilProtect,Env,slope,5
-coastWQReg,Env,Slope,2
+coastWQReg,Env,Slope,3
 CulturePsych,Env,Slope,2
 Food,Env,Slope,2
 Materials,Env,Slope,2
-Pollination,Env,Slope,1
+Pollination,Env,Slope,2
 SoilProtect,Env,Slope,5
 SoilProtect,Env,slope steepness,1
 MaintainOpts,Env,snow water equivalent,1
@@ -688,7 +722,15 @@ SoilProtect,Env,topographic position,1
 ClimReg,Env,topographic wetness index,1
 HabCreate,Env,topographic wetness index,1
 SoilProtect,Env,topographic wetness index,1
-ClimReg,Env,topography,1
+ClimReg,Env,topography,2
+coastWQReg,Env,topography,1
+freshWQReg,Env,topography,1
+MaintainOpts,Env,topography,1
+Pollination,Env,topography,1
+ClimReg,Env,topology,1
+freshWQReg,Env,topology,1
+Hazards,Env,topology,1
+SoilProtect,Env,topology,1
 coastWQReg,Env,total N,1
 Food,Env,total N,1
 PestPath,Env,total N,1
@@ -720,6 +762,11 @@ SoilProtect,Bio,vegetation basal gap,1
 SoilProtect,Bio,vegetation canopy gap,1
 SoilProtect,Env,vegetation cover,2
 SoilProtect,Env,Vegetation cover,2
+ClimReg,Bio,vegetation cover ,1
+Food,Bio,vegetation cover ,1
+freshWQReg,Bio,vegetation cover ,1
+Hazards,Bio,vegetation cover ,1
+SoilProtect,Bio,vegetation cover ,1
 ClimReg,Bio,vegetation type,1
 coastWQReg,Anthro,visible human impacts around the channel,1
 HabCreate,Anthro,visible human impacts around the channel,1

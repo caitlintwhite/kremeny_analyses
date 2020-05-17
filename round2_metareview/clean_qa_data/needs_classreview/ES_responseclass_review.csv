@@ -71,6 +71,7 @@ MaintainOpts,Biodiversity,0,1,0,0
 CulturePsych,biodiversity appreciation,0,1,0,0
 Pollination,biodiversity composite score,0,0,0,1
 CulturePsych,biodiversity condition,0,1,0,0
+MaintainOpts,Biodiversity index,0,0,0,1
 HabCreate,biodiversity loss,0,0,0,1
 MaintainOpts,Biodiversity of seedlings,0,0,0,1
 HabCreate,biodiversity protection,1,1,0,0
@@ -345,6 +346,7 @@ ClimReg,GPP,0,0,1,0
 Food,grain production,0,0,1,0
 Food,Grain production,0,1,0,0
 Food,grain weight (tonnes per hectare per plot),0,0,0,1
+Food,grain yield,0,0,1,0
 CulturePsych,grass for hay,0,0,0,1
 Food,grass nutritional value,0,0,0,1
 CulturePsych,gravimetric soil water,0,0,0,1
@@ -384,6 +386,7 @@ Pollination,Hummingbird movement,0,0,0,1
 Energy,hydro-energy potential,0,1,0,0
 freshWQReg,Hydrologic function score (rangeland health assessment),0,0,0,1
 freshWQReg,Hydrologic regime,1,0,0,0
+freshWQReg,hydrological regulation (rainfall storage),0,0,0,1
 Energy,hydropower,0,0,0,1
 SoilProtect,impact intensity (tons of soil),0,1,0,0
 MaintainOpts,index of rarity,1,0,0,0
@@ -491,6 +494,7 @@ coastWQReg,NO3-N concentrations,1,0,0,0
 CulturePsych,noise reduction,0,1,0,0
 ClimReg,NPP,0,2,0,0
 Food,NPP,0,1,0,0
+ClimReg,NPP),0,0,0,1
 PestPath,number of borers,0,0,1,0
 Food,Number of cattle per hectare,0,0,0,1
 MaintainOpts,number of invertabrates,0,0,0,1
@@ -615,7 +619,7 @@ PestPath,pollinator ESP abundance,0,0,0,1
 Pollination,pollinator ESP abundance,0,0,0,1
 Pollination,pollinator evenness,0,0,0,1
 HabCreate,Pollinator habitat use,0,1,0,0
-Pollination,pollinator richness,0,0,0,1
+Pollination,pollinator richness,0,0,0,2
 Pollination,Pollinator richness,0,0,0,1
 Pollination,pollinator species composition,0,0,0,1
 Pollination,pollinator species richness,0,0,0,1
@@ -668,6 +672,7 @@ Food,quantity of food,0,1,0,0
 PestPath,ranchers' assessment of effectiveness of invasive species control,0,0,1,0
 CulturePsych,range farm,0,0,1,0
 Food,range farm,0,0,1,0
+freshWQReg,Rates of water infiltration into soil,0,0,0,1
 freshWQReg,rates of water uptake,0,0,0,1
 PestPath,ratio of aphid growth with and without predators,0,1,0,0
 Materials,Raw material,1,1,0,0
@@ -722,6 +727,7 @@ Food,salmon angling,0,1,0,0
 Food,salmon total run,0,1,0,0
 SoilProtect,Sand fixation,0,0,1,0
 Materials,sand/gravel companies and production,0,0,0,1
+Hazards,sandstorm prevention,0,1,0,0
 freshWQReg,sap flow,0,0,0,1
 CulturePsych,sea turtle and shark biomass,0,1,0,0
 Food,seafood yields,0,0,0,1
@@ -776,7 +782,9 @@ SoilProtect,soil C:N,1,0,0,0
 ClimReg,soil carbon,0,5,0,3
 SoilProtect,soil carbon,0,2,0,1
 ClimReg,soil carbon pool,0,1,0,1
+ClimReg,Soil carbon stocks,0,1,0,0
 ClimReg,soil carbon storage,1,0,0,0
+coastWQReg,Soil chemical quality index,0,0,0,1
 SoilProtect,Soil community composition,0,1,0,0
 SoilProtect,soil conductivity,1,0,0,0
 SoilProtect,soil conservation,0,2,0,0
@@ -817,7 +825,7 @@ SoilProtect,Soil Protection,0,1,0,0
 SoilProtect,Soil quality,0,1,0,0
 ClimReg,soil respiration,1,0,0,0
 SoilProtect,soil respiration rate,1,1,0,0
-SoilProtect,soil retention,0,1,0,0
+SoilProtect,soil retention,0,1,0,1
 SoilProtect,Soil retention,1,2,1,0
 SoilProtect,soil stability indicator rate,0,1,0,0
 CulturePsych,soil temprature,0,0,0,1
@@ -927,6 +935,8 @@ CulturePsych,Urban green space,0,1,0,0
 ClimReg,urease activity,1,0,0,0
 PestPath,vector mosquito sex ratio,0,0,0,1
 PestPath,vector mosquitoe abundance,0,0,0,1
+ClimReg,vegetation carbon sequestration (net primary productivity,0,0,0,1
+ClimReg,Vegetation carbon stocks,0,1,0,0
 ClimReg,vegetation cover,0,0,0,1
 Energy,vegetation cover,0,0,0,1
 HabCreate,vegetation cover,0,0,1,0
