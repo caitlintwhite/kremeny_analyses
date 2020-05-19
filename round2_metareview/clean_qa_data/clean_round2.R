@@ -59,7 +59,9 @@ headers <- read.csv(list.files("round2_metareview/data/raw", full.names = T), na
 headerLUT <- read.csv("round2_metareview/data/headersLUT.csv", na.strings = na_vals)
 
 # original round 2 assignment
-original <- read.csv("round1_exclusion/output/review_assignments_round2_grpdsubset.csv")
+original <- read.csv("round1_exclusion/output/review_assignments_round2_grpdsubset.csv", na.strings = na_vals)
+# excluded papers from round 1 (to compile with excluded papers from round 2 and write out)
+exclude_r1 <- read.csv("round1_exclusion/output/exclude_round1.csv", na.strings = na_vals)
 
 # function for breaking out comma separated answers
 splitcom <- function(df, keepcols = c("Title", "answer"), splitcol = "answer"){
@@ -85,12 +87,14 @@ splitcom <- function(df, keepcols = c("Title", "answer"), splitcol = "answer"){
 
 # read in reviewer revisions/comments/corrections
 corrections <- list.files("round2_metareview/data/reviewer_revisions", full.names = T)
-IS <- read.csv(corrections[grep("IS", corrections)], na.strings = na_vals)
+IScorrections <- read.csv(corrections[grep("IS", corrections)], na.strings = na_vals)
 excludecorrections <- read.csv(corrections[grep("exclude", corrections)], na.strings = na_vals)
 systemcorrections <- read.csv(corrections[grep("ecosystem_class", corrections)], na.strings = na_vals)
+methodscorrections <- read.csv(corrections[grep("model", corrections)], na.strings = na_vals)
 biodrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Bio")
 anthdrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Anthro")
 envdrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Environ")
+
 
 
 # -- RM JUNK ROWS + ID DOUBLE-REVIEWED PAPERS -----
@@ -244,8 +248,6 @@ cultural <- c("CulturePsych")
 # specify ES field as factor for plotting
 ESlevels <- c(provisioning, regulating, supporting, cultural)
 headerLUT$ES <- factor(headerLUT$ES, levels = rev(ESlevels))
-
-
 
 
 
@@ -436,6 +438,9 @@ rm(KG_outstanding, rTim4KG, Tim_remain)
 # x) at some point will need step to add back in re-reviewed info
 
 
+# clean up work environment
+rm(stat_byname, stat_byrev, effort, supporting, regulating, provisioning, cultural, needs_match, forAK)
+
 ## 1) Check exclusion -----
 # look for "exclude" in final notes if answered before Q3b and c created
 prelim$Q24[grep("exclud", prelim$Q24)] # 3 cases so far (4 returns):
@@ -536,7 +541,7 @@ dplyr::select(prelimlong1b, ResponseId, Title, exclude) %>%
        title = paste("Round 2 data QA, Q3 vs. final notes:\nExclude paper? (arrayed by # of reviewers per paper),", Sys.Date())) +
   facet_wrap(~reviews)
 # I think either way, whether paper is a maybe exclude or definite exclude, answers that don't agree should be flagged for consesus among reviewers
-ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q3excludepaper.pdf", width = 4, height = 4, units = "in", scale = 1.5)
+# ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q3excludepaper.pdf", width = 4, height = 4, units = "in", scale = 1.5)
 
 # write out potential exclusion set for LD to judge
 ## read in current to indicate whether LD might have already reviewed
@@ -625,11 +630,32 @@ q4_qa %>%
   coord_flip() +
   theme(axis.text.y = element_blank())
 # write out for class review
-ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q4ecosystemnotes.pdf", width = 5, height = 4, units = "in", scale = 1.5)
+#ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q4ecosystemnotes.pdf", width = 5, height = 4, units = "in", scale = 1.5)
 # write out ecosystem notes for review
 ## change NA's to blanks so easier for reading in Excel
-q4_qa[is.na(q4_qa)] <- ""
+#q4_qa[is.na(q4_qa)] <- ""
 #write_csv(q4_qa, "round2_metareview/clean_qa_data/needs_classreview/ecosystemnotes_review.csv")
+
+
+# also pull anything that is potentially riparian/wetland
+# look at potential wetland/riparian papers
+wetlands <- subset(original, grepl("basin|catchm|fen|riparian|wetland|meadow|watershed", Abstract, ignore.case = T))
+# are these papers in q4_qa? or how were they coded?
+summary(wetlands$Title %in% q4_qa$Title) #4 are there
+wetland_abstracts <- subset(prelimlong1b, Title %in% wetlands$Title) %>%
+  # add col for double rev
+  group_by(Title) %>%
+  mutate(doublerev = length(unique(ResponseId))>1) %>%
+  ungroup() %>%
+  filter(qnum == "Q4" & exclude != "Exclude") %>%
+  mutate(assess_date = Sys.Date()) %>%
+  dplyr::select(assess_date, doublerev, ResponseId:ncol(.)) %>%
+  # drop anything LD excluded
+  filter(!Title %in% excludecorrections$Title[excludecorrections$exclude_LD]) %>%
+  arrange(Title)
+
+# write out
+write_csv(wetland_abstracts, "round2_metareview/clean_qa_data/needs_classreview/wetland_abstracts.csv")
 
 
 # 2b) Methods (Q6)
@@ -762,7 +788,7 @@ scalenotes <- prelimlong1b %>%
 # make all text so no "NA" in csv
 scalenotes[is.na(scalenotes)] <- ""  
 # write out for review
-write_csv(scalenotes, "round2_metareview/clean_qa_data/needs_classreview/scalenotes_review.csv")
+# write_csv(scalenotes, "round2_metareview/clean_qa_data/needs_classreview/scalenotes_review.csv")
 
 
 
@@ -844,7 +870,7 @@ kremennotes <-  prelimlong1b %>%
 # make all text so no "NA" in csv
 kremennotes[is.na(kremennotes)] <- ""  
 # write out for review
-write_csv(kremennotes, "round2_metareview/clean_qa_data/needs_classreview/kremennotes_review.csv")
+# write_csv(kremennotes, "round2_metareview/clean_qa_data/needs_classreview/kremennotes_review.csv")
 
 
 # visualize kremen topics for QA
@@ -858,8 +884,8 @@ ggplot(kremennotes, aes(MultiScale, fill = as.factor(KT_Scale))) +
   scale_fill_grey(name = "KT4 (scale) checked?", labels = c("0" = "No", "1" = "Yes")) +
   theme(legend.position = "bottom") +
   facet_wrap(~TimeTrends)
-ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_kremenscale.pdf",
-       width = 6.5, height = 6, units = "in", scale = 1.2)
+# ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_kremenscale.pdf",
+#        width = 6.5, height = 6, units = "in", scale = 1.2)
 
 
 # of those where ESP selected in Biotic Driver, how did they answer ESP_type?
@@ -880,8 +906,8 @@ mutate(kremennotes, ESP_type = str_replace_all(ESP_type, " \\[e.g.,? ([:alpha:]|
   theme(legend.position = c(0.99,0.99),
         legend.justification = c(1,1)) +
   facet_wrap(~grepl("Service Provider", Driver_Bio), nrow = 2, scale = "free_y", labeller= labeller('grepl("Service Provider", Driver_Bio)' = c("FALSE" = "Q12 Biotic Driver: No ESP", "TRUE"= "Q12 Biotic Driver: Yes ESP")))
-ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q14kremenESPs.pdf",
-       width = 8, height = 5, units = "in", scale = 1.2)
+# ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_q14kremenESPs.pdf",
+#        width = 8, height = 5, units = "in", scale = 1.2)
 
 
 # pull ESP
@@ -912,7 +938,7 @@ noKremen <- kremennotes %>%
 # change any NAs to "
 noKremen[is.na(noKremen)] <- ""
 # write out
-write_csv(noKremen, "round2_metareview/clean_qa_data/needs_classreview/KTnone_check.csv")
+#write_csv(noKremen, "round2_metareview/clean_qa_data/needs_classreview/KTnone_check.csv")
 
 
 # 1) If ESP checked in Biotic, ESP checked in Kremen
@@ -937,7 +963,7 @@ ESPcheck <- dplyr::select(kremennotes, assess_date, exclude:ESP_type, KT_Communi
 # change any NAs to "
 ESPcheck[is.na(ESPcheck)] <- ""
 # write out
-write_csv(ESPcheck, "round2_metareview/clean_qa_data/needs_classreview/KTesp_check.csv")
+#write_csv(ESPcheck, "round2_metareview/clean_qa_data/needs_classreview/KTesp_check.csv")
 
 
 # 2) Keyword search variables for Community structure
@@ -963,7 +989,7 @@ structurecheck <- dplyr::select(kremennotes, assess_date:KT_Community_structure)
 # convert NAs to blank cells
 structurecheck[is.na(structurecheck)] <- ""
 # write out for IS
-write_csv(structurecheck, "round2_metareview/clean_qa_data/needs_classreview/KTstructure_check.csv")
+#write_csv(structurecheck, "round2_metareview/clean_qa_data/needs_classreview/KTstructure_check.csv")
 
 
 # 3) If environmental variables checked or listed, Environment checked
@@ -980,7 +1006,7 @@ envcheck <- dplyr::select(kremennotes, assess_date, exclude:Response, KT_Environ
 # convert NAs to blank cells
 envcheck[is.na(envcheck)] <- ""
 # write out for IS
-write_csv(envcheck, "round2_metareview/clean_qa_data/needs_classreview/KTenvironment_check.csv")
+#write_csv(envcheck, "round2_metareview/clean_qa_data/needs_classreview/KTenvironment_check.csv")
 
 
 # 4) If multiple scales checked (time or space), Scale checked
@@ -1155,6 +1181,146 @@ write_csv(alldrivers_summary, "round2_metareview/clean_qa_data/needs_classreview
 
 
 # -- APPLY CORRECTIONS -----
+# clean up work environment
+rm(current_ecosystemnotes, current_kremennotes, current_methodsnotes, current_possibleexclude, current_scalenotes, exclude_notes, exclude_notes_ids, maybe_exclude_ids, maybe_exclude_notes, possibleexclude_df)
+
+# start with exclusions, because if paper excluded then other corrections are moot
+## notes from Laura on exclusions (email from LD to CTW 5/13/20):
+# "I've also added the papers that Nick has ruled out based on the review of the methods questions at the end."
+# "Thanks, Nick, for providing a second opinion on some of these!"
+# "So, exclude based on the column exclude_LD == TRUE. Could we also track the papers that are Q1 in the column Reason_LD?"
+# "I think we will want to add these to the ones that were excluded based on the Qualtrics survey and the round 1 abstract review to make a figure or report the number to % of studies that stopped at BD."
+# > CTW thought: maybe best to write out csv of all excluded papers, noted if excluded in R1 or R2, and reason why.. then can make figures or summary tables from that DF
+
+# notes from Nick on his excluded papers: 
+# Hyvonen 2008- had listed “other” as the only choice on the type of methods, and when I looked it over it was too much of a review.
+# Alvarez-Filipe 2009- The second was a meta analysis that should have been filtered out in the first round
+# Elbakidze 2017- The last one was pretty much a methods paper.
+## > CTW: so all should be excluded based on "review/metaanalysis/methods", which is equivalent to LD's Q3
+
+# after address exclusions, then apply IS corrections
+# then others in order of survey question number...
+
+
+# 1. Correct exclusions (LD + ND) -----
+# first, assign ResponseID and reason_LD to Nick's papers in correction set (one of Nick's titles doesn't match [case letter issue])
+
+for(i in which(is.na(excludecorrections$ResponseId))){
+  # infill responseID
+  excludecorrections$ResponseId[i] <- unique(prelimlong1b$ResponseId[casefold(prelimlong1b$Title) %in% with(excludecorrections, casefold(Title[i]))])
+  # correct title
+  excludecorrections$Title[i] <- unique(prelimlong1b$Title[casefold(prelimlong1b$Title) %in% with(excludecorrections, casefold(Title[i]))])
+  # infill reason
+  excludecorrections$Reason_LD[i] <- "Q3 - Nick et al. review" 
+}
+# clean up "TRUE" in reason_LD, it's not a reason..
+excludecorrections$Reason_LD[excludecorrections$Reason_LD == "TRUE"] <- NA
+# add missing reason to Check dam paper (Nick's review)
+excludecorrections$Reason_LD[grep("Check dam", excludecorrections$Title)] <- "No EF/ES, should be excluded in R1"
+# fill down reasons if exclude_LD == TRUE
+excludecorrections <- excludecorrections %>%
+  arrange(Reason_LD) %>%
+  group_by(Title) %>%
+  fill(Reason_LD) %>%
+  ungroup() %>%
+  arrange(Title)
+  
+
+# pull out any to exclude based on LD and ND review by their responseID and Title
+excludeLD <- with(excludecorrections, ResponseId[exclude_LD])
+keepLD <- excludecorrections$ResponseId[!excludecorrections$exclude_LD]
+# also grab straightforward excluded papers (didn't need LD's review), combine with 
+exclude_qualtrics <- unique(prelimlong1b$ResponseId[prelimlong1b$exclude == "Exclude" & !prelimlong1b$Title %in% excludecorrections$Title])
+# pull data for titles to exclude
+exclude_r2 <- subset(prelimlong1b, ResponseId %in% exclude_qualtrics) %>% #, excludeLD
+  #keep only qnum = q3
+  filter(qnum == "Q3" & !is.na(answer)) %>%
+  # add reason for exclusion
+  mutate(reviewer_exclusion = ifelse(exclude == "Exclude" & answer == "Yes", abbr, NA),
+  # add exclude LD and reason LD for binding with LD's reviewed papers
+  review_LD = FALSE, exclude_LD = NA, Reason_LD = NA)
+length(unique(exclude_r2$Title))
+
+exclude_r2LD <- subset(prelimlong1b, ResponseId %in% excludeLD) %>%
+  filter(qnum == "Q3") %>%
+  # join LD's reason for exclusion
+  left_join(distinct(excludecorrections[c("Title","exclude_LD", "Reason_LD")])) %>%
+  # capture which question entered yes by reviewer for comparison
+  mutate(reviewer_exclusion = ifelse(exclude == "Exclude" & answer == "Yes", abbr, NA),
+         review_LD = TRUE)
+length(unique(exclude_r2LD$Title))
+
+# bind all
+r2excluded_final <- rbind(exclude_r2, exclude_r2LD[names(exclude_r2)]) %>%
+  # select title, reason, and how/who excluded
+  dplyr::select(Title, reviewer_exclusion:ncol(.)) %>%
+  mutate(exclusion_reason = ifelse(!is.na(reviewer_exclusion), reviewer_exclusion, Reason_LD),
+  # recode LD's reasons to match abbreviated reasons
+  exclusion_reason = ifelse(grepl("^Q3|framework", exclusion_reason, ignore.case = T), "ReviewOnly",
+                            ifelse(grepl("^Q2|value|social|perception", exclusion_reason, ignore.case = T), "SocialOnly",
+                                   ifelse(grepl("Q1", exclusion_reason), "BiodivOnly", exclusion_reason)))) %>%
+  filter(!is.na(exclusion_reason) & !exclusion_reason == "by Q3") %>%
+  mutate_all(trimws) %>%
+  dplyr::select(-reviewer_exclusion) %>%
+  distinct() %>%
+  arrange(Title) %>%
+  # flag anything that doesn't have agreement in exclusion reasons
+  group_by(Title) %>%
+  mutate(count_reasons = length(exclusion_reason)) %>%
+  ungroup()
+
+# write out excluded papers
+write_csv(r2excluded_final, "round2_metareview/data/intermediate/round2_excluded.csv")
+
+# retain kept papers in prelimlong_1c
+prelimlong1c <- filter(prelimlong1b, !Title %in% unique(r2excluded_final$Title))
+# check LD's kept papers in here
+summary(keepLD %in% prelimlong1c$ResponseId) #yes
+# clean up environment
+rm(exclude_r2LD, excludeLD, exclude_r2, keepLD, exclude_qualtrics, excludecorrections)
+
+
+# 2. IS corrections (to her answers) ----
+# only retain what needs to be corrected
+IScorrections <- subset(IScorrections, !is.na(EmailNoteToCaitlin)) %>%
+  dplyr::select(Title, QualtricsNotes:ncol(.))
+# list notes
+IScorrections$EmailNoteToCaitlin
+# [1] "didn't have a Global Freshwater option but that would be the most suitable as its more of a conceptual modeling diatom science to ES paper"
+## > CTW: Nothing to do about this. Freshwater selected, and that's the best fit
+# [2] "q6 should have been observational"
+## > CTW will change
+# [3] "should have selected proxy for EF"
+## > CTW will change
+
+# [2] find Q6 answer and update
+prelimlong1c$answer[prelimlong1c$abbr == "Methods" & prelimlong1c$Title == IScorrections$Title[2]] <- "Observational (Includes data observed in situ OR via remote sensing, if used directly)"
+# [3] update proxy answer
+prelimlong1c$answer[prelimlong1c$abbr == "Yclass" & !is.na(prelimlong1c$answer) & prelimlong1c$Title == IScorrections$Title[3]]
+unique(prelimlong1c$answer[prelimlong1c$abbr == "Yclass"]) # there is no "Proxy for EF".. emailed IS
+
+
+
+# 3. Ecosystem correction (IS + LD) -----
+
+# use q4_qa data frame.. and a for loop
+
+View(q4_qa)
+prelimlong1c
+
+
+# 4. Methods corrections (AK + ND) -----
+# rule (from AK):
+# The column I added is "Changed?" 1 if the observational column was changed and NA if not.
+# The rule was: if a paper selected model/data simulation but used existing data (e.g. fisheries records, LTER) then it should not select observational too. 
+# Observational should only be checked if they collected data for that study.
+
+# prep methods correction file to apply
+methodscorrections <- dplyr::select(methodscorrections, ResponseId, doublerev, Title, GenInfo:Other, Changed) %>%
+  arrange(Title)
+
+
+# 4. Driver corrections (KG + SDJ) ----
 
 
 # -- CONDENSE DOUBLE REVIEWED ----
@@ -1186,6 +1352,8 @@ dplyr::select(doubleprelim, Title, abbr, same_answer) %>%
 
 
 # -- WRITE OUT CLEANED L1 DATASET FOR POST-PROCESSING AND ANALYSIS -----
+# write out data as it's ready for others to work on.. (e.g. Q12 matrix will probably come later)
+
 
 
 
