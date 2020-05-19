@@ -640,9 +640,11 @@ q4_qa %>%
 # also pull anything that is potentially riparian/wetland
 # look at potential wetland/riparian papers
 wetlands <- subset(original, grepl("basin|catchm|fen|riparian|wetland|meadow|watershed", Abstract, ignore.case = T))
+# also screen by whether people selected coastal or freshwater for the ecosystem
+watertitles <- subset(prelimlong1b, qnum == "Q4" & grepl("Coastal|Freshwater", answer))
 # are these papers in q4_qa? or how were they coded?
 summary(wetlands$Title %in% q4_qa$Title) #4 are there
-wetland_abstracts <- subset(prelimlong1b, Title %in% wetlands$Title) %>%
+wetland_abstracts <- subset(prelimlong1b, Title %in% unique(c(wetlands$Title, watertitles$Title))) %>%
   # add col for double rev
   group_by(Title) %>%
   mutate(doublerev = length(unique(ResponseId))>1) %>%
@@ -656,6 +658,7 @@ wetland_abstracts <- subset(prelimlong1b, Title %in% wetlands$Title) %>%
 
 # write out
 write_csv(wetland_abstracts, "round2_metareview/clean_qa_data/needs_classreview/wetland_abstracts.csv")
+
 
 
 # 2b) Methods (Q6)
