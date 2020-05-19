@@ -1,7 +1,7 @@
 Title,review_LD,exclude_LD,Reason_LD,exclusion_reason,count_reasons
 'Wild' in the city context: Do relative wild areas offer opportunities for urban biodiversity?,FALSE,NA,NA,BiodivOnly,1
 "A balancing act in urban social-ecology: human appreciation, ponds and dragonflies",FALSE,NA,NA,SocialOnly,1
-A bottom-up approach to map land covers as potential green infrastructure hubs for human well-being in rural settings: A case study from Sweden,TRUE,TRUE,Nick et al. methods review,Nick et al. methods review,1
+A bottom-up approach to map land covers as potential green infrastructure hubs for human well-being in rural settings: A case study from Sweden,TRUE,TRUE,Q3 - Nick review,ReviewOnly,1
 A framework to quantify the strength of ecological links between an environmental stressor and final ecosystem services,TRUE,TRUE,Q3 - Framework/method,ReviewOnly,1
 A global quantitative synthesis of local and landscape effects on wild bee pollinators in agroecosystems,FALSE,NA,NA,ReviewOnly,1
 Accounting for residential propagule pressure improves prediction of urban plant invasion,TRUE,TRUE,Q1,BiodivOnly,1
@@ -46,7 +46,7 @@ Exploring Current and Future Situation of Mediterranean Silvopastoral Systems: C
 Exploring subjective well-being and ecosystem services perception along a rural-urban gradient in the high Andes of Ecuador,FALSE,NA,NA,SocialOnly,1
 Farmers show complex and contrasting perceptions on ecosystem services and their management,FALSE,NA,NA,SocialOnly,1
 Fine-scale environmental heterogeneities of tidal creeks affect distribution of crab burrows in a Chinese salt marsh,TRUE,TRUE,Q1,BiodivOnly,1
-Flattening of Caribbean coral reefs: region-wide declines in architectural complexity,TRUE,TRUE,Nick et al. methods review,Nick et al. methods review,1
+Flattening of Caribbean coral reefs: region-wide declines in architectural complexity,TRUE,TRUE,Q3 - Nick review,ReviewOnly,1
 Forest Landscape Restoration in the Drylands of Latin America,FALSE,NA,NA,ReviewOnly,1
 From species to communities: the signature of recreational use on a tropical river ecosystem,FALSE,NA,NA,BiodivOnly,1
 Functional ecology and imperfect detection of species,FALSE,NA,NA,ReviewOnly,1
