@@ -31,7 +31,7 @@ na_vals <- c("NA", "NaN", "", " ", ".", NA, NaN)
 theme_set(theme_classic())
 
 # read in latest metareview data
-rawdat <- read.csv("round2_metareview/data/cleaned/prelim_singlereview.csv", na.strings = na_vals)
+rawdat <- read.csv("round2_metareview/data/intermediate/round2_prelim_singlereview.csv", na.strings = na_vals)
 # check read in as expected
 glimpse(rawdat)
 
