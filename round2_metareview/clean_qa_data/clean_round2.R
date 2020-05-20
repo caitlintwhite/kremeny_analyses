@@ -1087,7 +1087,7 @@ response_summary <- dplyr::select(responses, ResponseId, ES, Response, Yclass1, 
   rename(EcoServ = ES) %>%
   spread(answer, typefreq, fill = 0) %>%
   arrange(Response, EcoServ)
-  
+
 
 # change NAs to blanks for easier viewing in Excel
 responses[is.na(responses)] <- ""
@@ -1106,8 +1106,8 @@ drivers <- subset(q12df, abbr %in% c("Driver", "OtherDriver")) %>%
          # if "Other" not checked, pull whatever ES's are filled out for that Driver Group
          ## > this will pull ES's for honest Other Drivers where "Other" not checked (accident) but also where reviewer used "Other" as notes and not truly just for Other Drivers
          SingleES = ifelse(nchar(OtherES) == 0 & abbr == "OtherDriver", str_flatten(unique(ES[abbr == "Driver"]), collapse = ", "), OtherES)) %>%
-         ## > if other not checked and no other drivers entered, there will be no ES pulled
-         ## > this could be from honest error (forgot to check "Other"), but also unwanted human error (e.g. entered other driver in wrong box, or used other field for notes)  
+  ## > if other not checked and no other drivers entered, there will be no ES pulled
+  ## > this could be from honest error (forgot to check "Other"), but also unwanted human error (e.g. entered other driver in wrong box, or used other field for notes)  
   ungroup() %>%
   mutate(Other_checked = OtherES == SingleES)
 
@@ -1121,7 +1121,7 @@ stddrivers <- subset(drivers, abbr == "Driver") %>%
   splitcom(names(.), splitcol = "answer") %>%
   # drop enumeration
   dplyr::select(-num)
-  
+
 
 # prep other drivers to join with std drivers in wide format
 # separate problem records from the rest
@@ -1170,7 +1170,7 @@ alldrivers <- rbind(otherdrivers, otherdrivers_errors[names(otherdrivers)]) %>%
   mutate(OtherEntry = ifelse((answer != "Other" & abbr == "Driver") | abbr == "OtherDriver", NA, OtherEntry)) %>%
   # not sure the best way to arrange this so most helpful to reviewers..
   arrange(Title, ES,  Init, Group, abbr)
-  
+
 
 # summarize drivers for review, similar to response summary
 # just ES, driver, and frequency
@@ -1234,7 +1234,7 @@ excludecorrections <- excludecorrections %>%
   fill(Reason_LD) %>%
   ungroup() %>%
   arrange(Title)
-  
+
 
 # pull out any to exclude based on LD and ND review by their responseID and Title
 excludeLD <- with(excludecorrections, ResponseId[exclude_LD])
@@ -1247,8 +1247,8 @@ exclude_r2 <- subset(prelimlong1b, ResponseId %in% exclude_qualtrics) %>% #, exc
   filter(qnum == "Q3" & !is.na(answer)) %>%
   # add reason for exclusion
   mutate(reviewer_exclusion = ifelse(exclude == "Exclude" & answer == "Yes", abbr, NA),
-  # add exclude LD and reason LD for binding with LD's reviewed papers
-  review_LD = FALSE, exclude_LD = NA, Reason_LD = NA)
+         # add exclude LD and reason LD for binding with LD's reviewed papers
+         review_LD = FALSE, exclude_LD = NA, Reason_LD = NA)
 length(unique(exclude_r2$Title))
 
 exclude_r2LD <- subset(prelimlong1b, ResponseId %in% excludeLD) %>%
@@ -1265,10 +1265,10 @@ r2excluded_final <- rbind(exclude_r2, exclude_r2LD[names(exclude_r2)]) %>%
   # select title, reason, and how/who excluded
   dplyr::select(Title, reviewer_exclusion:ncol(.)) %>%
   mutate(exclusion_reason = ifelse(!is.na(reviewer_exclusion), reviewer_exclusion, Reason_LD),
-  # recode LD's reasons to match abbreviated reasons
-  exclusion_reason = ifelse(grepl("^Q3|framework", exclusion_reason, ignore.case = T), "ReviewOnly",
-                            ifelse(grepl("^Q2|value|social|perception", exclusion_reason, ignore.case = T), "SocialOnly",
-                                   ifelse(grepl("Q1", exclusion_reason), "BiodivOnly", exclusion_reason)))) %>%
+         # recode LD's reasons to match abbreviated reasons
+         exclusion_reason = ifelse(grepl("^Q3|framework", exclusion_reason, ignore.case = T), "ReviewOnly",
+                                   ifelse(grepl("^Q2|value|social|perception", exclusion_reason, ignore.case = T), "SocialOnly",
+                                          ifelse(grepl("Q1", exclusion_reason), "BiodivOnly", exclusion_reason)))) %>%
   filter(!is.na(exclusion_reason) & !exclusion_reason == "by Q3") %>%
   mutate_all(trimws) %>%
   dplyr::select(-reviewer_exclusion) %>%
@@ -1282,8 +1282,18 @@ r2excluded_final <- rbind(exclude_r2, exclude_r2LD[names(exclude_r2)]) %>%
 # write out excluded papers
 write_csv(r2excluded_final, "round2_metareview/data/intermediate/round2_excluded.csv")
 
+
 # retain kept papers in prelimlong_1c
-prelimlong1c <- filter(prelimlong1b, !Title %in% unique(r2excluded_final$Title))
+prelimlong1c <- filter(prelimlong1b, !Title %in% unique(r2excluded_final$Title)) %>%
+  # create clean answer column for storing cleaned answers and qa note
+  mutate(clean_answer = answer,
+         qa_note = NA) %>%
+  dplyr::select(StartDate:answer, clean_answer, fullquestion:ncol(.)) %>%
+  # change any "Yes"s in Q3 to No for clean answer since allowed by LD
+  mutate(qa_note = ifelse(answer == "Yes" & qnum == "Q3", "Keep paper, reviewed by LD", qa_note),
+         clean_answer = ifelse(answer == "Yes" & qnum == "Q3", "No", clean_answer)) %>%
+  # drop excluded cols
+  dplyr::select(-c(exclude, exclude_notes))
 # check LD's kept papers in here
 summary(keepLD %in% prelimlong1c$ResponseId) #yes
 # clean up environment
@@ -1291,8 +1301,6 @@ rm(exclude_r2LD, excludeLD, exclude_r2, keepLD, exclude_qualtrics, excludecorrec
 
 
 # 2. IS corrections (to her answers) ----
-prelimlong1c <- mutate(prelimlong1c, clean_answer = answer) %>%
-  dplyr::select(StartDate:answer, clean_answer, fullquestion:ncol(.))
 # only retain what needs to be corrected
 IScorrections <- subset(IScorrections, !is.na(EmailNoteToCaitlin)) %>%
   dplyr::select(Title, QualtricsNotes:ncol(.))
@@ -1305,8 +1313,10 @@ IScorrections$EmailNoteToCaitlin
 # [3] "should have selected proxy for EF"
 ## > CTW will change
 
-# [2] find Q6 answer and update
+# [2] find Q6 answer, update, and add qa note
 prelimlong1c$clean_answer[prelimlong1c$abbr == "Methods" & prelimlong1c$Title == IScorrections$Title[2]] <- "Observational (Includes data observed in situ OR via remote sensing, if used directly)"
+prelimlong1c$qa_note[prelimlong1c$abbr == "Methods" & prelimlong1c$Title == IScorrections$Title[2]] <- "Reviewer correction"
+
 # [3] update proxy answer
 prelimlong1c$answer[prelimlong1c$abbr == "Yclass" & !is.na(prelimlong1c$answer) & prelimlong1c$Title == IScorrections$Title[3]]
 unique(prelimlong1c$answer[prelimlong1c$abbr == "Yclass"]) # there is no "Proxy for EF".. emailed IS
@@ -1353,6 +1363,8 @@ for(i in ecosystemRIDs){
   }
   # NA other text field
   prelimlong1c$clean_answer[temprow_Q4notes] <- NA
+  # add QA note
+  
 }
 
 # screen for any other "Others" that got missed
@@ -1373,6 +1385,7 @@ for(i in agRIDs){
   if(!grepl("Terrestrial", prelimlong1c$clean_answer[temprow])){
     prelimlong1c$clean_answer[temprow] <- paste0("Terrestrial,", prelimlong1c$clean_answer[temprow])
   }
+  # add QA note
 }
 
 # clean up environment
@@ -1396,6 +1409,8 @@ for(i in methodsRIDs){
   temprow <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "Methods")
   # sub out Observational..
   prelimlong1c$clean_answer[temprow] <- gsub(",Observatio.*directly[)]", "", prelimlong1c$answer[temprow])
+  # add QA note
+  prelimlong1c$qa_note[temprow] <- "Used published data in model/data sim, did not collect, remove 'observational' method"
 }
 
 View(subset(prelimlong1c, ResponseId %in% methodsRIDs & abbr == "Methods"))
@@ -1415,10 +1430,34 @@ for(i in othermethodsRIDs){
   temprow_methods <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "Methods")
   temprow_methodsnotes <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "MethodsNotes")
   temprow_geninfo <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "GenInfo")
+  # grab methods to apply for data noted in "other"
+  tempmethod <- with(othermethodsdf, methodclass[othermethod == prelimlong1c$clean_answer[temprow_methodsnotes]])
   
-  # sub out Observational..
-  prelimlong1c$clean_answer[temprow] <- gsub(",Observatio.*directly[)]", "", prelimlong1c$answer[temprow])
+  # sub out Other
+  prelimlong1c$clean_answer[temprow_methods] <- gsub(",Other", "", prelimlong1c$clean_answer[temprow_methods])
+  # if method mentioned in other note not in main answer, append
+  if(!grepl(tempmethod, prelimlong1c$clean_answer[temprow_methods])){
+    prelimlong1c$clean_answer[temprow_methods] <- paste(prelimlong1c$clean_answer[temprow_methods], tempmethod, sep = ",")
+  }
+  # append original methods notes to GenInfo -- based on whether NA or not
+  if(!is.na(prelimlong1c$answer[temprow_geninfo])){
+    prelimlong1c$clean_answer[temprow_geninfo] <- paste0(prelimlong1c$clean_answer[temprow_geninfo], "; methods notes: ", prelimlong1c$answer[temprow_methodsnotes])
+  }else{
+    prelimlong1c$clean_answer[temprow_geninfo] <- paste("Methods notes:", prelimlong1c$answer[temprow_methodsnotes], sep = " ")
+  }
+  # NA methods notes and remove other
+  prelimlong1c$clean_answer[temprow_methodsnotes] <- NA
+  # add QA note
+  prelimlong1c$qa_note[c(temprow_methods, temprow_methodsnotes)] <- "Reclass 'other' method"
+  # add QA note to gen info, based on whether NA or not
+  if(is.na(prelimlong1c$qa_note[temprow_geninfo])){
+    prelimlong1c$qa_note[temprow_geninfo] <- "Append 'other' methods notes to geninfo notes"
+  }else{
+    prelimlong1c$qa_note[temprow_geninfo] <- paste0(prelimlong1c$qa_note[temprow_geninfo], "; append 'other' methods notes to geninfo notes")
+  }
 }
+
+
 
 # 4. Driver corrections (KG + SDJ) ----
 
@@ -1455,7 +1494,8 @@ dplyr::select(doubleprelim, Title, abbr, same_answer) %>%
 # -- WRITE OUT CLEANED L1 DATASET FOR POST-PROCESSING AND ANALYSIS -----
 # write out data as it's ready for others to work on.. (e.g. Q12 matrix will probably come later)
 
-
+# writing out temp file for now so people can start working with data
+write_csv(prelimlong1c, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
 # -- EXTRACT WORDS USED FOR ES RESPONSE AND DRIVERS ----
