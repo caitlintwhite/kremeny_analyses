@@ -654,6 +654,12 @@ wetland_abstracts <- subset(prelimlong1b, Title %in% unique(c(wetlands$Title, wa
   dplyr::select(assess_date, doublerev, ResponseId:ncol(.)) %>%
   # drop anything LD excluded
   filter(!Title %in% excludecorrections$Title[excludecorrections$exclude_LD]) %>%
+  # append citation info
+  # add citation info in case want to look at paper
+  left_join(dplyr::select(original, Title, FirstAuthor, PublicationYear, SourcePublication, Abstract)) %>%
+  # drop qcols
+  dplyr::select(-c(fullquestion, order:survey_order, exclude_notes)) %>%
+  filter(!is.na(answer)) %>%
   arrange(Title)
 
 # write out
@@ -1185,7 +1191,8 @@ write_csv(alldrivers_summary, "round2_metareview/clean_qa_data/needs_classreview
 
 # -- APPLY CORRECTIONS -----
 # clean up work environment
-rm(current_ecosystemnotes, current_kremennotes, current_methodsnotes, current_possibleexclude, current_scalenotes, exclude_notes, exclude_notes_ids, maybe_exclude_ids, maybe_exclude_notes, possibleexclude_df)
+rm(current_ecosystemnotes, current_kremennotes, current_methodsnotes, current_possibleexclude, current_scalenotes, 
+   exclude_notes, exclude_notes_ids, maybe_exclude_ids, maybe_exclude_notes, possibleexclude_df, watertitles, wetlands)
 
 # start with exclusions, because if paper excluded then other corrections are moot
 ## notes from Laura on exclusions (email from LD to CTW 5/13/20):
@@ -1284,6 +1291,8 @@ rm(exclude_r2LD, excludeLD, exclude_r2, keepLD, exclude_qualtrics, excludecorrec
 
 
 # 2. IS corrections (to her answers) ----
+prelimlong1c <- mutate(prelimlong1c, clean_answer = answer) %>%
+  dplyr::select(StartDate:answer, clean_answer, fullquestion:ncol(.))
 # only retain what needs to be corrected
 IScorrections <- subset(IScorrections, !is.na(EmailNoteToCaitlin)) %>%
   dplyr::select(Title, QualtricsNotes:ncol(.))
@@ -1297,7 +1306,7 @@ IScorrections$EmailNoteToCaitlin
 ## > CTW will change
 
 # [2] find Q6 answer and update
-prelimlong1c$answer[prelimlong1c$abbr == "Methods" & prelimlong1c$Title == IScorrections$Title[2]] <- "Observational (Includes data observed in situ OR via remote sensing, if used directly)"
+prelimlong1c$clean_answer[prelimlong1c$abbr == "Methods" & prelimlong1c$Title == IScorrections$Title[2]] <- "Observational (Includes data observed in situ OR via remote sensing, if used directly)"
 # [3] update proxy answer
 prelimlong1c$answer[prelimlong1c$abbr == "Yclass" & !is.na(prelimlong1c$answer) & prelimlong1c$Title == IScorrections$Title[3]]
 unique(prelimlong1c$answer[prelimlong1c$abbr == "Yclass"]) # there is no "Proxy for EF".. emailed IS
@@ -1305,11 +1314,72 @@ unique(prelimlong1c$answer[prelimlong1c$abbr == "Yclass"]) # there is no "Proxy 
 
 
 # 3. Ecosystem correction (IS + LD) -----
+# change new Ag class in LD and IS ecosystem correction so doesn't create problem with splitcom
+unique(systemcorrections$AssignToEcosystem)
+systemcorrections$AssignToEcosystem <- gsub("Agricultural, Agroforestry, and Rural", "Agricultural/Agroforestry/Rural", systemcorrections$AssignToEcosystem)
 
 # use q4_qa data frame.. and a for loop
-
 View(q4_qa)
-prelimlong1c
+View(systemcorrections)
+ecosystemRIDs <- unique(prelimlong1c$ResponseId[prelimlong1c$Title %in% q4_qa$Title])
+for(i in ecosystemRIDs){
+  
+  # find relevant rows in dataset
+  temprow_Q4 <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "Ecosystem")
+  temprow_Q4notes <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "EcosystemNotes")
+  temprow_geninfo <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "GenInfo")
+  
+  # ID relevant records for title, and ID ResponseID that has the relevant "other" comments
+  temp <- subset(prelimlong1c, qnum == "Q4" & ResponseId == i)
+  # add in check for "Other", if not then next (e.g. double reviews, one person didn't check other)
+  if(is.na(temp$answer[temp$abbr == "EcosystemNotes"])){
+    next
+  }
+  replacetemp <- subset(systemcorrections, grepl(paste0("^", str_remove_all(temp$answer[temp$abbr == "EcosystemNotes"], "[:punct:]| ")), str_remove_all(OriginalNoteCommaSep, "[:punct:]| "), ignore.case = T)) %>%
+    mutate(OriginalNoteCommaSep = casefold(OriginalNoteCommaSep)) %>%
+    distinct()
+  stopifnot(nrow(replacetemp) == 1)
+  #replacetemp <- subset(systemcorrections, pmatch(str_remove_all(OriginalNoteCommaSep, "[:punct:]| "), str_remove_all(temp$answer[temp$abbr == "EcosystemNotes"], "[:punct:]| "),ignore.case = T))
+  
+  
+  # replace answer to Q4 for LD + IS new classification
+  prelimlong1c$clean_answer[temprow_Q4] <- replacetemp$AssignToEcosystem
+  # paste original other comment to GenInfo text field
+  temp_geninfo <- prelimlong1c$answer[prelimlong1c$abbr == "GenInfo" & prelimlong1c$ResponseId == i]
+  if(!is.na(temp_geninfo)){
+    prelimlong1c$clean_answer[temprow_geninfo]  <- paste0(temp_geninfo, "; system notes: ", temp$answer[temp$abbr == "EcosystemNotes"])
+  }else{
+    prelimlong1c$clean_answer[temprow_geninfo] <- paste("System notes:", temp$answer[temp$abbr == "EcosystemNotes"], sep = " ")
+  }
+  # NA other text field
+  prelimlong1c$clean_answer[temprow_Q4notes] <- NA
+}
+
+# screen for any other "Others" that got missed
+# > if returns 0 rows, proceed! if not, triage
+subset(prelimlong1c, qnum == "Q4" & grepl("Other", answer, ignore.case = T) & grepl("Other", clean_answer, ignore.case = T))
+
+# append "Terrestrial" to any Ag entry, and gsub Ag label with new category IS and LD created
+## extract response IDs with Ag
+agRIDs <- unique(with(prelimlong1c, ResponseId[qnum == "Q4" & grepl("Agri", clean_answer, ignore.case = T)]))
+View(subset(prelimlong1c, qnum == "Q4" & grepl("Ag", clean_answer)))
+View(subset(prelimlong1c, ResponseId %in% agRIDs & qnum == "Q4"))
+for(i in agRIDs){
+  # ID row
+  temprow <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "Ecosystem")
+  # gsub Agri label
+  prelimlong1c$clean_answer[temprow] <- gsub("Agricultural/Rural", "Agricultural/Agroforestry/Rural", prelimlong1c$clean_answer[temprow])
+  # add Terrestrial if not there
+  if(!grepl("Terrestrial", prelimlong1c$clean_answer[temprow])){
+    prelimlong1c$clean_answer[temprow] <- paste0("Terrestrial,", prelimlong1c$clean_answer[temprow])
+  }
+}
+
+# clean up environment
+rm(replacetemp, temp, agRIDs, ecosystemRIDs, i, 
+   temprow, temprow_geninfo, temprow_Q4, temprow_Q4notes,
+   IScorrections, systemcorrections)
+
 
 
 # 4. Methods corrections (AK + ND) -----
@@ -1318,12 +1388,40 @@ prelimlong1c
 # The rule was: if a paper selected model/data simulation but used existing data (e.g. fisheries records, LTER) then it should not select observational too. 
 # Observational should only be checked if they collected data for that study.
 
-# prep methods correction file to apply
-methodscorrections <- dplyr::select(methodscorrections, ResponseId, doublerev, Title, GenInfo:Other, Changed) %>%
-  arrange(Title)
+# all that's needed is ResponseIds where Changed == 1 
+unique(methodscorrections$Changed)
+methodsRIDs <- methodscorrections$ResponseId[!is.na(methodscorrections$Changed)] # anything not NA is 1
+for(i in methodsRIDs){
+  # ID row
+  temprow <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "Methods")
+  # sub out Observational..
+  prelimlong1c$clean_answer[temprow] <- gsub(",Observatio.*directly[)]", "", prelimlong1c$answer[temprow])
+}
 
+View(subset(prelimlong1c, ResponseId %in% methodsRIDs & abbr == "Methods"))
+# remove "Other" from Data Simulation records (Other value is "used open data from published sources" which is implicit)
+# what are the records with Other in methods?
+othermethodsRIDs <- with(prelimlong1c, ResponseId[grepl("Other", clean_answer) & abbr == "Methods"])
+with(prelimlong1c, clean_answer[ResponseId %in% othermethodsRIDs & abbr == "MethodsNotes"])
+# >> most of these are observational (which includes geospatial data)
+# >> models are models, and quasi-experimental can be Experimental
+# >> put in df to update masters dataset
+othermethodsdf <- data.frame(othermethod = with(prelimlong1c, clean_answer[ResponseId %in% othermethodsRIDs & abbr == "MethodsNotes"])) %>%
+  mutate(methodclass = ifelse(grepl("model", othermethod), "Model/Data Simulation",
+                              ifelse(grepl("experiment", othermethod), "Experimental",
+                                     "Observational (Includes data observed in situ OR via remote sensing, if used directly)")))
+for(i in othermethodsRIDs){
+  # ID row
+  temprow_methods <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "Methods")
+  temprow_methodsnotes <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "MethodsNotes")
+  temprow_geninfo <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "GenInfo")
+  
+  # sub out Observational..
+  prelimlong1c$clean_answer[temprow] <- gsub(",Observatio.*directly[)]", "", prelimlong1c$answer[temprow])
+}
 
 # 4. Driver corrections (KG + SDJ) ----
+
 
 
 # -- CONDENSE DOUBLE REVIEWED ----
