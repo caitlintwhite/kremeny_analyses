@@ -1337,7 +1337,7 @@ for(i in ecosystemRIDs){
   # find relevant rows in dataset
   temprow_Q4 <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "Ecosystem")
   temprow_Q4notes <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "EcosystemNotes")
-  temprow_geninfo <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "GenInfo")
+  temprow_Q4geninfo <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "GenInfo")
   
   # ID relevant records for title, and ID ResponseID that has the relevant "other" comments
   temp <- subset(prelimlong1c, qnum == "Q4" & ResponseId == i)
@@ -1349,22 +1349,23 @@ for(i in ecosystemRIDs){
     mutate(OriginalNoteCommaSep = casefold(OriginalNoteCommaSep)) %>%
     distinct()
   stopifnot(nrow(replacetemp) == 1)
-  #replacetemp <- subset(systemcorrections, pmatch(str_remove_all(OriginalNoteCommaSep, "[:punct:]| "), str_remove_all(temp$answer[temp$abbr == "EcosystemNotes"], "[:punct:]| "),ignore.case = T))
-  
   
   # replace answer to Q4 for LD + IS new classification
   prelimlong1c$clean_answer[temprow_Q4] <- replacetemp$AssignToEcosystem
   # paste original other comment to GenInfo text field
-  temp_geninfo <- prelimlong1c$answer[prelimlong1c$abbr == "GenInfo" & prelimlong1c$ResponseId == i]
-  if(!is.na(temp_geninfo)){
-    prelimlong1c$clean_answer[temprow_geninfo]  <- paste0(temp_geninfo, "; system notes: ", temp$answer[temp$abbr == "EcosystemNotes"])
+  temp_Q4geninfo <- prelimlong1c$answer[prelimlong1c$abbr == "GenInfo" & prelimlong1c$ResponseId == i]
+  if(!is.na(temp_Q4geninfo)){
+    prelimlong1c$clean_answer[temprow_Q4geninfo]  <- paste0(temp_Q4geninfo, "; system notes: ", temp$answer[temp$abbr == "EcosystemNotes"])
   }else{
-    prelimlong1c$clean_answer[temprow_geninfo] <- paste("System notes:", temp$answer[temp$abbr == "EcosystemNotes"], sep = " ")
+    prelimlong1c$clean_answer[temprow_Q4geninfo] <- paste("System notes:", temp$answer[temp$abbr == "EcosystemNotes"], sep = " ")
   }
   # NA other text field
   prelimlong1c$clean_answer[temprow_Q4notes] <- NA
-  # add QA note
   
+  # add QA notes on corrections
+  prelimlong1c$qa_note[temprow_Q4] <- "Reclass 'other' system, LD+IS review"
+  prelimlong1c$qa_note[temprow_Q4notes] <- "Reclass 'other' system, LD+IS review"
+  prelimlong1c$qa_note[temprow_Q4geninfo] <- "Append 'other' system notes to geninfo notes"
 }
 
 # screen for any other "Others" that got missed
@@ -1378,19 +1379,22 @@ View(subset(prelimlong1c, qnum == "Q4" & grepl("Ag", clean_answer)))
 View(subset(prelimlong1c, ResponseId %in% agRIDs & qnum == "Q4"))
 for(i in agRIDs){
   # ID row
-  temprow <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "Ecosystem")
+  temprowAG <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "Ecosystem")
   # gsub Agri label
-  prelimlong1c$clean_answer[temprow] <- gsub("Agricultural/Rural", "Agricultural/Agroforestry/Rural", prelimlong1c$clean_answer[temprow])
+  prelimlong1c$clean_answer[temprowAG] <- gsub("Agricultural/Rural", "Agricultural/Agroforestry/Rural", prelimlong1c$clean_answer[temprowAG])
   # add Terrestrial if not there
-  if(!grepl("Terrestrial", prelimlong1c$clean_answer[temprow])){
-    prelimlong1c$clean_answer[temprow] <- paste0("Terrestrial,", prelimlong1c$clean_answer[temprow])
+  if(!grepl("Terrestrial", prelimlong1c$clean_answer[temprowAG])){
+    prelimlong1c$clean_answer[temprowAG] <- paste0("Terrestrial,", prelimlong1c$clean_answer[temprowAG])
   }
   # add QA note
+  if(is.na(prelimlong1c$qa_note[temprowAG])){
+    prelimlong1c$qa_note[temprowAG] <- "Standardize ag/rural system label, LD+IS review"
+  }
 }
 
 # clean up environment
-rm(replacetemp, temp, agRIDs, ecosystemRIDs, i, 
-   temprow, temprow_geninfo, temprow_Q4, temprow_Q4notes,
+rm(replacetemp, temp, agRIDs, ecosystemRIDs, i, temprowAG,
+  temp_Q4geninfo, temprow_Q4geninfo, temprow_Q4, temprow_Q4notes,
    IScorrections, systemcorrections)
 
 
@@ -1410,7 +1414,7 @@ for(i in methodsRIDs){
   # sub out Observational..
   prelimlong1c$clean_answer[temprow] <- gsub(",Observatio.*directly[)]", "", prelimlong1c$answer[temprow])
   # add QA note
-  prelimlong1c$qa_note[temprow] <- "Used published data in model/data sim, did not collect, remove 'observational' method"
+  prelimlong1c$qa_note[temprow] <- "Removed 'observational' method. Used published data in model/data sim, did not collect, ND+AK review"
 }
 
 View(subset(prelimlong1c, ResponseId %in% methodsRIDs & abbr == "Methods"))
@@ -1456,6 +1460,10 @@ for(i in othermethodsRIDs){
     prelimlong1c$qa_note[temprow_geninfo] <- paste0(prelimlong1c$qa_note[temprow_geninfo], "; append 'other' methods notes to geninfo notes")
   }
 }
+
+# clean up environment
+rm(temprow, temprow_geninfo, temprow_methods, temprow_methodsnotes, othermethodsdf,
+   methodsRIDs, othermethodsRIDs, methodscorrections)
 
 
 
