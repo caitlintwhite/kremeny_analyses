@@ -10,7 +10,7 @@ library(plotly)
 
 Data used:
 ```{r read data, echo=FALSE}
-data_path = "../data/cleaned/prelim_singlereview.csv"
+data_path = "../data/intermediate/round2_prelim_singlereview.csv"
 df = read.csv(data_path)
 non_excl_titles = df %>% 
   filter(qnum =='Q3', !answer=='Yes') %>%

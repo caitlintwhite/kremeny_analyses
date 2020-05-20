@@ -6,7 +6,7 @@ library(tidyverse)
 library(igraph)
 library(plotly)
 
-df = read.csv("round2_metareview/data/cleaned/prelim_singlereview.csv")
+df = read.csv("round2_metareview/data/intermediate/round2_prelim_singlereview.csv")
 
 # get the titles that made it through the first few exclusion questions
 non_excl_titles = df %>% 
