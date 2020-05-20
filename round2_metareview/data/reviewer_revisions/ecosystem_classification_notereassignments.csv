@@ -2,10 +2,10 @@ AssignToEcosystem,OriginalNoteCommaSep,RemoveClassification,HierarchicalCategory
 Coastal,brackish wetlands at river delta,"Other,Terrestrial",
 Coastal,salt marsh,Other,
 Coastal,tidal salt marsh,"Other,Terrestrial",
-"Agricultural, Agroforestry, and Rural,Terrestrial",agroforests,Other,"Agricultural/Rural now Agricultural, Agroforestry, and Rural"
-"Agricultural, Agroforestry, and Rural,Terrestrial",agroforestry,Other,"Agricultural/Rural now Agricultural, Agroforestry, and Rural"
-"Agricultural, Agroforestry, and Rural,Terrestrial",agroecosystem,Other,"Agricultural/Rural now Agricultural, Agroforestry, and Rural"
-"Agricultural, Agroforestry, and Rural,Terrestrial",described as silvo-pastoral,Other,"Agricultural/Rural now Agricultural, Agroforestry, and Rural"
+"Terrestrial,Agricultural, Agroforestry, and Rural",agroforests,Other,"Agricultural/Rural now Agricultural, Agroforestry, and Rural"
+"Terrestrial,Agricultural, Agroforestry, and Rural",agroforestry,Other,"Agricultural/Rural now Agricultural, Agroforestry, and Rural"
+"Terrestrial,Agricultural, Agroforestry, and Rural",agroecosystem,Other,"Agricultural/Rural now Agricultural, Agroforestry, and Rural"
+"Terrestrial,Agricultural, Agroforestry, and Rural",described as silvo-pastoral,Other,"Agricultural/Rural now Agricultural, Agroforestry, and Rural"
 Experimental Ecosystem,greenhouse,Other,New category Experimental Ecosystem
 Experimental Ecosystem,microcosm,Other,
 Experimental Ecosystem,laboratory,Other,
@@ -17,13 +17,13 @@ Terrestrial,Simulated terrestrial,Other,
 "Freshwater,Coastal","salmon habitat, appears to be river systems, but have fisheries expert confirm freshwater selection",Other,
 Freshwater,stream benthic community,Other,
 Freshwater,Lake,Other,
-"Freshwater, Terrestrial","specifically, streamflow within a watershed",Other,
+"Freshwater,Terrestrial","specifically, streamflow within a watershed",Other,
 Terrestrial,Grassland,Other,
-"Agricultural, Agroforestry, and Rural,Terrestrial",Natural forest and agricultural,Other,
+"Terrestrial,Agricultural, Agroforestry, and Rural",Natural forest and agricultural,Other,
 Freshwater,Stream benthic community,Other,
 "Freshwater,Terrestrial",terrestrial-riparian (water basin),Other,
 "Freshwater,Terrestrial",Riparian Zone,Other,
 "Freshwater,Terrestrial",Wetland,Other,
-"Freshwater, Terrestrial",Artificial reservoir (dam),Other,
-"Agricultural, Agroforestry, and Rural,Terrestrial",coffee,Other,
+"Freshwater,Terrestrial",Artificial reservoir (dam),Other,
+"Terrestrial,Agricultural, Agroforestry, and Rural",coffee,Other,
 Terrestrial,moorlands,Other,
