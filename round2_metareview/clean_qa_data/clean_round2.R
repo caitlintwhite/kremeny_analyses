@@ -1092,10 +1092,10 @@ response_summary <- dplyr::select(responses, ResponseId, ES, Response, Yclass1, 
 
 
 # change NAs to blanks for easier viewing in Excel
-responses[is.na(responses)] <- ""
+# responses[is.na(responses)] <- ""
 #write out
-write_csv(responses, "round2_metareview/clean_qa_data/needs_classreview/ES_allresponses.csv")
-write_csv(response_summary, "round2_metareview/clean_qa_data/needs_classreview/ES_responseclass_review.csv")
+# write_csv(responses, "round2_metareview/clean_qa_data/needs_classreview/ES_allresponses.csv")
+# write_csv(response_summary, "round2_metareview/clean_qa_data/needs_classreview/ES_responseclass_review.csv")
 
 
 # compile drivers 
@@ -1185,9 +1185,9 @@ alldrivers_summary <- group_by(alldrivers, ES, Group, casefold(answer)) %>%
 
 # write out both
 ## change NAs to blanks so reads easier in Excel
-alldrivers[is.na(alldrivers)] <- "" 
-write_csv(alldrivers, "round2_metareview/clean_qa_data/needs_classreview/ES_alldrivers.csv")
-write_csv(alldrivers_summary, "round2_metareview/clean_qa_data/needs_classreview/ES_driversfreq_review.csv")
+# alldrivers[is.na(alldrivers)] <- "" 
+# write_csv(alldrivers, "round2_metareview/clean_qa_data/needs_classreview/ES_alldrivers.csv")
+# write_csv(alldrivers_summary, "round2_metareview/clean_qa_data/needs_classreview/ES_driversfreq_review.csv")
 
 
 
@@ -1273,7 +1273,9 @@ r2excluded_final <- rbind(exclude_r2, exclude_r2LD[names(exclude_r2)]) %>%
                                           ifelse(grepl("Q1", exclusion_reason), "BiodivOnly", exclusion_reason)))) %>%
   filter(!is.na(exclusion_reason) & !exclusion_reason == "by Q3") %>%
   mutate_all(trimws) %>%
-  dplyr::select(-reviewer_exclusion) %>%
+  # add in col to indicate whether double reviewed or not
+  mutate(doublerev = Title %in% doubletitles) %>%
+  dplyr::select(Title, doublerev, review_LD:ncol(.)) %>%
   distinct() %>%
   arrange(Title) %>%
   # flag anything that doesn't have agreement in exclusion reasons
@@ -1469,6 +1471,9 @@ for(i in othermethodsRIDs){
 rm(temprow, temprow_geninfo, temprow_methods, temprow_methodsnotes, othermethodsdf,
    methodsRIDs, othermethodsRIDs, methodscorrections)
 
+# make copy to save results in progress
+copydf <- prelimlong1c
+
 
 
 # 4. Driver corrections (KG + SDJ) ----
@@ -1476,8 +1481,42 @@ rm(temprow, temprow_geninfo, temprow_methods, temprow_methodsnotes, othermethods
 
 
 
+# 5. Logic check corrections -----
+
+# 5.1. Q13: Kremen ESP
+## > if ESP check in Biotic drivers, then ESP checked in Kremen topics
+
+
+
+# 5.2. Q13: Kremen Structure
+## > if structure keyword present in drivers (or responses?), then structure checked in Kremen topics
+
+
+
+# 5.3. Q13: Kremen Environment
+## > if environmental driver listed, then env check in Kremen topics
+
+
+
+# 5.4. Q13: Kremen Scale
+## > if Multiscale == "Yes", then scale checked in Kremen topics
+## > note, 5/21: waiting on Grant and Julie to confirm Multiscale reliable question for triggering correction (CTW sent email)
+
+
+
+# 5.5. Q14: Service Providers
+# > note: we should have had a "how many species in this study" question..
+# within = "genetic"
+# single.. hard to pull by keywrods
+# multiple ESPs.. also tough
+# across = "structure|diversity"
+# among = "interact"
+# only land cover .. not sure how to screen for this one either..
+
+
+
 # -- CONDENSE DOUBLE REVIEWED ----
-doubleprelim <- subset(prelimlong1b, Title %in% doubletitles) %>%
+doubleprelim <- subset(prelimlong1c, Title %in% doubletitles) %>%
   group_by(Title, id) %>%
   mutate(same_answer = length(unique(answer)) ==1) %>%
   ungroup() %>%
@@ -1490,12 +1529,18 @@ sapply(split(doubleprelim$Title, doubleprelim$Init), function(x) length(unique(x
 write_csv(doubleprelim, "round2_metareview/data/intermediate/round2_doublereviewed_tidy.csv")
 
 # where are the most inconsistencies (by question)?
-dplyr::select(doubleprelim, Title, abbr, same_answer) %>%
+# factor abbr by survey order
+doubleprelim %>%
+  mutate(abbr = factor(abbr, levels= unique(abbr[order(survey_order)]))) %>%
+  # remove exclusion question since these are all kept papers
+  subset(qnum != "Q3") %>%
+  dplyr::select(Title, abbr, same_answer) %>%
   distinct() %>%
   ggplot(aes(same_answer)) +
   geom_bar() +
-  facet_wrap(~abbr)
-
+  facet_wrap(~abbr) +
+  ggtitle(paste0("Round 2: double-reviewed kept papers (n=", length(unique(doubleprelim$Title)),"), agreement in answers by question,\n", Sys.Date()))
+ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_doublereview_congruency.pdf")
 # add flag for answer inconsistencies:
 # 1) exclusion answers that don't agree
 
