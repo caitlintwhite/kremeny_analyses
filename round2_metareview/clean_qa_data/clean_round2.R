@@ -18,6 +18,8 @@
 
 
 # notes:
+# 5/20 all exploratory figs and review QA datasets commented out since we've completed survey, so there will be no new updates
+
 ## cached code for qualtRics## -----
 # how to read in qualtrix dynamically
 # https://www.rdocumentation.org/packages/qualtRics/versions/3.0
@@ -196,7 +198,7 @@ forAK <- subset(prelim, clean_title %in% unique(records$clean_title[records$nobs
   arrange(clean_title, StartDate) %>%
   mutate_all(function(x) ifelse(is.na(x), "", x)) %>%
   distinct()
-write.csv(forAK, "round2_metareview/data/intermediate/round2_doublereviewed.csv", row.names = F)
+#write.csv(forAK, "round2_metareview/data/intermediate/round2_doublereviewed.csv", row.names = F)
 
 # pull titles for screening further down
 doubletitles <- unique(forAK$clean_title)
@@ -296,8 +298,8 @@ stat_byrev <- ggplot(keydf, aes(Round2_reviewer1, fill = Name)) +
   labs(subtitle = "# papers reviewed by R2 reviewer 1 assigned, colored by person who answered Qualtrics")
 # write to repo
 plot_grid(stat_byname, stat_byrev, nrow = 2)
-ggsave("round2_metareview/clean_qa_data/review_status/reviewstatus_r2papers.pdf", 
-       height = 6, width = 6, units = "in", scale = 1.5)
+# ggsave("round2_metareview/clean_qa_data/review_status/reviewstatus_r2papers.pdf", 
+#        height = 6, width = 6, units = "in", scale = 1.5)
 
 # what remains? (# comment out this code bc throws error when all papers done)
 # outstanding <- cbind(assess_date = Sys.Date(), subset(original, !Title %in% unique(keydf$Title))) %>%
@@ -327,7 +329,7 @@ effort <- data.frame(assess_date = Sys.Date(), Init = unname(initials), Name = n
 
 # write out both for LD to deal with
 #write_csv(outstanding, "round2_metareview/clean_qa_data/review_status/outstanding_r2papers.csv")
-write_csv(effort, "round2_metareview/clean_qa_data/review_status/revieweffort_r2papers.csv")
+#write_csv(effort, "round2_metareview/clean_qa_data/review_status/revieweffort_r2papers.csv")
 
 # make tidy dataset
 prelimlong <- prelim %>%
@@ -345,7 +347,7 @@ firstreview <- prelimlong %>%
   filter(!duplicated(Title)) %>%
   ungroup()
 # write to cleaned data folder for now..
-write_csv(firstreview, "round2_metareview/data/cleaned/prelim_singlereview.csv")
+#write_csv(firstreview, "round2_metareview/data/intermediate/round2_prelim_singlereview.csv")
 
 
 ## -- 2020/03/18: LOOP TO SUSBET PAIRED REVIEWERS [only run this one time (pre spring bring)] -----
@@ -414,7 +416,7 @@ rm(KG_outstanding, rTim4KG, Tim_remain)
 
 
 
-# -- NITTY GRITTY DATA CLEANING -----
+# -- FLAG DATA FOR REVIEW -----
 # potential issues:
 ## 1) inconsistent answers *within* reviewed papers
 ## 2) questions not answered (esp questions added later [e.g. exclusion questions])
@@ -663,7 +665,7 @@ wetland_abstracts <- subset(prelimlong1b, Title %in% unique(c(wetlands$Title, wa
   arrange(Title)
 
 # write out
-write_csv(wetland_abstracts, "round2_metareview/clean_qa_data/needs_classreview/wetland_abstracts.csv")
+#write_csv(wetland_abstracts, "round2_metareview/clean_qa_data/needs_classreview/wetland_abstracts.csv")
 
 
 
@@ -717,7 +719,7 @@ methodsnotes <- prelimlong1b %>%
   # since want to pull papers add citation info
   left_join(original[c("Title", "FirstAuthor", "SourcePublication", "PublicationYear", "Abstract")])
 # make all text so no "NA" in csv
-methodsnotes[is.na(methodsnotes)] <- ""  
+#methodsnotes[is.na(methodsnotes)] <- ""  
 # write out for review
 #write_csv(methodsnotes, "round2_metareview/clean_qa_data/needs_classreview/methodsnotes_review.csv")
 
@@ -795,7 +797,7 @@ scalenotes <- prelimlong1b %>%
   mutate(TimeTrends = gsub(" \\(e.g.*$", "", TimeTrends))
 
 # make all text so no "NA" in csv
-scalenotes[is.na(scalenotes)] <- ""  
+# scalenotes[is.na(scalenotes)] <- ""  
 # write out for review
 # write_csv(scalenotes, "round2_metareview/clean_qa_data/needs_classreview/scalenotes_review.csv")
 
@@ -877,7 +879,7 @@ kremennotes <-  prelimlong1b %>%
   dplyr::select(assess_date, newcase, exclude, doublerev:ncol(.))
 # unite main and other drivers
 # make all text so no "NA" in csv
-kremennotes[is.na(kremennotes)] <- ""  
+# kremennotes[is.na(kremennotes)] <- ""  
 # write out for review
 # write_csv(kremennotes, "round2_metareview/clean_qa_data/needs_classreview/kremennotes_review.csv")
 
@@ -945,7 +947,7 @@ noKremen <- kremennotes %>%
   # join paper citation info
   left_join(original[c("Title", "SourcePublication", "PublicationYear", "Abstract")])
 # change any NAs to "
-noKremen[is.na(noKremen)] <- ""
+#noKremen[is.na(noKremen)] <- ""
 # write out
 #write_csv(noKremen, "round2_metareview/clean_qa_data/needs_classreview/KTnone_check.csv")
 
@@ -970,7 +972,7 @@ ESPcheck <- dplyr::select(kremennotes, assess_date, exclude:ESP_type, KT_Communi
   # join paper citation info
   left_join(original[c("Title", "SourcePublication", "PublicationYear", "Abstract")])
 # change any NAs to "
-ESPcheck[is.na(ESPcheck)] <- ""
+#ESPcheck[is.na(ESPcheck)] <- ""
 # write out
 #write_csv(ESPcheck, "round2_metareview/clean_qa_data/needs_classreview/KTesp_check.csv")
 
@@ -996,7 +998,7 @@ structurecheck <- dplyr::select(kremennotes, assess_date:KT_Community_structure)
   # add paper citation info for reference
   left_join(original[c("Title", "FirstAuthor", "SourcePublication", "PublicationYear", "Abstract")])
 # convert NAs to blank cells
-structurecheck[is.na(structurecheck)] <- ""
+#structurecheck[is.na(structurecheck)] <- ""
 # write out for IS
 #write_csv(structurecheck, "round2_metareview/clean_qa_data/needs_classreview/KTstructure_check.csv")
 
@@ -1013,7 +1015,7 @@ envcheck <- dplyr::select(kremennotes, assess_date, exclude:Response, KT_Environ
   # add paper citation info for reference
   left_join(original[c("Title", "FirstAuthor", "SourcePublication", "PublicationYear", "Abstract")])
 # convert NAs to blank cells
-envcheck[is.na(envcheck)] <- ""
+#envcheck[is.na(envcheck)] <- ""
 # write out for IS
 #write_csv(envcheck, "round2_metareview/clean_qa_data/needs_classreview/KTenvironment_check.csv")
 
@@ -1287,8 +1289,10 @@ write_csv(r2excluded_final, "round2_metareview/data/intermediate/round2_excluded
 prelimlong1c <- filter(prelimlong1b, !Title %in% unique(r2excluded_final$Title)) %>%
   # create clean answer column for storing cleaned answers and qa note
   mutate(clean_answer = answer,
-         qa_note = NA) %>%
-  dplyr::select(StartDate:answer, clean_answer, fullquestion:ncol(.)) %>%
+         qa_note = NA,
+         # add col to indicate double review
+         doublerev = Title %in% doubletitles) %>%
+  dplyr::select(StartDate:Init, doublerev, Title:answer, clean_answer, fullquestion:ncol(.)) %>%
   # change any "Yes"s in Q3 to No for clean answer since allowed by LD
   mutate(qa_note = ifelse(answer == "Yes" & qnum == "Q3", "Keep paper, reviewed by LD", qa_note),
          clean_answer = ifelse(answer == "Yes" & qnum == "Q3", "No", clean_answer)) %>%
@@ -1471,6 +1475,7 @@ rm(temprow, temprow_geninfo, temprow_methods, temprow_methodsnotes, othermethods
 
 
 
+
 # -- CONDENSE DOUBLE REVIEWED ----
 doubleprelim <- subset(prelimlong1b, Title %in% doubletitles) %>%
   group_by(Title, id) %>%
@@ -1506,7 +1511,7 @@ dplyr::select(doubleprelim, Title, abbr, same_answer) %>%
 write_csv(prelimlong1c, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
-# -- EXTRACT WORDS USED FOR ES RESPONSE AND DRIVERS ----
+
 
 
 # -- PRELIM SUMMARY FIGURE ----
