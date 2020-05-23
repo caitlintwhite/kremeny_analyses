@@ -1485,7 +1485,7 @@ copydf <- prelimlong1c
 topo_keywords <- "distance|DEM|elevation|slope|aspect|geograph|altitude|latitud|longitud|topography|topology| position" # considered nodes as well.. but leaving in hydrology.. could add "connectivity" to bin label though.. 
 
 # 4.a. Driver corrections -----
-
+# review bio drivers..
 test_biodrivers <- dplyr::select(biodrivecorrections, answer, Driver_Finer) %>%
   distinct() %>%
   arrange(answer)
@@ -1555,11 +1555,67 @@ clean_envdriver_corrections <- subset(alldrivers_summary, Group == "Env") %>%
       
 
 
-# review human drivers
+# review human drivers..
 test_anthdrivers <- dplyr::select(anthdrivecorrections, answer, Driver_Finer) %>%
   distinct() %>%
   arrange(answer)
 
+# notes: review characteristics of plot (should any of these be in env or biotic??)
+## > shade/canopy cover... correspond to "Anolis lizards as biocontrol agents in mainland..." (SDJ).. lizard predation on pest beetles in coffee farm.. seems like shade and canopy cover should be environment (both proxy shade)
+## > mean area/edge, spatial agg, mean lot size, mean patch size ... come from "Landscape structure influences urban vegetation ver..." (SDJ).. all seem like characteristics of place
+## > wildflower strips ... seems like this should be a biotic driver, not anthro .. either that or it goes under management/restoration
+## > tree volume, stand age .. comes from Truchy et al. 2019 (CTW's paper).. looked at paper and using those in land cover type way (stand age and tree volume = proxies for less disturbed soil)
+
+# specify terms that need matching or re-class
+management_terms <- "age|tillage|manipulation|livestock|wildflower" #add tillage to switch from surface disturbance to management, since that's what it is
+development_terms <- "distance|proximity|roads|urban areas"
+human_disturbance_terms <- "disturbance|impacts|ditching"
+char_humanpop <- "composition|structure of the homog|orientation|policy|socioecon"
+place_terms <- "city|apartment|municipal|green roof|location|street density|mean edge|mean lot|mean patch|spatial agg" #characteristics of place
+landuse_terms <- "deforestation|urbanization|land use change|tree volume|stand age" # as long as stand age comes after setting mgmt terms, will apply correct finer driver
+# clean up
+rm(test_anthdrivers)
+
+# go through environmental drivers and clean up bins, and assign what's outstanding
+clean_anthdriver_corrections <- subset(alldrivers_summary, Group == "Anthro") %>%
+  #remove count since that may have changed
+  dplyr::select(-count) %>%
+  # rename group so joins properly
+  rename(Driver_Group = Group) %>%
+  left_join(dplyr::select(anthdrivecorrections, -count)) %>%
+  mutate(clean_driver_finer = trimws(casefold(Driver_Finer))) %>%
+  # arrange by answer and fill down anything that wasn't added to list when SJD + KG filled it out
+  arrange(answer) %>%
+  group_by(answer) %>%
+  fill(clean_driver_finer) %>%
+  ungroup() %>%
+  # fix typos in drivers
+  mutate(clean_driver_finer = gsub("distrubances", "disturbances", clean_driver_finer),
+         clean_driver_finer = gsub(" adn", " and", clean_driver_finer),
+         # change land use to LULCC
+         clean_driver_finer = recode(clean_driver_finer, 'land use' = 'land use and land cover change',
+                                     # land cover becomes proximity to development
+                                     'land cover' = 'proximity to development'),
+         # start infilling
+         # human management and restoration
+         clean_driver_finer = ifelse(grepl(management_terms, answer, ignore.case = T), "management/restoration", clean_driver_finer),
+         # proximity to development
+         clean_driver_finer = ifelse(grepl(development_terms, answer, ignore.case = T), "proximity to development", clean_driver_finer),
+         # human disturbance
+         clean_driver_finer = ifelse(grepl(human_disturbance_terms, answer, ignore.case = T), "human disturbance", clean_driver_finer),
+         # characteristics of human population
+         clean_driver_finer = ifelse(grepl(char_humanpop, answer, ignore.case = T), "characteristics of human population", clean_driver_finer),
+         # characteristics of locality
+         clean_driver_finer = ifelse(grepl(place_terms, answer, ignore.case = T), "characteristics of locality", clean_driver_finer),
+         # add to land use
+         clean_driver_finer = ifelse(grepl(landuse_terms, answer, ignore.case = T), "land use and land cover change", clean_driver_finer),
+         # add index
+         clean_driver_finer = ifelse(grepl("index", answer, ignore.case = T), "index", clean_driver_finer),
+         # shade and canopy cover (proxy for shade) should be abiotic char-terrestrial and assigned to Env
+         clean_driver_finer = ifelse(answer %in% c("shade", "canopy cover"), "abiotic characteristics of the landscape: terrestrial", clean_driver_finer),
+         # clean up group
+         clean_driver_group = ifelse(grepl("abiotic", clean_driver_finer), "Env", Driver_Group))
+  
 
 # 4.b. Response corrections -----
 test_responses <- dplyr::select(responsecorrections, Response, Key.word) %>%
