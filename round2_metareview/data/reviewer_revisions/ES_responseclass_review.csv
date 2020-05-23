@@ -1,0 +1,1001 @@
+EcoServ,Response,Key word,Notes,EF,ES,no selection,Proxy for ES
+HabCreate,maximum anchor ice,Abiotic characteristics of the landscape,maybe...ice,1,0,0,0
+HabCreate,channel bed distribution,"Abiotic characteristics of the landscape, Hydrology",,1,0,0,0
+freshWQReg,base flow,Abiotic characteristics of the landscape: aquatic,,0,1,0,0
+HabCreate,dimensionless flow velocity,Abiotic characteristics of the landscape: aquatic,,1,0,0,0
+HabCreate,discharge,Abiotic characteristics of the landscape: aquatic,,1,0,0,0
+Hazards,average rate of falling tide,Abiotic characteristics of the landscape: aquatic,,0,0,1,0
+freshWQReg,evapotranspiration,Abiotic characteristics of the landscape:aquatic,,1,0,0,1
+HabCreate,cooling by vegetation,Abiotic characteristics of the landscape:terrestrial,,0,1,0,0
+HabCreate,energy flow,Abitic characteristics of the landscape,vague,0,0,0,1
+coastWQReg,denitrification,Aquatic Biogeochemistry,,1,0,0,0
+coastWQReg,N and P excretion rates,Aquatic biogeochemistry,,0,0,1,0
+coastWQReg,nitrate spiraling rates,Aquatic biogeochemistry,,0,0,1,0
+coastWQReg,nitrate conc.,Aquatic biogeochemistry,,0,0,0,1
+coastWQReg,nitrate spiraling rates,Aquatic biogeochemistry,,0,0,0,1
+coastWQReg,nitrate/nitrite/phosphorous/BOD5/O2 concentrations in water,Aquatic biogeochemistry,,0,1,0,0
+coastWQReg,nitrite conc.,Aquatic biogeochemistry,,0,0,0,1
+coastWQReg,Nitrogen,Aquatic biogeochemistry,,0,0,0,1
+coastWQReg,nitrogen and phosphorus retention,Aquatic biogeochemistry,,0,0,0,1
+coastWQReg,nitrogen concentration,Aquatic biogeochemistry,,0,0,0,1
+coastWQReg,NO3-N concentrations,Aquatic biogeochemistry,,1,0,0,0
+OceanReg,carbonate production,Aquatic Biogeochemistry,,0,2,0,0
+SoilProtect,Decomposition of leaf litter in freshwater systems,Aquatic Biogeochemistry,maybe,0,1,0,0
+CulturePsych,biodiversity appreciation,Biodiversity,new category,0,1,0,0
+CulturePsych,biodiversity condition,Biodiversity,new category,0,1,0,0
+Food,biodiversity,Biodiversity,new category,0,0,0,1
+HabCreate,biodiversity,Biodiversity,new category,0,0,0,2
+HabCreate,biodiversity loss,Biodiversity,new category,0,0,0,1
+HabCreate,biodiversity protection,Biodiversity,new category,1,1,0,0
+HabCreate,biodiversity value of grasslands,Biodiversity,new category,0,0,0,1
+MaintainOpts,Biodiversity,Biodiversity,new category,0,1,0,0
+MaintainOpts,Biodiversity of seedlings,Biodiversity,new category,0,0,0,1
+PestPath,biodiversity,Biodiversity,new category,0,0,0,1
+Pollination,biodiversity composite score,Biodiversity,new category,0,0,0,1
+CulturePsych,decrease in spring litter,Biotic characteristics of the lanscape,,0,0,0,1
+ClimReg,canopy carbon,Carbon,,0,0,0,1
+ClimReg,Carbon Capture,Carbon,,0,1,0,0
+ClimReg,Carbon cycling (measured by enzyme activity),Carbon,,1,0,0,0
+ClimReg,carbon emissions,Carbon,,0,0,0,1
+ClimReg,carbon fluxes,Carbon,,0,0,0,1
+ClimReg,carbon gain,Carbon,,0,1,0,0
+ClimReg,carbon in trees per area,Carbon,,0,1,0,0
+ClimReg,carbon per area,Carbon,,0,1,0,0
+ClimReg,Carbon per tree,Carbon,,0,1,0,0
+ClimReg,carbon seq. CO2 equivalent,Carbon,,0,1,0,0
+ClimReg,carbon sequestration,Carbon,,0,2,1,2
+ClimReg,Carbon sequestration,Carbon,,1,0,1,0
+ClimReg,carbon sequestration in soils and biomass,Carbon,,0,1,0,0
+ClimReg,carbon stock,Carbon,,0,2,0,0
+ClimReg,Carbon stock,Carbon,,1,0,0,1
+ClimReg,Carbon stocks,Carbon,,0,1,0,0
+ClimReg,carbon storage,Carbon,,0,9,0,1
+ClimReg,Carbon storage,Carbon,,0,6,0,0
+ClimReg,CO2 efflux,Carbon,,0,1,0,1
+ClimReg,CO2 emissions,Carbon,,0,1,0,0
+ClimReg,CO2 flux,Carbon,,0,1,0,0
+ClimReg,coarse veg area x avg. sequestration rate,Carbon,,0,1,0,0
+ClimReg,Dilution and sequestration,Carbon,maybe,0,1,0,0
+ClimReg,ecosystem carbon exchange,Carbon,,0,1,0,1
+ClimReg,fine veg area x avg. sequestration rate,Carbon,,0,1,0,0
+ClimReg,forest floor carbon pool,Carbon,,0,1,0,1
+ClimReg,greenhouse gas value,Carbon,maybe expand the carbon bin to include all greenhouse gases,0,1,0,0
+ClimReg,Greenhouse Gas Value (GHGV),Carbon,,0,1,0,0
+ClimReg,Mg C per ha,Carbon,,0,0,1,0
+ClimReg,Net C balance,Carbon,,0,1,0,0
+OceanReg,carbon sequestation,Carbon,,0,1,0,0
+SoilProtect,carbon storage,Carbon,,0,1,0,0
+CulturePsych,birding experience (satisfaction),Characteristics of human population,,0,0,1,0
+CulturePsych,cars or bicycles parked in front yard),Characteristics of human population,,0,0,0,1
+CulturePsych,Disturbance (artificial light,Characteristics of human population,maybe,0,0,0,1
+CulturePsych,effect on estate value,Characteristics of human population,,0,1,0,0
+CulturePsych,human attitudes and preferences (i.e. ecosystem services-based traits):water use,Characteristics of human population,,0,1,0,0
+CulturePsych,landscape aesthetics,Characteristics of human population,,0,1,0,0
+CulturePsych,lawn furniture,Characteristics of human population,,0,0,0,1
+CulturePsych,life satisfaction,Characteristics of human population,,0,0,0,1
+CulturePsych,Love of nature,Characteristics of human population,,0,1,0,0
+CulturePsych,Nature appreciation,Characteristics of human population,,0,1,0,0
+CulturePsych,human and agricultural water consumption(access),"Characteristics of human population, land cover",,0,0,0,1
+MaintainOpts,fire regeneration after fire,Characteristics of the landscape,both abiotic and biotic,0,0,1,0
+coastWQReg,BOD,Characteristics of the landscape: aquatic,"no idea, maybe biochemical oxygen demand",0,0,0,1
+HabCreate,biotic integrity score (rangeland health assessment),Characteristics of the landscape: terrestrial,both abiotic and biotic?,0,0,1,0
+HabCreate,dune height,Characteristics of the landscape: terrestrial,,0,0,0,1
+HabCreate,coral cover,Characteristics of the plot,,0,1,0,0
+SoilProtect,burrow opening diameter,Characteristics of the plot,maybe Biotic characteristics of the landscape: terrestrial,1,0,0,0
+CulturePsych,Garden-design,"Characteristics of the plot, Exploitation/harvest",,0,0,0,1
+ClimReg,net oxygen production,ClimReg nutrients,,0,0,1,0
+ClimReg,nitrogen,ClimReg nutrients,,0,1,0,0
+ClimReg,Nitrogen storage,ClimReg nutrients,,0,1,0,0
+CulturePsych,deer hunting,Exploitation/harvest,,0,1,0,0
+CulturePsych,grass for hay,Exploitation/harvest,,0,0,0,1
+CulturePsych,moose hunting,Exploitation/harvest,,0,1,0,0
+CulturePsych,natural materials,Exploitation/harvest,maybe,0,1,0,0
+CulturePsych,number of national reserves,Exploitation/harvest,too vague,0,0,0,1
+Energy,barrels of oil equivalent,Exploitation/harvest,,0,1,0,0
+Energy,hydro-energy potential,Exploitation/harvest,,0,1,0,0
+Energy,hydropower,Exploitation/harvest,,0,0,0,1
+Energy,Indicators (12 different indices),Exploitation/harvest,,1,1,0,0
+Food,agricultural production,Exploitation/harvest,,0,2,0,0
+Food,Agricultural production,Exploitation/harvest,,0,2,0,0
+Food,Agricultural revenue,Exploitation/harvest,money category?,0,1,0,1
+Food,black duck hunting,Exploitation/harvest,,0,1,0,0
+Food,brook trout angling,Exploitation/harvest,,0,1,0,0
+Food,cattle,Exploitation/harvest,,0,1,0,0
+Food,cloud berry picking,Exploitation/harvest,,0,1,0,0
+Food,commercially harvested fungi richness,Exploitation/harvest,,0,1,0,1
+Food,community garden,Exploitation/harvest,,0,1,0,0
+Food,crop production,Exploitation/harvest,,0,1,0,1
+Food,Crop production,Exploitation/harvest,,0,1,1,0
+Food,Crop revenue,Exploitation/harvest,,0,1,0,0
+Food,crop variation,Exploitation/harvest,,0,0,1,0
+Food,crop yield,Exploitation/harvest,,0,4,0,0
+Food,Crop yield,Exploitation/harvest,,0,0,1,0
+Food,ear mass,Exploitation/harvest,,0,0,0,1
+Food,Edible mushroom yield,Exploitation/harvest,,0,1,0,0
+Food,fiber,Exploitation/harvest,maybe,0,1,0,0
+Food,Field derived production,Exploitation/harvest,maybe Productivity,0,1,0,1
+Food,fish aquaculture,Exploitation/harvest,,0,1,0,0
+Food,fish harvesting,Exploitation/harvest,,0,1,0,0
+Food,fish landings,Exploitation/harvest,,0,0,1,0
+Food,fish yield,Exploitation/harvest,,0,1,0,1
+Food,fisheries yield,Exploitation/harvest,,0,1,0,0
+Food,Food,Exploitation/harvest,,1,1,0,0
+Food,food cultivation area,Exploitation/harvest,,0,0,1,0
+Food,food production,Exploitation/harvest,,0,1,0,0
+Food,food supply,Exploitation/harvest,,0,1,0,0
+Food,forage production,Exploitation/harvest,,0,1,0,0
+Food,freshwater plants and animals,Exploitation/harvest,,0,1,0,0
+Food,fruit quality,Exploitation/harvest,,0,0,0,1
+Food,Fruit set,Exploitation/harvest,,1,0,0,0
+Food,fruit weight,Exploitation/harvest,,0,0,0,1
+Food,fungi,Exploitation/harvest,,0,1,0,0
+Food,grain production,Exploitation/harvest,,0,0,1,0
+Food,Grain production,Exploitation/harvest,,0,1,0,0
+Food,grain weight (tonnes per hectare per plot),Exploitation/harvest,,0,0,0,1
+Food,grass nutritional value,Exploitation/harvest,,0,0,0,1
+Food,inland fisheries yields,Exploitation/harvest,,0,1,0,0
+Food,legume abundance,Exploitation/harvest,,0,0,0,1
+Food,livestock and agriculture,Exploitation/harvest,,0,1,0,0
+Food,livestock owned,Exploitation/harvest,,0,0,1,0
+Food,livestock production,Exploitation/harvest,,0,0,0,1
+Food,Maple syrup,Exploitation/harvest,,0,1,0,0
+Food,marine trophic index,Exploitation/harvest,,0,1,0,0
+Food,meat production,Exploitation/harvest,,0,1,0,0
+Food,Moose hunting,Exploitation/harvest,,0,1,0,0
+Food,NPP,Exploitation/harvest,,0,1,0,0
+Food,Number of cattle per hectare,Exploitation/harvest,,0,0,0,1
+Materials,charcoal production,Exploitation/harvest,,0,0,1,0
+Materials,firewood use,Exploitation/harvest,,0,1,0,0
+Materials,harvestable timber,Exploitation/harvest,,0,1,0,0
+MedGen,commercially harvested fungi richness,Exploitation/harvest,,0,1,0,0
+CulturePsych,leisure hunting,"Exploitation/harvest, Recreation/tourism",,0,1,0,0
+CulturePsych,aquaculture,Expolitation/harvest,,0,0,1,0
+Food,aquaculture,Expolitation/harvest,,0,0,1,0
+Food,aquaculture and salt production,Expolitation/harvest,check salt production,0,1,0,0
+freshWQReg,Flood control,Extreme events,maybe,0,1,0,0
+Hazards,flood buffering,Extreme events,maybe,0,1,0,0
+Hazards,flood mitigation,Extreme events,maybe,0,1,0,0
+Hazards,Flood regulation,Extreme events,maybe,0,1,0,0
+Hazards,number of people affected by floods,Extreme events,,0,1,0,0
+ClimReg,Loss of Co2 from forest fires,"Extreme events, Carbon",,0,0,0,1
+Hazards,maximum continuous period of tidal submergence,"Extreme events, Hydrology",,0,0,1,0
+ClimReg,Broader habitat type,Habitat,,0,0,0,1
+CulturePsych,habitat suitability,Habitat,,0,0,0,1
+HabCreate,aquatic habitat potential,Habitat,new category,0,0,0,1
+HabCreate,Bat and bird habitat,Habitat,new category,0,1,0,0
+HabCreate,Broader habitat type,Habitat,,0,0,0,1
+HabCreate,fish habitat,Habitat,,0,1,0,0
+HabCreate,game fish habitat suitability index,Habitat,,0,0,0,1
+HabCreate,habitat,Habitat,,0,1,0,0
+HabCreate,Habitat capability index,Habitat,,0,0,0,1
+HabCreate,habitat connectivity,Habitat,,2,1,0,0
+HabCreate,habitat cover,Habitat,,0,0,0,1
+HabCreate,habitat maintenance,Habitat,,0,1,0,0
+HabCreate,habitat patch size,Habitat,,0,0,0,1
+HabCreate,Habitat Provision,Habitat,,0,1,0,0
+HabCreate,habitat quality,Habitat,,2,2,0,1
+HabCreate,Habitat quality,Habitat,,0,0,1,0
+HabCreate,Habitat sensitivity,Habitat,,1,0,0,0
+HabCreate,landscape heterogeneity,Habitat,,0,0,0,1
+HabCreate,multifunctional hotspots,Habitat,no idea,0,1,0,0
+Hazards,Broader habitat type,Habitat,,0,0,0,1
+MaintainOpts,habitat assessment score,Habitat,,0,0,0,1
+MedGen,Broader habitat type,Habitat,,0,0,0,1
+CulturePsych,health deprivation,Human health,,0,1,0,0
+CulturePsych,health effects (physical - mental),Human health,,0,1,0,0
+CulturePsych,human disease prevalence(6+types),Human health,,0,0,0,1
+CulturePsych,noise reduction,Human health,,0,1,0,0
+CulturePsych,generation of scientific knowledge,Human knowledge,,0,0,0,1
+CulturePsych,information and knowledge,Human knowledge,,0,1,0,0
+freshWQReg,groundwater quantity,Hydology,,0,0,0,1
+coastWQReg,freshwater,hydrology,too vague,0,1,0,0
+freshWQReg,groundwater exchange,Hydrology,,1,0,0,0
+freshWQReg,Hydrologic function score (rangeland health assessment),Hydrology,,0,0,0,1
+freshWQReg,Hydrologic regime,Hydrology,,1,0,0,0
+freshWQReg,infiltration,Hydrology,,0,1,0,0
+PestPath,Invasive species cover,Invasive species,,0,0,1,0
+ClimReg,area burned by fire,Land cover,,0,0,0,1
+CulturePsych,cultural sites of First Nations,Land cover,maybe,0,1,0,0
+Food,cover,Land cover,maybe,1,0,0,0
+Food,farmland,Land cover,or is it land use,0,0,1,0
+HabCreate,connectivity,Land cover,,0,1,0,0
+HabCreate,connectivity between grasslands,Land cover,,0,0,0,1
+MaintainOpts,change in forest area,Land cover,,0,0,0,1
+PestPath,area of riparian habitat,Land cover,,0,0,0,2
+SoilProtect,fallow,Land cover,"maybe, also Exploitation/harvest",0,0,1,0
+CulturePsych,crop land,Land use,maybe,0,0,1,0
+Food,crop land,Land use,maybe,0,0,1,0
+SoilProtect,crop land,Land use,maybe,0,0,2,0
+Energy,biomass,Pathogens/natural enemies,,1,1,0,1
+PestPath,Abundance of fungal pathogen,pathogens/natural enemies,,1,0,0,0
+PestPath,arthropod removal by birds,Pathogens/natural enemies,,0,1,0,0
+PestPath,Biological control by natural predators,Pathogens/natural enemies,,0,0,0,1
+PestPath,biological control index,Pathogens/natural enemies,,0,1,0,0
+PestPath,Biological control of aphid pests,Pathogens/natural enemies,,0,0,0,1
+PestPath,biological control of pests,Pathogens/natural enemies,,0,1,0,0
+PestPath,bird predation rates on plasticene insects,Pathogens/natural enemies,,0,0,0,1
+PestPath,carrion consumption rate,Pathogens/natural enemies,,0,1,0,0
+PestPath,CBB bean damage,Pathogens/natural enemies,,0,1,0,0
+PestPath,CBB infestation,Pathogens/natural enemies,,0,1,0,0
+PestPath,cereal leaf beetle density,Pathogens/natural enemies,,0,1,0,1
+PestPath,cereal leaf beetle eggs,Pathogens/natural enemies,,0,1,0,1
+PestPath,cereal leaf beetle larvae,Pathogens/natural enemies,,0,1,0,1
+PestPath,crop damage,Pathogens/natural enemies,,0,1,0,1
+PestPath,distribution of pest predators,Pathogens/natural enemies,,0,0,0,1
+PestPath,E. coli levels,Pathogens/natural enemies,,0,0,0,1
+PestPath,efficacy of beetle removal by Anole,Pathogens/natural enemies,,0,0,0,1
+PestPath,Egg predation,Pathogens/natural enemies,,0,1,0,0
+PestPath,Feces removal rate,Pathogens/natural enemies,,0,0,0,1
+PestPath,Functional Diveristy,Pathogens/natural enemies,,0,0,0,1
+PestPath,invasion resistance,Pathogens/natural enemies,,1,0,0,0
+PestPath,larval dissappearance rates of pests,Pathogens/natural enemies,,0,0,0,1
+PestPath,larval removal,Pathogens/natural enemies,,0,1,0,0
+PestPath,number of borers,Pathogens/natural enemies,,0,0,1,0
+Pollination,arthropod predators and birds during winter,Pathogens/natural enemies,"check ""birds during winter"", is this abundance?",0,1,0,0
+Pollination,Invertebrate abundance (natural enemies),Pathogens/natural enemies,,0,0,0,1
+SoilProtect,leaf consumption,Pathogens/natural enemies,,0,0,0,1
+Pollination,Average percent volume of plant in feces,Pathogens/natural predators,also maybe abundance,0,0,0,1
+coastWQReg,leaf litter decomposition,Plant soil feedbacks,,1,0,0,0
+coastWQReg,litter consumption rates,Plant soil feedbacks,,1,0,0,0
+SoilProtect,% litter mass remaining,Plant soil feedbacks,,1,0,0,1
+SoilProtect,Leaf litter decomposition,Plant soil feedbacks,,0,1,0,0
+SoilProtect,litter biomass,Plant soil feedbacks,,1,0,0,0
+SoilProtect,litter decomposition,Plant soil feedbacks,,1,0,0,0
+Pollination,blueberry flower visitation,Pollination,,0,1,0,0
+Pollination,diversity,Pollination,vague,0,0,0,1
+Pollination,flower visits,Pollination,,0,0,0,1
+Pollination,Flower visits,Pollination,,0,1,0,0
+Pollination,fruit set,Pollination,,0,1,0,0
+Pollination,Fruit set,Pollination,,1,0,0,0
+Pollination,Functional Diveristy,Pollination,,0,0,0,1
+Pollination,Hummingbird movement,Pollination,,0,0,0,1
+Pollination,isotope ratios,Pollination,,0,0,0,1
+Pollination,likelihood of seed dispersal in given locations,Pollination,,0,1,0,0
+Pollination,Nectar feeder biodiversity and abundance,Pollination,,0,0,0,1
+Pollination,number of pollen grains deposited per flower,Pollination,,0,1,0,0
+HabCreate,insect pollinated plants,"Pollination, vegetation cover",,0,1,0,0
+AQReg,air quality improvement,Pollution/water quality,,0,1,0,0
+AQReg,atmospheric regulation,Pollution/water quality/air quality,,0,1,0,0
+AQReg,coarse veg area x pollution removal rate,Pollution/water quality/air quality,,0,1,0,0
+AQReg,fine veg area x pollution removal rate,Pollution/water quality/air quality,,0,1,0,0
+AQReg,Gas regulation,Pollution/water quality/air quality,,1,1,0,0
+AQReg,N2,Pollution/water quality/air quality,,0,1,0,0
+AQReg,nitrous oxide emission,Pollution/water quality/air quality,,0,0,0,1
+AQReg,Nitrous oxide emissions,Pollution/water quality/air quality,,1,0,0,0
+AQReg,nitrous oxide flux,Pollution/water quality/air quality,,0,1,0,0
+AQReg,NO measurements,Pollution/water quality/air quality,,0,1,0,0
+AQReg,NO2 concentration levels,Pollution/water quality/air quality,,0,0,0,1
+AQReg,No2 dry deposition velocity,Pollution/water quality/air quality,,0,0,0,1
+coastWQReg,chemical water quality regulation,Pollution/water quality/air quality,,0,1,0,0
+coastWQReg,ecologic water quality,Pollution/water quality/air quality,,0,0,0,1
+Food,mercury residues in fish,Pollution/water quality/air quality,,0,0,1,0
+ClimReg,above and below ground primary prouction,Productivity,,0,1,0,1
+ClimReg,Aboveground biomass,Productivity,,1,2,0,0
+ClimReg,aboveground carbon pool,Productivity,,0,1,0,1
+ClimReg,aboveground carbon storage,Productivity,check this one,0,1,0,0
+ClimReg,aboveground live biomass,Productivity,,1,0,0,0
+ClimReg,biomass carbon stock,Productivity,,1,0,0,0
+ClimReg,C fixation and O2 releasing,Productivity,,0,1,0,0
+ClimReg,C storage,Productivity,,0,1,0,0
+ClimReg,canopy biomass,Productivity,,0,0,0,1
+ClimReg,GPP,Productivity,,0,0,1,0
+ClimReg,microbial biomass,Productivity,?,1,0,0,0
+ClimReg,Net primary production,Productivity,,0,0,1,0
+ClimReg,net primary productivity,Productivity,,0,0,0,1
+ClimReg,NPP,Productivity,,0,2,0,0
+coastWQReg,chlorophyll a,Productivity,,0,0,0,1
+coastWQReg,fish size,Productivity,,0,0,0,1
+coastWQReg,Growth of dry soft tissue,Productivity,maybe,1,0,0,0
+coastWQReg,Growth of shell length,Productivity,"maybe, could be ESP",1,0,0,0
+CulturePsych,fish productivity,Productivity,,0,0,0,1
+Energy,Aboveground annual net primary productivity,Productivity,,0,0,0,1
+Energy,Biomass,Productivity,,0,0,0,1
+Energy,Biomass based energy,Productivity,,0,1,0,0
+Food,aboveground biomass,Productivity,,0,0,0,1
+Food,biomass,Productivity,,1,0,0,0
+Food,Biomass,Productivity,,0,1,0,1
+Food,Growth of dry soft tissue,Productivity,maybe,1,0,0,0
+Food,Growth of shell length,Productivity,"maybe, could be ESP",1,0,0,0
+freshWQReg,bryophyte biomass,Productivity,,0,0,0,1
+HabCreate,aboveground production,Productivity,,0,0,0,1
+HabCreate,coral growth,Productivity,,1,0,0,0
+HabCreate,gross primary production,Productivity,,0,0,0,1
+Materials,forest yield,Productivity,maybe with new bin for forest products,0,1,0,0
+PestPath,biomass of weeds,Productivity,,1,0,0,0
+SoilProtect,above ground biomass,Productivity,,0,1,0,0
+SoilProtect,Microbial biomass,Productivity,?,1,0,0,0
+HabCreate,herbivore fish biomass,Productivity ,could also be Pathogens/natural enemies,0,1,0,0
+Food,corn yield,"Productivity, Exploitation/harvest",,0,1,0,0
+HabCreate,NDVI,"Productivity, Habitat",,0,0,1,0
+CulturePsych,cross country skiing,Recreation/tourism,,0,1,0,0
+CulturePsych,dive tourism,Recreation/tourism,or maybe Exploitation,0,1,0,0
+CulturePsych,flora and fauna,Recreation/tourism,maybe,0,1,0,0
+CulturePsych,horseback riding,Recreation/tourism,,0,1,0,0
+CulturePsych,distance traveled to visit lakes,Recreation/toursim,,0,1,0,0
+CulturePsych,lake visitation,Recreation/toursim,,0,1,0,0
+coastWQReg,macroinvertebrate abundance and composition,"Service provider abunance, Service provider diversity/richness/composition",,0,0,0,1
+coastWQReg,abundance of zooplankton,service provider abundance,,0,0,0,1
+CulturePsych,Abundance of RDB or nationally scarce invertebrates,service provider abundance,,0,0,0,1
+CulturePsych,fish density (adults per ha),Service provider abundance,,0,0,0,1
+CulturePsych,Fish density (young-of-year per ha),Service provider abundance,,0,0,0,1
+HabCreate,crustacean density,Service provider abundance,,1,0,0,0
+HabCreate,fish density,Service provider abundance,,1,0,0,0
+HabCreate,nekton abundance,Service provider abundance,,1,0,0,0
+MaintainOpts,abundance of native and non-native taxa,service provider abundance,,0,0,0,1
+MaintainOpts,conifer seedling abundance,Service provider abundance,,0,0,1,0
+MaintainOpts,existence of woodland caribou,Service provider abundance,,0,1,0,0
+MaintainOpts,fish abundances,Service provider abundance,,1,0,0,0
+MaintainOpts,index of rarity,Service provider abundance,maybe,1,0,0,0
+MaintainOpts,invertebrate abundances,Service provider abundance,,1,0,0,0
+MaintainOpts,number of invertabrates,Service provider abundance,,0,0,0,1
+MedGen,medicinal plants,Service provider abundance,maybe,0,2,0,0
+PestPath,abundance of beneficial fungi,service provider abundance,,1,0,0,0
+PestPath,aphid (pest) density,service provider abundance,pathogens/natural enemies,0,1,0,1
+PestPath,aphid days,service provider abundance,pathogens/natural enemies,0,0,0,1
+PestPath,aphid growth,service provider abundance,pathogens/natural enemies,0,0,0,1
+PestPath,Aphids per plant,service provider abundance,pathogens/natural enemies,0,1,0,0
+PestPath,bird abundance,service provider abundance,,0,1,0,0
+PestPath,bird species density,service provider abundance,,0,1,0,0
+Pollination,abundance,service provider abundance,check this one,0,1,0,0
+Pollination,butterfly presence/abundance,service provider abundance,,0,0,1,0
+SoilProtect,abundance and body size of carabids,service provider abundance,,0,0,0,1
+SoilProtect,abundance and body size of collembollans,service provider abundance,,0,0,0,1
+SoilProtect,abundance and body size of dipterans,service provider abundance,,0,0,0,1
+SoilProtect,abundance and body size of staphylinids,service provider abundance,,0,0,0,1
+SoilProtect,Abundance of detritivorous soil arthropods,service provider abundance,,1,0,0,0
+SoilProtect,burrow density,service provider abundance,,1,0,0,0
+SoilProtect,earthworm abundance,Service provider abundance,,1,0,0,1
+SoilProtect,earthworm density,Service provider abundance,,0,0,0,1
+SoilProtect,fungal abundance,Service provider abundance,,1,0,0,0
+SoilProtect,frequency of burrows,Service provider abundance ,indirectly?,1,0,0,0
+PestPath,dung-decomposing beetle diversity and abundance,"Service provider abundance, service provider diversity/richness/composition",,1,0,0,0
+SoilProtect,dung-decomposing beetle diversity and abundance,"Service provider abundance, service provider diversity/richness/composition",,1,0,0,0
+PestPath,arthropod diversity and abundance,service provider abundance; service provider diversity/richness/composition,,1,0,0,0
+Pollination,Abundance and diversity of native bees,service provider abundance; service provider diversity/richness/composition,,0,1,0,0
+SoilProtect,arthropod diversity and abundance,service provider abundance; service provider diversity/richness/composition,,1,0,0,0
+Pollination,and diversity of wild bees visiting flowers,service provider diversity/richness,,0,1,0,0
+coastWQReg,diversity of algal and bacterial communities,Service provider diversity/richness/composition,,0,0,0,1
+coastWQReg,invertebrate community,Service provider diversity/richness/composition,,0,0,0,1
+Food,Fish community diversity,Service provider diversity/richness/composition,,0,1,0,0
+Food,Fish community structure,Service provider diversity/richness/composition,,1,0,0,0
+HabCreate,fish community index (FCI),Service provider diversity/richness/composition,,1,0,0,0
+HabCreate,macro invertebrate rayon richness and diversity,Service provider diversity/richness/composition,,0,0,0,1
+MaintainOpts,Fish Community Index (FCI),Service provider diversity/richness/composition,,1,0,0,0
+MedGen,medicinal plant richness,Service provider diversity/richness/composition,,0,1,0,0
+PestPath,bird functional diversity,service provider diversity/richness/composition,,1,0,0,0
+PestPath,bird species richness,service provider diversity/richness/composition,,0,1,0,0
+PestPath,Invertebrate biodiversity,Service provider diversity/richness/composition,,0,0,0,1
+Pollination,bird functional diversity,service provider diversity/richness/composition,,1,0,0,0
+Pollination,Community structure of flower longicorn beetles,Service provider diversity/richness/composition,,0,0,0,1
+SoilProtect,ant assemblage composition,service provider diversity/richness/composition,,0,0,0,1
+SoilProtect,ant species richness,service provider diversity/richness/composition,,1,0,0,0
+Food,genera richness,"Service provider diversity/richness/composition, Exploitation/harvest",,0,0,1,0
+CulturePsych,fish functional group biodiversity,"Service provider diversity/richness/composition, Service provider function/functional traits",,0,1,0,0
+coastWQReg,coral rugosity,Service provider function/functional traits,,0,0,0,1
+CulturePsych,coral functional traits,Service provider function/functional traits,,0,0,0,1
+freshWQReg,bryophyte water holding capacity,Service provider function/functional traits,new category or could be Biotic characteristics of the landscape: aquatic,0,0,0,1
+HabCreate,coral functional traits (Age and size at maturity,Service provider function/functional traits,,0,0,0,1
+HabCreate,coral rugosity,Service provider function/functional traits,,0,0,0,1
+HabCreate,coral survival,Service provider function/functional traits,maybe,1,0,0,0
+HabCreate,dispersal distance,Service provider function/functional traits,maybe,1,0,0,0
+HabCreate,fish functional group,Service provider function/functional traits,,0,0,0,1
+Hazards,coral functional traits (Colony maximum diameter,Service provider function/functional traits,,0,0,0,1
+Hazards,coral rugosity,Service provider function/functional traits,,0,0,0,1
+MaintainOpts,fish traits,Service provider function/functional traits,,1,0,0,0
+MaintainOpts,Invertebrate traits,Service provider function/functional traits,,1,0,0,0
+PestPath,Bird functional traits (related to foraging),Service provider function/functional traits,new category,0,0,0,1
+SoilProtect,Detritivore feeding rate,Service provider function/functional traits,,0,0,0,1
+SoilProtect,earthworm functional traits,Service provider function/functional traits,,0,0,0,1
+SoilProtect,Earthworm physical properties,Service provider function/functional traits,,0,0,0,1
+Pollination,functional evenness,"Service provider function/functional traits, Service provider diversity/abundance/composition",,0,0,0,1
+SoilProtect,functional diversity,"Service provider function/functional traits, Service provider diversity/abundance/composition",,1,0,0,0
+AQReg,N deposition,Soil characteristics,vague,0,0,0,1
+AQReg,N storage,Soil characteristics,vague,0,1,0,0
+ClimReg,N avaliability,Soil characteristics,vague,0,1,0,1
+CulturePsych,gravimetric soil water,Soil characteristics,,0,0,0,1
+freshWQReg,N retention,Soil characteristics,vague,0,1,0,0
+SoilProtect,available P,Soil characteristics,,0,0,0,1
+SoilProtect,C:N ratio,Soil characteristics,,0,0,0,1
+SoilProtect,Ca-P,Soil characteristics,,0,0,0,1
+SoilProtect,detrital P,Soil characteristics,,0,0,0,1
+SoilProtect,erosion,Soil characteristics,,1,0,0,0
+SoilProtect,erosion control,Soil characteristics,,0,1,0,0
+SoilProtect,erosion control capacity,Soil characteristics,,0,0,0,1
+SoilProtect,erosion mitigation,Soil characteristics,,0,1,0,0
+SoilProtect,Erosion modulus,Soil characteristics,,0,1,0,0
+SoilProtect,exchangeable base cations (Ca,Soil characteristics,,0,0,0,1
+SoilProtect,impact intensity (tons of soil),Soil characteristics,or abiotic characteristics of the landscape:terrestrial,0,1,0,0
+SoilProtect,inorganic N supply,Soil characteristics,,0,1,0,0
+SoilProtect,many soil chemistry variables,Soil characteristics,,1,0,0,0
+SoilProtect,Mg,Soil characteristics,Magnesium ?,0,0,0,1
+SoilProtect,Microbial basal respiration,Soil characteristics,,1,0,0,0
+SoilProtect,N,Soil characteristics,Nitrogen ?,1,0,0,1
+SoilProtect,N mineralisation rate,Soil characteristics,vague,0,0,0,1
+SoilProtect,N mineralization rate,Soil characteristics,vague,1,0,0,0
+SoilProtect,N retention,Soil characteristics,vague,0,1,0,0
+SoilProtect,N storage,Soil characteristics,vague,1,0,0,0
+SoilProtect,Na),Soil characteristics,maybe this should be sodium,0,0,0,1
+SoilProtect,net nitrogen mineralization absorbed to ionic resins,Soil characteristics,,0,1,0,0
+SoilProtect,Nitrate supply rate,Soil characteristics,,0,0,1,0
+SoilProtect,nitrogen retention,Soil characteristics,,0,1,0,0
+SoilProtect,nitrogen storage in SOM,Soil characteristics,,0,1,0,0
+coastWQReg,forest,Vegetation cover,,0,0,1,0
+CulturePsych,forest,Vegetation cover,,0,0,1,0
+freshWQReg,forest,Vegetation cover,,0,0,1,0
+HabCreate,fleshy algal cover,Vegetation cover,,0,1,0,0
+HabCreate,Floral cover,Vegetation cover,,1,0,0,0
+HabCreate,forest understory plant survivorship,Vegetation cover,,1,0,0,0
+SoilProtect,forest,Vegetation cover,,0,0,1,0
+AQReg,dissolved gasses,,too vague,0,1,0,0
+AQReg,ecologically effective area,,no idea,0,0,0,1
+AQReg,fluorescence),,is this one unconnected from the rest,0,0,0,1
+AQReg,photosynthesis (gas exchange,,,0,0,0,1
+AQReg,Relaxation,,,0,1,0,0
+AQReg,S depositon,,,0,0,0,1
+AQReg,total pollutants removal,,,0,1,0,0
+AQReg,tree growth and survival,,,0,0,0,1
+ClimReg,AGB,,no idea,0,1,0,0
+ClimReg,basal area,,no idea,1,1,1,0
+ClimReg,Climate regulation,,no idea,1,1,0,0
+ClimReg,coarse veg area x avg. storage rate,,not sure what storage is talking about ,0,1,0,0
+ClimReg,ER,,no idea,0,0,1,0
+ClimReg,Freshwater metabolism,,needs new bin?,0,0,0,1
+ClimReg,growth rates,,too vague,1,0,0,0
+ClimReg,nutrient use efficiency,,,0,1,0,1
+ClimReg,Organic Carbon,,,0,0,0,1
+ClimReg,Percent carbon in soil by weight,,,0,1,0,0
+ClimReg,percent cover canopy,,,1,1,0,0
+ClimReg,percent cover herbs,,,1,1,0,0
+ClimReg,percent cover shrubs,,,1,1,0,0
+ClimReg,percent tree cover,,,0,0,0,1
+ClimReg,Pest control,,,0,1,0,0
+ClimReg,phosphatase activity,,,1,0,0,0
+ClimReg,plant productivity,,,1,0,0,0
+ClimReg,Potential carbon sequestration,,,0,1,0,0
+ClimReg,root biomass,,,1,1,0,1
+ClimReg,secondary forest fire tolerance,,,1,0,0,0
+ClimReg,Semi-natural space type,,,0,0,0,1
+ClimReg,shoot biomass,,,0,0,0,1
+ClimReg,soil area x carbon density,,,0,1,0,0
+ClimReg,soil carbon,,,0,5,0,3
+ClimReg,soil carbon pool,,,0,1,0,1
+ClimReg,soil carbon storage,,,1,0,0,0
+ClimReg,soil nitrogen,,,0,1,0,1
+ClimReg,soil organic carbon,,,2,1,0,0
+ClimReg,soil organic matter,,,0,1,0,1
+ClimReg,soil respiration,,,1,0,0,0
+ClimReg,standing biomass,,,0,1,0,0
+ClimReg,stem relative growth rate,,,0,1,0,0
+ClimReg,thermal regulation (roofs),,,0,0,0,1
+ClimReg,timber volume,,,0,1,0,0
+ClimReg,total aboveground carbon,,,0,1,0,0
+ClimReg,total biomass,,,1,1,0,0
+ClimReg,total carbon pool,,,1,1,0,0
+ClimReg,total carbon stock,,,0,2,0,0
+ClimReg,total carbon stocks,,,0,1,0,1
+ClimReg,total carbon storage,,,0,1,0,0
+ClimReg,total soil C,,,0,1,0,0
+ClimReg,total soil nitrogen,,,1,0,0,0
+ClimReg,tree above ground carbon,,,0,1,0,0
+ClimReg,tree biomass,,,0,1,0,1
+ClimReg,Tree DBH,,,0,0,0,1
+ClimReg,tree density,,,1,1,0,0
+ClimReg,tree growth and survival,,,0,0,0,1
+ClimReg,tree height,,,1,1,0,0
+ClimReg,Tree leaf biomass,,,0,0,0,1
+ClimReg,urease activity,,,1,0,0,0
+ClimReg,vegetation cover,,,0,0,0,1
+ClimReg,vegetation height,,,1,0,0,0
+coastWQReg,Ammonia and nitrate loss,,Aquatic Biogeochemistry,0,1,0,0
+coastWQReg,clearance rate,,no idea,0,1,0,0
+coastWQReg,community respiration,,too vague,1,0,0,0
+coastWQReg,dissolved solids,,maybe Pollution/water quality/air quality,1,0,0,0
+coastWQReg,downstream,,too vague,0,0,1,0
+coastWQReg,forest recovery,,no idea,0,0,0,1
+coastWQReg,Freshwater metabolism,,,0,0,0,1
+coastWQReg,nutrients,,,1,0,0,0
+coastWQReg,O2 conc.,,,0,0,0,1
+coastWQReg,organic matter,,,0,0,0,1
+coastWQReg,oxygen concentration,,,0,1,0,0
+coastWQReg,phosphate concentration,,,0,1,0,0
+coastWQReg,Phosphorous,,,0,0,0,1
+coastWQReg,phosphorus conc.,,,0,0,0,1
+coastWQReg,Phosphorus concentration,,,1,0,0,0
+coastWQReg,Plankton and macroinvertebrate community structure,,,1,0,0,0
+coastWQReg,presence and abundance of fish,,,0,0,0,1
+coastWQReg,presence and abundance of submerged macrophytes,,,0,0,0,1
+coastWQReg,presence and abundance of terrestrial consumers,,,0,0,0,1
+coastWQReg,presence of submerged aquatic vegetation-dependent fish and waterfowl,,,0,0,0,1
+coastWQReg,quality of regulating services,,,0,0,0,1
+coastWQReg,riparian wetland,,,0,0,1,0
+coastWQReg,Running water quality,,,0,1,0,0
+coastWQReg,Runoff coefficient,,,0,1,0,0
+coastWQReg,salinity,,,0,1,0,0
+coastWQReg,sediment yield,,,0,1,0,0
+coastWQReg,Sediment yield,,,0,1,0,0
+coastWQReg,sodium and chloride contents,,,1,0,0,0
+coastWQReg,Soil phosphorus saturation,,,0,1,0,0
+coastWQReg,Standing water quality,,,0,1,0,0
+coastWQReg,submerged aquatic vegetation coverage,,,0,0,0,1
+coastWQReg,total carbon content,,,1,0,0,0
+coastWQReg,total N,,,0,0,0,1
+coastWQReg,total N removal potential,,,0,1,0,0
+coastWQReg,Total nitrogen,,,0,0,0,1
+coastWQReg,total nitrogen content,,,1,0,0,0
+coastWQReg,total P removal potential,,,0,1,0,0
+coastWQReg,Total tree leaf area,,,0,0,0,1
+coastWQReg,tree growth and survival,,,0,0,0,1
+coastWQReg,turbidity and dissolved oxygen,,,0,0,0,1
+coastWQReg,volumes of wastewater generated and treated,,,0,1,0,0
+coastWQReg,water clarity,,,0,1,0,1
+coastWQReg,Water Purification and Provision,,,0,1,0,0
+coastWQReg,water quality,,,0,2,0,0
+coastWQReg,water quality for various uses,,,0,0,0,1
+coastWQReg,water quality index,,,0,1,0,0
+coastWQReg,Water quality regulation,,,0,1,0,0
+coastWQReg,Water yield,,,0,0,1,0
+CulturePsych,actual use),,no idea,0,1,0,0
+CulturePsych,Aesthetic heritage,,new category,0,1,0,0
+CulturePsych,aesthetic value,,new category,0,4,0,0
+CulturePsych,Aesthetics,,new category,0,1,0,0
+CulturePsych,basal area increment,,no idea,0,1,0,0
+CulturePsych,evolution of populations,,no idea,0,0,0,1
+CulturePsych,fish,,"could be Recreation/tourism, Exploitation/harvest, or ESP",0,1,0,0
+CulturePsych,number of pots,,no idea,0,1,0,0
+CulturePsych,opnion,,,0,0,1,0
+CulturePsych,orchard,,,0,0,1,0
+CulturePsych,Outdoor activities,,,0,1,0,0
+CulturePsych,outdoor rec,,,0,1,0,0
+CulturePsych,Outdoor recreation,,,0,1,0,0
+CulturePsych,paddle routes,,,0,1,0,0
+CulturePsych,people displacement,,,0,0,0,1
+CulturePsych,Plant biodiversity,,,0,0,0,1
+CulturePsych,plant diversity,,,0,0,0,1
+CulturePsych,population carrier,,,0,1,0,0
+CulturePsych,presence of Argali sheep,,,0,0,0,1
+CulturePsych,Presence of land cover types preferred by people via survey,,,0,1,0,0
+CulturePsych,presence of showy flowers,,,0,1,0,0
+CulturePsych,presence of the environment,,,0,1,0,0
+CulturePsych,probability of stocking,,,0,0,0,1
+CulturePsych,quality of cultural ecosystem services,,,0,0,0,1
+CulturePsych,range farm,,,0,0,1,0
+CulturePsych,Recreation,,,0,1,0,0
+CulturePsych,recreation (public access,,,0,1,0,0
+CulturePsych,recreation and community activities,,,0,1,0,0
+CulturePsych,Recreation and culture,,,1,1,0,0
+CulturePsych,recreation and ecotourism,,,0,1,0,0
+CulturePsych,recreation and tourism,,,0,1,0,0
+CulturePsych,recreation capacity,,,0,0,0,1
+CulturePsych,recreation potential,,,0,1,0,0
+CulturePsych,recreation value,,,0,2,0,0
+CulturePsych,recreational demand,,,0,0,0,1
+CulturePsych,recreational potential,,,0,0,0,1
+CulturePsych,recreational value,,,0,1,0,0
+CulturePsych,red grouse breeding success,,,0,0,0,1
+CulturePsych,relative basal area increment,,,0,1,0,0
+CulturePsych,resiliance,,,0,0,0,1
+CulturePsych,riparian wetland,,,0,0,1,0
+CulturePsych,sea turtle and shark biomass,,,0,1,0,0
+CulturePsych,Semi-natural space type,,,0,0,0,1
+CulturePsych,site size(well-being),,,0,0,1,0
+CulturePsych,size at maturity,,,0,1,0,0
+CulturePsych,social setting,,,0,1,0,0
+CulturePsych,soil temprature,,,0,0,0,1
+CulturePsych,sounds and scents,,,0,1,0,0
+CulturePsych,spiritual,,,0,1,0,0
+CulturePsych,stocked walleye length,,,0,0,0,1
+CulturePsych,summer cottages,,,0,1,0,0
+CulturePsych,total fish biomass,,,0,1,0,0
+CulturePsych,tourism,,,0,1,0,0
+CulturePsych,tourist visits,,,0,1,0,0
+CulturePsych,upstream downstream,,,0,0,1,0
+CulturePsych,Urban green space,,,0,1,0,0
+CulturePsych,viewscapes,,,0,1,0,0
+CulturePsych,visitors to national reserves/parks,,,0,0,0,1
+CulturePsych,visits to national reserves/parks,,,0,0,0,1
+CulturePsych,volunteer input and community events,,,0,0,0,1
+CulturePsych,volunteer input(education),,,0,0,1,0
+CulturePsych,wild rice harvest,,,0,1,0,0
+Energy,annual mortality,,no idea,1,0,0,0
+Energy,plant biomass,,,1,0,0,0
+Energy,Suvivorship,,,1,0,0,0
+Energy,total energy production,,,0,1,0,0
+Energy,total hydropower production,,,0,1,0,0
+Energy,vegetation cover,,,0,0,0,1
+Energy,Woody biomass,,,0,1,0,0
+Energy,Yield,,,1,1,0,0
+Food,coffee dry fruit weight,,could be about pollination,0,1,0,0
+Food,coffee fruit set,,could be about pollination,0,1,0,0
+Food,coffee fruit size,,could be about pollination,0,1,0,0
+Food,community structure,,too vague,0,0,0,1
+Food,ecological vulnerability,,no idea,0,0,0,1
+Food,fauna,,too vague,0,1,0,0
+Food,fish stock,,no idea,0,0,0,1
+Food,Fish Type,,no idea,0,0,0,1
+Food,flor,,no idea,0,1,0,0
+Food,NA,,no idea,1,0,0,0
+Food,number of pots,,no idea,0,1,0,0
+Food,okra yield,,,0,0,0,1
+Food,open space,,,0,1,0,0
+Food,orchard,,,0,0,1,0
+Food,orchard and forage production,,,0,1,0,0
+Food,oyster density,,,0,1,0,0
+Food,Oyster size,,,0,1,0,0
+Food,paddy rice field,,,0,0,1,0
+Food,palatability,,,0,0,0,1
+Food,palatable (to livestock) plant richness,,,0,1,0,0
+Food,pest load,,,0,0,0,1
+Food,pigs,,,0,1,0,0
+Food,population density,,,0,0,0,1
+Food,Port and Cattle,,,0,1,0,0
+Food,Proportion of non-declining exploited species of fish,,,0,0,0,1
+Food,proportion of site area cultivated for food,,,0,0,0,1
+Food,Quality of food,,,0,1,0,0
+Food,quality of provisioning services,,,0,0,0,1
+Food,quantity of food,,,0,1,0,0
+Food,range farm,,,0,0,1,0
+Food,resiliance,,,0,0,0,1
+Food,Risk-adjusted performance of chinook and sockey salmon fisheries,,,0,1,0,0
+Food,salmon angling,,,0,1,0,0
+Food,salmon total run,,,0,1,0,0
+Food,seafood yields,,,0,0,0,1
+Food,Seed mass,,,0,0,0,1
+Food,Seed set,,,1,0,0,0
+Food,Seed set per plant,,,0,0,0,1
+Food,sheep,,,0,1,0,0
+Food,Social vulnerability,,,0,0,0,1
+Food,Socio-ecological vulnerability,,,0,0,0,1
+Food,soil,,,0,1,0,0
+Food,Soya bean yield,,,0,1,0,0
+Food,spawner abundance,,,0,1,0,0
+Food,stability of fisheries yields,,,0,1,0,0
+Food,sward height,,,0,0,0,1
+Food,Terrestrial plants and animals,,,0,1,0,0
+Food,tiller mass,,,0,0,0,1
+Food,tiller number,,,1,0,0,0
+Food,timber,,,0,1,0,0
+Food,Total agricultural revenues,,,0,0,0,1
+Food,total fish biomass,,,0,0,0,1
+Food,total value of catch,,,0,1,0,0
+Food,water,,,0,1,0,0
+Food,weed community structure,,,0,0,0,1
+Food,Wetland area,,,0,1,0,1
+Food,wetland area (fisheries proxy),,,0,0,0,1
+Food,wheat,,,0,1,0,0
+Food,wheat biomass,,,0,1,0,0
+Food,wild rice,,,0,1,0,0
+Food,winter wheat yield,,,0,1,0,0
+Food,yield,,,0,1,0,0
+Food,Yield,,,0,3,0,0
+freshWQReg,Aquatic production,,no idea,0,1,0,0
+freshWQReg,P retention,,,0,1,0,0
+freshWQReg,Peak stream flows,,,0,0,0,1
+freshWQReg,peowater for individuals,,,0,0,0,1
+freshWQReg,rates of water uptake,,,0,0,0,1
+freshWQReg,reservoir volume,,,0,1,0,0
+freshWQReg,runoff coefficient (runoff/rainfall),,,0,0,0,1
+freshWQReg,sap flow,,,0,0,0,1
+freshWQReg,Sediment retention,,,0,1,0,0
+freshWQReg,Semi-natural space type,,,0,0,0,1
+freshWQReg,soil water infiltration,,,0,0,0,1
+freshWQReg,Soil water retention,,,0,0,0,1
+freshWQReg,stemflow and throughfall,,,0,0,0,1
+freshWQReg,stormwater quantity and quality,,,0,0,0,1
+freshWQReg,streamflow,,,0,0,0,1
+freshWQReg,streamwater flow,,,0,0,0,1
+freshWQReg,surface run-off,,,0,1,0,0
+freshWQReg,Tree leaf area,,,0,0,0,1
+freshWQReg,upstream,,,0,0,1,0
+freshWQReg,water conservation,,,0,1,0,0
+freshWQReg,water depth,,,0,0,1,0
+freshWQReg,water discharge,,,0,0,1,0
+freshWQReg,water flow,,,0,1,0,0
+freshWQReg,water flow regulation,,,0,2,0,0
+freshWQReg,water for agricultural use,,,0,1,0,0
+freshWQReg,water for consumption,,,0,0,0,1
+freshWQReg,Water for human consumption,,,0,1,0,0
+freshWQReg,water for industrial and energy use,,,0,1,0,0
+freshWQReg,water provisioning,,,0,1,0,0
+freshWQReg,water quality,,,0,1,0,0
+freshWQReg,water quality regulation,,,0,1,0,0
+freshWQReg,Water quantity,,,0,1,0,0
+freshWQReg,water regulation,,,0,1,0,0
+freshWQReg,water retention,,,0,2,0,0
+freshWQReg,water supply,,,0,2,0,0
+freshWQReg,Water supply,,,1,1,0,0
+freshWQReg,water supply for human consumption,,,0,1,0,0
+freshWQReg,water supply for industry,,,0,1,0,0
+freshWQReg,water yield,,,0,2,0,1
+freshWQReg,Water yield,,,0,1,0,0
+freshWQReg,wateryield production,,,0,1,0,0
+HabCreate,"author created ""ecosystem services potential'general ecosystem services",,no idea,0,0,0,1
+HabCreate,Colony maximum diameter,,could be about pollination,0,0,0,1
+HabCreate,ecological priority areas,,"this could be several categories, too vague",0,1,0,0
+HabCreate,Ecosystem stability,,no idea,0,1,0,0
+HabCreate,environmental quality,,vague,0,0,0,1
+HabCreate,fish capacity,,no idea,0,1,0,0
+HabCreate,Growth form),,no idea,0,0,0,1
+HabCreate,Manning's roughness Coefficient,,no idea,1,0,0,0
+HabCreate,number of pots,,no idea,0,1,0,0
+HabCreate,nutrient uptake,,,0,0,0,1
+HabCreate,Oyster habitat,,,0,1,0,0
+HabCreate,plant community composition,,,1,0,0,0
+HabCreate,Plant diversity,,,0,0,0,1
+HabCreate,plant productivity,,,0,1,0,0
+HabCreate,Plant species composition,,,0,1,0,0
+HabCreate,Pollinator habitat use,,,0,1,0,0
+HabCreate,population stability,,,0,1,0,0
+HabCreate,Potential habitat function,,,0,1,0,0
+HabCreate,Potential patch dispersal events,,,1,0,0,0
+HabCreate,production sensitivity,,,1,0,0,0
+HabCreate,regeneration potential,,,0,1,0,0
+HabCreate,resiliance,,,0,0,0,1
+HabCreate,restoration potential,,,0,1,0,0
+HabCreate,restored significance,,,0,0,1,0
+HabCreate,Riparian canopy density,,,0,0,1,0
+HabCreate,Riparian canopy width,,,0,0,1,0
+HabCreate,rugosity of reefs,,,0,0,0,1
+HabCreate,seed deposition,,,1,1,0,0
+HabCreate,Seed persistence,,,1,0,0,0
+HabCreate,seedbank abundance,,,1,0,0,0
+HabCreate,Shanon-weiner floristic diversity,,,0,0,0,1
+HabCreate,shape,,,0,1,0,0
+HabCreate,Shelter for fauna,,,0,1,0,0
+HabCreate,size,,,0,1,0,0
+HabCreate,species diversity,,,0,0,0,1
+HabCreate,species richness,,,1,0,0,0
+HabCreate,Structural benthic habitat,,,0,1,0,0
+HabCreate,surface ice,,,1,0,0,0
+HabCreate,suspended ice,,,1,0,0,0
+HabCreate,Total variation in functional matrix,,,1,0,0,0
+HabCreate,Tree composition,,,0,0,0,1
+HabCreate,trophic level of fish community,,,0,1,0,0
+HabCreate,vegetation cover,,,0,0,1,0
+HabCreate,vegetation diversity/richness,,,1,0,0,0
+HabCreate,vegetation height,,,1,0,0,0
+HabCreate,Vertical diversity,,,0,0,0,1
+HabCreate,wetted width,,,1,0,0,0
+HabCreate,wildflower strips,,,0,0,1,0
+HabCreate,wind erosion,,,0,0,1,0
+Hazards,Capacity of fragment regeneration,,no idea,0,0,0,1
+Hazards,Growth form),,no idea,0,0,0,1
+Hazards,number over tides,,,0,0,1,0
+Hazards,people affected by floods,,,0,0,0,1
+Hazards,physical water quantity regulation,,,0,1,0,0
+Hazards,runoff mitigation,,,0,1,0,0
+Hazards,shannon diversity,,,0,0,0,1
+Hazards,species richness,,,0,0,0,1
+Hazards,stormwater retention,,,0,0,0,1
+Hazards,total hours tidal submergence,,,0,0,1,0
+Hazards,Water infiltration rate,,,0,0,0,1
+Hazards,windbreak function,,,0,1,0,0
+MaintainOpts,"""Total Diversity"" (not ecological diversity)",,no idea,0,1,0,0
+MaintainOpts,amount of disturbance,,no idea,0,0,0,1
+MaintainOpts,ecosystem functionality,,no idea,0,0,0,1
+MaintainOpts,ecosystem integrity,,no idea,0,0,0,1
+MaintainOpts,evolutionary rarity,,no idea,1,0,0,0
+MaintainOpts,Indicators (12 different indices),,too vague,0,1,0,0
+MaintainOpts,NA,,no idea,1,0,0,0
+MaintainOpts,number of species 'in danger',,,0,0,0,1
+MaintainOpts,Plant community composition,,,1,0,0,0
+MaintainOpts,plant diversity,,,0,1,0,0
+MaintainOpts,Plant diversity maintenance,,,0,1,0,0
+MaintainOpts,Plant species richness,,,0,0,0,1
+MaintainOpts,protected plant species,,,0,1,0,0
+MaintainOpts,protected vertebrate species,,,0,1,0,0
+MaintainOpts,recovery debt,,,0,1,0,0
+MaintainOpts,resilience,,,0,0,1,0
+MaintainOpts,Richness,,,1,0,0,0
+MaintainOpts,Shannon diversity,,,1,0,0,0
+MaintainOpts,Simpsons diversity,,,1,0,0,0
+MaintainOpts,Species richness,,,1,0,0,0
+MaintainOpts,speciesin danger category,,,0,0,0,1
+MaintainOpts,terrestrial biodiversity,,,0,0,0,1
+MaintainOpts,Tree species richness,,,1,0,0,0
+MaintainOpts,vegetation homogenization,,,1,0,0,0
+MaintainOpts,vertebrate diversity,,,0,1,0,0
+Materials,basal area,,no idea,0,0,1,0
+Materials,Biotic materials,,new category,0,1,0,0
+Materials,forest products,,needs new bin?,0,1,0,0
+Materials,Number of roots,,,0,1,0,0
+Materials,Plant quality,,,1,0,0,0
+Materials,Raw material,,,1,1,0,0
+Materials,root length,,,0,1,0,0
+Materials,sand/gravel companies and production,,,0,0,0,1
+Materials,size,,,0,1,0,0
+Materials,timber production,,,0,1,0,0
+Materials,Timber value,,,0,1,0,0
+Materials,timber volume,,,0,1,0,0
+Materials,Vegetative production,,,0,1,0,0
+Materials,wood production,,,0,2,0,0
+Materials,wood raw materials,,,0,1,0,0
+MedGen,number of pots,,no idea,0,1,0,0
+PestPath,Community Structure,,too vague,0,0,0,1
+PestPath,density of anole,,is the anole the pest or the ESP?,0,0,0,1
+PestPath,dung decomposition,,"this says that it is in the pathogen category, but it sounds like an ESP",0,0,0,1
+PestPath,dung removal,,"this says that it is in the pathogen category, but it sounds like an ESP",0,1,0,0
+PestPath,parasitism rate,,,0,1,0,0
+PestPath,parasitoid abundance,,,0,0,0,1
+PestPath,parasitoids,,,0,0,0,1
+PestPath,persistence of insectivore bat species,,,0,0,0,1
+PestPath,Pest,,,0,1,0,0
+PestPath,Pest abundance,,,0,1,0,0
+PestPath,Pest Abundance,,,0,1,0,0
+PestPath,Pest and disease control,,,0,1,0,0
+PestPath,pest attack rate,,,0,0,1,0
+PestPath,pest community composition,,,0,0,1,0
+PestPath,pest diversity index,,,0,0,0,1
+PestPath,pest management by spiders (only spider abundance and richness),,,0,0,0,1
+PestPath,Pest parasitism,,,0,1,0,0
+PestPath,pest parasitism rate (i.e. biocontrol success),,,0,0,1,0
+PestPath,Pest population,,,1,1,0,0
+PestPath,Pest predation,,,0,1,0,0
+PestPath,Pest regulation,,,0,1,0,0
+PestPath,pollinator ESP abundance,,,0,0,0,1
+PestPath,predation index,,,0,1,0,0
+PestPath,predation rate,,,0,1,0,0
+PestPath,predator abundance,,,0,1,0,0
+PestPath,predator diet,,,0,0,0,1
+PestPath,predator movement from non-crop to crop vegetation,,,0,0,0,1
+PestPath,Predator population,,,1,1,0,0
+PestPath,presence of male mosquitoes,,,0,1,0,0
+PestPath,prey diversity for otters,,,0,0,0,1
+PestPath,proportion of leaves damaged by insects,,,0,1,0,0
+PestPath,proportion of predated Colorado potato beetle eggs,,,0,1,0,0
+PestPath,ranchers' assessment of effectiveness of invasive species control,,,0,0,1,0
+PestPath,ratio of aphid growth with and without predators,,,0,1,0,0
+PestPath,reduction of coffee berry borer (CBB) presence,,,0,1,0,0
+PestPath,residential propagule pressure,,,1,0,0,0
+PestPath,seed feeding insects,,,0,0,0,1
+PestPath,Spider and predatory beetle abundance,,,0,0,0,1
+PestPath,stable isotope analysis,,,0,0,0,1
+PestPath,syrphid fly (natural enemy) density,,,0,1,0,1
+PestPath,vector mosquito sex ratio,,,0,0,0,1
+PestPath,vector mosquitoe abundance,,,0,0,0,1
+PestPath,weed seed removal,,,0,1,0,0
+PestPath,weed suppression,,,0,1,0,0
+PestPath,west nile virus incidence in humans,,,0,1,0,0
+Pollination,colony foraging radius,,could be about pollination,0,0,0,1
+Pollination,Community Structure,,too vague,0,0,0,1
+Pollination,functional dispersion,,no idea,0,0,0,1
+Pollination,number of pots,,no idea,0,1,0,0
+Pollination,number of visitors),,,0,1,0,0
+Pollination,parasitoids,,,0,1,0,0
+Pollination,Percent frequency of plants in feces,,,0,0,0,1
+Pollination,percent germination of dispersed propagules,,,0,0,0,1
+Pollination,persistence of nectar of frugivorous bat species,,,0,0,0,1
+Pollination,persistence of nectarivorous bat species,,,0,0,0,1
+Pollination,pollen deposition (grains),,,0,1,0,0
+Pollination,pollination,,,0,4,0,0
+Pollination,Pollination,,,0,2,0,0
+Pollination,Pollination potential,,,0,2,0,0
+Pollination,pollinator abbundance,,,0,0,0,1
+Pollination,pollinator abundance,,,0,0,0,1
+Pollination,Pollinator abundance,,,0,0,0,1
+Pollination,pollinator density,,,0,0,0,1
+Pollination,pollinator diversity,,,0,0,0,1
+Pollination,Pollinator diversity,,,0,1,0,0
+Pollination,pollinator diversity index,,,0,0,0,1
+Pollination,pollinator ESP abundance,,,0,0,0,1
+Pollination,pollinator evenness,,,0,0,0,1
+Pollination,pollinator richness,,,0,0,0,1
+Pollination,Pollinator richness,,,0,0,0,1
+Pollination,pollinator species composition,,,0,0,0,1
+Pollination,pollinator species richness,,,0,0,0,1
+Pollination,pollinator taxonomic breadth,,,0,0,0,1
+Pollination,Pollinator visitation (identity of pollinator,,,0,1,0,0
+Pollination,Predation of pests by entomopathogenic fungi,,,0,1,0,0
+Pollination,richness,,,0,1,0,0
+Pollination,seed abundance,,,0,0,0,1
+Pollination,seed dispersal,,,0,2,0,0
+Pollination,Seed dispersal,,,0,1,0,0
+Pollination,seed dispersal distance,,,1,0,0,0
+Pollination,seed dispersal distribution,,,0,0,0,1
+Pollination,seed dispersal shadow size,,,0,1,0,0
+Pollination,seed removal,,,1,0,0,0
+Pollination,Seed set,,,1,1,0,0
+Pollination,species diversity,,,0,0,0,1
+Pollination,species evenness,,,0,0,0,1
+Pollination,species richness,,,0,0,0,1
+Pollination,spring and summer,,,0,1,0,0
+Pollination,sunflower yield,,,0,1,0,0
+Pollination,terrestrial biodiversity,,,0,0,0,1
+Pollination,Visitation rate,,,0,0,0,1
+Pollination,yield,,,0,1,0,0
+SoilProtect,bacterial substrate uptake,,no idea,0,0,0,1
+SoilProtect,Carbon cycling,,,0,1,0,0
+SoilProtect,composition,,too vague,0,0,0,1
+SoilProtect,decomposition rate,,too vague,0,0,0,1
+SoilProtect,dung decomposition,,"this says that it is in the pathogen category, but it sounds like an ESP",0,1,0,1
+SoilProtect,Dung decomposition,,"this says that it is in the pathogen category, but it sounds like an ESP",1,0,0,0
+SoilProtect,dung removal rate,,"this says that it is in the pathogen category, but it sounds like an ESP",0,1,0,0
+SoilProtect,K,,potassium? too vague,0,0,0,1
+SoilProtect,nutrient provisioning,,,0,1,0,0
+SoilProtect,nutrient removal,,,0,1,0,0
+SoilProtect,Nutrient transformation and cycling,,,0,1,0,0
+SoilProtect,orchard,,,0,0,1,0
+SoilProtect,organic matter content,,,0,0,0,1
+SoilProtect,Organic P,,,0,0,0,1
+SoilProtect,P,,,1,0,0,0
+SoilProtect,P retention,,,0,1,0,0
+SoilProtect,Pedogenesis and soil quality regulation,,,0,1,0,0
+SoilProtect,per capita siderophore production,,,0,0,0,1
+SoilProtect,percent nitrogen in soil by weight,,,0,1,0,0
+SoilProtect,pH,,,1,0,0,0
+SoilProtect,phosphorous storage in SOM,,,0,1,0,0
+SoilProtect,plant density,,,0,0,0,1
+SoilProtect,plant-available N,,,1,0,0,0
+SoilProtect,pore water metal content,,,0,0,0,1
+SoilProtect,Potential erosion potential,,,0,1,0,0
+SoilProtect,pre-rill erosion %,,,0,1,0,0
+SoilProtect,proportion of buried cotton fabric decomposed,,,0,1,0,0
+SoilProtect,proportion of buried leaf litter decomposed,,,0,1,0,0
+SoilProtect,protection against rockfalls,,,0,1,0,0
+SoilProtect,resiliance,,,0,1,0,1
+SoilProtect,rill erosion %,,,0,1,0,0
+SoilProtect,riparian wetland,,,0,0,1,0
+SoilProtect,root biomass,,,1,0,0,0
+SoilProtect,Root Mass,,,0,1,0,0
+SoilProtect,Sand fixation,,,0,0,1,0
+SoilProtect,sediment retention,,,0,3,0,0
+SoilProtect,sedimentation,,,0,1,0,0
+SoilProtect,social organic matter,,,1,0,0,0
+SoilProtect,Soil & site stability score (rangeland health assessment),,,0,0,0,1
+SoilProtect,soil building,,,0,1,0,0
+SoilProtect,soil bulk density,,,2,0,0,1
+SoilProtect,soil C,,,1,0,0,0
+SoilProtect,soil C:N,,,1,0,0,0
+SoilProtect,soil carbon,,,0,2,0,1
+SoilProtect,Soil community composition,,,0,1,0,0
+SoilProtect,soil conductivity,,,1,0,0,0
+SoilProtect,soil conservation,,,0,2,0,0
+SoilProtect,Soil conservation,,,1,1,0,0
+SoilProtect,soil conservation function,,,0,1,0,0
+SoilProtect,soil conservation percentage,,,0,1,0,0
+SoilProtect,Soil coverage,,,0,0,0,1
+SoilProtect,Soil density,,,0,0,0,1
+SoilProtect,soil enzyme levels,,,1,1,0,0
+SoilProtect,soil erosion,,,1,1,0,1
+SoilProtect,Soil erosion,,,0,0,0,1
+SoilProtect,soil erosion by wind,,,0,1,0,0
+SoilProtect,soil erosion rate,,,0,1,0,0
+SoilProtect,soil fertility,,,0,1,0,0
+SoilProtect,Soil food web,,,0,1,0,0
+SoilProtect,Soil formation and retention,,,1,1,0,0
+SoilProtect,soil loss potential,,,0,0,0,1
+SoilProtect,soil microbial biomass,,,1,0,0,0
+SoilProtect,soil microbial biomass carbon,,,1,0,0,1
+SoilProtect,soil microbial composition,,,0,1,0,1
+SoilProtect,soil microbial extracellular enzyme activity,,,0,1,0,1
+SoilProtect,soil microbial metabolics,,,0,1,0,1
+SoilProtect,soil moisture,,,0,0,0,1
+SoilProtect,soil multifunctionality index,,,1,0,0,0
+SoilProtect,soil N,,,1,1,0,1
+SoilProtect,soil nitrogen stock,,,0,1,0,0
+SoilProtect,soil organic carbon,,,1,0,0,0
+SoilProtect,Soil organic carbon,,,1,1,0,0
+SoilProtect,soil organic matter,,,2,1,0,2
+SoilProtect,soil ph,,,1,0,0,0
+SoilProtect,soil pH,,,1,1,0,3
+SoilProtect,soil phosphorous,,,0,1,0,1
+SoilProtect,Soil Protection,,,0,1,0,0
+SoilProtect,Soil quality,,,0,1,0,0
+SoilProtect,soil respiration rate,,,1,1,0,0
+SoilProtect,soil retention,,,0,1,0,0
+SoilProtect,Soil retention,,,1,2,1,0
+SoilProtect,soil stability indicator rate,,,0,1,0,0
+SoilProtect,soil water content,,,0,1,0,1
+SoilProtect,soil water holding capacity,,,1,0,0,0
+SoilProtect,Soil water repellency,,,0,0,0,1
+SoilProtect,soil water stable aggregates,,,1,0,0,1
+SoilProtect,species richness,,,0,0,0,1
+SoilProtect,surface erosion %,,,0,1,0,0
+SoilProtect,surface runoff,,,0,1,0,0
+SoilProtect,total C,,,0,0,0,1
+SoilProtect,total exchangeable cations,,,0,0,0,1
+SoilProtect,total N,,,0,0,0,2
+SoilProtect,total organic carbon,,,1,0,0,0
+SoilProtect,total P,,,0,0,0,1
+SoilProtect,waste treatment,,,1,1,0,0
+SoilProtect,Water yield,,,1,1,0,0
+SoilProtect,weed seed predation,,,0,1,0,0

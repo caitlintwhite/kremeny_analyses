@@ -96,7 +96,7 @@ methodscorrections <- read.csv(corrections[grep("model", corrections)], na.strin
 biodrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Bio")
 anthdrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Anthro")
 envdrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Environ")
-
+responsecorrections <- read.csv(corrections[grep("response", corrections)], na.strings = na_vals)
 
 
 # -- RM JUNK ROWS + ID DOUBLE-REVIEWED PAPERS -----
@@ -1400,7 +1400,7 @@ for(i in agRIDs){
 
 # clean up environment
 rm(replacetemp, temp, agRIDs, ecosystemRIDs, i, temprowAG,
-  temp_Q4geninfo, temprow_Q4geninfo, temprow_Q4, temprow_Q4notes,
+   temp_Q4geninfo, temprow_Q4geninfo, temprow_Q4, temprow_Q4notes,
    IScorrections, systemcorrections)
 
 
@@ -1476,35 +1476,123 @@ copydf <- prelimlong1c
 
 
 
-# 4. Driver corrections (KG + SDJ) ----
+# 4. Driver/Response corrections (KG + SDJ) ----
+# 5/22/20: write basic code to read in and correct responses and drivers, can update when KG + SDJ finished
+
+# see if can collapse down response and driver categories based on work already done
+# i.e. if remove ES's, is everything labeled?
+
+topo_keywords <- "distance|DEM|elevation|slope|aspect|geograph|altitude|latitud|longitud|topography|topology| position" # considered nodes as well.. but leaving in hydrology.. could add "connectivity" to bin label though.. 
+
+# 4.a. Driver corrections -----
+
+test_biodrivers <- dplyr::select(biodrivecorrections, answer, Driver_Finer) %>%
+  distinct() %>%
+  arrange(answer)
 
 
+# review envdrivers..
+test_envdrivers <- dplyr::select(envdrivecorrections, answer, Driver_Finer) %>%
+  distinct() %>%
+  arrange(answer)
+## ctw impressions:
+# > if soil chemical components are separate from aquatic chem, "soil characteristics" should be soil physio-chemical characteristics to be clear
+# > another options would be anything that's chemical (whether soil or aquatic) gets labeled as biogeochem
 
+# > for "Topography and landscape position", distance to... in env should fall in that too (e.g. distance to river)
+# > I also think any response or driver that's a composite should be in an "Index" category
+# > anything that's management in "environment" should be moved to a human driver (e.g. prescribed burn in environmental driver should be changed to management per our convo 5/21)
+# can ignore "Other".. and some weird ones:
+## > "Ecosystem service types," seems to be error.. in Travis' paper in "OtherDriver" for Env.. but he never checked "Other". Doesn't make sense as an env driver, so leaning towards it's a mistake
+## > "rewiring" is network structure rearrangement (IS paper [Costa et al. 2018].. looked at abstract and they manipulated interactions in an ecosystem network, simulating network with and without rearrangement ("rewiring")))... also think rewiring should be moved to biotic since they were removing species to see how affected ES, not anything env-related
+## > "turnover time" .. is from a CW paper that got excluded by LD review so doesn't matter now.. but could be abiotic characteristic: aquatic
+## > "hypothetical stressors (abstract and vague)" .. from "When things don't add up: quantifying impacts.." GV and AK reviewed. AK wrote "Temperature".. I looked at paper (Gavin et al. 2018, Ecol Letter).. they are hypothetical (unnamed) stressors in pairwise combos that are either A, B, additive, synergistic +, synergistic - ... call it index
+## > "daytime light" .. from "Linking environmental variables with regional-scale..", AIS reviewed, is about carbon and kelp forests in UK, so ultimately an abiotic characteristics--aquatic 
+## > "inundation" .. was from greenhouse study looking at roots and chemical response properties.. abiotic characteristics--terrestrial
+## > "evapotrans" = climate (from NBD paper on Loess Plateau in China.. I've read that too and it's an remote sensing study, so used an ET layer, modeled off of climate and abiotic factors.. since ET function of plant and weather, binning as climate)
+rm(test_envdrivers)
+
+# go through environmental drivers and clean up bins, and assign what's outstanding
+clean_envdriver_corrections <- subset(alldrivers_summary, Group == "Env") %>%
+  #remove count since that may have changed
+  dplyr::select(-count) %>%
+  # rename group so joins properly
+  rename(Driver_Group = Group) %>%
+  left_join(dplyr::select(envdrivecorrections, -count)) %>%
+  mutate(clean_driver_finer = trimws(casefold(Driver_Finer))) %>%
+  # arrange by answer and fill down anything that wasn't added to list when SJD + KG filled it out
+  arrange(answer) %>%
+  group_by(answer) %>%
+  fill(clean_driver_finer) %>%
+  ungroup() %>%
+  # begin final cleanup
+  mutate(
+    # assign topography and landscape position
+    clean_driver_finer = ifelse(grepl(topo_keywords, answer, ignore.case = T), "topography and position", clean_driver_finer),
+    # windthrow is a disturbance not abiotic characteristic, change to "extreme event"
+    clean_driver_finer = ifelse(grepl("fire|burn|windthrow", answer, ignore.case = T), "extreme events", clean_driver_finer),
+    # change index and hypothetical stressors type to index bin
+    clean_driver_finer = ifelse(grepl("index|hypothetical stress", answer, ignore.case = T), "index", clean_driver_finer), 
+    # fix soil
+    clean_driver_finer = ifelse(grepl("soil", answer, ignore.case = T), "soil physiochemical characteristics", clean_driver_finer),
+    # landscape goes in land cover
+    clean_driver_finer = ifelse(grepl("landscape", answer, ignore.case = T), "land cover", clean_driver_finer),
+    # add weirdos to abiotic char--aquatic
+    clean_driver_finer = ifelse(grepl("daytime light|turnover|HDO satu", answer, ignore.case = T), "abiotic characteristics of the landscape: aquatic", clean_driver_finer),
+    # add weirdos to abiotic char--terrestrial
+    clean_driver_finer = ifelse(grepl("inundat|NDWI", answer, ignore.case = T), "abiotic characteristics of the landscape: terrestrial", clean_driver_finer),
+    # add weirdos + newbies to climate (wind itself should be climate if annual windspeed is..)
+    clean_driver_finer = ifelse(grepl("evapotrans|drought|annual wind", answer, ignore.case = T) | answer == "wind", "climate", clean_driver_finer),
+    # assign biotic driver bin to rewiring
+    clean_driver_finer = ifelse(grepl("rewiring", answer, ignore.case = T), "network property", clean_driver_finer),
+    # maybe to be sure specify "Ecosystem service types," as "remove"
+    clean_driver_finer = ifelse(grepl("^Ecosystem service", answer), "REMOVE", clean_driver_finer),
+    # ådd col for new driver type if needs to be re-assigned
+    clean_driver_group = ifelse(clean_driver_finer %in% c("productivity", "vegetation cover") | answer == "rewiring", "Biotic", 
+                                ifelse(clean_driver_finer == "management", "Anthro", Driver_Group)),
+    # infill group for NA just in case (only applies to answer == Other)
+    clean_driver_group = ifelse(answer == "Other", Driver_Group, clean_driver_group))
+      
+
+
+# review human drivers
+test_anthdrivers <- dplyr::select(anthdrivecorrections, answer, Driver_Finer) %>%
+  distinct() %>%
+  arrange(answer)
+
+
+# 4.b. Response corrections -----
+test_responses <- dplyr::select(responsecorrections, Response, Key.word) %>%
+  distinct() %>%
+  arrange(Response)
+summary(is.na(test_responses$Key.word))
 
 # 5. Logic check corrections -----
 
-# 5.1. Q13: Kremen ESP
+# 5.1. Q13: Kremen ESP ----
 ## > if ESP check in Biotic drivers, then ESP checked in Kremen topics
 
 
 
-# 5.2. Q13: Kremen Structure
+
+# 5.2. Q13: Kremen Structure ----
 ## > if structure keyword present in drivers (or responses?), then structure checked in Kremen topics
 
 
 
-# 5.3. Q13: Kremen Environment
-## > if environmental driver listed, then env check in Kremen topics
+# 5.3. Q13: Kremen Environment ----
+## > if environmental driver listed (either one of the canned answers or other AND other described), then env check in Kremen topics
+## > if other described but other not checked, review (most likely errors looking at the review file)
+## > also need to repeat screen because envcheck csv subsetted kremen notes, which only pulled records that had notes..
 
 
-
-# 5.4. Q13: Kremen Scale
+# 5.4. Q13: Kremen Scale ----
 ## > if Multiscale == "Yes", then scale checked in Kremen topics
 ## > note, 5/21: waiting on Grant and Julie to confirm Multiscale reliable question for triggering correction (CTW sent email)
 
 
 
-# 5.5. Q14: Service Providers
+# 5.5. Q14: Service Providers ----
 # > note: we should have had a "how many species in this study" question..
 # within = "genetic"
 # single.. hard to pull by keywrods
@@ -1541,8 +1629,13 @@ doubleprelim %>%
   facet_wrap(~abbr) +
   ggtitle(paste0("Round 2: double-reviewed kept papers (n=", length(unique(doubleprelim$Title)),"), agreement in answers by question,\n", Sys.Date()))
 ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_doublereview_congruency.pdf")
-# add flag for answer inconsistencies:
-# 1) exclusion answers that don't agree
+
+
+# see what can be dissolved..
+## > any text field can be combined (e.g. paste(notes from rev1, notes from rev2))
+## > if multi-choice answers are nested (e.g. rev1 = [a], rev2 = [a,b]), dissolve answer (we said as a group this would be okay rule)
+## > if multi-choice answers do not agree (not nested).. kick back to outside reviewer or original reviewers
+
 
 
 # -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
