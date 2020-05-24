@@ -1290,7 +1290,7 @@ write_csv(r2excluded_final, "round2_metareview/data/intermediate/round2_excluded
 # retain kept papers in prelimlong_1c
 prelimlong1c <- filter(prelimlong1b, !Title %in% unique(r2excluded_final$Title)) %>%
   # create clean answer column for storing cleaned answers and qa note
-  mutate(clean_answer = answer,
+  mutate(clean_answer = trimws(answer),
          qa_note = NA,
          # add col to indicate double review
          doublerev = Title %in% doubletitles) %>%
@@ -1482,13 +1482,56 @@ copydf <- prelimlong1c
 # see if can collapse down response and driver categories based on work already done
 # i.e. if remove ES's, is everything labeled?
 
-topo_keywords <- "distance|DEM|elevation|slope|aspect|geograph|altitude|latitud|longitud|topography|topology| position" # considered nodes as well.. but leaving in hydrology.. could add "connectivity" to bin label though.. 
 
 # 4.a. Driver corrections -----
 # review bio drivers..
 test_biodrivers <- dplyr::select(biodrivecorrections, answer, Driver_Finer) %>%
   distinct() %>%
   arrange(answer)
+
+# notes:
+# call land cover "habitat" as a biotic driver
+
+biodiv_terms <- "divers|shannon|richn|even|macroinvertebrate and fish|loss of seed source"
+abund_terms <- "abundance"
+# clean up
+rm(test_biodrivers)
+
+# go through environmental drivers and clean up bins, and assign what's outstanding
+clean_biodriver_corrections <- subset(alldrivers_summary, Group == "Bio") %>%
+  #remove count since that may have changed
+  dplyr::select(-count) %>%
+  # rename group so joins properly
+  rename(Driver_Group = Group) %>%
+  left_join(dplyr::select(biodrivecorrections, -count)) %>%
+  mutate(clean_driver_finer = trimws(casefold(Driver_Finer))) %>%
+  # arrange by answer and fill down anything that wasn't added to list when SJD + KG filled it out
+  arrange(answer) %>%
+  group_by(answer) %>%
+  fill(clean_driver_finer) %>%
+  ungroup() %>%
+  # re-class land cover as habitat
+  mutate(clean_driver_finer = recode(clean_driver_finer, "land cover" = "habitat"),
+         # characteristics of plot = biotic char of plot
+         clean_driver_finer = gsub("characteristics of", "biotic characteristics of", clean_driver_finer),
+         # infill others
+         # diversity and richness drivers
+         clean_driver_finer = ifelse(grepl(biodiv_terms, answer, ignore.case = T), "service provider diversity/richness", clean_driver_finer),
+         # abundance drivers
+         clean_driver_finer = ifelse(grepl(abund_terms, answer, ignore.case = T), "service provider abundance", clean_driver_finer),
+         # indices
+         clean_driver_finer = ifelse(grepl("index|82 different", answer, ignore.case = T), "index", clean_driver_finer),
+         # general service provider option
+         clean_driver_finer = ifelse(grepl("^service provider|biotic driver=|Aphodius", answer, ignore.case = T) & !grepl("yield", answer), "service provider identity", clean_driver_finer),
+         # ESP density
+         clean_driver_finer = ifelse(grepl("density", answer, ignore.case = T), "service provider density", clean_driver_finer),
+         # clean up randos
+         clean_driver_finer = ifelse(grepl("polychaete", answer), "pathogens/natural enemies",
+                                     ifelse(grepl("reproduc", answer, ignore.case = T), "reproduction",
+                                            ifelse(grepl("root depth|vegetation cover", answer, ignore.case = T), "biotic characteristics of the plot", clean_driver_finer))),
+         # move management to anthro category
+         clean_driver_group = ifelse(clean_driver_finer == "management", "Anthro", 
+                                     ifelse(!is.na(clean_driver_finer), "Bio", Driver_Group)))
 
 
 # review envdrivers..
@@ -1510,6 +1553,9 @@ test_envdrivers <- dplyr::select(envdrivecorrections, answer, Driver_Finer) %>%
 ## > "daytime light" .. from "Linking environmental variables with regional-scale..", AIS reviewed, is about carbon and kelp forests in UK, so ultimately an abiotic characteristics--aquatic 
 ## > "inundation" .. was from greenhouse study looking at roots and chemical response properties.. abiotic characteristics--terrestrial
 ## > "evapotrans" = climate (from NBD paper on Loess Plateau in China.. I've read that too and it's an remote sensing study, so used an ET layer, modeled off of climate and abiotic factors.. since ET function of plant and weather, binning as climate)
+
+topo_keywords <- "distance|DEM|elevation|slope|aspect|geograph|altitude|latitud|longitud|topography|topology| position" # considered nodes as well.. but leaving in hydrology.. could add "connectivity" to bin label though.. 
+# clean up
 rm(test_envdrivers)
 
 # go through environmental drivers and clean up bins, and assign what's outstanding
@@ -1552,7 +1598,7 @@ clean_envdriver_corrections <- subset(alldrivers_summary, Group == "Env") %>%
                                 ifelse(clean_driver_finer == "management", "Anthro", Driver_Group)),
     # infill group for NA just in case (only applies to answer == Other)
     clean_driver_group = ifelse(answer == "Other", Driver_Group, clean_driver_group))
-      
+
 
 
 # review human drivers..
@@ -1615,13 +1661,71 @@ clean_anthdriver_corrections <- subset(alldrivers_summary, Group == "Anthro") %>
          clean_driver_finer = ifelse(answer %in% c("shade", "canopy cover"), "abiotic characteristics of the landscape: terrestrial", clean_driver_finer),
          # clean up group
          clean_driver_group = ifelse(grepl("abiotic", clean_driver_finer), "Env", Driver_Group))
-  
+
 
 # 4.b. Response corrections -----
 test_responses <- dplyr::select(responsecorrections, Response, Key.word) %>%
   distinct() %>%
   arrange(Response)
 summary(is.na(test_responses$Key.word))
+
+# set functional biodiv keywords
+fxnlbiodiv_terms <- "functional even|functional disp|functional diver|functional trait|fish trait|invertebrate trait"
+
+# go through responses and clean up bins, assign what's outstanding
+clean_responses_corrections <- response_summary %>%
+  # drop EF/ES counts in corrections file since not up to date
+  left_join(dplyr::select(responsecorrections, EcoServ:Notes)) %>%
+  mutate(response_finer = trimws(casefold(Key.word))) %>%
+  # arrange by answer and fill down anything that wasn't added to list when SJD + KG filled it out
+  arrange(Response) %>%
+  group_by(Response) %>%
+  fill(response_finer) %>%
+  ungroup() %>%
+  # remove NA values (think that's just from remnant empty/NA cell)
+  filter(!Response == "NA") %>%
+  # clean up typos in finer_responses
+  mutate(response_finer = gsub("service provider diversity/richness/composition", "service provider species biodiversity", response_finer),
+         response_finer = gsub("service provider function/functional traits", "service provider functional biodiversity and traits", response_finer),
+         # triage function biodiversity
+         response_finer = ifelse(grepl("function", Response), gsub("species biodiversity", "functional biodiversity and traits", response_finer), response_finer),
+         # standardize soil char label with label used in env driver
+         response_finer = ifelse(grepl("^soil", response_finer), "soil physiochemical characteristics", response_finer),
+         # standardize abiotic characteristics
+         response_finer = ifelse(grepl("aquatic$", response_finer, ignore.case = T), "abiotic characteristics of the landscape: aquatic", response_finer),
+         # infill what needs infilling...
+         rf2 = response_finer,
+         # abundance
+         rf2 = ifelse(grepl(abund_terms, Response, ignore.case = T), "service provider abundance", rf2),
+         # species biodiversity (richness, diversity, evenness)
+         rf2 = ifelse(grepl(biodiv_terms, Response, ignore.case = T), "service provider species biodiversity", rf2),
+         # functional biodiversity and traits -- needs to come after species biodiversity to replace
+         rf2 = ifelse(grepl(fxnlbiodiv_terms, Response,ignore.case = T), "service provider functional biodiversity and traits", rf2),
+         # if has biomass or aboveground or AGB, productivity
+         rf2 = ifelse(grepl("biomass|AGB|aboveground|NPP", Response, ignore.case = T), "productivity", rf2),
+         # if it has carbon, then carbon
+         rf2 = ifelse(grepl("carbon|CO2", Response, ignore.case = T), "carbon", rf2),
+         # triage value and appreciation
+         rf2 = ifelse(grepl("value|appreciation|aesthetic|revenue|social vulner|social set|socio-econo", Response, ignore.case = T) & Response != "grass nutritional value", "characteristics of human population", rf2),
+         # assign index/composite
+         rf2 = ifelse(grepl("index|total diversity|score|integrity", Response, ignore.case = T), "index", rf2),
+         # reclass velocity, flow, discharge, etc. as hydrology
+         rf2 = ifelse(grepl("flow", Response, ignore.case = T) & grepl("WQ", EcoServ)|
+                        grepl("discharge|flow velocity|water yield", Response, ignore.case = T), "hydrology", rf2), # buuut "sap flow" and "stemflow" need to be something else
+         rf2 = ifelse((EcoServ == "Materials" & !grepl("value", Response)) | grepl("yield", Response, ignore.case = T), "exploitation/harvest", rf2)) %>%
+  # recode any NA with "test" just so can move on with coding
+  replace_na(list(rf2="TEST_VALUE"))
+# apply same keywords 
+
+
+# 4.c. Apply driver and response corrections -----
+# maybe try pulling out Q12 to clean and tidy on its own?
+q12df_clean <- subset(prelimlong1c, qnum == "Q12")
+# the only way to do this cleanly is to go by ResponseId
+
+
+
+
 
 # 5. Logic check corrections -----
 
