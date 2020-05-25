@@ -1530,8 +1530,10 @@ clean_biodriver_corrections <- subset(alldrivers_summary, Group == "Bio") %>%
                                      ifelse(grepl("reproduc", answer, ignore.case = T), "reproduction",
                                             ifelse(grepl("root depth|vegetation cover", answer, ignore.case = T), "biotic characteristics of the plot", clean_driver_finer))),
          # move management to anthro category
-         clean_driver_group = ifelse(clean_driver_finer == "management", "Anthro", 
-                                     ifelse(!is.na(clean_driver_finer), "Bio", Driver_Group)))
+         clean_driver_group = ifelse(clean_driver_finer == "management", "Anthro", Driver_Group)) %>%
+  #didn't get NAs
+  replace_na(list(clean_driver_group ="Bio"))
+                                  
 
 
 # review envdrivers..
@@ -1573,14 +1575,14 @@ clean_envdriver_corrections <- subset(alldrivers_summary, Group == "Env") %>%
   ungroup() %>%
   # begin final cleanup
   mutate(
-    # assign topography and landscape position
-    clean_driver_finer = ifelse(grepl(topo_keywords, answer, ignore.case = T), "topography and position", clean_driver_finer),
     # windthrow is a disturbance not abiotic characteristic, change to "extreme event"
     clean_driver_finer = ifelse(grepl("fire|burn|windthrow", answer, ignore.case = T), "extreme events", clean_driver_finer),
     # change index and hypothetical stressors type to index bin
     clean_driver_finer = ifelse(grepl("index|hypothetical stress", answer, ignore.case = T), "index", clean_driver_finer), 
     # fix soil
     clean_driver_finer = ifelse(grepl("soil", answer, ignore.case = T), "soil physiochemical characteristics", clean_driver_finer),
+    # assign topography and landscape position
+    clean_driver_finer = ifelse(grepl(topo_keywords, answer, ignore.case = T), "topography and position", clean_driver_finer),
     # landscape goes in land cover
     clean_driver_finer = ifelse(grepl("landscape", answer, ignore.case = T), "land cover", clean_driver_finer),
     # add weirdos to abiotic char--aquatic
@@ -1663,6 +1665,17 @@ clean_anthdriver_corrections <- subset(alldrivers_summary, Group == "Anthro") %>
          clean_driver_group = ifelse(grepl("abiotic", clean_driver_finer), "Env", Driver_Group))
 
 
+# stack all for master driver reference set
+master_driver_corrections <- dplyr::select(clean_biodriver_corrections, -c('Binning Notes', Driver_Finer)) %>%
+  rbind(clean_anthdriver_corrections[names(.)], clean_envdriver_corrections[names(.)]) %>%
+  arrange(answer, ES, Driver_Group) %>%
+  #capitalize first letter in clean_driver_finer
+  mutate(clean_driver_finer = ifelse(!is.na(clean_driver_finer), 
+                                     paste0(casefold(substr(clean_driver_finer, 1,1), upper = T), substr(clean_driver_finer, 2, nchar(clean_driver_finer))),
+                                     clean_driver_finer))
+
+
+
 # 4.b. Response corrections -----
 test_responses <- dplyr::select(responsecorrections, Response, Key.word) %>%
   distinct() %>%
@@ -1678,7 +1691,7 @@ clean_responses_corrections <- response_summary %>%
   left_join(dplyr::select(responsecorrections, EcoServ:Notes)) %>%
   mutate(response_finer = trimws(casefold(Key.word))) %>%
   # arrange by answer and fill down anything that wasn't added to list when SJD + KG filled it out
-  arrange(Response) %>%
+  arrange(Response, EcoServ) %>%
   group_by(Response) %>%
   fill(response_finer) %>%
   ungroup() %>%
@@ -1693,6 +1706,18 @@ clean_responses_corrections <- response_summary %>%
          response_finer = ifelse(grepl("^soil", response_finer), "soil physiochemical characteristics", response_finer),
          # standardize abiotic characteristics
          response_finer = ifelse(grepl("aquatic$", response_finer, ignore.case = T), "abiotic characteristics of the landscape: aquatic", response_finer),
+         # fix abiotic typo
+         response_finer = gsub("abitic", "abiotic", response_finer),
+         # fix exploitation typo
+         response_finer = gsub("expolitation", "exploitation", response_finer),
+         # fix hydrology typo
+         response_finer = gsub("hydology", "hydrology", response_finer),
+         # fix tourism typo
+         response_finer = gsub("toursim", "tourism", response_finer),
+         # fix landscape typo
+         response_finer = gsub("lanscape", "landscape", response_finer),
+         # standardize pollution bin
+         response_finer = recode(response_finer, "pollution/water quality" = "pollution/water quality/air quality"),
          # infill what needs infilling...
          rf2 = response_finer,
          # abundance
@@ -1702,7 +1727,7 @@ clean_responses_corrections <- response_summary %>%
          # functional biodiversity and traits -- needs to come after species biodiversity to replace
          rf2 = ifelse(grepl(fxnlbiodiv_terms, Response,ignore.case = T), "service provider functional biodiversity and traits", rf2),
          # if has biomass or aboveground or AGB, productivity
-         rf2 = ifelse(grepl("biomass|AGB|aboveground|NPP", Response, ignore.case = T), "productivity", rf2),
+         rf2 = ifelse(grepl("biomass|AGB|aboveground|NPP|NDVI", Response, ignore.case = T), "productivity", rf2),
          # if it has carbon, then carbon
          rf2 = ifelse(grepl("carbon|CO2", Response, ignore.case = T), "carbon", rf2),
          # triage value and appreciation
@@ -1715,15 +1740,84 @@ clean_responses_corrections <- response_summary %>%
          rf2 = ifelse((EcoServ == "Materials" & !grepl("value", Response)) | grepl("yield", Response, ignore.case = T), "exploitation/harvest", rf2)) %>%
   # recode any NA with "test" just so can move on with coding
   replace_na(list(rf2="TEST_VALUE"))
+
+# write file for LD and AK to finish assigning
+responses_forLDAK <- clean_responses_corrections
+# quote NAs
+responses_forLDAK[is.na(responses_forLDAK)] <- ""
+write_csv(responses_forLDAK, "round2_metareview/clean_qa_data/needs_classreview/partially_binned_ESresponse_review.csv")
+
 # apply same keywords 
 
 
 # 4.c. Apply driver and response corrections -----
 # maybe try pulling out Q12 to clean and tidy on its own?
 q12df_clean <- subset(prelimlong1c, qnum == "Q12")
+
+
 # the only way to do this cleanly is to go by ResponseId
+test_q12 <- subset(q12df_clean, ResponseId == "R_1JQHDAYFWcs4yEt") %>%
+  filter(!is.na(answer)) %>%
+  # unfactor ES's
+  mutate(ES = as.character(ES))
+# some things.. 
+# > need to assign "Other" to abbr == "Driver" if it's not there and text in "OtherDriver" present
 
+# break out responses
+test_q12responses <- subset(test_q12, abbr == "Response")
 
+# which ESs ID'd in response
+temp_unique_ESresponse <- unique(with(test_q12responses, ES[which(!is.na(answer))]))
+
+# break out drivers
+test_q12drivers <- subset(test_q12, grepl("Driver", abbr))
+# first, ID which has other drivers listed and whether Other present in Driver field
+temp_otherdriver_grp <- unique(with(test_q12drivers, Group[which(!is.na(answer) & abbr == "OtherDriver")]))
+# then go through and check for Other in Driver, if not present append
+for(i in temp_otherdriver_grp){
+  grprow <- with(test_q12drivers, which(Group == i & abbr == "Driver"))
+  if(!grepl("Other", test_q12drivers$clean_answer[grprow])){
+    test_q12drivers$clean_answer[grprow] <- paste0(test_q12drivers$clean_answer[grprow], ", Other")
+    # if(is.na(test_q12drivers$qa_note[grprow])){
+    #   # add append other to qa note
+    #   test_q12drivers$qa_note[grprow] <- "Appended 'Other' to Driver (Other driver entered but Other not checked)"
+    # }else{
+    #   # paste append other to existing qa note
+    #   test_q12drivers$qa_note[grprow] <- paste0(test_q12drivers$qa_note[grprow], "; appended 'Other' to Driver (Other driver entered but Other not checked)")
+    # }
+  }
+  
+}
+
+# now break out drivers by splitcom..
+
+testdriver2 <- test_q12drivers %>%
+  rename(orig_answer = answer)
+
+testdriver3 <- splitcom(testdriver2, keepcols = names(testdriver2), splitcol = "clean_answer") %>%
+  dplyr::select(StartDate:orig_answer, answer, num, fullquestion:ncol(.)) %>%
+  arrange(survey_order, num)
+# if it doesn't have QA note, it means every row in qa_note was NA
+if(!"qa_note" %in% names(testdriver3)){
+  testdriver3$qa_note <- NA
+}
+# add QA note for Other
+# id rows that have "Other"
+temp_otherrows <- with(testdriver3, which(answer == "Other" & !grepl("Other", orig_answer)))
+# append QA note
+for(i in temp_otherrows){
+  if(is.na(testdriver3$qa_note[i])){
+    # add append other to qa note
+    testdriver3$qa_note[i] <- "Appended 'Other' to Driver (Other driver entered but Other not checked)"
+  }else{
+    # paste append other to existing qa note
+    testdriver3$qa_note[i] <- paste0(testdriver3$qa_note[i], "; appended 'Other' to Driver (Other driver entered but Other not checked)")
+  }
+}
+
+# then add variable bin..
+testjoin <- testdriver3 %>%
+  left_join(master_driver_corrections, by = c("ES", "Group" = "Driver_Group", "answer"))
 
 
 

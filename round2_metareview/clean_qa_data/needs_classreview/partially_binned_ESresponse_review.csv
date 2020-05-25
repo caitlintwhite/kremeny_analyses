@@ -1,0 +1,1011 @@
+EcoServ,Response,EF,ES,no selection,Proxy for ES,Key.word,Notes,response_finer,rf2
+MaintainOpts,"""Total Diversity"" (not ecological diversity)",0,1,0,0,,no idea,,index
+SoilProtect,% litter mass remaining,1,0,0,1,Plant soil feedbacks,,plant soil feedbacks,plant soil feedbacks
+ClimReg,above and below ground primary prouction,0,1,0,1,Productivity,,productivity,productivity
+SoilProtect,above ground biomass,0,1,0,0,Productivity,,productivity,productivity
+Energy,Aboveground annual net primary productivity,0,0,0,1,Productivity,,productivity,productivity
+Food,aboveground biomass,0,0,0,1,Productivity,,productivity,productivity
+ClimReg,Aboveground biomass,1,2,0,0,Productivity,,productivity,productivity
+ClimReg,aboveground carbon pool,0,1,0,1,Productivity,,productivity,carbon
+ClimReg,aboveground carbon storage,0,1,0,0,Productivity,check this one,productivity,carbon
+ClimReg,aboveground live biomass,1,0,0,0,Productivity,,productivity,productivity
+HabCreate,aboveground production,0,0,0,1,Productivity,,productivity,productivity
+Pollination,abundance,0,1,0,0,service provider abundance,check this one,service provider abundance,service provider abundance
+SoilProtect,abundance and body size of carabids,0,0,0,1,service provider abundance,,service provider abundance,service provider abundance
+SoilProtect,abundance and body size of collembollans,0,0,0,1,service provider abundance,,service provider abundance,service provider abundance
+SoilProtect,abundance and body size of dipterans,0,0,0,1,service provider abundance,,service provider abundance,service provider abundance
+SoilProtect,abundance and body size of staphylinids,0,0,0,1,service provider abundance,,service provider abundance,service provider abundance
+Pollination,Abundance and diversity of native bees,0,1,0,0,service provider abundance; service provider diversity/richness/composition,,service provider abundance; service provider species biodiversity,service provider species biodiversity
+PestPath,abundance of beneficial fungi,1,0,0,0,service provider abundance,,service provider abundance,service provider abundance
+SoilProtect,Abundance of detritivorous soil arthropods,1,0,0,0,service provider abundance,,service provider abundance,service provider abundance
+PestPath,Abundance of fungal pathogen,1,0,0,0,pathogens/natural enemies,,pathogens/natural enemies,service provider abundance
+MaintainOpts,abundance of native and non-native taxa,0,0,0,1,service provider abundance,,service provider abundance,service provider abundance
+CulturePsych,Abundance of RDB or nationally scarce invertebrates,0,0,0,1,service provider abundance,,service provider abundance,service provider abundance
+coastWQReg,abundance of zooplankton,0,0,0,1,service provider abundance,,service provider abundance,service provider abundance
+CulturePsych,actual use),0,1,0,0,,no idea,,TEST_VALUE
+CulturePsych,Aesthetic heritage,0,1,0,0,,new category,,characteristics of human population
+CulturePsych,aesthetic value,0,4,0,0,,new category,,characteristics of human population
+CulturePsych,Aesthetics,0,1,0,0,,new category,,characteristics of human population
+ClimReg,AGB,0,1,0,0,,no idea,,productivity
+Food,agricultural production,0,2,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,Agricultural production,0,2,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,Agricultural revenue,0,1,0,1,Exploitation/harvest,money category?,exploitation/harvest,characteristics of human population
+AQReg,air quality improvement,0,1,0,0,Pollution/water quality,,pollution/water quality/air quality,pollution/water quality/air quality
+coastWQReg,Ammonia and nitrate loss,0,1,0,0,,Aquatic Biogeochemistry,,TEST_VALUE
+MaintainOpts,amount of disturbance,0,0,0,1,,no idea,,TEST_VALUE
+Pollination,and diversity of wild bees visiting flowers,0,1,0,0,service provider diversity/richness,,service provider diversity/richness,service provider species biodiversity
+Energy,annual mortality,1,0,0,0,,no idea,,TEST_VALUE
+SoilProtect,ant assemblage composition,0,0,0,1,service provider diversity/richness/composition,,service provider species biodiversity,service provider species biodiversity
+SoilProtect,ant species richness,1,0,0,0,service provider diversity/richness/composition,,service provider species biodiversity,service provider species biodiversity
+PestPath,aphid (pest) density,0,1,0,1,service provider abundance,pathogens/natural enemies,service provider abundance,service provider abundance
+PestPath,aphid days,0,0,0,1,service provider abundance,pathogens/natural enemies,service provider abundance,service provider abundance
+PestPath,aphid growth,0,0,0,1,service provider abundance,pathogens/natural enemies,service provider abundance,service provider abundance
+PestPath,Aphids per plant,0,1,0,0,service provider abundance,pathogens/natural enemies,service provider abundance,service provider abundance
+CulturePsych,aquaculture,0,0,1,0,Expolitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,aquaculture,0,0,1,0,Expolitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,aquaculture and salt production,0,1,0,0,Expolitation/harvest,check salt production,exploitation/harvest,exploitation/harvest
+HabCreate,aquatic habitat potential,0,0,0,1,Habitat,new category,habitat,habitat
+freshWQReg,Aquatic production,0,1,0,0,,no idea,,TEST_VALUE
+ClimReg,area burned by fire,0,0,0,1,Land cover,,land cover,land cover
+PestPath,area of riparian habitat,0,0,0,2,Land cover,,land cover,land cover
+PestPath,arthropod diversity and abundance,1,0,0,0,service provider abundance; service provider diversity/richness/composition,,service provider abundance; service provider species biodiversity,service provider species biodiversity
+SoilProtect,arthropod diversity and abundance,1,0,0,0,service provider abundance; service provider diversity/richness/composition,,service provider abundance; service provider species biodiversity,service provider species biodiversity
+Pollination,arthropod predators and birds during winter,0,1,0,0,Pathogens/natural enemies,"check ""birds during winter"", is this abundance?",pathogens/natural enemies,pathogens/natural enemies
+PestPath,arthropod removal by birds,0,1,0,0,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+AQReg,atmospheric regulation,0,1,0,0,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+HabCreate,"author created ""ecosystem services potential'general ecosystem services",0,0,0,1,,no idea,,TEST_VALUE
+SoilProtect,available P,0,0,0,1,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+Pollination,Average percent volume of plant in feces,0,0,0,1,Pathogens/natural predators,also maybe abundance,pathogens/natural predators,pathogens/natural predators
+Hazards,average rate of falling tide,0,0,1,0,Abiotic characteristics of the landscape: aquatic,,abiotic characteristics of the landscape: aquatic,abiotic characteristics of the landscape: aquatic
+SoilProtect,bacterial substrate uptake,0,0,0,1,,no idea,,TEST_VALUE
+Energy,barrels of oil equivalent,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+ClimReg,basal area,1,1,1,0,,no idea,,TEST_VALUE
+Materials,basal area,0,0,1,0,,no idea,,exploitation/harvest
+CulturePsych,basal area increment,0,1,0,0,,no idea,,TEST_VALUE
+freshWQReg,base flow,0,1,0,0,Abiotic characteristics of the landscape: aquatic,,abiotic characteristics of the landscape: aquatic,hydrology
+HabCreate,Bat and bird habitat,0,1,0,0,Habitat,new category,habitat,habitat
+Food,biodiversity,0,0,0,1,Biodiversity,new category,biodiversity,service provider species biodiversity
+HabCreate,biodiversity,0,0,0,2,Biodiversity,new category,biodiversity,service provider species biodiversity
+PestPath,biodiversity,0,0,0,1,Biodiversity,new category,biodiversity,service provider species biodiversity
+MaintainOpts,Biodiversity,0,1,0,0,Biodiversity,new category,biodiversity,service provider species biodiversity
+CulturePsych,biodiversity appreciation,0,1,0,0,Biodiversity,new category,biodiversity,characteristics of human population
+Pollination,biodiversity composite score,0,0,0,1,Biodiversity,new category,biodiversity,index
+CulturePsych,biodiversity condition,0,1,0,0,Biodiversity,new category,biodiversity,service provider species biodiversity
+MaintainOpts,Biodiversity index,0,0,0,1,,,,index
+HabCreate,biodiversity loss,0,0,0,1,Biodiversity,new category,biodiversity,service provider species biodiversity
+MaintainOpts,Biodiversity of seedlings,0,0,0,1,Biodiversity,new category,biodiversity,service provider species biodiversity
+HabCreate,biodiversity protection,1,1,0,0,Biodiversity,new category,biodiversity,service provider species biodiversity
+HabCreate,biodiversity value of grasslands,0,0,0,1,Biodiversity,new category,biodiversity,characteristics of human population
+PestPath,Biological control by natural predators,0,0,0,1,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+PestPath,biological control index,0,1,0,0,Pathogens/natural enemies,,pathogens/natural enemies,index
+PestPath,Biological control of aphid pests,0,0,0,1,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+PestPath,biological control of pests,0,1,0,0,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+Energy,biomass,1,1,0,1,Pathogens/natural enemies,,pathogens/natural enemies,productivity
+Food,biomass,1,0,0,0,Productivity,,productivity,productivity
+Energy,Biomass,0,0,0,1,Productivity,,productivity,productivity
+Food,Biomass,0,1,0,1,Productivity,,productivity,productivity
+Energy,Biomass based energy,0,1,0,0,Productivity,,productivity,productivity
+ClimReg,biomass carbon stock,1,0,0,0,Productivity,,productivity,carbon
+PestPath,biomass of weeds,1,0,0,0,Productivity,,productivity,productivity
+HabCreate,biotic integrity score (rangeland health assessment),0,0,1,0,Characteristics of the landscape: terrestrial,both abiotic and biotic?,characteristics of the landscape: terrestrial,index
+Materials,Biotic materials,0,1,0,0,,new category,,exploitation/harvest
+PestPath,bird abundance,0,1,0,0,service provider abundance,,service provider abundance,service provider abundance
+PestPath,bird functional diversity,1,0,0,0,service provider diversity/richness/composition,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+Pollination,bird functional diversity,1,0,0,0,service provider diversity/richness/composition,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+PestPath,Bird functional traits (related to foraging),0,0,0,1,Service provider function/functional traits,new category,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+PestPath,bird predation rates on plasticene insects,0,0,0,1,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+PestPath,bird species density,0,1,0,0,service provider abundance,,service provider abundance,service provider abundance
+PestPath,bird species richness,0,1,0,0,service provider diversity/richness/composition,,service provider species biodiversity,service provider species biodiversity
+CulturePsych,birding experience (satisfaction),0,0,1,0,Characteristics of human population,,characteristics of human population,characteristics of human population
+Food,black duck hunting,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Pollination,blueberry flower visitation,0,1,0,0,Pollination,,pollination,pollination
+coastWQReg,BOD,0,0,0,1,Characteristics of the landscape: aquatic,"no idea, maybe biochemical oxygen demand",abiotic characteristics of the landscape: aquatic,abiotic characteristics of the landscape: aquatic
+ClimReg,Broader habitat type,0,0,0,1,Habitat,,habitat,habitat
+HabCreate,Broader habitat type,0,0,0,1,Habitat,,habitat,habitat
+Hazards,Broader habitat type,0,0,0,1,Habitat,,habitat,habitat
+MedGen,Broader habitat type,0,0,0,1,Habitat,,habitat,habitat
+Food,brook trout angling,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+freshWQReg,bryophyte biomass,0,0,0,1,Productivity,,productivity,productivity
+freshWQReg,bryophyte water holding capacity,0,0,0,1,Service provider function/functional traits,new category or could be Biotic characteristics of the landscape: aquatic,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+SoilProtect,burrow density,1,0,0,0,service provider abundance,,service provider abundance,service provider abundance
+SoilProtect,burrow opening diameter,1,0,0,0,Characteristics of the plot,maybe Biotic characteristics of the landscape: terrestrial,characteristics of the plot,characteristics of the plot
+Pollination,butterfly presence/abundance,0,0,1,0,service provider abundance,,service provider abundance,service provider abundance
+ClimReg,C fixation and O2 releasing,0,1,0,0,Productivity,,productivity,productivity
+ClimReg,C storage,0,1,0,0,Productivity,,productivity,productivity
+SoilProtect,C:N ratio,0,0,0,1,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+SoilProtect,Ca-P,0,0,0,1,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+ClimReg,canopy biomass,0,0,0,1,Productivity,,productivity,productivity
+ClimReg,canopy carbon,0,0,0,1,Carbon,,carbon,carbon
+Hazards,Capacity of fragment regeneration,0,0,0,1,,no idea,,TEST_VALUE
+ClimReg,Carbon Capture,0,1,0,0,Carbon,,carbon,carbon
+SoilProtect,Carbon cycling,0,1,0,0,,,,carbon
+ClimReg,Carbon cycling (measured by enzyme activity),1,0,0,0,Carbon,,carbon,carbon
+ClimReg,carbon emissions,0,0,0,1,Carbon,,carbon,carbon
+ClimReg,carbon fluxes,0,0,0,1,Carbon,,carbon,carbon
+ClimReg,carbon gain,0,1,0,0,Carbon,,carbon,carbon
+ClimReg,carbon in trees per area,0,1,0,0,Carbon,,carbon,carbon
+ClimReg,carbon per area,0,1,0,0,Carbon,,carbon,carbon
+ClimReg,Carbon per tree,0,1,0,0,Carbon,,carbon,carbon
+ClimReg,carbon seq. CO2 equivalent,0,1,0,0,Carbon,,carbon,carbon
+OceanReg,carbon sequestation,0,1,0,0,Carbon,,carbon,carbon
+ClimReg,carbon sequestration,0,2,1,2,Carbon,,carbon,carbon
+ClimReg,Carbon sequestration,1,0,1,0,Carbon,,carbon,carbon
+ClimReg,carbon sequestration in soils and biomass,0,1,0,0,Carbon,,carbon,carbon
+ClimReg,carbon stock,0,2,0,0,Carbon,,carbon,carbon
+ClimReg,Carbon stock,1,0,0,1,Carbon,,carbon,carbon
+ClimReg,Carbon stocks,0,1,0,0,Carbon,,carbon,carbon
+ClimReg,carbon storage,0,9,0,1,Carbon,,carbon,carbon
+SoilProtect,carbon storage,0,1,0,0,Carbon,,carbon,carbon
+ClimReg,Carbon storage,0,6,0,0,Carbon,,carbon,carbon
+OceanReg,carbonate production,0,2,0,0,Aquatic Biogeochemistry,,aquatic biogeochemistry,carbon
+PestPath,carrion consumption rate,0,1,0,0,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+CulturePsych,cars or bicycles parked in front yard),0,0,0,1,Characteristics of human population,,characteristics of human population,characteristics of human population
+Food,cattle,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+PestPath,CBB bean damage,0,1,0,0,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+PestPath,CBB infestation,0,1,0,0,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+PestPath,cereal leaf beetle density,0,1,0,1,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+PestPath,cereal leaf beetle eggs,0,1,0,1,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+PestPath,cereal leaf beetle larvae,0,1,0,1,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+MaintainOpts,change in forest area,0,0,0,1,Land cover,,land cover,land cover
+HabCreate,channel bed distribution,1,0,0,0,"Abiotic characteristics of the landscape, Hydrology",,"abiotic characteristics of the landscape, hydrology","abiotic characteristics of the landscape, hydrology"
+Materials,charcoal production,0,0,1,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+coastWQReg,chemical water quality regulation,0,1,0,0,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+coastWQReg,chlorophyll a,0,0,0,1,Productivity,,productivity,productivity
+coastWQReg,clearance rate,0,1,0,0,,no idea,,TEST_VALUE
+ClimReg,Climate regulation,1,1,0,0,,no idea,,TEST_VALUE
+Food,cloud berry picking,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+ClimReg,CO2 efflux,0,1,0,1,Carbon,,carbon,carbon
+ClimReg,CO2 emissions,0,1,0,0,Carbon,,carbon,carbon
+ClimReg,CO2 flux,0,1,0,0,Carbon,,carbon,carbon
+ClimReg,coarse veg area x avg.  sequestration rate,0,1,0,0,,,,TEST_VALUE
+ClimReg,coarse veg area x avg.  storage rate,0,1,0,0,,,,TEST_VALUE
+AQReg,coarse veg area x pollution removal rate,0,1,0,0,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+Food,coffee dry fruit weight,0,1,0,0,,could be about pollination,,TEST_VALUE
+Food,coffee fruit set,0,1,0,0,,could be about pollination,,TEST_VALUE
+Food,coffee fruit size,0,1,0,0,,could be about pollination,,TEST_VALUE
+Pollination,colony foraging radius,0,0,0,1,,could be about pollination,,TEST_VALUE
+HabCreate,Colony maximum diameter,0,0,0,1,,could be about pollination,,TEST_VALUE
+Food,commercially harvested fungi richness,0,1,0,1,Exploitation/harvest,,exploitation/harvest,service provider species biodiversity
+MedGen,commercially harvested fungi richness,0,1,0,0,Exploitation/harvest,,exploitation/harvest,service provider species biodiversity
+Food,community garden,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+coastWQReg,community respiration,1,0,0,0,,too vague,,TEST_VALUE
+Food,community structure,0,0,0,1,,too vague,,TEST_VALUE
+PestPath,Community Structure,0,0,0,1,,too vague,,TEST_VALUE
+Pollination,Community Structure,0,0,0,1,,too vague,,TEST_VALUE
+Pollination,Community structure of flower longicorn beetles,0,0,0,1,Service provider diversity/richness/composition,,service provider species biodiversity,service provider species biodiversity
+SoilProtect,composition,0,0,0,1,,too vague,,TEST_VALUE
+MaintainOpts,conifer seedling abundance,0,0,1,0,Service provider abundance,,service provider abundance,service provider abundance
+HabCreate,connectivity,0,1,0,0,Land cover,,land cover,land cover
+HabCreate,connectivity between grasslands,0,0,0,1,Land cover,,land cover,land cover
+HabCreate,cooling by vegetation,0,1,0,0,Abiotic characteristics of the landscape:terrestrial,,abiotic characteristics of the landscape:terrestrial,abiotic characteristics of the landscape:terrestrial
+HabCreate,coral cover,0,1,0,0,Characteristics of the plot,,characteristics of the plot,characteristics of the plot
+CulturePsych,coral functional traits,0,0,0,1,Service provider function/functional traits,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+HabCreate,coral functional traits (Age and size at maturity,0,0,0,1,Service provider function/functional traits,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+Hazards,coral functional traits (Colony maximum diameter,0,0,0,1,Service provider function/functional traits,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+HabCreate,coral growth,1,0,0,0,Productivity,,productivity,productivity
+coastWQReg,coral rugosity,0,0,0,1,Service provider function/functional traits,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+HabCreate,coral rugosity,0,0,0,1,Service provider function/functional traits,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+Hazards,coral rugosity,0,0,0,1,Service provider function/functional traits,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+HabCreate,coral survival,1,0,0,0,Service provider function/functional traits,maybe,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+Food,corn yield,0,1,0,0,"Productivity, Exploitation/harvest",,"productivity, exploitation/harvest",exploitation/harvest
+Food,cover,1,0,0,0,Land cover,maybe,land cover,land cover
+PestPath,crop damage,0,1,0,1,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+CulturePsych,crop land,0,0,1,0,Land use,maybe,land use,land use
+Food,crop land,0,0,1,0,Land use,maybe,land use,land use
+SoilProtect,crop land,0,0,2,0,Land use,maybe,land use,land use
+Food,crop production,0,1,0,1,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,Crop production,0,1,1,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,Crop revenue,0,1,0,0,Exploitation/harvest,,exploitation/harvest,characteristics of human population
+Food,crop variation,0,0,1,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,crop yield,0,4,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,Crop yield,0,0,1,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+CulturePsych,cross country skiing,0,1,0,0,Recreation/tourism,,recreation/tourism,recreation/tourism
+HabCreate,crustacean density,1,0,0,0,Service provider abundance,,service provider abundance,service provider abundance
+CulturePsych,cultural sites of First Nations,0,1,0,0,Land cover,maybe,land cover,land cover
+SoilProtect,Decomposition of leaf litter in freshwater systems,0,1,0,0,Aquatic Biogeochemistry,maybe,aquatic biogeochemistry,aquatic biogeochemistry
+SoilProtect,decomposition rate,0,0,0,1,,too vague,,TEST_VALUE
+CulturePsych,decrease in spring litter,0,0,0,1,Biotic characteristics of the lanscape,,biotic characteristics of the landscape,biotic characteristics of the landscape
+CulturePsych,deer hunting,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+coastWQReg,denitrification,1,0,0,0,Aquatic Biogeochemistry,,aquatic biogeochemistry,aquatic biogeochemistry
+PestPath,density of anole,0,0,0,1,,is the anole the pest or the ESP?,,TEST_VALUE
+SoilProtect,detrital P,0,0,0,1,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+SoilProtect,Detritivore feeding rate,0,0,0,1,Service provider function/functional traits,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+ClimReg,Dilution and sequestration,0,1,0,0,Carbon,maybe,carbon,carbon
+HabCreate,dimensionless flow velocity,1,0,0,0,Abiotic characteristics of the landscape: aquatic,,abiotic characteristics of the landscape: aquatic,hydrology
+HabCreate,discharge,1,0,0,0,Abiotic characteristics of the landscape: aquatic,,abiotic characteristics of the landscape: aquatic,hydrology
+HabCreate,dispersal distance,1,0,0,0,Service provider function/functional traits,maybe,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+AQReg,dissolved gasses,0,1,0,0,,too vague,,TEST_VALUE
+coastWQReg,dissolved solids,1,0,0,0,,maybe Pollution/water quality/air quality,,TEST_VALUE
+CulturePsych,distance traveled to visit lakes,0,1,0,0,Recreation/toursim,,recreation/tourism,recreation/tourism
+PestPath,distribution of pest predators,0,0,0,1,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+CulturePsych,Disturbance (artificial light,0,0,0,1,Characteristics of human population,maybe,characteristics of human population,characteristics of human population
+CulturePsych,dive tourism,0,1,0,0,Recreation/tourism,or maybe Exploitation,recreation/tourism,recreation/tourism
+Pollination,diversity,0,0,0,1,Pollination,vague,pollination,service provider species biodiversity
+coastWQReg,diversity of algal and bacterial communities,0,0,0,1,Service provider diversity/richness/composition,,service provider species biodiversity,service provider species biodiversity
+coastWQReg,downstream,0,0,1,0,,too vague,,TEST_VALUE
+HabCreate,dune height,0,0,0,1,Characteristics of the landscape: terrestrial,,characteristics of the landscape: terrestrial,characteristics of the landscape: terrestrial
+PestPath,dung decomposition,0,0,0,1,,"this says that it is in the pathogen category, but it sounds like an ESP",,TEST_VALUE
+SoilProtect,dung decomposition,0,1,0,1,,"this says that it is in the pathogen category, but it sounds like an ESP",,TEST_VALUE
+SoilProtect,Dung decomposition,1,0,0,0,,"this says that it is in the pathogen category, but it sounds like an ESP",,TEST_VALUE
+PestPath,dung removal,0,1,0,0,,"this says that it is in the pathogen category, but it sounds like an ESP",,TEST_VALUE
+SoilProtect,dung removal rate,0,1,0,0,,"this says that it is in the pathogen category, but it sounds like an ESP",,TEST_VALUE
+PestPath,dung-decomposing beetle diversity and abundance,1,0,0,0,"Service provider abundance, service provider diversity/richness/composition",,"service provider abundance, service provider species biodiversity",service provider species biodiversity
+SoilProtect,dung-decomposing beetle diversity and abundance,1,0,0,0,"Service provider abundance, service provider diversity/richness/composition",,"service provider abundance, service provider species biodiversity",service provider species biodiversity
+PestPath,E. coli levels,0,0,0,1,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+Food,ear mass,0,0,0,1,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+SoilProtect,earthworm abundance,1,0,0,1,Service provider abundance,,service provider abundance,service provider abundance
+SoilProtect,earthworm density,0,0,0,1,Service provider abundance,,service provider abundance,service provider abundance
+SoilProtect,earthworm functional traits,0,0,0,1,Service provider function/functional traits,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+SoilProtect,Earthworm physical properties,0,0,0,1,Service provider function/functional traits,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+coastWQReg,ecologic water quality,0,0,0,1,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+HabCreate,ecological priority areas,0,1,0,0,,"this could be several categories, too vague",,TEST_VALUE
+Food,ecological vulnerability,0,0,0,1,,no idea,,TEST_VALUE
+AQReg,ecologically effective area,0,0,0,1,,no idea,,TEST_VALUE
+ClimReg,ecosystem carbon exchange,0,1,0,1,Carbon,,carbon,carbon
+MaintainOpts,ecosystem functionality,0,0,0,1,,no idea,,TEST_VALUE
+MaintainOpts,ecosystem integrity,0,0,0,1,,no idea,,index
+HabCreate,Ecosystem stability,0,1,0,0,,no idea,,TEST_VALUE
+Food,Edible mushroom yield,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+CulturePsych,effect on estate value,0,1,0,0,Characteristics of human population,,characteristics of human population,characteristics of human population
+PestPath,efficacy of beetle removal by Anole,0,0,0,1,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+PestPath,Egg predation,0,1,0,0,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+HabCreate,energy flow,0,0,0,1,Abitic characteristics of the landscape,vague,abiotic characteristics of the landscape,abiotic characteristics of the landscape
+HabCreate,environmental quality,0,0,0,1,,vague,,TEST_VALUE
+ClimReg,ER,0,0,1,0,,no idea,,TEST_VALUE
+SoilProtect,erosion,1,0,0,0,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+SoilProtect,erosion control,0,1,0,0,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+SoilProtect,erosion control capacity,0,0,0,1,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+SoilProtect,erosion mitigation,0,1,0,0,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+SoilProtect,Erosion modulus,0,1,0,0,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+freshWQReg,evapotranspiration,1,0,0,1,Abiotic characteristics of the landscape:aquatic,,abiotic characteristics of the landscape: aquatic,abiotic characteristics of the landscape: aquatic
+CulturePsych,evolution of populations,0,0,0,1,,no idea,,TEST_VALUE
+MaintainOpts,evolutionary rarity,1,0,0,0,,no idea,,TEST_VALUE
+SoilProtect,exchangeable base cations (Ca,0,0,0,1,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+MaintainOpts,existence of woodland caribou,0,1,0,0,Service provider abundance,,service provider abundance,service provider abundance
+SoilProtect,fallow,0,0,1,0,Land cover,"maybe, also Exploitation/harvest",land cover,land cover
+Food,farmland,0,0,1,0,Land cover,or is it land use,land cover,land cover
+Food,fauna,0,1,0,0,,too vague,,TEST_VALUE
+PestPath,Feces removal rate,0,0,0,1,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+Food,fiber,0,1,0,0,Exploitation/harvest,maybe,exploitation/harvest,exploitation/harvest
+Food,Field derived production,0,1,0,1,Exploitation/harvest,maybe Productivity,exploitation/harvest,exploitation/harvest
+ClimReg,fine veg area x avg.  sequestration rate,0,1,0,0,,,,TEST_VALUE
+AQReg,fine veg area x pollution removal rate,0,1,0,0,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+MaintainOpts,fire regeneration after fire,0,0,1,0,Characteristics of the landscape,both abiotic and biotic,characteristics of the landscape,characteristics of the landscape
+Materials,firewood use,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+CulturePsych,fish,0,1,0,0,,"could be Recreation/tourism, Exploitation/harvest, or ESP",,TEST_VALUE
+MaintainOpts,fish abundances,1,0,0,0,Service provider abundance,,service provider abundance,service provider abundance
+Food,fish aquaculture,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+HabCreate,fish capacity,0,1,0,0,,no idea,,TEST_VALUE
+Food,Fish community diversity,0,1,0,0,Service provider diversity/richness/composition,,service provider species biodiversity,service provider species biodiversity
+HabCreate,fish community index (FCI),1,0,0,0,Service provider diversity/richness/composition,,service provider species biodiversity,index
+MaintainOpts,Fish Community Index (FCI),1,0,0,0,Service provider diversity/richness/composition,,service provider species biodiversity,index
+Food,Fish community structure,1,0,0,0,Service provider diversity/richness/composition,,service provider species biodiversity,service provider species biodiversity
+HabCreate,fish density,1,0,0,0,Service provider abundance,,service provider abundance,service provider abundance
+CulturePsych,fish density (adults per ha),0,0,0,1,Service provider abundance,,service provider abundance,service provider abundance
+CulturePsych,Fish density (young-of-year per ha),0,0,0,1,Service provider abundance,,service provider abundance,service provider abundance
+HabCreate,fish functional group,0,0,0,1,Service provider function/functional traits,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+CulturePsych,fish functional group biodiversity,0,1,0,0,"Service provider diversity/richness/composition, Service provider function/functional traits",,"service provider functional biodiversity and traits, service provider functional biodiversity and traits",service provider species biodiversity
+HabCreate,fish habitat,0,1,0,0,Habitat,,habitat,habitat
+Food,fish harvesting,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,fish landings,0,0,1,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+CulturePsych,fish productivity,0,0,0,1,Productivity,,productivity,productivity
+coastWQReg,fish size,0,0,0,1,Productivity,,productivity,productivity
+Food,fish stock,0,0,0,1,,no idea,,TEST_VALUE
+MaintainOpts,fish traits,1,0,0,0,Service provider function/functional traits,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+Food,Fish Type,0,0,0,1,,no idea,,TEST_VALUE
+Food,fish yield,0,1,0,1,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,fisheries yield,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+HabCreate,fleshy algal cover,0,1,0,0,Vegetation cover,,vegetation cover,vegetation cover
+Hazards,flood buffering,0,1,0,0,Extreme events,maybe,extreme events,extreme events
+freshWQReg,Flood control,0,1,0,0,Extreme events,maybe,extreme events,extreme events
+Hazards,flood mitigation,0,1,0,0,Extreme events,maybe,extreme events,extreme events
+Hazards,Flood regulation,0,1,0,0,Extreme events,maybe,extreme events,extreme events
+Food,flor,0,1,0,0,,no idea,,TEST_VALUE
+CulturePsych,flora and fauna,0,1,0,0,Recreation/tourism,maybe,recreation/tourism,recreation/tourism
+HabCreate,Floral cover,1,0,0,0,Vegetation cover,,vegetation cover,vegetation cover
+Pollination,flower visits,0,0,0,1,Pollination,,pollination,pollination
+Pollination,Flower visits,0,1,0,0,Pollination,,pollination,pollination
+AQReg,fluorescence),0,0,0,1,,is this one unconnected from the rest,,TEST_VALUE
+Food,Food,1,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,food cultivation area,0,0,1,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,food production,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,food supply,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,forage production,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+coastWQReg,forest,0,0,1,0,Vegetation cover,,vegetation cover,vegetation cover
+CulturePsych,forest,0,0,1,0,Vegetation cover,,vegetation cover,vegetation cover
+freshWQReg,forest,0,0,1,0,Vegetation cover,,vegetation cover,vegetation cover
+SoilProtect,forest,0,0,1,0,Vegetation cover,,vegetation cover,vegetation cover
+ClimReg,forest floor carbon pool,0,1,0,1,Carbon,,carbon,carbon
+Materials,forest products,0,1,0,0,,needs new bin?,,exploitation/harvest
+coastWQReg,forest recovery,0,0,0,1,,no idea,,TEST_VALUE
+HabCreate,forest understory plant survivorship,1,0,0,0,Vegetation cover,,vegetation cover,vegetation cover
+Materials,forest yield,0,1,0,0,Productivity,maybe with new bin for forest products,productivity,exploitation/harvest
+SoilProtect,frequency of burrows,1,0,0,0,Service provider abundance ,indirectly?,service provider abundance,service provider abundance
+coastWQReg,freshwater,0,1,0,0,hydrology,too vague,hydrology,hydrology
+ClimReg,Freshwater metabolism,0,0,0,1,,needs new bin?,,TEST_VALUE
+coastWQReg,Freshwater metabolism,0,0,0,1,,,,TEST_VALUE
+Food,freshwater plants and animals,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,fruit quality,0,0,0,1,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Pollination,fruit set,0,1,0,0,Pollination,,pollination,pollination
+Food,Fruit set,1,0,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Pollination,Fruit set,1,0,0,0,Pollination,,pollination,pollination
+Food,fruit weight,0,0,0,1,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Pollination,functional dispersion,0,0,0,1,,no idea,,service provider functional biodiversity and traits
+PestPath,Functional Diveristy,0,0,0,1,Pathogens/natural enemies,,pathogens/natural enemies,service provider functional biodiversity and traits
+Pollination,Functional Diveristy,0,0,0,1,Pollination,,pollination,service provider functional biodiversity and traits
+SoilProtect,functional diversity,1,0,0,0,"Service provider function/functional traits, Service provider diversity/abundance/composition",,"service provider functional biodiversity and traits, service provider diversity/abundance/composition",service provider functional biodiversity and traits
+Pollination,functional evenness,0,0,0,1,"Service provider function/functional traits, Service provider diversity/abundance/composition",,"service provider functional biodiversity and traits, service provider diversity/abundance/composition",service provider functional biodiversity and traits
+SoilProtect,fungal abundance,1,0,0,0,Service provider abundance,,service provider abundance,service provider abundance
+Food,fungi,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+HabCreate,game fish habitat suitability index,0,0,0,1,Habitat,,habitat,index
+CulturePsych,Garden-design,0,0,0,1,"Characteristics of the plot, Exploitation/harvest",,"characteristics of the plot, exploitation/harvest","characteristics of the plot, exploitation/harvest"
+AQReg,Gas regulation,1,1,0,0,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+Food,genera richness,0,0,1,0,"Service provider diversity/richness/composition, Exploitation/harvest",,"service provider species biodiversity, exploitation/harvest",service provider species biodiversity
+CulturePsych,generation of scientific knowledge,0,0,0,1,Human knowledge,,human knowledge,human knowledge
+ClimReg,GPP,0,0,1,0,Productivity,,productivity,productivity
+Food,grain production,0,0,1,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,Grain production,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,grain weight (tonnes per hectare per plot),0,0,0,1,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,grain yield,0,0,1,0,,,,exploitation/harvest
+CulturePsych,grass for hay,0,0,0,1,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,grass nutritional value,0,0,0,1,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+CulturePsych,gravimetric soil water,0,0,0,1,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+ClimReg,greenhouse gas value,0,1,0,0,Carbon,maybe expand the carbon bin to include all greenhouse gases,carbon,characteristics of human population
+ClimReg,Greenhouse Gas Value (GHGV),0,1,0,0,Carbon,,carbon,characteristics of human population
+HabCreate,gross primary production,0,0,0,1,Productivity,,productivity,productivity
+freshWQReg,groundwater exchange,1,0,0,0,Hydrology,,hydrology,hydrology
+freshWQReg,groundwater quantity,0,0,0,1,Hydology,,hydrology,hydrology
+HabCreate,Growth form),0,0,0,1,,no idea,,TEST_VALUE
+Hazards,Growth form),0,0,0,1,,no idea,,TEST_VALUE
+coastWQReg,Growth of dry soft tissue,1,0,0,0,Productivity,maybe,productivity,productivity
+Food,Growth of dry soft tissue,1,0,0,0,Productivity,maybe,productivity,productivity
+coastWQReg,Growth of shell length,1,0,0,0,Productivity,"maybe, could be ESP",productivity,productivity
+Food,Growth of shell length,1,0,0,0,Productivity,"maybe, could be ESP",productivity,productivity
+ClimReg,growth rates,1,0,0,0,,too vague,,TEST_VALUE
+HabCreate,habitat,0,1,0,0,Habitat,,habitat,habitat
+MaintainOpts,habitat assessment score,0,0,0,1,Habitat,,habitat,index
+HabCreate,Habitat capability index,0,0,0,1,Habitat,,habitat,index
+HabCreate,habitat connectivity,2,1,0,0,Habitat,,habitat,habitat
+HabCreate,habitat cover,0,0,0,1,Habitat,,habitat,habitat
+HabCreate,habitat maintenance,0,1,0,0,Habitat,,habitat,habitat
+HabCreate,habitat patch size,0,0,0,1,Habitat,,habitat,habitat
+HabCreate,Habitat Provision,0,1,0,0,Habitat,,habitat,habitat
+HabCreate,habitat quality,2,2,0,1,Habitat,,habitat,habitat
+HabCreate,Habitat quality,0,0,1,0,Habitat,,habitat,habitat
+HabCreate,Habitat sensitivity,1,0,0,0,Habitat,,habitat,habitat
+CulturePsych,habitat suitability,0,0,0,1,Habitat,,habitat,habitat
+Materials,harvestable timber,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+CulturePsych,health deprivation,0,1,0,0,Human health,,human health,human health
+CulturePsych,health effects (physical - mental),0,1,0,0,Human health,,human health,human health
+HabCreate,herbivore fish biomass,0,1,0,0,Productivity ,could also be Pathogens/natural enemies,productivity,productivity
+CulturePsych,horseback riding,0,1,0,0,Recreation/tourism,,recreation/tourism,recreation/tourism
+CulturePsych,human and agricultural water consumption(access),0,0,0,1,"Characteristics of human population, land cover",,"characteristics of human population, land cover","characteristics of human population, land cover"
+CulturePsych,human attitudes and preferences (i.e. ecosystem services-based traits):water use,0,1,0,0,Characteristics of human population,,characteristics of human population,characteristics of human population
+CulturePsych,human disease prevalence(6+types),0,0,0,1,Human health,,human health,human health
+Pollination,Hummingbird movement,0,0,0,1,Pollination,,pollination,pollination
+Energy,hydro-energy potential,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+freshWQReg,Hydrologic function score (rangeland health assessment),0,0,0,1,Hydrology,,hydrology,index
+freshWQReg,Hydrologic regime,1,0,0,0,Hydrology,,hydrology,hydrology
+freshWQReg,hydrological regulation (rainfall storage),0,0,0,1,,,,TEST_VALUE
+Energy,hydropower,0,0,0,1,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+SoilProtect,impact intensity (tons of soil),0,1,0,0,Soil characteristics,or abiotic characteristics of the landscape:terrestrial,soil physiochemical characteristics,soil physiochemical characteristics
+MaintainOpts,index of rarity,1,0,0,0,Service provider abundance,maybe,service provider abundance,index
+Energy,Indicators (12 different indices),1,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+MaintainOpts,Indicators (12 different indices),0,1,0,0,,too vague,exploitation/harvest,exploitation/harvest
+freshWQReg,infiltration,0,1,0,0,Hydrology,,hydrology,hydrology
+CulturePsych,information and knowledge,0,1,0,0,Human knowledge,,human knowledge,human knowledge
+Food,inland fisheries yields,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+SoilProtect,inorganic N supply,0,1,0,0,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+HabCreate,insect pollinated plants,0,1,0,0,"Pollination, vegetation cover",,"pollination, vegetation cover","pollination, vegetation cover"
+PestPath,invasion resistance,1,0,0,0,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+PestPath,Invasive species cover,0,0,1,0,Invasive species,,invasive species,invasive species
+Pollination,Invertebrate abundance (natural enemies),0,0,0,1,Pathogens/natural enemies,,pathogens/natural enemies,service provider abundance
+MaintainOpts,invertebrate abundances,1,0,0,0,Service provider abundance,,service provider abundance,service provider abundance
+PestPath,Invertebrate biodiversity,0,0,0,1,Service provider diversity/richness/composition,,service provider species biodiversity,service provider species biodiversity
+coastWQReg,invertebrate community,0,0,0,1,Service provider diversity/richness/composition,,service provider species biodiversity,service provider species biodiversity
+MaintainOpts,Invertebrate traits,1,0,0,0,Service provider function/functional traits,,service provider functional biodiversity and traits,service provider functional biodiversity and traits
+Pollination,isotope ratios,0,0,0,1,Pollination,,pollination,pollination
+SoilProtect,K,0,0,0,1,,potassium? too vague,,TEST_VALUE
+CulturePsych,lake visitation,0,1,0,0,Recreation/toursim,,recreation/tourism,recreation/tourism
+CulturePsych,landscape aesthetics,0,1,0,0,Characteristics of human population,,characteristics of human population,characteristics of human population
+HabCreate,landscape heterogeneity,0,0,0,1,Habitat,,habitat,habitat
+PestPath,larval dissappearance rates of pests,0,0,0,1,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+PestPath,larval removal,0,1,0,0,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+CulturePsych,lawn furniture,0,0,0,1,Characteristics of human population,,characteristics of human population,characteristics of human population
+SoilProtect,leaf consumption,0,0,0,1,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+coastWQReg,leaf litter decomposition,1,0,0,0,Plant soil feedbacks,,plant soil feedbacks,plant soil feedbacks
+SoilProtect,Leaf litter decomposition,0,1,0,0,Plant soil feedbacks,,plant soil feedbacks,plant soil feedbacks
+Food,legume abundance,0,0,0,1,Exploitation/harvest,,exploitation/harvest,service provider abundance
+CulturePsych,leisure hunting,0,1,0,0,"Exploitation/harvest, Recreation/tourism",,"exploitation/harvest, recreation/tourism","exploitation/harvest, recreation/tourism"
+CulturePsych,life satisfaction,0,0,0,1,Characteristics of human population,,characteristics of human population,characteristics of human population
+Pollination,likelihood of seed dispersal in given locations,0,1,0,0,Pollination,,pollination,pollination
+SoilProtect,litter biomass,1,0,0,0,Plant soil feedbacks,,plant soil feedbacks,productivity
+coastWQReg,litter consumption rates,1,0,0,0,Plant soil feedbacks,,plant soil feedbacks,plant soil feedbacks
+SoilProtect,litter decomposition,1,0,0,0,Plant soil feedbacks,,plant soil feedbacks,plant soil feedbacks
+Food,livestock and agriculture,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,livestock owned,0,0,1,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,livestock production,0,0,0,1,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+ClimReg,Loss of Co2 from forest fires,0,0,0,1,"Extreme events, Carbon",,"extreme events, carbon",carbon
+CulturePsych,Love of nature,0,1,0,0,Characteristics of human population,,characteristics of human population,characteristics of human population
+HabCreate,macro invertebrate rayon richness and diversity,0,0,0,1,Service provider diversity/richness/composition,,service provider species biodiversity,service provider species biodiversity
+coastWQReg,macroinvertebrate abundance and composition,0,0,0,1,"Service provider abunance, Service provider diversity/richness/composition",,"service provider abunance, service provider species biodiversity",service provider abundance
+HabCreate,Manning's roughness Coefficient,1,0,0,0,,no idea,,TEST_VALUE
+SoilProtect,many soil chemistry variables,1,0,0,0,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+Food,Maple syrup,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,marine trophic index,0,1,0,0,Exploitation/harvest,,exploitation/harvest,index
+HabCreate,maximum anchor ice,1,0,0,0,Abiotic characteristics of the landscape,maybe...ice,abiotic characteristics of the landscape,abiotic characteristics of the landscape
+Hazards,maximum continuous period of tidal submergence,0,0,1,0,"Extreme events, Hydrology",,"extreme events, hydrology","extreme events, hydrology"
+Food,meat production,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+MedGen,medicinal plant richness,0,1,0,0,Service provider diversity/richness/composition,,service provider species biodiversity,service provider species biodiversity
+MedGen,medicinal plants,0,2,0,0,Service provider abundance,maybe,service provider abundance,service provider abundance
+Food,mercury residues in fish,0,0,1,0,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+SoilProtect,Mg,0,0,0,1,Soil characteristics,Magnesium ?,soil physiochemical characteristics,soil physiochemical characteristics
+ClimReg,Mg C per ha,0,0,1,0,Carbon,,carbon,carbon
+SoilProtect,Microbial basal respiration,1,0,0,0,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+ClimReg,microbial biomass,1,0,0,0,Productivity,?,productivity,productivity
+SoilProtect,Microbial biomass,1,0,0,0,Productivity,?,productivity,productivity
+CulturePsych,moose hunting,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+Food,Moose hunting,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+HabCreate,multifunctional hotspots,0,1,0,0,Habitat,no idea,habitat,habitat
+SoilProtect,N,1,0,0,1,Soil characteristics,Nitrogen ?,soil physiochemical characteristics,soil physiochemical characteristics
+coastWQReg,N and P excretion rates,0,0,1,0,Aquatic biogeochemistry,,aquatic biogeochemistry,aquatic biogeochemistry
+ClimReg,N avaliability,0,1,0,1,Soil characteristics,vague,soil physiochemical characteristics,soil physiochemical characteristics
+AQReg,N deposition,0,0,0,1,Soil characteristics,vague,soil physiochemical characteristics,soil physiochemical characteristics
+SoilProtect,N mineralisation rate,0,0,0,1,Soil characteristics,vague,soil physiochemical characteristics,soil physiochemical characteristics
+SoilProtect,N mineralization rate,1,0,0,0,Soil characteristics,vague,soil physiochemical characteristics,soil physiochemical characteristics
+freshWQReg,N retention,0,1,0,0,Soil characteristics,vague,soil physiochemical characteristics,soil physiochemical characteristics
+SoilProtect,N retention,0,1,0,0,Soil characteristics,vague,soil physiochemical characteristics,soil physiochemical characteristics
+AQReg,N storage,0,1,0,0,Soil characteristics,vague,soil physiochemical characteristics,soil physiochemical characteristics
+SoilProtect,N storage,1,0,0,0,Soil characteristics,vague,soil physiochemical characteristics,soil physiochemical characteristics
+AQReg,N2,0,1,0,0,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+SoilProtect,Na),0,0,0,1,Soil characteristics,maybe this should be sodium,soil physiochemical characteristics,soil physiochemical characteristics
+CulturePsych,natural materials,0,1,0,0,Exploitation/harvest,maybe,exploitation/harvest,exploitation/harvest
+CulturePsych,Nature appreciation,0,1,0,0,Characteristics of human population,,characteristics of human population,characteristics of human population
+HabCreate,NDVI,0,0,1,0,"Productivity, Habitat",,"productivity, habitat",productivity
+Pollination,Nectar feeder biodiversity and abundance,0,0,0,1,Pollination,,pollination,service provider species biodiversity
+HabCreate,nekton abundance,1,0,0,0,Service provider abundance,,service provider abundance,service provider abundance
+ClimReg,Net C balance,0,1,0,0,Carbon,,carbon,carbon
+SoilProtect,net nitrogen mineralization absorbed to ionic resins,0,1,0,0,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+ClimReg,net oxygen production,0,0,1,0,ClimReg nutrients,,climreg nutrients,climreg nutrients
+ClimReg,Net primary production,0,0,1,0,Productivity,,productivity,productivity
+ClimReg,net primary productivity,0,0,0,1,Productivity,,productivity,productivity
+coastWQReg,nitrate  spiraling rates,0,0,1,0,,,,TEST_VALUE
+coastWQReg,nitrate conc.,0,0,0,1,Aquatic biogeochemistry,,aquatic biogeochemistry,aquatic biogeochemistry
+coastWQReg,nitrate spiraling rates,0,0,0,1,Aquatic biogeochemistry,,aquatic biogeochemistry,aquatic biogeochemistry
+coastWQReg,nitrate spiraling rates,0,0,0,1,Aquatic biogeochemistry,,aquatic biogeochemistry,aquatic biogeochemistry
+SoilProtect,Nitrate supply rate,0,0,1,0,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+coastWQReg,nitrate/nitrite/phosphorous/BOD5/O2 concentrations in water,0,1,0,0,Aquatic biogeochemistry,,aquatic biogeochemistry,aquatic biogeochemistry
+coastWQReg,nitrite conc.,0,0,0,1,Aquatic biogeochemistry,,aquatic biogeochemistry,aquatic biogeochemistry
+ClimReg,nitrogen,0,1,0,0,ClimReg nutrients,,climreg nutrients,climreg nutrients
+coastWQReg,Nitrogen,0,0,0,1,Aquatic biogeochemistry,,aquatic biogeochemistry,aquatic biogeochemistry
+coastWQReg,nitrogen and phosphorus retention,0,0,0,1,Aquatic biogeochemistry,,aquatic biogeochemistry,aquatic biogeochemistry
+coastWQReg,nitrogen concentration,0,0,0,1,Aquatic biogeochemistry,,aquatic biogeochemistry,aquatic biogeochemistry
+SoilProtect,nitrogen retention,0,1,0,0,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+ClimReg,Nitrogen storage,0,1,0,0,ClimReg nutrients,,climreg nutrients,climreg nutrients
+SoilProtect,nitrogen storage in SOM,0,1,0,0,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
+AQReg,nitrous oxide emission,0,0,0,1,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+AQReg,Nitrous oxide emissions,1,0,0,0,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+AQReg,nitrous oxide flux,0,1,0,0,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+AQReg,NO measurements,0,1,0,0,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+AQReg,NO2 concentration levels,0,0,0,1,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+AQReg,No2 dry deposition velocity,0,0,0,1,Pollution/water quality/air quality,,pollution/water quality/air quality,pollution/water quality/air quality
+coastWQReg,NO3-N concentrations,1,0,0,0,Aquatic biogeochemistry,,aquatic biogeochemistry,aquatic biogeochemistry
+CulturePsych,noise reduction,0,1,0,0,Human health,,human health,human health
+ClimReg,NPP,0,2,0,0,Productivity,,productivity,productivity
+Food,NPP,0,1,0,0,Exploitation/harvest,,exploitation/harvest,productivity
+ClimReg,NPP),0,0,0,1,,,,productivity
+PestPath,number of borers,0,0,1,0,Pathogens/natural enemies,,pathogens/natural enemies,pathogens/natural enemies
+Food,Number of cattle per hectare,0,0,0,1,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
+MaintainOpts,number of invertabrates,0,0,0,1,Service provider abundance,,service provider abundance,service provider abundance
+CulturePsych,number of national reserves,0,0,0,1,Exploitation/harvest,too vague,exploitation/harvest,exploitation/harvest
+Hazards,number of people affected by floods,0,1,0,0,Extreme events,,extreme events,extreme events
+Pollination,number of pollen grains deposited per flower,0,1,0,0,Pollination,,pollination,pollination
+CulturePsych,number of pots,0,1,0,0,,no idea,,TEST_VALUE
+Food,number of pots,0,1,0,0,,no idea,,TEST_VALUE
+HabCreate,number of pots,0,1,0,0,,no idea,,TEST_VALUE
+MedGen,number of pots,0,1,0,0,,no idea,,TEST_VALUE
+Pollination,number of pots,0,1,0,0,,no idea,,TEST_VALUE
+Materials,Number of roots,0,1,0,0,,,,exploitation/harvest
+MaintainOpts,number of species 'in danger',0,0,0,1,,,,TEST_VALUE
+Pollination,number of visitors),0,1,0,0,,,,TEST_VALUE
+Hazards,number over tides,0,0,1,0,,,,TEST_VALUE
+SoilProtect,nutrient provisioning,0,1,0,0,,,,TEST_VALUE
+SoilProtect,nutrient removal,0,1,0,0,,,,TEST_VALUE
+SoilProtect,Nutrient transformation and cycling,0,1,0,0,,,,TEST_VALUE
+HabCreate,nutrient uptake,0,0,0,1,,,,TEST_VALUE
+ClimReg,nutrient use efficiency,0,1,0,1,,,,TEST_VALUE
+coastWQReg,nutrients,1,0,0,0,,,,TEST_VALUE
+coastWQReg,O2 conc.,0,0,0,1,,,,TEST_VALUE
+Food,okra yield,0,0,0,1,,,,exploitation/harvest
+Food,open space,0,1,0,0,,,,TEST_VALUE
+CulturePsych,opnion,0,0,1,0,,,,TEST_VALUE
+CulturePsych,orchard,0,0,1,0,,,,TEST_VALUE
+Food,orchard,0,0,1,0,,,,TEST_VALUE
+SoilProtect,orchard,0,0,1,0,,,,TEST_VALUE
+Food,orchard and forage production,0,1,0,0,,,,TEST_VALUE
+ClimReg,Organic Carbon,0,0,0,1,,,,carbon
+coastWQReg,organic matter,0,0,0,1,,,,TEST_VALUE
+SoilProtect,organic matter content,0,0,0,1,,,,TEST_VALUE
+SoilProtect,Organic P,0,0,0,1,,,,TEST_VALUE
+CulturePsych,Outdoor activities,0,1,0,0,,,,TEST_VALUE
+CulturePsych,outdoor rec,0,1,0,0,,,,TEST_VALUE
+CulturePsych,Outdoor recreation,0,1,0,0,,,,TEST_VALUE
+coastWQReg,oxygen concentration,0,1,0,0,,,,TEST_VALUE
+Food,oyster density,0,1,0,0,,,,TEST_VALUE
+HabCreate,Oyster habitat,0,1,0,0,,,,TEST_VALUE
+Food,Oyster size,0,1,0,0,,,,TEST_VALUE
+SoilProtect,P,1,0,0,0,,,,TEST_VALUE
+freshWQReg,P retention,0,1,0,0,,,,TEST_VALUE
+SoilProtect,P retention,0,1,0,0,,,,TEST_VALUE
+CulturePsych,paddle routes,0,1,0,0,,,,TEST_VALUE
+Food,paddy rice field,0,0,1,0,,,,TEST_VALUE
+Food,palatability,0,0,0,1,,,,TEST_VALUE
+Food,palatable (to livestock) plant richness,0,1,0,0,,,,service provider species biodiversity
+PestPath,parasitism rate,0,1,0,0,,,,TEST_VALUE
+PestPath,parasitoid abundance,0,0,0,1,,,,service provider abundance
+PestPath,parasitoids,0,0,0,1,,,,TEST_VALUE
+Pollination,parasitoids,0,1,0,0,,,,TEST_VALUE
+freshWQReg,Peak stream flows,0,0,0,1,,,,hydrology
+SoilProtect,Pedogenesis and soil quality regulation,0,1,0,0,,,,TEST_VALUE
+Hazards,people affected by floods,0,0,0,1,,,,TEST_VALUE
+CulturePsych,people displacement,0,0,0,1,,,,TEST_VALUE
+freshWQReg,peowater for individuals,0,0,0,1,,,,TEST_VALUE
+SoilProtect,per capita siderophore production,0,0,0,1,,,,TEST_VALUE
+ClimReg,Percent carbon in soil by weight,0,1,0,0,,,,carbon
+ClimReg,percent cover canopy,1,1,0,0,,,,TEST_VALUE
+ClimReg,percent cover herbs,1,1,0,0,,,,TEST_VALUE
+ClimReg,percent cover shrubs,1,1,0,0,,,,TEST_VALUE
+Pollination,Percent frequency of plants in feces,0,0,0,1,,,,TEST_VALUE
+Pollination,percent germination of dispersed propagules,0,0,0,1,,,,TEST_VALUE
+SoilProtect,percent nitrogen in soil by weight,0,1,0,0,,,,TEST_VALUE
+ClimReg,percent tree cover,0,0,0,1,,,,TEST_VALUE
+PestPath,persistence of insectivore bat species,0,0,0,1,,,,TEST_VALUE
+Pollination,persistence of nectar of frugivorous bat species,0,0,0,1,,,,TEST_VALUE
+Pollination,persistence of nectarivorous bat species,0,0,0,1,,,,TEST_VALUE
+PestPath,Pest,0,1,0,0,,,,TEST_VALUE
+PestPath,Pest abundance,0,1,0,0,,,,service provider abundance
+PestPath,Pest Abundance,0,1,0,0,,,,service provider abundance
+PestPath,Pest and disease control,0,1,0,0,,,,TEST_VALUE
+PestPath,pest attack rate,0,0,1,0,,,,TEST_VALUE
+PestPath,pest community composition,0,0,1,0,,,,TEST_VALUE
+ClimReg,Pest control,0,1,0,0,,,,TEST_VALUE
+PestPath,pest diversity index,0,0,0,1,,,,index
+Food,pest load,0,0,0,1,,,,TEST_VALUE
+PestPath,pest management by spiders (only spider abundance and richness),0,0,0,1,,,,service provider species biodiversity
+PestPath,Pest parasitism,0,1,0,0,,,,TEST_VALUE
+PestPath,pest parasitism rate (i.e. biocontrol success),0,0,1,0,,,,TEST_VALUE
+PestPath,Pest population,1,1,0,0,,,,TEST_VALUE
+PestPath,Pest predation,0,1,0,0,,,,TEST_VALUE
+PestPath,Pest regulation,0,1,0,0,,,,TEST_VALUE
+SoilProtect,pH,1,0,0,0,,,,TEST_VALUE
+ClimReg,phosphatase activity,1,0,0,0,,,,TEST_VALUE
+coastWQReg,phosphate concentration,0,1,0,0,,,,TEST_VALUE
+coastWQReg,Phosphorous,0,0,0,1,,,,TEST_VALUE
+SoilProtect,phosphorous storage in SOM,0,1,0,0,,,,TEST_VALUE
+coastWQReg,phosphorus conc.,0,0,0,1,,,,TEST_VALUE
+coastWQReg,Phosphorus concentration,1,0,0,0,,,,TEST_VALUE
+AQReg,photosynthesis (gas exchange,0,0,0,1,,,,TEST_VALUE
+Hazards,physical water quantity regulation,0,1,0,0,,,,TEST_VALUE
+Food,pigs,0,1,0,0,,,,TEST_VALUE
+coastWQReg,Plankton and macroinvertebrate community structure,1,0,0,0,,,,TEST_VALUE
+CulturePsych,Plant biodiversity,0,0,0,1,,,,service provider species biodiversity
+Energy,plant biomass,1,0,0,0,,,,productivity
+HabCreate,plant community composition,1,0,0,0,,,,TEST_VALUE
+MaintainOpts,Plant community composition,1,0,0,0,,,,TEST_VALUE
+SoilProtect,plant density,0,0,0,1,,,,TEST_VALUE
+CulturePsych,plant diversity,0,0,0,1,,,,service provider species biodiversity
+MaintainOpts,plant diversity,0,1,0,0,,,,service provider species biodiversity
+HabCreate,Plant diversity,0,0,0,1,,,,service provider species biodiversity
+MaintainOpts,Plant diversity maintenance,0,1,0,0,,,,service provider species biodiversity
+ClimReg,plant productivity,1,0,0,0,,,,TEST_VALUE
+HabCreate,plant productivity,0,1,0,0,,,,TEST_VALUE
+Materials,Plant quality,1,0,0,0,,,,exploitation/harvest
+HabCreate,Plant species composition,0,1,0,0,,,,TEST_VALUE
+MaintainOpts,Plant species richness,0,0,0,1,,,,service provider species biodiversity
+SoilProtect,plant-available N,1,0,0,0,,,,TEST_VALUE
+Pollination,pollen deposition (grains),0,1,0,0,,,,TEST_VALUE
+Pollination,pollination,0,4,0,0,,,,TEST_VALUE
+Pollination,Pollination,0,2,0,0,,,,TEST_VALUE
+Pollination,Pollination potential,0,2,0,0,,,,TEST_VALUE
+Pollination,pollinator abbundance,0,0,0,1,,,,TEST_VALUE
+Pollination,pollinator abundance,0,0,0,1,,,,service provider abundance
+Pollination,Pollinator abundance,0,0,0,1,,,,service provider abundance
+Pollination,pollinator density,0,0,0,1,,,,TEST_VALUE
+Pollination,pollinator diversity,0,0,0,1,,,,service provider species biodiversity
+Pollination,Pollinator diversity,0,1,0,0,,,,service provider species biodiversity
+Pollination,pollinator diversity index,0,0,0,1,,,,index
+PestPath,pollinator ESP abundance,0,0,0,1,,,,service provider abundance
+Pollination,pollinator ESP abundance,0,0,0,1,,,,service provider abundance
+Pollination,pollinator evenness,0,0,0,1,,,,service provider species biodiversity
+HabCreate,Pollinator habitat use,0,1,0,0,,,,TEST_VALUE
+Pollination,pollinator richness,0,0,0,2,,,,service provider species biodiversity
+Pollination,Pollinator richness,0,0,0,1,,,,service provider species biodiversity
+Pollination,pollinator species composition,0,0,0,1,,,,TEST_VALUE
+Pollination,pollinator species richness,0,0,0,1,,,,service provider species biodiversity
+Pollination,pollinator taxonomic breadth,0,0,0,1,,,,TEST_VALUE
+Pollination,Pollinator visitation (identity of pollinator,0,1,0,0,,,,TEST_VALUE
+CulturePsych,population carrier,0,1,0,0,,,,TEST_VALUE
+Food,population density,0,0,0,1,,,,TEST_VALUE
+HabCreate,population stability,0,1,0,0,,,,TEST_VALUE
+SoilProtect,pore water metal content,0,0,0,1,,,,TEST_VALUE
+Food,Port and Cattle,0,1,0,0,,,,TEST_VALUE
+ClimReg,Potential carbon sequestration,0,1,0,0,,,,carbon
+SoilProtect,Potential erosion potential,0,1,0,0,,,,TEST_VALUE
+HabCreate,Potential habitat function,0,1,0,0,,,,TEST_VALUE
+HabCreate,Potential patch dispersal events,1,0,0,0,,,,service provider species biodiversity
+CulturePsych,potential tourism (12 types),0,0,0,1,,,,TEST_VALUE
+SoilProtect,pre-rill erosion %,0,1,0,0,,,,TEST_VALUE
+PestPath,predation index,0,1,0,0,,,,index
+Pollination,Predation of pests by entomopathogenic fungi,0,1,0,0,,,,TEST_VALUE
+PestPath,predation rate,0,1,0,0,,,,TEST_VALUE
+PestPath,predator abundance,0,1,0,0,,,,service provider abundance
+PestPath,predator diet,0,0,0,1,,,,TEST_VALUE
+PestPath,predator movement from non-crop to crop vegetation,0,0,0,1,,,,TEST_VALUE
+PestPath,Predator population,1,1,0,0,,,,TEST_VALUE
+coastWQReg,presence and abundance of fish,0,0,0,1,,,,service provider abundance
+coastWQReg,presence and abundance of submerged macrophytes,0,0,0,1,,,,service provider abundance
+coastWQReg,presence and abundance of terrestrial consumers,0,0,0,1,,,,service provider abundance
+CulturePsych,presence of Argali sheep,0,0,0,1,,,,TEST_VALUE
+CulturePsych,Presence of land cover types preferred by people via survey,0,1,0,0,,,,TEST_VALUE
+PestPath,presence of male mosquitoes,0,1,0,0,,,,TEST_VALUE
+CulturePsych,presence of showy flowers,0,1,0,0,,,,TEST_VALUE
+coastWQReg,presence of submerged aquatic vegetation-dependent fish and waterfowl,0,0,0,1,,,,TEST_VALUE
+CulturePsych,presence of the environment,0,1,0,0,,,,TEST_VALUE
+PestPath,prey diversity for otters,0,0,0,1,,,,service provider species biodiversity
+CulturePsych,probability of stocking,0,0,0,1,,,,TEST_VALUE
+HabCreate,production sensitivity,1,0,0,0,,,,TEST_VALUE
+SoilProtect,proportion of buried cotton fabric decomposed,0,1,0,0,,,,TEST_VALUE
+SoilProtect,proportion of buried leaf litter decomposed,0,1,0,0,,,,TEST_VALUE
+PestPath,proportion of leaves damaged by insects,0,1,0,0,,,,TEST_VALUE
+Food,Proportion of non-declining exploited species of fish,0,0,0,1,,,,TEST_VALUE
+PestPath,proportion of predated Colorado potato beetle eggs,0,1,0,0,,,,TEST_VALUE
+Food,proportion of site area cultivated for food,0,0,0,1,,,,TEST_VALUE
+MaintainOpts,protected plant species,0,1,0,0,,,,TEST_VALUE
+MaintainOpts,protected vertebrate species,0,1,0,0,,,,TEST_VALUE
+SoilProtect,protection against rockfalls,0,1,0,0,,,,TEST_VALUE
+CulturePsych,quality of cultural ecosystem services,0,0,0,1,,,,TEST_VALUE
+Food,Quality of food,0,1,0,0,,,,TEST_VALUE
+Food,quality of provisioning services,0,0,0,1,,,,TEST_VALUE
+coastWQReg,quality of regulating services,0,0,0,1,,,,TEST_VALUE
+Food,quantity of food,0,1,0,0,,,,TEST_VALUE
+PestPath,ranchers' assessment of effectiveness of invasive species control,0,0,1,0,,,,TEST_VALUE
+CulturePsych,range farm,0,0,1,0,,,,TEST_VALUE
+Food,range farm,0,0,1,0,,,,TEST_VALUE
+freshWQReg,Rates of water infiltration into soil,0,0,0,1,,,,TEST_VALUE
+freshWQReg,rates of water uptake,0,0,0,1,,,,TEST_VALUE
+PestPath,ratio of aphid growth with and without predators,0,1,0,0,,,,TEST_VALUE
+Materials,Raw material,1,1,0,0,,,,exploitation/harvest
+MaintainOpts,recovery debt,0,1,0,0,,,,TEST_VALUE
+CulturePsych,Recreation,0,1,0,0,,,,TEST_VALUE
+CulturePsych,recreation (public access,0,1,0,0,,,,TEST_VALUE
+CulturePsych,recreation and community activities,0,1,0,0,,,,TEST_VALUE
+CulturePsych,Recreation and culture,1,1,0,0,,,,TEST_VALUE
+CulturePsych,recreation and ecotourism,0,1,0,0,,,,TEST_VALUE
+CulturePsych,recreation and tourism,0,1,0,0,,,,TEST_VALUE
+CulturePsych,recreation capacity,0,0,0,1,,,,TEST_VALUE
+CulturePsych,recreation potential,0,1,0,0,,,,TEST_VALUE
+CulturePsych,recreation value,0,2,0,0,,,,characteristics of human population
+CulturePsych,recreational demand,0,0,0,1,,,,TEST_VALUE
+CulturePsych,recreational potential,0,0,0,1,,,,TEST_VALUE
+CulturePsych,recreational value,0,1,0,0,,,,characteristics of human population
+CulturePsych,red grouse breeding success,0,0,0,1,,,,TEST_VALUE
+PestPath,reduction of coffee berry borer (CBB) presence,0,1,0,0,,,,TEST_VALUE
+HabCreate,regeneration potential,0,1,0,0,,,,TEST_VALUE
+CulturePsych,relative basal area increment,0,1,0,0,,,,TEST_VALUE
+AQReg,Relaxation,0,1,0,0,,,,TEST_VALUE
+freshWQReg,reservoir volume,0,1,0,0,,,,TEST_VALUE
+PestPath,residential propagule pressure,1,0,0,0,,,,TEST_VALUE
+CulturePsych,resiliance,0,0,0,1,,,,TEST_VALUE
+Food,resiliance,0,0,0,1,,,,TEST_VALUE
+HabCreate,resiliance,0,0,0,1,,,,TEST_VALUE
+SoilProtect,resiliance,0,1,0,1,,,,TEST_VALUE
+MaintainOpts,resilience,0,0,1,0,,,,TEST_VALUE
+HabCreate,restoration potential,0,1,0,0,,,,TEST_VALUE
+HabCreate,restored significance,0,0,1,0,,,,TEST_VALUE
+Pollination,richness,0,1,0,0,,,,service provider species biodiversity
+MaintainOpts,Richness,1,0,0,0,,,,service provider species biodiversity
+SoilProtect,rill erosion %,0,1,0,0,,,,TEST_VALUE
+HabCreate,Riparian canopy density,0,0,1,0,,,,TEST_VALUE
+HabCreate,Riparian canopy width,0,0,1,0,,,,TEST_VALUE
+coastWQReg,riparian wetland,0,0,1,0,,,,TEST_VALUE
+CulturePsych,riparian wetland,0,0,1,0,,,,TEST_VALUE
+SoilProtect,riparian wetland,0,0,1,0,,,,TEST_VALUE
+Food,Risk-adjusted performance of chinook and sockey salmon fisheries,0,1,0,0,,,,TEST_VALUE
+ClimReg,root biomass,1,1,0,1,,,,productivity
+SoilProtect,root biomass,1,0,0,0,,,,productivity
+Materials,root length,0,1,0,0,,,,exploitation/harvest
+SoilProtect,Root Mass,0,1,0,0,,,,TEST_VALUE
+HabCreate,rugosity of reefs,0,0,0,1,,,,TEST_VALUE
+coastWQReg,Running water quality,0,1,0,0,,,,TEST_VALUE
+coastWQReg,Runoff coefficient,0,1,0,0,,,,TEST_VALUE
+freshWQReg,runoff coefficient (runoff/rainfall),0,0,0,1,,,,TEST_VALUE
+Hazards,runoff mitigation,0,1,0,0,,,,TEST_VALUE
+AQReg,S depositon,0,0,0,1,,,,TEST_VALUE
+coastWQReg,salinity,0,1,0,0,,,,TEST_VALUE
+Food,salmon angling,0,1,0,0,,,,TEST_VALUE
+Food,salmon total run,0,1,0,0,,,,TEST_VALUE
+SoilProtect,Sand fixation,0,0,1,0,,,,TEST_VALUE
+Materials,sand/gravel companies and production,0,0,0,1,,,,exploitation/harvest
+Hazards,sandstorm prevention,0,1,0,0,,,,service provider species biodiversity
+freshWQReg,sap flow,0,0,0,1,,,,hydrology
+CulturePsych,sea turtle and shark biomass,0,1,0,0,,,,productivity
+Food,seafood yields,0,0,0,1,,,,exploitation/harvest
+ClimReg,secondary forest fire tolerance,1,0,0,0,,,,TEST_VALUE
+SoilProtect,sediment retention,0,3,0,0,,,,TEST_VALUE
+freshWQReg,Sediment retention,0,1,0,0,,,,TEST_VALUE
+coastWQReg,sediment yield,0,1,0,0,,,,exploitation/harvest
+coastWQReg,Sediment yield,0,1,0,0,,,,exploitation/harvest
+SoilProtect,sedimentation,0,1,0,0,,,,TEST_VALUE
+Pollination,seed abundance,0,0,0,1,,,,service provider abundance
+HabCreate,seed deposition,1,1,0,0,,,,TEST_VALUE
+Pollination,seed dispersal,0,2,0,0,,,,TEST_VALUE
+Pollination,Seed dispersal,0,1,0,0,,,,TEST_VALUE
+Pollination,seed dispersal distance,1,0,0,0,,,,TEST_VALUE
+Pollination,seed dispersal distribution,0,0,0,1,,,,TEST_VALUE
+Pollination,seed dispersal shadow size,0,1,0,0,,,,TEST_VALUE
+PestPath,seed feeding insects,0,0,0,1,,,,TEST_VALUE
+Food,Seed mass,0,0,0,1,,,,TEST_VALUE
+HabCreate,Seed persistence,1,0,0,0,,,,TEST_VALUE
+Pollination,seed removal,1,0,0,0,,,,TEST_VALUE
+Food,Seed set,1,0,0,0,,,,TEST_VALUE
+Pollination,Seed set,1,1,0,0,,,,TEST_VALUE
+Food,Seed set per plant,0,0,0,1,,,,TEST_VALUE
+HabCreate,seedbank abundance,1,0,0,0,,,,service provider abundance
+ClimReg,Semi-natural space type,0,0,0,1,,,,TEST_VALUE
+CulturePsych,Semi-natural space type,0,0,0,1,,,,TEST_VALUE
+freshWQReg,Semi-natural space type,0,0,0,1,,,,TEST_VALUE
+Hazards,shannon diversity,0,0,0,1,,,,service provider species biodiversity
+MaintainOpts,Shannon diversity,1,0,0,0,,,,service provider species biodiversity
+HabCreate,Shanon-weiner floristic diversity,0,0,0,1,,,,service provider species biodiversity
+HabCreate,shape,0,1,0,0,,,,TEST_VALUE
+Food,sheep,0,1,0,0,,,,TEST_VALUE
+HabCreate,Shelter for fauna,0,1,0,0,,,,TEST_VALUE
+ClimReg,shoot biomass,0,0,0,1,,,,productivity
+MaintainOpts,Simpsons diversity,1,0,0,0,,,,service provider species biodiversity
+CulturePsych,site size(well-being),0,0,1,0,,,,TEST_VALUE
+HabCreate,size,0,1,0,0,,,,TEST_VALUE
+Materials,size,0,1,0,0,,,,exploitation/harvest
+CulturePsych,size at maturity,0,1,0,0,,,,TEST_VALUE
+SoilProtect,social organic matter,1,0,0,0,,,,TEST_VALUE
+CulturePsych,social setting,0,1,0,0,,,,characteristics of human population
+Food,Social vulnerability,0,0,0,1,,,,characteristics of human population
+Food,Socio-ecological vulnerability,0,0,0,1,,,,TEST_VALUE
+coastWQReg,sodium and chloride contents,1,0,0,0,,,,TEST_VALUE
+Food,soil,0,1,0,0,,,,TEST_VALUE
+SoilProtect,Soil & site stability score (rangeland health assessment),0,0,0,1,,,,index
+ClimReg,soil area x carbon density,0,1,0,0,,,,carbon
+SoilProtect,soil building,0,1,0,0,,,,TEST_VALUE
+SoilProtect,soil bulk density,2,0,0,1,,,,TEST_VALUE
+SoilProtect,soil C,1,0,0,0,,,,TEST_VALUE
+SoilProtect,soil C:N,1,0,0,0,,,,TEST_VALUE
+ClimReg,soil carbon,0,5,0,3,,,,carbon
+SoilProtect,soil carbon,0,2,0,1,,,,carbon
+ClimReg,soil carbon pool,0,1,0,1,,,,carbon
+ClimReg,Soil carbon stocks,0,1,0,0,,,,carbon
+ClimReg,soil carbon storage,1,0,0,0,,,,carbon
+coastWQReg,Soil chemical quality index,0,0,0,1,,,,index
+SoilProtect,Soil community composition,0,1,0,0,,,,TEST_VALUE
+SoilProtect,soil conductivity,1,0,0,0,,,,TEST_VALUE
+SoilProtect,soil conservation,0,2,0,0,,,,TEST_VALUE
+SoilProtect,Soil conservation,1,1,0,0,,,,TEST_VALUE
+SoilProtect,soil conservation function,0,1,0,0,,,,TEST_VALUE
+SoilProtect,soil conservation percentage,0,1,0,0,,,,TEST_VALUE
+SoilProtect,Soil coverage,0,0,0,1,,,,TEST_VALUE
+SoilProtect,Soil density,0,0,0,1,,,,TEST_VALUE
+SoilProtect,soil enzyme levels,1,1,0,0,,,,TEST_VALUE
+SoilProtect,soil erosion,1,1,0,1,,,,TEST_VALUE
+SoilProtect,Soil erosion,0,0,0,1,,,,TEST_VALUE
+SoilProtect,soil erosion by wind,0,1,0,0,,,,TEST_VALUE
+SoilProtect,soil erosion rate,0,1,0,0,,,,TEST_VALUE
+SoilProtect,soil fertility,0,1,0,0,,,,TEST_VALUE
+SoilProtect,Soil food web,0,1,0,0,,,,TEST_VALUE
+SoilProtect,Soil formation and retention,1,1,0,0,,,,TEST_VALUE
+SoilProtect,soil loss potential,0,0,0,1,,,,TEST_VALUE
+SoilProtect,soil microbial biomass,1,0,0,0,,,,productivity
+SoilProtect,soil microbial biomass carbon,1,0,0,1,,,,carbon
+SoilProtect,soil microbial composition,0,1,0,1,,,,TEST_VALUE
+SoilProtect,soil microbial extracellular enzyme activity,0,1,0,1,,,,TEST_VALUE
+SoilProtect,soil microbial metabolics,0,1,0,1,,,,TEST_VALUE
+SoilProtect,soil moisture,0,0,0,1,,,,TEST_VALUE
+SoilProtect,soil multifunctionality index,1,0,0,0,,,,index
+SoilProtect,soil N,1,1,0,1,,,,TEST_VALUE
+ClimReg,soil nitrogen,0,1,0,1,,,,TEST_VALUE
+SoilProtect,soil nitrogen stock,0,1,0,0,,,,TEST_VALUE
+ClimReg,soil organic carbon,2,1,0,0,,,,carbon
+SoilProtect,soil organic carbon,1,0,0,0,,,,carbon
+SoilProtect,Soil organic carbon,1,1,0,0,,,,carbon
+ClimReg,soil organic matter,0,1,0,1,,,,TEST_VALUE
+SoilProtect,soil organic matter,2,1,0,2,,,,TEST_VALUE
+SoilProtect,soil ph,1,0,0,0,,,,TEST_VALUE
+SoilProtect,soil pH,1,1,0,3,,,,TEST_VALUE
+SoilProtect,soil phosphorous,0,1,0,1,,,,TEST_VALUE
+coastWQReg,Soil phosphorus saturation,0,1,0,0,,,,TEST_VALUE
+SoilProtect,Soil Protection,0,1,0,0,,,,TEST_VALUE
+SoilProtect,Soil quality,0,1,0,0,,,,TEST_VALUE
+ClimReg,soil respiration,1,0,0,0,,,,TEST_VALUE
+SoilProtect,soil respiration rate,1,1,0,0,,,,TEST_VALUE
+SoilProtect,soil retention,0,1,0,1,,,,TEST_VALUE
+SoilProtect,Soil retention,1,2,1,0,,,,TEST_VALUE
+SoilProtect,soil stability indicator rate,0,1,0,0,,,,TEST_VALUE
+CulturePsych,soil temprature,0,0,0,1,,,,TEST_VALUE
+SoilProtect,soil water content,0,1,0,1,,,,TEST_VALUE
+SoilProtect,soil water holding capacity,1,0,0,0,,,,TEST_VALUE
+freshWQReg,soil water infiltration,0,0,0,1,,,,TEST_VALUE
+SoilProtect,Soil water repellency,0,0,0,1,,,,TEST_VALUE
+freshWQReg,Soil water retention,0,0,0,1,,,,TEST_VALUE
+SoilProtect,soil water stable aggregates,1,0,0,1,,,,TEST_VALUE
+CulturePsych,sounds and scents,0,1,0,0,,,,TEST_VALUE
+Food,Soya bean yield,0,1,0,0,,,,exploitation/harvest
+Food,spawner abundance,0,1,0,0,,,,service provider abundance
+HabCreate,species diversity,0,0,0,1,,,,service provider species biodiversity
+Pollination,species diversity,0,0,0,1,,,,service provider species biodiversity
+Pollination,species evenness,0,0,0,1,,,,service provider species biodiversity
+HabCreate,species richness,1,0,0,0,,,,service provider species biodiversity
+Hazards,species richness,0,0,0,1,,,,service provider species biodiversity
+Pollination,species richness,0,0,0,1,,,,service provider species biodiversity
+SoilProtect,species richness,0,0,0,1,,,,service provider species biodiversity
+MaintainOpts,Species richness,1,0,0,0,,,,service provider species biodiversity
+MaintainOpts,speciesin danger category,0,0,0,1,,,,TEST_VALUE
+PestPath,Spider and predatory beetle abundance,0,0,0,1,,,,service provider abundance
+CulturePsych,spiritual,0,1,0,0,,,,TEST_VALUE
+Pollination,spring and summer,0,1,0,0,,,,TEST_VALUE
+Food,stability of fisheries yields,0,1,0,0,,,,exploitation/harvest
+PestPath,stable isotope analysis,0,0,0,1,,,,TEST_VALUE
+ClimReg,standing biomass,0,1,0,0,,,,productivity
+coastWQReg,Standing water quality,0,1,0,0,,,,TEST_VALUE
+ClimReg,stem relative growth rate,0,1,0,0,,,,TEST_VALUE
+freshWQReg,stemflow and  throughfall,0,0,0,1,,,,hydrology
+CulturePsych,stocked walleye length,0,0,0,1,,,,TEST_VALUE
+freshWQReg,stormwater quantity and quality,0,0,0,1,,,,TEST_VALUE
+Hazards,stormwater retention,0,0,0,1,,,,TEST_VALUE
+freshWQReg,streamflow,0,0,0,1,,,,hydrology
+freshWQReg,streamwater flow,0,0,0,1,,,,hydrology
+HabCreate,Structural benthic habitat,0,1,0,0,,,,TEST_VALUE
+coastWQReg,submerged aquatic vegetation coverage,0,0,0,1,,,,TEST_VALUE
+CulturePsych,summer cottages,0,1,0,0,,,,TEST_VALUE
+Pollination,sunflower yield,0,1,0,0,,,,exploitation/harvest
+SoilProtect,surface erosion %,0,1,0,0,,,,TEST_VALUE
+HabCreate,surface ice,1,0,0,0,,,,TEST_VALUE
+freshWQReg,surface run-off,0,1,0,0,,,,TEST_VALUE
+SoilProtect,surface runoff,0,1,0,0,,,,TEST_VALUE
+HabCreate,suspended ice,1,0,0,0,,,,TEST_VALUE
+Energy,Suvivorship,1,0,0,0,,,,TEST_VALUE
+Food,sward height,0,0,0,1,,,,TEST_VALUE
+PestPath,syrphid fly (natural enemy) density,0,1,0,1,,,,TEST_VALUE
+MaintainOpts,terrestrial biodiversity,0,0,0,1,,,,service provider species biodiversity
+Pollination,terrestrial biodiversity,0,0,0,1,,,,service provider species biodiversity
+Food,Terrestrial plants and animals,0,1,0,0,,,,TEST_VALUE
+ClimReg,thermal regulation (roofs),0,0,0,1,,,,TEST_VALUE
+Food,tiller mass,0,0,0,1,,,,TEST_VALUE
+Food,tiller number,1,0,0,0,,,,TEST_VALUE
+Food,timber,0,1,0,0,,,,TEST_VALUE
+Materials,timber production,0,1,0,0,,,,exploitation/harvest
+Materials,Timber value,0,1,0,0,,,,characteristics of human population
+ClimReg,timber volume,0,1,0,0,,,,TEST_VALUE
+Materials,timber volume,0,1,0,0,,,,exploitation/harvest
+ClimReg,total aboveground carbon,0,1,0,0,,,,carbon
+Food,Total agricultural revenues,0,0,0,1,,,,characteristics of human population
+ClimReg,total biomass,1,1,0,0,,,,productivity
+SoilProtect,total C,0,0,0,1,,,,TEST_VALUE
+coastWQReg,total carbon content,1,0,0,0,,,,carbon
+ClimReg,total carbon pool,1,1,0,0,,,,carbon
+ClimReg,total carbon stock,0,2,0,0,,,,carbon
+ClimReg,total carbon stocks,0,1,0,1,,,,carbon
+ClimReg,total carbon storage,0,1,0,0,,,,carbon
+Energy,total energy production,0,1,0,0,,,,TEST_VALUE
+SoilProtect,total exchangeable cations,0,0,0,1,,,,TEST_VALUE
+CulturePsych,total fish biomass,0,1,0,0,,,,productivity
+Food,total fish biomass,0,0,0,1,,,,productivity
+Hazards,total hours tidal submergence,0,0,1,0,,,,TEST_VALUE
+Energy,total hydropower production,0,1,0,0,,,,TEST_VALUE
+coastWQReg,total N,0,0,0,1,,,,TEST_VALUE
+SoilProtect,total N,0,0,0,2,,,,TEST_VALUE
+coastWQReg,total N removal potential,0,1,0,0,,,,TEST_VALUE
+coastWQReg,Total nitrogen,0,0,0,1,,,,TEST_VALUE
+coastWQReg,total nitrogen content,1,0,0,0,,,,TEST_VALUE
+SoilProtect,total organic carbon,1,0,0,0,,,,carbon
+SoilProtect,total P,0,0,0,1,,,,TEST_VALUE
+coastWQReg,total P removal potential,0,1,0,0,,,,TEST_VALUE
+AQReg,total pollutants removal,0,1,0,0,,,,TEST_VALUE
+ClimReg,total soil C,0,1,0,0,,,,TEST_VALUE
+ClimReg,total soil nitrogen,1,0,0,0,,,,TEST_VALUE
+coastWQReg,Total tree leaf area,0,0,0,1,,,,TEST_VALUE
+Food,total value of catch,0,1,0,0,,,,characteristics of human population
+HabCreate,Total variation in functional matrix,1,0,0,0,,,,TEST_VALUE
+CulturePsych,tourism,0,1,0,0,,,,TEST_VALUE
+CulturePsych,tourist visits,0,1,0,0,,,,TEST_VALUE
+ClimReg,tree above ground carbon,0,1,0,0,,,,carbon
+ClimReg,tree biomass,0,1,0,1,,,,productivity
+HabCreate,Tree composition,0,0,0,1,,,,TEST_VALUE
+ClimReg,Tree DBH,0,0,0,1,,,,TEST_VALUE
+ClimReg,tree density,1,1,0,0,,,,TEST_VALUE
+AQReg,tree growth and survival,0,0,0,1,,,,TEST_VALUE
+ClimReg,tree growth and survival,0,0,0,1,,,,TEST_VALUE
+coastWQReg,tree growth and survival,0,0,0,1,,,,TEST_VALUE
+ClimReg,tree height,1,1,0,0,,,,TEST_VALUE
+freshWQReg,Tree leaf area,0,0,0,1,,,,TEST_VALUE
+ClimReg,Tree leaf biomass,0,0,0,1,,,,productivity
+MaintainOpts,Tree species richness,1,0,0,0,,,,service provider species biodiversity
+HabCreate,trophic level of fish community,0,1,0,0,,,,TEST_VALUE
+coastWQReg,turbidity and dissolved oxygen,0,0,0,1,,,,TEST_VALUE
+freshWQReg,upstream,0,0,1,0,,,,TEST_VALUE
+CulturePsych,upstream downstream,0,0,1,0,,,,TEST_VALUE
+CulturePsych,Urban green space,0,1,0,0,,,,TEST_VALUE
+ClimReg,urease activity,1,0,0,0,,,,TEST_VALUE
+PestPath,vector mosquito sex ratio,0,0,0,1,,,,TEST_VALUE
+PestPath,vector mosquitoe abundance,0,0,0,1,,,,service provider abundance
+ClimReg,vegetation carbon sequestration (net primary productivity,0,0,0,1,,,,carbon
+ClimReg,Vegetation carbon stocks,0,1,0,0,,,,carbon
+ClimReg,vegetation cover,0,0,0,1,,,,TEST_VALUE
+Energy,vegetation cover,0,0,0,1,,,,TEST_VALUE
+HabCreate,vegetation cover,0,0,1,0,,,,TEST_VALUE
+HabCreate,vegetation diversity/richness,1,0,0,0,,,,service provider species biodiversity
+ClimReg,vegetation height,1,0,0,0,,,,TEST_VALUE
+HabCreate,vegetation height,1,0,0,0,,,,TEST_VALUE
+MaintainOpts,vegetation homogenization,1,0,0,0,,,,TEST_VALUE
+Materials,Vegetative production,0,1,0,0,,,,exploitation/harvest
+MaintainOpts,vertebrate diversity,0,1,0,0,,,,service provider species biodiversity
+HabCreate,Vertical diversity,0,0,0,1,,,,service provider species biodiversity
+CulturePsych,viewscapes,0,1,0,0,,,,TEST_VALUE
+Pollination,Visitation rate,0,0,0,1,,,,TEST_VALUE
+CulturePsych,visitors to national reserves/parks,0,0,0,1,,,,TEST_VALUE
+CulturePsych,visits to national reserves/parks,0,0,0,1,,,,TEST_VALUE
+coastWQReg,volumes of wastewater generated and treated,0,1,0,0,,,,TEST_VALUE
+CulturePsych,volunteer input and community events,0,0,0,1,,,,service provider species biodiversity
+CulturePsych,volunteer input(education),0,0,1,0,,,,TEST_VALUE
+SoilProtect,waste treatment,1,1,0,0,,,,TEST_VALUE
+Food,water,0,1,0,0,,,,TEST_VALUE
+coastWQReg,water clarity,0,1,0,1,,,,TEST_VALUE
+freshWQReg,water conservation,0,1,0,0,,,,TEST_VALUE
+freshWQReg,water depth,0,0,1,0,,,,TEST_VALUE
+freshWQReg,water discharge,0,0,1,0,,,,hydrology
+freshWQReg,water flow,0,1,0,0,,,,hydrology
+freshWQReg,water flow regulation,0,2,0,0,,,,hydrology
+freshWQReg,water for agricultural use,0,1,0,0,,,,TEST_VALUE
+freshWQReg,water for consumption,0,0,0,1,,,,TEST_VALUE
+freshWQReg,Water for human consumption,0,1,0,0,,,,TEST_VALUE
+freshWQReg,water for industrial and energy use,0,1,0,0,,,,TEST_VALUE
+Hazards,Water infiltration rate,0,0,0,1,,,,TEST_VALUE
+freshWQReg,water provisioning,0,1,0,0,,,,TEST_VALUE
+coastWQReg,Water Purification and Provision,0,1,0,0,,,,TEST_VALUE
+coastWQReg,water quality,0,2,0,0,,,,TEST_VALUE
+freshWQReg,water quality,0,1,0,0,,,,TEST_VALUE
+coastWQReg,water quality for various uses,0,0,0,1,,,,TEST_VALUE
+coastWQReg,water quality index,0,1,0,0,,,,index
+freshWQReg,water quality regulation,0,1,0,0,,,,TEST_VALUE
+coastWQReg,Water quality regulation,0,1,0,0,,,,TEST_VALUE
+freshWQReg,Water quantity,0,1,0,0,,,,TEST_VALUE
+freshWQReg,water regulation,0,1,0,0,,,,TEST_VALUE
+freshWQReg,water retention,0,2,0,0,,,,TEST_VALUE
+freshWQReg,water supply,0,2,0,0,,,,TEST_VALUE
+freshWQReg,Water supply,1,1,0,0,,,,TEST_VALUE
+freshWQReg,water supply for human consumption,0,1,0,0,,,,TEST_VALUE
+freshWQReg,water supply for industry,0,1,0,0,,,,TEST_VALUE
+freshWQReg,water yield,0,2,0,1,,,,exploitation/harvest
+coastWQReg,Water yield,0,0,1,0,,,,exploitation/harvest
+freshWQReg,Water yield,0,1,0,0,,,,exploitation/harvest
+SoilProtect,Water yield,1,1,0,0,,,,exploitation/harvest
+freshWQReg,wateryield production,0,1,0,0,,,,exploitation/harvest
+Food,weed community structure,0,0,0,1,,,,TEST_VALUE
+SoilProtect,weed seed predation,0,1,0,0,,,,TEST_VALUE
+PestPath,weed seed removal,0,1,0,0,,,,TEST_VALUE
+PestPath,weed suppression,0,1,0,0,,,,TEST_VALUE
+PestPath,west nile virus incidence in humans,0,1,0,0,,,,TEST_VALUE
+Food,Wetland area,0,1,0,1,,,,TEST_VALUE
+Food,wetland area (fisheries proxy),0,0,0,1,,,,TEST_VALUE
+HabCreate,wetted width,1,0,0,0,,,,TEST_VALUE
+Food,wheat,0,1,0,0,,,,TEST_VALUE
+Food,wheat biomass,0,1,0,0,,,,productivity
+Food,wild rice,0,1,0,0,,,,TEST_VALUE
+CulturePsych,wild rice harvest,0,1,0,0,,,,TEST_VALUE
+HabCreate,wildflower strips,0,0,1,0,,,,TEST_VALUE
+HabCreate,wind erosion,0,0,1,0,,,,TEST_VALUE
+Hazards,windbreak function,0,1,0,0,,,,TEST_VALUE
+Food,winter wheat yield,0,1,0,0,,,,exploitation/harvest
+Materials,wood production,0,2,0,0,,,,exploitation/harvest
+Materials,wood raw materials,0,1,0,0,,,,exploitation/harvest
+Energy,Woody biomass,0,1,0,0,,,,productivity
+Food,yield,0,1,0,0,,,,exploitation/harvest
+Pollination,yield,0,1,0,0,,,,exploitation/harvest
+Energy,Yield,1,1,0,0,,,,exploitation/harvest
+Food,Yield,0,3,0,0,,,,exploitation/harvest
