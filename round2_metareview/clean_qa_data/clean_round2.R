@@ -641,7 +641,7 @@ q4_qa %>%
 
 # also pull anything that is potentially riparian/wetland
 # look at potential wetland/riparian papers
-wetlands <- subset(original, grepl("basin|catchm|fen|riparian|wetland|meadow|watershed", Abstract, ignore.case = T))
+wetlands <- subset(original, grepl(" basin| catchm| fen | riparian| wetland| meadow| watershed", Abstract, ignore.case = T))
 # also screen by whether people selected coastal or freshwater for the ecosystem
 watertitles <- subset(prelimlong1b, qnum == "Q4" & grepl("Coastal|Freshwater", answer))
 # are these papers in q4_qa? or how were they coded?
@@ -665,7 +665,7 @@ wetland_abstracts <- subset(prelimlong1b, Title %in% unique(c(wetlands$Title, wa
   arrange(Title)
 
 # write out
-#write_csv(wetland_abstracts, "round2_metareview/clean_qa_data/needs_classreview/wetland_abstracts.csv")
+write_csv(wetland_abstracts, "round2_metareview/clean_qa_data/needs_classreview/wetland_abstracts.csv")
 
 
 
@@ -1190,6 +1190,66 @@ alldrivers_summary <- group_by(alldrivers, ES, Group, casefold(answer)) %>%
 # write_csv(alldrivers_summary, "round2_metareview/clean_qa_data/needs_classreview/ES_driversfreq_review.csv")
 
 
+# check for missing drivers and responses [5/28: CTW found when applying corrections some papers missing that info]
+# how many Titles don't have any Response or Driver entered??
+noResponseDriver <- subset(prelimlong1b, qnum =="Q12" & exclude != "Exclude") %>%
+  mutate(ES = as.character(ES),
+         # add doublerev
+         doublerev = Title %in% doubletitles) %>%
+  # remove anything in LD's exclusion csv
+  filter(!Title %in% excludecorrections$Title[excludecorrections$exclude_LD]) %>%
+  # also catch ones that are misspelled in the exclusion csv
+  filter(!grepl("^Flattening of Caribbean", Title)) %>%
+  group_by(ResponseId) %>%
+  mutate(flag_noResponse = all(is.na(answer[abbr == "Response"])),
+         flag_noDriver = all(is.na(answer[grepl("Driver", abbr)])),
+         flag_noDirection = all(is.na(answer[abbr == "EffectDirect"]))) %>%
+  ungroup() %>%
+  filter(ResponseId %in% c(unique(ResponseId[flag_noResponse | flag_noDriver]))) %>%
+  # check if, is paper is double reviewed, are both answers empty?
+  group_by(Title) %>%
+  # sum unique ResponseId
+  mutate(count_RID = length(unique(ResponseId))) %>%
+  ungroup() %>%
+  # exclude if 2nd review has answers
+  filter(!(doublerev & count_RID == 1)) %>%
+  # subset to ES's with answers only
+  group_by(ResponseId) %>%
+  mutate(ES_wanswers = str_flatten(unique(ES[!is.na(answer)])),
+         removeES = NA) %>%
+  ungroup() %>%
+  arrange(Title, survey_order)
+
+for(i in 1:nrow(noResponseDriver)){
+  noResponseDriver$removeES[i] <- grepl(noResponseDriver$ES[i], noResponseDriver$ES_wanswers[i])
+}
+# clean up
+noResponseDriver <- filter(noResponseDriver, is.na(removeES) | removeES == 1 | is.na(ES_wanswers)) %>%
+  # remove Response 2 option from df if is NA (assume ppl wrote Response in Response 1 question)
+  filter(!grepl("Response 2", fullquestion)) %>%
+  # drop unneeded cols
+  dplyr::select(-c(removeES, count_RID, ES_wanswers, exclude, exclude_notes)) %>%
+  # add clean answer col for ppl to fill out
+  mutate(clean_answer = NA) %>%
+  dplyr::select(StartDate:answer, clean_answer, fullquestion:ncol(.))
+# who and what?
+sort(unique(noResponseDriver2$Init))
+sort(unique(noResponseDriver$Title))
+#quote all so not annoying to look at in Excel
+#noResponseDriver2[is.na(noResponseDriver2)] <- ""
+# write out by person
+for(i in sort(unique(noResponseDriver$Init))){
+ tempdat <- subset(noResponseDriver, Init == i)
+ write_csv(tempdat, paste0("round2_metareview/clean_qa_data/needs_classreview/missing_responsedriver/q12_review", i, ".csv"), na = "")
+}
+
+
+# check how much was entered for each (e.g. directions, response var type)
+View(subset(q12df_clean, ResponseId %in% c(unique(noDriver$ResponseId), unique(noResponse$ResponseId))))
+
+
+
+
 
 # -- APPLY CORRECTIONS -----
 # clean up work environment
@@ -1529,11 +1589,13 @@ clean_biodriver_corrections <- subset(alldrivers_summary, Group == "Bio") %>%
          clean_driver_finer = ifelse(grepl("polychaete", answer), "pathogens/natural enemies",
                                      ifelse(grepl("reproduc", answer, ignore.case = T), "reproduction",
                                             ifelse(grepl("root depth|vegetation cover", answer, ignore.case = T), "biotic characteristics of the plot", clean_driver_finer))),
+         # call Other 'Other' just in case no otherdriver text entered (can at least count Other, if other text available, can drop Other)
+         clean_driver_finer = ifelse(answer == "Other", "other", clean_driver_finer),
          # move management to anthro category
          clean_driver_group = ifelse(clean_driver_finer == "management", "Anthro", Driver_Group)) %>%
   #didn't get NAs
   replace_na(list(clean_driver_group ="Bio"))
-                                  
+
 
 
 # review envdrivers..
@@ -1595,6 +1657,8 @@ clean_envdriver_corrections <- subset(alldrivers_summary, Group == "Env") %>%
     clean_driver_finer = ifelse(grepl("rewiring", answer, ignore.case = T), "network property", clean_driver_finer),
     # maybe to be sure specify "Ecosystem service types," as "remove"
     clean_driver_finer = ifelse(grepl("^Ecosystem service", answer), "REMOVE", clean_driver_finer),
+    # call Other 'Other' just in case no otherdriver text entered (can at least count Other, if other text available, can drop Other)
+    clean_driver_finer = ifelse(answer == "Other", "other", clean_driver_finer),
     # ådd col for new driver type if needs to be re-assigned
     clean_driver_group = ifelse(clean_driver_finer %in% c("productivity", "vegetation cover") | answer == "rewiring", "Biotic", 
                                 ifelse(clean_driver_finer == "management", "Anthro", Driver_Group)),
@@ -1661,6 +1725,8 @@ clean_anthdriver_corrections <- subset(alldrivers_summary, Group == "Anthro") %>
          clean_driver_finer = ifelse(grepl("index", answer, ignore.case = T), "index", clean_driver_finer),
          # shade and canopy cover (proxy for shade) should be abiotic char-terrestrial and assigned to Env
          clean_driver_finer = ifelse(answer %in% c("shade", "canopy cover"), "abiotic characteristics of the landscape: terrestrial", clean_driver_finer),
+         # call Other 'Other' just in case no otherdriver text entered (can at least count Other, if other text available, can drop Other)
+         clean_driver_finer = ifelse(answer == "Other", "other", clean_driver_finer),
          # clean up group
          clean_driver_group = ifelse(grepl("abiotic", clean_driver_finer), "Env", Driver_Group))
 
@@ -1672,8 +1738,10 @@ master_driver_corrections <- dplyr::select(clean_biodriver_corrections, -c('Binn
   #capitalize first letter in clean_driver_finer
   mutate(clean_driver_finer = ifelse(!is.na(clean_driver_finer), 
                                      paste0(casefold(substr(clean_driver_finer, 1,1), upper = T), substr(clean_driver_finer, 2, nchar(clean_driver_finer))),
-                                     clean_driver_finer))
-
+                                     clean_driver_finer)) %>%
+  # make driver group and driver_finer more generic (so can rbind with cleaned responses)
+  rename(clean_answer_finer = clean_driver_finer,
+         clean_group = clean_driver_group)
 
 
 # 4.b. Response corrections -----
@@ -1754,9 +1822,11 @@ write_csv(responses_forLDAK, "round2_metareview/clean_qa_data/needs_classreview/
 # maybe try pulling out Q12 to clean and tidy on its own?
 q12df_clean <- subset(prelimlong1c, qnum == "Q12")
 
-
+kept_ResponseId <- unique(q12df_clean$ResponseId)
+master_clean_q12 <- data.frame()
+for(i in unique(q12df_clean$ResponseId)){
 # the only way to do this cleanly is to go by ResponseId
-test_q12 <- subset(q12df_clean, ResponseId == "R_1JQHDAYFWcs4yEt") %>%
+test_q12 <- subset(q12df_clean, ResponseId == i) %>%
   filter(!is.na(answer)) %>%
   # unfactor ES's
   mutate(ES = as.character(ES))
@@ -1765,60 +1835,116 @@ test_q12 <- subset(q12df_clean, ResponseId == "R_1JQHDAYFWcs4yEt") %>%
 
 # break out responses
 test_q12responses <- subset(test_q12, abbr == "Response")
-
 # which ESs ID'd in response
 temp_unique_ESresponse <- unique(with(test_q12responses, ES[which(!is.na(answer))]))
+
 
 # break out drivers
 test_q12drivers <- subset(test_q12, grepl("Driver", abbr))
 # first, ID which has other drivers listed and whether Other present in Driver field
 temp_otherdriver_grp <- unique(with(test_q12drivers, Group[which(!is.na(answer) & abbr == "OtherDriver")]))
 # then go through and check for Other in Driver, if not present append
+# > if other driver entered for a given group, must be checked in at least 1 ES for that group
 for(i in temp_otherdriver_grp){
   grprow <- with(test_q12drivers, which(Group == i & abbr == "Driver"))
-  if(!grepl("Other", test_q12drivers$clean_answer[grprow])){
+  # only paste if it's not in any Driver field for that Group (look across all ES's where filled out)
+  if(!any(grepl("Other", test_q12drivers$clean_answer[grprow]))){
     test_q12drivers$clean_answer[grprow] <- paste0(test_q12drivers$clean_answer[grprow], ", Other")
-    # if(is.na(test_q12drivers$qa_note[grprow])){
-    #   # add append other to qa note
-    #   test_q12drivers$qa_note[grprow] <- "Appended 'Other' to Driver (Other driver entered but Other not checked)"
-    # }else{
-    #   # paste append other to existing qa note
-    #   test_q12drivers$qa_note[grprow] <- paste0(test_q12drivers$qa_note[grprow], "; appended 'Other' to Driver (Other driver entered but Other not checked)")
-    # }
   }
   
 }
 
 # now break out drivers by splitcom..
-
 testdriver2 <- test_q12drivers %>%
   rename(orig_answer = answer)
 
 testdriver3 <- splitcom(testdriver2, keepcols = names(testdriver2), splitcol = "clean_answer") %>%
   dplyr::select(StartDate:orig_answer, answer, num, fullquestion:ncol(.)) %>%
   arrange(survey_order, num)
-# if it doesn't have QA note, it means every row in qa_note was NA
+# splitcom removes any column that is all NA
+# if newdat doesn't have qa_note col, it means every row in qa_note was NA, so add back in
 if(!"qa_note" %in% names(testdriver3)){
   testdriver3$qa_note <- NA
 }
 # add QA note for Other
 # id rows that have "Other"
-temp_otherrows <- with(testdriver3, which(answer == "Other" & !grepl("Other", orig_answer)))
+temp_otheradded_rows <- with(testdriver3, which(answer == "Other" & !grepl("Other", orig_answer)))
 # append QA note
-for(i in temp_otherrows){
+for(i in temp_otheradded_rows){
   if(is.na(testdriver3$qa_note[i])){
     # add append other to qa note
-    testdriver3$qa_note[i] <- "Appended 'Other' to Driver (Other driver entered but Other not checked)"
+    testdriver3$qa_note[i] <- "Appended 'Other' to Driver (Other driver entered but 'Other' not checked)"
   }else{
     # paste append other to existing qa note
-    testdriver3$qa_note[i] <- paste0(testdriver3$qa_note[i], "; appended 'Other' to Driver (Other driver entered but Other not checked)")
+    testdriver3$qa_note[i] <- paste0(testdriver3$qa_note[i], "; appended 'Other' to Driver (Other driver entered but 'Other' not checked)")
   }
 }
 
-# then add variable bin..
-testjoin <- testdriver3 %>%
-  left_join(master_driver_corrections, by = c("ES", "Group" = "Driver_Group", "answer"))
+# need to now iterate through Other and assign an ES to Other Driver fields
+# compile list of different ES's listed in driver
+temp_ESdriver_list <- list("Env" = sort(with(testdriver3, unique(ES[answer == "Other" & Group == "Env"]))),
+                           "Anthro" = sort(with(testdriver3, unique(ES[answer == "Other" & Group == "Anthro"]))),
+                           "Bio" = sort(with(testdriver3, unique(ES[answer == "Other" & Group == "Bio"]))))
 
+tempother_df <- data.frame()
+for(i in 1:length(temp_ESdriver_list)){
+  if(length(temp_ESdriver_list[[i]]) > 0){
+    # subset env 
+    tempdat_other <- subset(testdriver3, abbr == "OtherDriver" & Group == names(temp_ESdriver_list[i]))
+    # double check valid records pulled
+    stopifnot(nrow(tempdat_other) > 0)
+    # expand tempdat_otherenv by however many other env ES's are indicated
+    tempdat_other2 <- do.call("rbind", replicate(length(temp_ESdriver_list[[i]]), tempdat_other, simplify = FALSE))
+    # infill ES's
+    tempdat_other2$ES <- rep(temp_ESdriver_list[[i]], each = max(tempdat_other2$num))
+    # bind to master
+    tempother_df <- rbind(tempother_df, tempdat_other2)
+  }
+}
+# infill ESnum
+tempother_df$ESnum <- merge(tempother_df[c("ES")], distinct(headerLUT[c("ES", "ESnum")]), by = "ES", all.x = T)$ESnum
+# add QA note
+tempother_df$qa_note <- paste(tempother_df$qa_note, "Infilled ES from Driver where 'Other' specified", sep = "; ")
+# clean up if pasted to empty string
+tempother_df$qa_note <- gsub("NA; ", "", tempother_df$qa_note)
+
+# add Other Drivers back to data frame (swap cleaned up for original/unclean)
+testdriver4 <- subset(testdriver3, abbr != "OtherDriver") %>%
+  rbind(tempother_df)
+
+# then add variable bin..
+testjoin <- testdriver4 %>%
+  left_join(master_driver_corrections, by = c("ES", "Group" = "Driver_Group", "answer")) %>%
+  # add order back in for rbinding with master (also got dropped in splitcom bc NA)
+  mutate(order = NA) %>%
+  # reorder cols
+  dplyr::select(StartDate:num, clean_answer_finer, fullquestion, abbr, order, Group, clean_group, ESnum:ncol(.)) %>%
+  # rename answers back to answer and clean_answer
+  rename(clean_answer = answer,
+         answer = orig_answer,
+         varnum = num) %>%
+  mutate(track = 1)
+
+
+# need to put back in data frame..
+# build data frame for the Response Id in current iteration
+test_q12_clean <- subset(q12df_clean, ResponseId == i) %>%
+  mutate(ES = as.character(ES),
+        track = 0) %>%
+  cbind(data.frame(matrix(nrow = nrow(.), 
+                          ncol = sum(!names(testjoin) %in% names(.)),
+                          dimnames = list(NULL, names(testjoin)[!names(testjoin) %in% names(.)])))) %>%
+  dplyr::select(names(testjoin)) %>%
+  as.data.frame() %>%
+  # filter out any rows replaced in cleaning (are there downsides to doing it this way??)
+  filter(!survey_order %in% unique(testjoin$survey_order)) %>%
+  rbind(testjoin) %>%
+  arrange(survey_order, track, varnum)
+
+# rbind into master
+master_clean_q12 <- rbind(master_clean_q12, test_q12_clean)
+
+}
 
 
 # 5. Logic check corrections -----
