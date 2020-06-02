@@ -73,9 +73,14 @@ splitcom <- function(df, keepcols = c("Title", "answer"), splitcol = "answer"){
     #dplyr::select_vars(keepcols) %>%
     distinct() %>%
     # break out answers by comma
-    separate(answer, paste0("v",1:30), ",") %>% # <- this will throw warning, fine. pad with extra cols for up to 20 comma-separated answers just in case
+    separate(answer, paste0("v",1:30), ",") # <- this will throw warning, fine. pad with extra cols for up to 20 comma-separated answers just in case
+  # break pipe to ID empty vcols
+  emptycols <- names(df)[grepl("^v[2-9]|^v[[:digit:]]{2,}$", names(df))] # v1 will always be a col to keep even if NA
+  emptycols <- emptycols[sapply(df[emptycols], function(x) all(is.na(x)))]  
+  # restart pipeline  
+  df <- df %>%
     # remove cols that are all na
-    dplyr::select(names(.)[sapply(., function(x) !(all(is.na(x))))]) %>%
+    dplyr::select(-(emptycols)) %>%
     # gather to tidy
     gather(num, answer, names(.)[grep("^v[[:digit:]]+$", names(.))]) %>% #v1:ncol(.)
     mutate(answer = trimws(answer)) %>%
@@ -1829,20 +1834,20 @@ q12df_clean <- subset(prelimlong1c, qnum == "Q12")
 
 kept_ResponseId <- unique(q12df_clean$ResponseId)
 master_clean_q12 <- data.frame()
-for(i in unique(q12df_clean$ResponseId)){
+for(rid in unique(q12df_clean$ResponseId)){
   # the only way to do this cleanly is to go by ResponseId
-  temp_q12 <- subset(q12df_clean, ResponseId == i)
+  temp_q12<- subset(q12df_clean, ResponseId == rid)
   
   # need to assign "MISSING" to response, drivers, yclass and effect direct for cases where missing AND for cases where missing when doublerev = TRUE
   # id which answers (if any) are missing, and infill so needed rows don't get removed
-  if(i %in% unique(noResponseDriver$ResponseId)){
-    temp_infill_responsedriver <- subset(noResponseDriver, ResponseId == i)
+  if(rid %in% unique(noResponseDriver$ResponseId)){
+    temp_infill_responsedriver <- subset(noResponseDriver, ResponseId == rid)
     if(unique(temp_infill_responsedriver$flag_noResponse)){
       # subset which drivers are applicable if that's the case
       temp_infill_responsedriver <- filter(temp_infill_responsedriver, 
                                            (Group == unique(Group[!is.na(answer)]) & grepl("Driver|Effect", abbr)) | !grepl("Driver|Effect", abbr)) %>%
-      # assign missing
-      mutate_at(vars("answer"), function(x) ifelse(is.na(x) & .[,"abbr"] %in% c("Response", "Yclass"), "MISSING", x))
+        # assign missing
+        mutate_at(vars("answer"), function(x) ifelse(is.na(x) & .[,"abbr"] %in% c("Response", "Yclass"), "MISSING", x))
     }
     if(unique(temp_infill_responsedriver$flag_noDriver)){
       temp_infill_responsedriver <- temp_infill_responsedriver %>%
@@ -1851,7 +1856,9 @@ for(i in unique(q12df_clean$ResponseId)){
     }
     # infill answers in working q12 df
     temp_q12$answer[temp_q12$survey_order %in% temp_infill_responsedriver$survey_order] <- temp_infill_responsedriver$answer
+    temp_q12$clean_answer[temp_q12$survey_order %in% temp_infill_responsedriver$survey_order] <- temp_infill_responsedriver$answer
   }
+  
   # moving on..
   temp_q12 <- temp_q12 %>%
     filter(!is.na(answer)) %>%
@@ -1870,81 +1877,84 @@ for(i in unique(q12df_clean$ResponseId)){
   # break out drivers
   temp_q12drivers <- subset(temp_q12, grepl("Driver", abbr))
   # first, ID which has other drivers listed and whether Other present in Driver field
-  temp_otherdriver_grp <- unique(with(test_q12drivers, Group[which(!is.na(answer) & abbr == "OtherDriver")]))
+  temp_otherdriver_grp <- unique(with(temp_q12drivers, Group[which(!is.na(answer) & abbr == "OtherDriver")]))
   # then go through and check for Other in Driver, if not present append
   # > if other driver entered for a given group, must be checked in at least 1 ES for that group
+  # > this for-loop won't do anything if temp_otherdriver_grp is empty (i.e. no other drivers entered)
   for(i in temp_otherdriver_grp){
-    grprow <- with(test_q12drivers, which(Group == i & abbr == "Driver"))
+    # ID which rows (i.e. which ESs) have drivers entered
+    grprow <- with(temp_q12drivers, which(Group == i & abbr == "Driver"))
     # only paste if it's not in any Driver field for that Group (look across all ES's where filled out)
-    if(!any(grepl("Other", test_q12drivers$clean_answer[grprow]))){
-      test_q12drivers$clean_answer[grprow] <- paste0(test_q12drivers$clean_answer[grprow], ", Other")
+    if(!any(grepl("Other", temp_q12drivers$clean_answer[grprow]))){
+      temp_q12drivers$clean_answer[grprow] <- paste0(temp_q12drivers$clean_answer[grprow], ", Other")
     }
     
   }
   
   # now break out drivers by splitcom..
-  testdriver2 <- test_q12drivers %>%
-    rename(orig_answer = answer)
-  
-  testdriver3 <- splitcom(testdriver2, keepcols = names(testdriver2), splitcol = "clean_answer") %>%
+  temp_q12drivers <- temp_q12drivers %>%
+    rename(orig_answer = answer) %>%
+    splitcom(keepcols = names(.), splitcol = "clean_answer") %>%
     dplyr::select(StartDate:orig_answer, answer, num, fullquestion:ncol(.)) %>%
-    arrange(survey_order, num)
-  # splitcom removes any column that is all NA
-  # if newdat doesn't have qa_note col, it means every row in qa_note was NA, so add back in
-  if(!"qa_note" %in% names(testdriver3)){
-    testdriver3$qa_note <- NA
-  }
+    arrange(survey_order, num) %>%
+    data.frame()
+ 
   # add QA note for Other
   # id rows that have "Other"
-  temp_otheradded_rows <- with(testdriver3, which(answer == "Other" & !grepl("Other", orig_answer)))
+  temp_otheradded_rows <- with(temp_q12drivers, which(answer == "Other" & !grepl("Other", orig_answer)))
   # append QA note
+  # > if no "Other" added to abbr== Driver rows, for-loop will not do anything
   for(i in temp_otheradded_rows){
-    if(is.na(testdriver3$qa_note[i])){
+    if(is.na(temp_q12drivers$qa_note[i])){
       # add append other to qa note
-      testdriver3$qa_note[i] <- "Appended 'Other' to Driver (Other driver entered but 'Other' not checked)"
+      temp_q12drivers$qa_note[i] <- "Appended 'Other' to Driver (Other driver entered but 'Other' not checked)"
     }else{
       # paste append other to existing qa note
-      testdriver3$qa_note[i] <- paste0(testdriver3$qa_note[i], "; appended 'Other' to Driver (Other driver entered but 'Other' not checked)")
+      temp_q12drivers$qa_note[i] <- paste0(temp_q12drivers$qa_note[i], "; appended 'Other' to Driver (Other driver entered but 'Other' not checked)")
     }
   }
   
-  # need to now iterate through Other and assign an ES to Other Driver fields
-  # compile list of different ES's listed in driver
-  temp_ESdriver_list <- list("Env" = sort(with(testdriver3, unique(ES[answer == "Other" & Group == "Env"]))),
-                             "Anthro" = sort(with(testdriver3, unique(ES[answer == "Other" & Group == "Anthro"]))),
-                             "Bio" = sort(with(testdriver3, unique(ES[answer == "Other" & Group == "Bio"]))))
-  
-  tempother_df <- data.frame()
-  for(i in 1:length(temp_ESdriver_list)){
-    if(length(temp_ESdriver_list[[i]]) > 0){
-      # subset env 
-      tempdat_other <- subset(testdriver3, abbr == "OtherDriver" & Group == names(temp_ESdriver_list[i]))
-      # double check valid records pulled
-      stopifnot(nrow(tempdat_other) > 0)
-      # expand tempdat_otherenv by however many other env ES's are indicated
-      tempdat_other2 <- do.call("rbind", replicate(length(temp_ESdriver_list[[i]]), tempdat_other, simplify = FALSE))
-      # infill ES's
-      tempdat_other2$ES <- rep(temp_ESdriver_list[[i]], each = max(tempdat_other2$num))
-      # bind to master
-      tempother_df <- rbind(tempother_df, tempdat_other2)
+  # if Other Drivers present, need to now iterate through Other and assign an ES to Other Driver fields
+  if("OtherDriver" %in% unique(temp_q12drivers$abbr)){
+    # compile list of different ES's listed in driver
+    temp_ESdriver_list <- list("Env" = sort(with(temp_q12drivers, unique(ES[answer == "Other" & Group == "Env"]))),
+                               "Anthro" = sort(with(temp_q12drivers, unique(ES[answer == "Other" & Group == "Anthro"]))),
+                               "Bio" = sort(with(temp_q12drivers, unique(ES[answer == "Other" & Group == "Bio"]))))
+    
+    tempother_df <- data.frame()
+    for(i in 1:length(temp_ESdriver_list)){
+      if(length(temp_ESdriver_list[[i]]) > 0){
+        # subset env 
+        tempdat_other <- subset(temp_driver3, abbr == "OtherDriver" & Group == names(temp_ESdriver_list[i]))
+        # double check valid records pulled
+        stopifnot(nrow(tempdat_other) > 0)
+        # expand tempdat_otherenv by however many other env ES's are indicated
+        tempdat_other2 <- do.call("rbind", replicate(length(temp_ESdriver_list[[i]]), tempdat_other, simplify = FALSE))
+        # infill ES's
+        tempdat_other2$ES <- rep(temp_ESdriver_list[[i]], each = max(tempdat_other2$num))
+        # bind to master
+        tempother_df <- rbind(tempother_df, tempdat_other2)
+      }
+      # clean up
+      rm(tempdat_other, tempdat_other2)
     }
+    # infill ESnum
+    tempother_df$ESnum <- merge(tempother_df[c("ES")], distinct(headerLUT[c("ES", "ESnum")]), by = "ES", all.x = T)$ESnum
+    # add QA note
+    tempother_df$qa_note <- paste(tempother_df$qa_note, "Infilled ES from Driver where 'Other' specified", sep = "; ")
+    # clean up if pasted to empty string
+    tempother_df$qa_note <- gsub("NA; ", "", tempother_df$qa_note)
+    
+    # add Other Drivers back to data frame (swap cleaned up for original/unclean)
+    temp_q12drivers <- subset(temp_q12drivers, abbr != "OtherDriver") %>%
+      rbind(tempother_df)
   }
-  # infill ESnum
-  tempother_df$ESnum <- merge(tempother_df[c("ES")], distinct(headerLUT[c("ES", "ESnum")]), by = "ES", all.x = T)$ESnum
-  # add QA note
-  tempother_df$qa_note <- paste(tempother_df$qa_note, "Infilled ES from Driver where 'Other' specified", sep = "; ")
-  # clean up if pasted to empty string
-  tempother_df$qa_note <- gsub("NA; ", "", tempother_df$qa_note)
-  
-  # add Other Drivers back to data frame (swap cleaned up for original/unclean)
-  testdriver4 <- subset(testdriver3, abbr != "OtherDriver") %>%
-    rbind(tempother_df)
   
   # then add variable bin..
-  testjoin <- testdriver4 %>%
+  temp_q12drivers <- temp_q12drivers %>%
     left_join(master_driver_corrections, by = c("ES", "Group" = "Driver_Group", "answer")) %>%
-    # add order back in for rbinding with master (also got dropped in splitcom bc NA)
-    mutate(order = NA) %>%
+    # assign clean_driver_finer for MISSING answers
+    mutate(clean_answer_finer = ifelse(answer == "MISSING", "MISSING", clean_answer_finer)) %>%
     # reorder cols
     dplyr::select(StartDate:num, clean_answer_finer, fullquestion, abbr, order, Group, clean_group, ESnum:ncol(.)) %>%
     # rename answers back to answer and clean_answer
@@ -1956,24 +1966,25 @@ for(i in unique(q12df_clean$ResponseId)){
   
   # need to put back in data frame..
   # build data frame for the Response Id in current iteration
-  test_q12_clean <- subset(q12df_clean, ResponseId == i) %>%
+  temp_q12_clean <- subset(q12df_clean, ResponseId == rid) %>%
     mutate(ES = as.character(ES),
            track = 0) %>%
     cbind(data.frame(matrix(nrow = nrow(.), 
-                            ncol = sum(!names(testjoin) %in% names(.)),
-                            dimnames = list(NULL, names(testjoin)[!names(testjoin) %in% names(.)])))) %>%
-    dplyr::select(names(testjoin)) %>%
-    as.data.frame() %>%
+                            ncol = sum(!names(temp_q12drivers) %in% names(.)),
+                            dimnames = list(NULL, names(temp_q12drivers)[!names(temp_q12drivers) %in% names(.)])))) %>%
+    dplyr::select(names(temp_q12drivers)) %>%
+    data.frame() %>%
     # filter out any rows replaced in cleaning (are there downsides to doing it this way??)
-    filter(!survey_order %in% unique(testjoin$survey_order)) %>%
-    rbind(testjoin) %>%
+    filter(!survey_order %in% unique(temp_q12drivers$survey_order)) %>% # <-- add in response survey_order rows too
+    rbind(temp_q12drivers) %>% # add in temp_q12responses
     arrange(survey_order, track, varnum)
   
   # rbind into master
-  master_clean_q12 <- rbind(master_clean_q12, test_q12_clean)
-  
+  master_clean_q12 <- rbind(master_clean_q12, temp_q12_clean)
+  # clean up to be sure data not added erroneously to next iteration (shouldn't, but just in case, and will clean enviro when loop done)
+  rm(temp_q12, temp_q12_clean, temp_q12drivers, temp_q12responses, 
+     temp_unique_ESresponse, temp_otheradded_rows, temp_otherdriver, temp_otherdriver_grp)
 }
-
 
 # 5. Logic check corrections -----
 
