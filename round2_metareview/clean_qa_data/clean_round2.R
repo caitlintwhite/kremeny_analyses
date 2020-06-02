@@ -1834,7 +1834,8 @@ q12df_clean <- subset(prelimlong1c, qnum == "Q12")
 
 kept_ResponseId <- unique(q12df_clean$ResponseId)
 master_clean_q12 <- data.frame()
-for(rid in unique(q12df_clean$ResponseId)){
+#unique(q12df_clean$ResponseId)
+for(rid in kept_ResponseId){
   # the only way to do this cleanly is to go by ResponseId
   temp_q12<- subset(q12df_clean, ResponseId == rid)
   
@@ -1872,7 +1873,17 @@ for(rid in unique(q12df_clean$ResponseId)){
   temp_q12responses <- subset(temp_q12, abbr == "Response")
   # which ESs ID'd in response
   temp_unique_ESresponse <- unique(with(temp_q12responses, ES[which(!is.na(answer))]))
-  
+  # break out responses by splitcom, append finer response group
+  temp_q12responses <- temp_q12responses %>%
+    # change answer to orig_answer before splitcom
+    rename(orig_answer = answer) %>%
+    splitcom(keepcols = names(.), splitcol = "clean_answer") %>%
+    # join finer response bins
+    left_join(clean_responses_corrections[c("EcoServ", "Response", "rf2")], by = c("ES" = "EcoServ", "answer" = "Response")) %>% # will need to change rf2 later..
+    # rename cols to rbind with cleaned up drivers later on..
+    rename(clean_answer = answer, answer = orig_answer, clean_answer_finer = rf2, varnum = num) %>%
+    # add tracking numer and clean group col to match cleaned up driver df
+    mutate(track = 1, clean_group = NA)
   
   # break out drivers
   temp_q12drivers <- subset(temp_q12, grepl("Driver", abbr))
@@ -1920,12 +1931,16 @@ for(rid in unique(q12df_clean$ResponseId)){
     temp_ESdriver_list <- list("Env" = sort(with(temp_q12drivers, unique(ES[answer == "Other" & Group == "Env"]))),
                                "Anthro" = sort(with(temp_q12drivers, unique(ES[answer == "Other" & Group == "Anthro"]))),
                                "Bio" = sort(with(temp_q12drivers, unique(ES[answer == "Other" & Group == "Bio"]))))
-    
+    # if no ESs ID'd. generate list from ES's available where Driver entered
+    # > ex. case: RID R_306ID7zs5CnvD81, Drivers entered for Anthro group in several ES's, OtherDriver entered for Env with NA ES (bc other).. Env Driver never entered 
+    if(length(unlist(temp_ESdriver_list)) == 0){
+      temp_ESdriver_list <- list()
+    }
     tempother_df <- data.frame()
     for(i in 1:length(temp_ESdriver_list)){
       if(length(temp_ESdriver_list[[i]]) > 0){
         # subset env 
-        tempdat_other <- subset(temp_driver3, abbr == "OtherDriver" & Group == names(temp_ESdriver_list[i]))
+        tempdat_other <- subset(temp_q12drivers, abbr == "OtherDriver" & Group == names(temp_ESdriver_list[i]))
         # double check valid records pulled
         stopifnot(nrow(tempdat_other) > 0)
         # expand tempdat_otherenv by however many other env ES's are indicated
@@ -1975,16 +1990,21 @@ for(rid in unique(q12df_clean$ResponseId)){
     dplyr::select(names(temp_q12drivers)) %>%
     data.frame() %>%
     # filter out any rows replaced in cleaning (are there downsides to doing it this way??)
-    filter(!survey_order %in% unique(temp_q12drivers$survey_order)) %>% # <-- add in response survey_order rows too
-    rbind(temp_q12drivers) %>% # add in temp_q12responses
+    filter(!survey_order %in% unique(c(temp_q12drivers$survey_order, temp_q12responses$survey_order))) %>% # <-- add in response survey_order rows too
+    rbind(temp_q12drivers, temp_q12responses[names(temp_q12drivers)]) %>% # add in temp_q12responses
     arrange(survey_order, track, varnum)
   
+  # double check all survey_order nums that should be there are there
+  stopifnot(all(unique(temp_q12_clean$survey_order) %in% unique(headerLUT$survey_order[headerLUT$qnum == "Q12"])))
+  
   # rbind into master
-  master_clean_q12 <- rbind(master_clean_q12, temp_q12_clean)
-  # clean up to be sure data not added erroneously to next iteration (shouldn't, but just in case, and will clean enviro when loop done)
-  rm(temp_q12, temp_q12_clean, temp_q12drivers, temp_q12responses, 
-     temp_unique_ESresponse, temp_otheradded_rows, temp_otherdriver, temp_otherdriver_grp)
+  master_clean_q12 <- rbind(master_clean_q12, temp_q12_clean) %>% data.frame()
 }
+
+# clean enviro after for loop done
+rm(i, rid, temp_q12, temp_q12_clean, temp_q12drivers, temp_q12responses, tempother_df,
+   temp_unique_ESresponse, temp_otheradded_rows, temp_otherdriver_grp)
+
 
 # 5. Logic check corrections -----
 
