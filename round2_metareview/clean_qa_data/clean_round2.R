@@ -1896,10 +1896,10 @@ for(rid in kept_ResponseId){
     # ID which rows (i.e. which ESs) have drivers entered
     grprow <- with(temp_q12drivers, which(Group == i & abbr == "Driver"))
     # only paste if it's not in any Driver field for that Group (look across all ES's where filled out)
+    # > this will do nothing if grprow empty (e.g. someone entered other driver for given group, but no drivers entered in that group)
     if(!any(grepl("Other", temp_q12drivers$clean_answer[grprow]))){
-      temp_q12drivers$clean_answer[grprow] <- paste0(temp_q12drivers$clean_answer[grprow], ", Other")
+      temp_q12drivers$clean_answer[grprow] <- paste0(temp_q12drivers$clean_answer[grprow], ",Other")
     }
-    
   }
   
   # now break out drivers by splitcom..
@@ -1909,7 +1909,7 @@ for(rid in kept_ResponseId){
     dplyr::select(StartDate:orig_answer, answer, num, fullquestion:ncol(.)) %>%
     arrange(survey_order, num) %>%
     data.frame()
- 
+  
   # add QA note for Other
   # id rows that have "Other"
   temp_otheradded_rows <- with(temp_q12drivers, which(answer == "Other" & !grepl("Other", orig_answer)))
@@ -1935,6 +1935,14 @@ for(rid in kept_ResponseId){
     # > ex. case: RID R_306ID7zs5CnvD81, Drivers entered for Anthro group in several ES's, OtherDriver entered for Env with NA ES (bc other).. Env Driver never entered 
     if(length(unlist(temp_ESdriver_list)) == 0){
       temp_ESdriver_list <- list()
+      # set trigger to use different infill message
+      trigger_otherinfill <- TRUE
+      # need to see which Group has "OtherDriver" and then assign ES's from Driver to that group .. or just use unique ES from response?
+      for(i in 1:length(temp_otherdriver_grp)){
+        # build list
+        temp_ESdriver_list[[i]] <- temp_unique_ESresponse
+        names(temp_ESdriver_list)[i] <- temp_otherdriver_grp[i]
+      }
     }
     tempother_df <- data.frame()
     for(i in 1:length(temp_ESdriver_list)){
@@ -1955,14 +1963,41 @@ for(rid in kept_ResponseId){
     }
     # infill ESnum
     tempother_df$ESnum <- merge(tempother_df[c("ES")], distinct(headerLUT[c("ES", "ESnum")]), by = "ES", all.x = T)$ESnum
-    # add QA note
-    tempother_df$qa_note <- paste(tempother_df$qa_note, "Infilled ES from Driver where 'Other' specified", sep = "; ")
+    if(trigger_otherinfill){
+      # add special QA note
+      tempother_df$qa_note <- paste(tempother_df$qa_note, "Other not checked but OtherDriver entered, infilled ES based on ES rows where data entered", sep = "; ")
+    }else{
+      # add regular QA note
+      tempother_df$qa_note <- paste(tempother_df$qa_note, "Infilled ES from Driver where 'Other' specified", sep = "; ")
+    }
     # clean up if pasted to empty string
     tempother_df$qa_note <- gsub("NA; ", "", tempother_df$qa_note)
-    
+    # if trigger is true, also need to create Other rows for abbr == Driver for ES's ID'd
+    if(trigger_otherinfill){
+      # subset q12df_clean again
+      tempdriver_infill <- subset(q12df_clean, ResponseId == rid & Group %in% unique(tempother_df$Group) & abbr == "Driver" & ES %in% unique(tempother_df$ES)) %>%
+        # append "Other" to clean_answer
+        # > bc "Other" infilled earlier in loop, if we're at this point it means rows for Driver are empty
+        mutate(clean_answer = "Other",
+               # will be only variable for given ES and Group
+               num = 1,
+               # add QA note
+               qa_note = ifelse(is.na(qa_note), "Added 'Other' to Driver based on Other Driver answer",
+                                # if qa_note not empty, append comment
+                                paste0(qa_note, "; added 'Other' to Driver based on Other Driver answer"))) %>%
+        #rename answer cols so can rbind
+        rename(orig_answer = answer,
+               answer = clean_answer)
+      
+      # rbind infilled driver rows to infilled other driver rows 
+      tempother_df <- rbind(tempother_df, tempdriver_infill[names(tempother_df)]) %>%
+        arrange(survey_order)
+      
+    }
     # add Other Drivers back to data frame (swap cleaned up for original/unclean)
-    temp_q12drivers <- subset(temp_q12drivers, abbr != "OtherDriver") %>%
-      rbind(tempother_df)
+    temp_q12drivers <- subset(temp_q12drivers, !survey_order %in% tempother_df$survey_order) %>% #Added 'Other' to Driver based on Other Driver answer
+      rbind(tempother_df) %>%
+      arrange(survey_order)
   }
   
   # then add variable bin..
