@@ -1880,6 +1880,8 @@ for(rid in kept_ResponseId){
     splitcom(keepcols = names(.), splitcol = "clean_answer") %>%
     # join finer response bins
     left_join(clean_responses_corrections[c("EcoServ", "Response", "rf2")], by = c("ES" = "EcoServ", "answer" = "Response")) %>% # will need to change rf2 later..
+    # fill in MISSING for answer_finer if clean answer is missing
+    mutate(rf2 = ifelse(answer == "MISSING", "MISSING", rf2)) %>%
     # rename cols to rbind with cleaned up drivers later on..
     rename(clean_answer = answer, answer = orig_answer, clean_answer_finer = rf2, varnum = num) %>%
     # add tracking numer and clean group col to match cleaned up driver df
@@ -2050,8 +2052,27 @@ for(rid in kept_ResponseId){
 rm(i, rid, temp_q12, temp_q12_clean, temp_q12drivers, temp_q12responses, tempother_df,
    temp_unique_ESresponse, temp_otheradded_rows, temp_otherdriver_grp)
 
+# final clean up then join to master prelimlong dataset
+master_clean_q12.2 <- dplyr::select(master_clean_q12, -track)
+# id new colnames to master dataset
+addcols <- names(master_clean_q12.2)[!names(master_clean_q12.2) %in% names(prelimlong1c)]
+
+# new version prelimlong since including the expanded vars now
+prelimlong1d <- subset(prelimlong1c, qnum != "Q12") %>%
+  # need to add in new cols in master_clean_q12
+  cbind(matrix(ncol = length(addcols), nrow = nrow(.), dimnames = list(NULL, addcols))) %>%
+  data.frame() %>%
+  dplyr::select(names(master_clean_q12.2)) %>%
+  rbind(master_clean_q12.2) %>%
+  arrange(RecordedDate, survey_order)
+
+
+# write out temp prelim cleaned so ppl can start code for analysis..
+write_csv(prelimlong1d, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 # 5. Logic check corrections -----
+
+
 
 # 5.1. Q13: Kremen ESP ----
 ## > if ESP check in Biotic drivers, then ESP checked in Kremen topics
