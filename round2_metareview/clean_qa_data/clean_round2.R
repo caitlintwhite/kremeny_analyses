@@ -2070,6 +2070,8 @@ prelimlong1d <- subset(prelimlong1c, qnum != "Q12") %>%
 # write out temp prelim cleaned so ppl can start code for analysis..
 write_csv(prelimlong1d, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
+
+
 # 5. Logic check corrections -----
 
 
@@ -2109,11 +2111,12 @@ write_csv(prelimlong1d, "round2_metareview/data/cleaned/ESqualtrics_r2keep_clean
 
 
 # -- CONDENSE DOUBLE REVIEWED ----
-doubleprelim <- subset(prelimlong1c, Title %in% doubletitles) %>%
+# add "unified" record to to double reviews
+doubleprelim <- subset(prelimlong1d, Title %in% doubletitles) %>%
   group_by(Title, id) %>%
-  mutate(same_answer = length(unique(answer)) ==1) %>%
+  mutate(same_answer = length(unique(clean_answer)) ==1) %>%
   ungroup() %>%
-  filter(!(same_answer & is.na(answer))) %>%
+  filter(!(same_answer & is.na(clean_answer))) %>%
   arrange(Title, survey_order, RecordedDate)
 # how many double reviewed?
 length(unique(doubleprelim$Title))
@@ -2132,8 +2135,9 @@ doubleprelim %>%
   ggplot(aes(same_answer)) +
   geom_bar() +
   facet_wrap(~abbr) +
-  ggtitle(paste0("Round 2: double-reviewed kept papers (n=", length(unique(doubleprelim$Title)),"), agreement in answers by question,\n", Sys.Date()))
-ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_doublereview_congruency.pdf")
+  ggtitle(paste0("Round 2: double-reviewed kept papers (n=", length(unique(doubleprelim$Title)),"),\nagreement in answers by question, ", Sys.Date()))
+ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_doublereview_congruency.pdf",
+       width = 5, height = 5, units = "in")
 
 
 # see what can be dissolved..
@@ -2151,7 +2155,7 @@ ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_doublereview_congruency.pdf"
 # write out data as it's ready for others to work on.. (e.g. Q12 matrix will probably come later)
 
 # writing out temp file for now so people can start working with data
-write_csv(prelimlong1c, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+write_csv(prelimlong1e, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
 
