@@ -1934,9 +1934,14 @@ for(rid in kept_ResponseId){
     # if no ESs ID'd. generate list from ES's available where Driver entered
     # > ex. case: RID R_306ID7zs5CnvD81, Drivers entered for Anthro group in several ES's, OtherDriver entered for Env with NA ES (bc other).. Env Driver never entered 
     if(length(unlist(temp_ESdriver_list)) == 0){
-      temp_ESdriver_list <- list()
       # set trigger to use different infill message
-      trigger_otherinfill <- TRUE
+      trigger_otherinfill <- TRUE}else{
+        # if list populated, turn off trigger
+        trigger_otherinfill <- FALSE
+      }
+    if(trigger_otherinfill){
+      # reset list
+      temp_ESdriver_list <- list()
       # need to see which Group has "OtherDriver" and then assign ES's from Driver to that group .. or just use unique ES from response?
       for(i in 1:length(temp_otherdriver_grp)){
         # build list
@@ -1949,8 +1954,13 @@ for(rid in kept_ResponseId){
       if(length(temp_ESdriver_list[[i]]) > 0){
         # subset env 
         tempdat_other <- subset(temp_q12drivers, abbr == "OtherDriver" & Group == names(temp_ESdriver_list[i]))
-        # double check valid records pulled
-        stopifnot(nrow(tempdat_other) > 0)
+        # if no rows pulled, it means "Other" checked but no OtherDriver entered
+        if(nrow(tempdat_other) == 0){
+        tempdat_other <- subset(q12df_clean, ResponseId == rid & abbr == "OtherDriver" & Group == names(temp_ESdriver_list[i])) %>%
+          mutate(answer = "MISSING", clean_answer = "MISSING", num = 1) %>%
+          rename(orig_answer = answer, answer = clean_answer) %>%
+          dplyr::select(names(tempdat_other))
+        }
         # expand tempdat_otherenv by however many other env ES's are indicated
         tempdat_other2 <- do.call("rbind", replicate(length(temp_ESdriver_list[[i]]), tempdat_other, simplify = FALSE))
         # infill ES's
