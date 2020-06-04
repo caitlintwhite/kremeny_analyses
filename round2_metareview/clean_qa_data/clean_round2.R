@@ -655,7 +655,7 @@ wetlands <- subset(original, grepl(" basin| catchm| fen | riparian| wetland| mea
 watertitles <- subset(prelimlong1b, qnum == "Q4" & grepl("Coastal|Freshwater", answer))
 # are these papers in q4_qa? or how were they coded?
 summary(wetlands$Title %in% q4_qa$Title) #4 are there
-wetland_abstracts <- subset(prelimlong1b, Title %in% unique(c(wetlands$Title, watertitles$Title))) %>%
+wetland_abstracts <- subset(prelimlong1b, Title %in% unique(c(wetlands$Title, watertitles$Title, newscale$Title[!is.na(newscale$aquatic.)]))) %>%
   # add col for double rev
   group_by(Title) %>%
   mutate(doublerev = length(unique(ResponseId))>1) %>%
@@ -668,13 +668,17 @@ wetland_abstracts <- subset(prelimlong1b, Title %in% unique(c(wetlands$Title, wa
   # append citation info
   # add citation info in case want to look at paper
   left_join(dplyr::select(original, Title, FirstAuthor, PublicationYear, SourcePublication, Abstract)) %>%
+  # join julie and grant info
+  left_join(newscale[c("Title", "aquatic.")]) %>%
+  rename(aquatic_JLGV = 'aquatic.') %>%
   # drop qcols
   dplyr::select(-c(fullquestion, order:survey_order, exclude_notes)) %>%
   filter(!is.na(answer)) %>%
   arrange(Title)
 
+
 # write out
-write_csv(wetland_abstracts, "round2_metareview/clean_qa_data/needs_classreview/wetland_abstracts.csv")
+write_csv(wetland_abstracts, "round2_metareview/clean_qa_data/needs_classreview/wetland_abstracts.csv", na = "")
 
 
 
@@ -2082,7 +2086,6 @@ write_csv(prelimlong1d, "round2_metareview/data/cleaned/ESqualtrics_r2keep_clean
 # 5. Add in new scale data (JL & GV) -----
 # prep data
 # for now need dates, ResponseId, Init can be different.. some other cols will be different 
-
 
 
 
