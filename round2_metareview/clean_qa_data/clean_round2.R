@@ -1752,6 +1752,9 @@ master_driver_corrections <- dplyr::select(clean_biodriver_corrections, -c('Binn
   rename(clean_answer_finer = clean_driver_finer,
          clean_group = clean_driver_group)
 
+# write out for LD, AK, SDJ, and KG to review
+write_csv(master_driver_corrections, "round2_metareview/data/intermediate/round2_master_driver_bins.csv", na = "")
+
 
 # 4.b. Response corrections -----
 test_responses <- dplyr::select(responsecorrections, Response, Key.word) %>%
