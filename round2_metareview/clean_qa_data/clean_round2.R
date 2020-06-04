@@ -53,12 +53,16 @@ na_vals <- c("NA", NA, "NaN", NaN, " ", "", ".")
 theme_set(theme_bw())
 
 # read in raw data
+rawdat <- list.files("round2_metareview/data/raw", full.names = T)
 ## skip first two lines to read data col types correctly
-qualtrix <- read.csv(list.files("round2_metareview/data/raw", full.names = T), na.strings = na_vals, skip  = 2) 
+qualtrix <- read.csv(rawdat[!grepl("scale", rawdat)], na.strings = na_vals, skip  = 2) 
 ## re-read, no skipping, for colnames
-headers <- read.csv(list.files("round2_metareview/data/raw", full.names = T), na.strings = na_vals)
+headers <- read.csv(rawdat[!grepl("scale", rawdat)], na.strings = na_vals)
 ## read in header lookup table (exported headers and typed in abbreviations and group assignments bc easier doing in Excel than R)
 headerLUT <- read.csv("round2_metareview/data/headersLUT.csv", na.strings = na_vals)
+
+# read in new scale data from Grant and Julie
+newscale <- read.csv(rawdat[grepl("scale", rawdat)], na.strings = na_vals)
 
 # original round 2 assignment
 original <- read.csv("round1_exclusion/output/review_assignments_round2_grpdsubset.csv", na.strings = na_vals)
@@ -2075,34 +2079,41 @@ write_csv(prelimlong1d, "round2_metareview/data/cleaned/ESqualtrics_r2keep_clean
 
 
 
-# 5. Logic check corrections -----
+# 5. Add in new scale data (JL & GV) -----
+# prep data
+# for now need dates, ResponseId, Init can be different.. some other cols will be different 
 
 
 
-# 5.1. Q13: Kremen ESP ----
+
+# 6. Logic check corrections -----
+
+
+
+# 6.1. Q13: Kremen ESP ----
 ## > if ESP check in Biotic drivers, then ESP checked in Kremen topics
 
 
 
 
-# 5.2. Q13: Kremen Structure ----
+# 6.2. Q13: Kremen Structure ----
 ## > if structure keyword present in drivers (or responses?), then structure checked in Kremen topics
 
 
 
-# 5.3. Q13: Kremen Environment ----
+# 6.3. Q13: Kremen Environment ----
 ## > if environmental driver listed (either one of the canned answers or other AND other described), then env check in Kremen topics
 ## > if other described but other not checked, review (most likely errors looking at the review file)
 ## > also need to repeat screen because envcheck csv subsetted kremen notes, which only pulled records that had notes..
 
 
-# 5.4. Q13: Kremen Scale ----
+# 6.4. Q13: Kremen Scale ----
 ## > if Multiscale == "Yes", then scale checked in Kremen topics
 ## > note, 5/21: waiting on Grant and Julie to confirm Multiscale reliable question for triggering correction (CTW sent email)
 
 
 
-# 5.5. Q14: Service Providers ----
+# 6.5. Q14: Service Providers ----
 # > note: we should have had a "how many species in this study" question..
 # within = "genetic"
 # single.. hard to pull by keywrods
