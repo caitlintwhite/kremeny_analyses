@@ -2070,6 +2070,7 @@ addcols <- names(master_clean_q12.2)[!names(master_clean_q12.2) %in% names(preli
 
 # new version prelimlong since including the expanded vars now
 prelimlong1d <- subset(prelimlong1c, qnum != "Q12") %>%
+  mutate(ES = as.character(ES)) %>%
   # need to add in new cols in master_clean_q12
   cbind(matrix(ncol = length(addcols), nrow = nrow(.), dimnames = list(NULL, addcols))) %>%
   data.frame() %>%
@@ -2086,8 +2087,81 @@ write_csv(prelimlong1d, "round2_metareview/data/cleaned/ESqualtrics_r2keep_clean
 # 5. Add in new scale data (JL & GV) -----
 # prep data
 # for now need dates, ResponseId, Init can be different.. some other cols will be different 
+# check for unique, consistent answers
+sapply(newscale, function(x) sort(unique(x)))
+# are all titles clean? (in original$Title?)
+summary(newscale$Title %in% original$Title) # great
+
+newscale_tidy <- dplyr::select(newscale, -'aquatic.') %>%
+  rename(Init = Reviewed_by) %>%
+  gather(abbr, answer, extent_answer:ncol(.)) %>%
+  # add cols in main set that don't exist
+  cbind(matrix(nrow = nrow(.), ncol = length(names(prelimlong1d)[!names(prelimlong1d) %in% names(.)]),
+               dimnames = list(NULL, names(prelimlong1d)[!names(prelimlong1d) %in% names(.)]))) %>%
+  data.frame() %>%
+  dplyr::select(names(prelimlong1d)) %>%
+  # clean up: GV says NAs in extent_answer can be "Undefined" (no scale-- they are meaningful NAs)
+  mutate(clean_answer = ifelse(abbr == "extent_answer" & is.na(answer), "Undefined/no scale", answer),
+         # standardize macro-scale
+         clean_answer = gsub("macro-sacle", "Macro-scale", clean_answer),
+         # fill in the rest
+         doublerev = Title %in% doubletitles)
+# set date as yesterday (6/3/2020, when GV pushed dataset)
+newscale_tidy[grep("Date", names(newscale_tidy))] <- as.POSIXct("2020-06-03")
+
+#convert col classes to match prelimlong1d col classes
+for(i in names(newscale_tidy)){
+  class(newscale_tidy[,i]) <- class(prelimlong1d[, i])
+}
+
+# what are the existing survey ids?
+sort(unique(headerLUT$id[grepl("^Q", headerLUT$id)]))
+# next number would be Q31
+unique(newscale_tidy$abbr)
+# survey_order for scale notes is 56.. maybe these new questions can be 56.x? to show that i'm inserting?
+# Q9 = # of scale and plots.. Q8 = original multiscale question, and is survey_order 31.. maybe julie and grant questions should replace q8, and i'll just keep q9 notes..
+newscale_tidy2 <- newscale_tidy %>%
+  mutate(abbr = recode(abbr, "extent_answer" = "Extent", "extent_notes" = "ExtentNotes", "nested_answer" =  "Nested", "nested_notes" = "NestedNotes"),
+         qnum = "Q8",
+         survey_order = ifelse(abbr == "Extent", 31.1, ifelse(abbr == "ExtentNotes", 31.2,
+                                                             ifelse(abbr == "Nested", 31.3, 31.4))),
+         id = paste0("Q", survey_order),
+         fullquestion = ifelse(abbr =="Extent", "Q8.1a: What is the spatial extent of the study? Select one (choose the largest extent covered, even if multiple scales are analyzed).",
+                               ifelse(abbr == "ExtentNotes", "Q8.1b: Reviewer notes on spatial extent (optional).",
+                                      ifelse( abbr == "Nested", "Q8.2a: Does the study consider nested or multiple spatial scales in the analysis?",
+                                              "Q8.2b: Reviewer notes on nested or multiple spatial scales (optional)."))),
+         qa_note = "This Q8 replaces original Qualtrics multiscale Q8, and all but reviewer notes in Q9 (# sites and # plots question)")
+# not entirely sure what to do about reponse id.. if create col to indicate original or unified..
+
+# keep ScaleNotes in Q9, but drop everything else
+prelimlong1e <- rbind(prelimlong1d, newscale_tidy2) %>%
+  # add ordercol for ordering Titles by their original date recorded (Julie and Grant's recordeddate throws things off)
+  group_by(Title) %>%
+  mutate(ordercol = min(RecordedDate)) %>%
+  ungroup() %>%
+  arrange(ordercol, survey_order)
+
+# out of curiousity, compare JLGV multiscale with original multiscale
+ggplot(subset(prelimlong1e, survey_order %in% c(31, 31.3) & !doublerev), aes(Title, clean_answer, col = abbr, group = Title)) +
+  geom_line() +
+  geom_point() +
+  theme(axis.text.y = element_blank()) +
+  coord_flip() #every line across is where original and new don't agree.. so lots of lines
+
+# continue cleaning
+# drop original q8 and q9 except for q9 notes
+prelimlong1e <- filter(prelimlong1e, !abbr %in% c("MultiScale", "Plots", "Sites")) %>%
+  # append note to Q9 to indicate only original answer left
+  mutate(qa_note = ifelse(abbr == "ScaleNotes", "Original Qualtrics Q9 (#sites, #plots) removed, only original reviewer notes from Q9 preserved.", qa_note),
+  # add col to indicate whether original answer or final
+  # > single review will always be final, anything from JL or GV will be final, but doublrev will be original or final (condensed)
+  version = ifelse(!doublerev | qnum == "Q8", "final", "original")) %>%
+  # reorder cols.. put after doublrev, since it mostly has to do with that?
+  dplyr::select(StartDate:doublerev, version, Title:ncol(.))
 
 
+# write out for the homeez
+write_csv(prelimlong1e, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 # 6. Logic check corrections -----
 
@@ -2172,7 +2246,7 @@ ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_doublereview_congruency.pdf"
 # write out data as it's ready for others to work on.. (e.g. Q12 matrix will probably come later)
 
 # writing out temp file for now so people can start working with data
-write_csv(prelimlong1e, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+write_csv(cleandf_long, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
 
