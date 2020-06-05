@@ -47,7 +47,7 @@ theme_set(theme_classic())
 
 
 # read in latest metareview data
-rawdat <- read.csv("round2_metareview/data/intermediate/prelim_singlereview.csv", na.strings = na_vals)
+rawdat <- read.csv("round2_metareview/data/intermediate/round2_prelim_singlereview.csv", na.strings = na_vals)
 # check read in as expected
 glimpse(rawdat)
 
@@ -136,7 +136,7 @@ response_summary_simple <- group_by(response_summary3, ES, yresponse) %>% summar
   filter(yresponse != "")
 
 # environmental drivers
-png("round2_metareview/figs/envdrivers_wordcloud.png",width = 5, height = 5, units = "in", res = 300)
+png("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/envdrivers_wordcloud.png",width = 5, height = 5, units = "in", res = 300)
 wordcloud(words = drivers_grouped$answer[drivers_grouped$Group == "Environmental"], freq = drivers_grouped$count[drivers_grouped$Group == "Environmental"], 
           min.freq = 1, max.words=200, random.order=FALSE,
           colors=brewer.pal(8, "Dark2")) # scale = c(2, 0.4),
@@ -144,7 +144,7 @@ title(sub = "Environmental Drivers")
 dev.off()
 
 # human drivers
-png("round2_metareview/figs/humandrivers_wordcloud.png",width = 5, height = 5, units = "in", res = 300)
+png("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/humandrivers_wordcloud.png",width = 5, height = 5, units = "in", res = 300)
 wordcloud(words = drivers_grouped$answer[drivers_grouped$Group == "Human"], freq = drivers_grouped$count[drivers_grouped$Group == "Human"], 
           min.freq = 1, max.words=200, random.order=FALSE,
           colors=brewer.pal(8, "Dark2")) # scale = c(2, 0.4),
@@ -152,7 +152,7 @@ title(sub = "Human Drivers")
 dev.off()
 
 # biotic drivers
-png("round2_metareview/figs/bioticdrivers_wordcloud.png",width = 5, height = 5, units = "in", res = 300)
+png("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/bioticdrivers_wordcloud.png",width = 5, height = 5, units = "in", res = 300)
 wordcloud(words = drivers_grouped$answer[drivers_grouped$Group == "Biotic"], freq = drivers_grouped$count[drivers_grouped$Group == "Biotic"], 
           min.freq = 1, max.words=200, scale = c(3, 0.5), random.order=FALSE,
           colors=brewer.pal(8, "Dark2")) # scale = c(2, 0.4),
@@ -210,7 +210,7 @@ response_summary4 <- subset(response_summary, !is.na(answer)) %>%
   ungroup()
 
 # soil protection responses
-png("round2_metareview/figs/soilESresponses_wordcloud.png",width = 5, height = 5, units = "in", res = 300)
+png("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/soilESresponses_wordcloud.png",width = 5, height = 5, units = "in", res = 300)
 wordcloud(words = response_summary4$answer[response_summary4$ES == "SoilProtect"], freq = response_summary4$count[response_summary4$ES == "SoilProtect"], 
           min.freq = 1, max.words=200, scale = c(2, 0.4),random.order=FALSE, rot.per = 0.35,
           colors=brewer.pal(8, "Dark2")) # 

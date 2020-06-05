@@ -93,7 +93,7 @@ loc %>%
   scale_y_continuous(expand = c(0,0)) +
   # make oceania color between terrestrial and ocean
   scale_fill_manual(values = c("Ocean" = "royalblue4", "Oceania" = "lightseagreen", "Terrestrial" = "tan3"), guide =F) 
-ggsave("round2_metareview/figs/q5_location_barplot.png",
+ggsave("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/q5_location_barplot.png",
        width = 3, height = 1.75, units = "in", scale = 3.2)
 table(loc$answer)
 table(loc$num)
@@ -122,7 +122,7 @@ ggplot(ecotype, aes(forcats::fct_infreq(answer))) +
   labs(x = "Ecosystem", y = "Number of studies") +
   scale_y_continuous(breaks = seq(0,400, 20), expand = c(0,0)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggsave("round2_metareview/figs/q4_ecosystem_barplot.png",
+ggsave("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/q4_ecosystem_barplot.png",
        width = 0.8, height = 1.47, units = "in", scale = 4)
 table(ecotype$answer)
 table(ecotype$num) # most papers study only one type of system, but multiple systems entered for +100 papers (about 30% of papers reviewed)
@@ -148,7 +148,7 @@ ggplot(studytype, aes(forcats::fct_infreq(answer))) +
   labs(x = "Study type", y = "Number of studies") +
   scale_y_continuous(breaks = seq(0,400, 20), expand = c(0,0)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggsave("round2_metareview/figs/q6_studytype_barplot.png",
+ggsave("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/q6_studytype_barplot.png",
        width = 0.8, height = 1.47, units = "in", scale = 4)
 table(studytype$answer)
 table(studytype$num)
@@ -176,7 +176,7 @@ ggplot(temptype, aes(forcats::fct_infreq(TimeTrends))) +
   geom_bar() +
   labs(subtitle = "Considered Multiple Time Periods?", x = NULL, y = "Number of studies") +
   scale_y_continuous(breaks = seq(0,400, 20), expand = c(0,0)) 
-ggsave("round2_metareview/figs/q7_timetrends_barplot.png",
+ggsave("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/q7_timetrends_barplot.png",
        width = 3.5, height = 1, units = "in", scale = 3)
 
 # if yes, what temporal scales?
@@ -185,7 +185,7 @@ ggplot(subset(temptype, TimeTrends != "No" & !is.na(YrsData)), aes(forcats::fct_
   geom_bar() +
   labs(subtitle = "If yes, what temporal scales?", x = NULL, y = "Number of studies") +
   scale_y_continuous(expand = c(0,0)) #breaks = seq(0,400, 20), 
-ggsave("round2_metareview/figs/q7_yrsdata_barplot.png",
+ggsave("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/q7_yrsdata_barplot.png",
        width = 3.5, height = 1, units = "in", scale = 3)
 
 # also wants drivers for multiple time period studies
@@ -214,7 +214,7 @@ ggplot(subset(drivers_summary, Title %in% timetitles), aes(forcats::fct_infreq(G
   geom_bar() +
   labs(subtitle = "Which drivers?", x = NULL, y = "Number of studies") +
   scale_y_continuous(expand = c(0,0))
-ggsave("round2_metareview/figs/q7_temporal_drivertype_barplot.png",
+ggsave("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/q7_temporal_drivertype_barplot.png",
        height = 1, width = 1.25, units = "in", scale = 3)
 
 # how many drivers?
@@ -226,7 +226,7 @@ ggplot(subset(drivers_summary, Title %in% timetitles), aes(as.factor(num), fill 
   #scale_fill_viridis_d(name = "Driver", option = "E", direction = -1) +
   theme(legend.position = c(1,1),
         legend.justification = c(1,1))
-ggsave("round2_metareview/figs/q7_temporal_drivercount_barplot.png",
+ggsave("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/q7_temporal_drivercount_barplot.png",
        height = 1, width = 1.25, units = "in", scale = 3)
 
 
@@ -249,7 +249,7 @@ ggplot(feedbacks, aes(forcats::fct_infreq(answer))) +
   geom_bar() +
   labs(subtitle = "Considered feedbacks?", y = "Number of studies", x = NULL) +
   scale_y_continuous(breaks = seq(0,400, 20), expand = c(0,0))
-ggsave("round2_metareview/figs/q15_feedbacks_barplot.png",
+ggsave("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/q15_feedbacks_barplot.png",
        width = 3.5, height = 1, units = "in", scale = 3)
 
 # follow up barplot for those studies that did consider feedbacks
@@ -274,7 +274,7 @@ ggplot(tholds, aes(forcats::fct_infreq(answer))) +
   geom_bar() +
   labs(subtitle = "Considered thresholds?", y = "Number of studies", x = NULL) +
   scale_y_continuous(breaks = seq(0,400, 20), expand = c(0,0))
-ggsave("round2_metareview/figs/q16_thresholds_barplot.png",
+ggsave("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/q16_thresholds_barplot.png",
        width = 3.5, height = 1, units = "in", scale = 3)
 
 table(tholds$answer)
@@ -293,6 +293,6 @@ ggplot(kremen, aes(forcats::fct_infreq(answer))) +
   geom_bar() +
   labs(subtitle = "Which Kremen Topics?", y = "Number of studies", x = NULL) +
   scale_y_continuous(breaks = seq(0,400, 20), expand = c(0,0))
-ggsave("round2_metareview/figs/q13_krementopics_barplot.png",
+ggsave("round2_metareview/analyze_data/prelim_analysis_sudinglabmtg/prelim_figs/q13_krementopics_barplot.png",
        width = 3.5, height = 1, units = "in", scale = 3)
 
