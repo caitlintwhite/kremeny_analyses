@@ -1265,6 +1265,45 @@ for(i in sort(unique(noResponseDriver$Init))){
 View(subset(q12df_clean, ResponseId %in% c(unique(noDriver$ResponseId), unique(noResponse$ResponseId))))
 
 
+# 6/6: check for "Other" checked in "Driver" but no "OtherDriver" entered
+othercheck <- subset(prelimlong1b, (abbr == "Driver" & !is.na(answer)) | abbr ==  "OtherDriver") %>%
+  # remove anything in LD's exclusion csv
+  filter(!Title %in% excludecorrections$Title[excludecorrections$exclude_LD]) %>%
+  # also catch ones that are misspelled in the exclusion csv
+  filter(!grepl("^Flattening of Caribbean", Title)) %>%
+  # add doublerev
+  mutate(doublerev = Title %in% doubletitles) %>%
+  filter(grepl("Other", answer) | abbr == "OtherDriver") %>%
+  group_by(ResponseId) %>%
+  # filter for Driver answers, only those that have Other checked
+  mutate(hasOther = grepl("Other", answer)) %>%
+  ungroup() %>%
+  filter(ResponseId %in% ResponseId[hasOther]) %>%
+  filter(hasOther | abbr == "OtherDriver") %>%
+  dplyr::select(ResponseId, Init, doublerev, Title, answer, abbr, Group) %>%
+  distinct() %>%
+  group_by(ResponseId, Group) %>%
+  mutate(newDriver = str_flatten(unique(answer[abbr == "Driver"]))) %>%
+  ungroup() %>%
+  mutate(answer = ifelse(abbr == "Driver", newDriver, answer)) %>%
+  # drop newDriver
+  dplyr::select(-newDriver) %>%
+  distinct() %>%
+  spread(abbr, answer, fill = NA) %>%
+  filter(grepl("Other", Driver)) %>%
+  # drop anything that has other supplied to isolate errors
+  filter(is.na(OtherDriver)) %>%
+  arrange(Init, Title) %>%
+  #join citation info
+  left_join(original[c("Title","FirstAuthor", "PublicationYear", "SourcePublication")])
+nrow(othercheck) # 15 titles.. dang
+
+# write out to needs review
+for(i in unique(othercheck$Init)){
+  tempdat <- subset(othercheck, Init == i)
+  write_csv(tempdat, paste0("round2_metareview/clean_qa_data/needs_classreview/missing_responsedriver/q12_otherdriver_review", i, ".csv"), na = "")
+}
+
 
 
 
@@ -1677,7 +1716,7 @@ clean_envdriver_corrections <- subset(alldrivers_summary, Group == "Env") %>%
     # call Other 'Other' just in case no otherdriver text entered (can at least count Other, if other text available, can drop Other)
     clean_driver_finer = ifelse(answer == "Other", "other", clean_driver_finer),
     # ådd col for new driver type if needs to be re-assigned
-    clean_driver_group = ifelse(clean_driver_finer %in% c("productivity", "vegetation cover") | answer == "rewiring", "Biotic", 
+    clean_driver_group = ifelse(clean_driver_finer %in% c("productivity", "vegetation cover") | answer == "rewiring", "Bio", 
                                 ifelse(clean_driver_finer == "management", "Anthro", Driver_Group)),
     # infill group for NA just in case (only applies to answer == Other)
     clean_driver_group = ifelse(answer == "Other", Driver_Group, clean_driver_group))
@@ -1762,6 +1801,7 @@ master_driver_corrections <- dplyr::select(clean_biodriver_corrections, -c('Binn
 
 # write out for LD, AK, SDJ, and KG to review
 write_csv(master_driver_corrections, "round2_metareview/data/intermediate/round2_master_driver_bins.csv", na = "")
+
 
 
 # 4.b. Response corrections -----
@@ -1969,10 +2009,10 @@ for(rid in kept_ResponseId){
         tempdat_other <- subset(temp_q12drivers, abbr == "OtherDriver" & Group == names(temp_ESdriver_list[i]))
         # if no rows pulled, it means "Other" checked but no OtherDriver entered
         if(nrow(tempdat_other) == 0){
-        tempdat_other <- subset(q12df_clean, ResponseId == rid & abbr == "OtherDriver" & Group == names(temp_ESdriver_list[i])) %>%
-          mutate(answer = "MISSING", clean_answer = "MISSING", num = 1) %>%
-          rename(orig_answer = answer, answer = clean_answer) %>%
-          dplyr::select(names(tempdat_other))
+          tempdat_other <- subset(q12df_clean, ResponseId == rid & abbr == "OtherDriver" & Group == names(temp_ESdriver_list[i])) %>%
+            mutate(answer = "MISSING", clean_answer = "MISSING", num = 1) %>%
+            rename(orig_answer = answer, answer = clean_answer) %>%
+            dplyr::select(names(tempdat_other))
         }
         # expand tempdat_otherenv by however many other env ES's are indicated
         tempdat_other2 <- do.call("rbind", replicate(length(temp_ESdriver_list[[i]]), tempdat_other, simplify = FALSE))
@@ -2106,7 +2146,7 @@ newscale_tidy <- dplyr::select(newscale, -'aquatic.') %>%
          clean_answer = gsub("macro-sacle", "Macro-scale", clean_answer),
          # fill in the rest
          doublerev = Title %in% doubletitles)
-# set date as yesterday (6/3/2020, when GV pushed dataset)
+# set date as 6/3/2020 (when GV pushed dataset)
 newscale_tidy[grep("Date", names(newscale_tidy))] <- as.POSIXct("2020-06-03")
 
 #convert col classes to match prelimlong1d col classes
@@ -2120,11 +2160,11 @@ sort(unique(headerLUT$id[grepl("^Q", headerLUT$id)]))
 unique(newscale_tidy$abbr)
 # survey_order for scale notes is 56.. maybe these new questions can be 56.x? to show that i'm inserting?
 # Q9 = # of scale and plots.. Q8 = original multiscale question, and is survey_order 31.. maybe julie and grant questions should replace q8, and i'll just keep q9 notes..
-newscale_tidy2 <- newscale_tidy %>%
+newscale_tidy <- newscale_tidy %>%
   mutate(abbr = recode(abbr, "extent_answer" = "Extent", "extent_notes" = "ExtentNotes", "nested_answer" =  "Nested", "nested_notes" = "NestedNotes"),
          qnum = "Q8",
          survey_order = ifelse(abbr == "Extent", 31.1, ifelse(abbr == "ExtentNotes", 31.2,
-                                                             ifelse(abbr == "Nested", 31.3, 31.4))),
+                                                              ifelse(abbr == "Nested", 31.3, 31.4))),
          id = paste0("Q", survey_order),
          fullquestion = ifelse(abbr =="Extent", "Q8.1a: What is the spatial extent of the study? Select one (choose the largest extent covered, even if multiple scales are analyzed).",
                                ifelse(abbr == "ExtentNotes", "Q8.1b: Reviewer notes on spatial extent (optional).",
@@ -2134,7 +2174,7 @@ newscale_tidy2 <- newscale_tidy %>%
 # not entirely sure what to do about reponse id.. if create col to indicate original or unified..
 
 # keep ScaleNotes in Q9, but drop everything else
-prelimlong1e <- rbind(prelimlong1d, newscale_tidy2) %>%
+prelimlong1e <- rbind(prelimlong1d, newscale_tidy) %>%
   # add ordercol for ordering Titles by their original date recorded (Julie and Grant's recordeddate throws things off)
   group_by(Title) %>%
   mutate(ordercol = min(RecordedDate)) %>%
@@ -2153,22 +2193,51 @@ ggplot(subset(prelimlong1e, survey_order %in% c(31, 31.3) & !doublerev), aes(Tit
 prelimlong1e <- filter(prelimlong1e, !abbr %in% c("MultiScale", "Plots", "Sites")) %>%
   # append note to Q9 to indicate only original answer left
   mutate(qa_note = ifelse(abbr == "ScaleNotes", "Original Qualtrics Q9 (#sites, #plots) removed, only original reviewer notes from Q9 preserved.", qa_note),
-  # add col to indicate whether original answer or final
-  # > single review will always be final, anything from JL or GV will be final, but doublrev will be original or final (condensed)
-  version = ifelse(!doublerev | qnum == "Q8", "final", "original")) %>%
+         # add col to indicate whether original answer or final
+         # > single review will always be final, anything from JL or GV will be final, but doublrev will be original or final (condensed)
+         version = ifelse(!doublerev | qnum == "Q8", "final", "original")) %>%
   # reorder cols.. put after doublrev, since it mostly has to do with that?
-  dplyr::select(StartDate:doublerev, version, Title:ncol(.))
-
+  dplyr::select(StartDate:doublerev, version, Title:ncol(.)) %>%
+  # drop certain cols that aren't needed anymore
+  dplyr::select(-'order') # only applied to sites/plots queztion
 
 # write out for the homeez
 write_csv(prelimlong1e, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
+
+
 # 6. Logic check corrections -----
-
-
+checkother <- subset(prelimlong1e, (abbr == "Driver" & clean_answer_finer == "Other") | (!is.na(clean_answer) & abbr == "OtherDriver"))
+  group_by(ResponseId, Group, ES) %>%
+  mutate(needs_other = grepl("Other", clean_answer_finer),
+         has_other = !is.na(clean_answer_finer)[abbr == "OtherDriver"]) %>%
+  ungroup()
 
 # 6.1. Q13: Kremen ESP ----
 ## > if ESP check in Biotic drivers, then ESP checked in Kremen topics
+has_ESPdriver <- subset(prelimlong1e, abbr %in% c("Driver", "OtherDriver") | qnum %in% c("Q13", "Q14")) %>%
+  arrange(RecordedDate) %>%
+  # check for "Service Provider" in clean_answer_finer by ResponseId
+  group_by(ResponseId) %>%
+  mutate(Bio_answer = str_flatten(unique(clean_answer_finer[Group == "Bio" & !is.na(clean_answer_finer)])), # flatten all biotic driver bin labels that aren't NA
+         # screen for Service provider in all Bio group coarse bins
+         has_ESP = grepl("Service provider", Bio_answer),
+         # check the Kremen topics indicates ESP
+         KT_ESP = grepl("Kremen Topic 1 : ESP", clean_answer[qnum == "Q13"])) %>%
+  # keep only conflicting records -- ESP indicated in driver but not in KT topics, or vv
+  filter((has_ESP & !KT_ESP) | (!has_ESP & KT_ESP)) %>%
+  ungroup() %>%
+  # keep only ResponseId, Title and flagging
+  dplyr::select(ResponseId, Title, has_ESP, KT_ESP) %>%
+  distinct()
+
+
+# correct and add QA note
+# > if driver answer is MISSING and ESP checked in KT topics, assume it probably included ESP.. give reviewer benefit of doubt.. but also see how many cases that applies to..
+  
+for(i in has_ESPdriver$ResponseId){
+  prelimlong1e$clean_answer
+}
 
 
 
