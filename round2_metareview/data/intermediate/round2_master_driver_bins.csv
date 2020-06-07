@@ -43,8 +43,8 @@ PestPath,Anthro,agrochemical use,Insecticides/fungicides/pesticides/herbicides,A
 SoilProtect,Env,air temperature,Climate,Env
 MaintainOpts,Env,also include temperature and precipitation (water stress) as a natural filter for all plants in the region,Climate,Env
 ClimReg,Env,altitude,Topography and position,Env
-Food,Env,Amount of 'semi natural vegetation',Vegetation cover,Biotic
-PestPath,Env,Amount of 'semi natural vegetation',Vegetation cover,Biotic
+Food,Env,Amount of 'semi natural vegetation',Vegetation cover,Bio
+PestPath,Env,Amount of 'semi natural vegetation',Vegetation cover,Bio
 Food,Env,Amount of ecological focus areas,Land cover,Env
 PestPath,Env,Amount of ecological focus areas,Land cover,Env
 Pollination,Env,Amount of ecological focus areas,Land cover,Env
@@ -101,8 +101,8 @@ ClimReg,Bio,canopy cover,Biotic characteristics of the plot,Bio
 PestPath,Anthro,canopy cover,Abiotic characteristics of the landscape: terrestrial,Env
 coastWQReg,Bio,Canopy cover,Biotic characteristics of the plot,Bio
 HabCreate,Bio,Canopy cover,Biotic characteristics of the plot,Bio
-Pollination,Env,Canopy density,Vegetation cover,Biotic
-SoilProtect,Env,Canopy openness,Vegetation cover,Biotic
+Pollination,Env,Canopy density,Vegetation cover,Bio
+SoilProtect,Env,Canopy openness,Vegetation cover,Bio
 Food,Bio,cereal leaf beetle density,Service provider density,Bio
 coastWQReg,Anthro,channel modifications,Management/restoration,Anthro
 HabCreate,Anthro,channel modifications,Management/restoration,Anthro
@@ -259,7 +259,7 @@ Pollination,Bio,Floral plant species richness,Service provider diversity/richnes
 Food,Bio,flower density,Service provider density,Bio
 Food,Bio,flower species richness,Service provider diversity/richness,Bio
 SoilProtect,Bio,foliar cover,Biotic characteristics of the plot,Bio
-Food,Env,Forest stand age,Vegetation cover,Biotic
+Food,Env,Forest stand age,Vegetation cover,Bio
 ClimReg,Bio,Forest type,Biotic characteristics of the plot,Bio
 SoilProtect,Env,four microhabitats (bottom,Land cover,Env
 coastWQReg,Bio,freshwater mussels,Service provider abundance,Bio
@@ -318,7 +318,7 @@ Food,Anthro,Income,Characteristics of human population,Anthro
 Materials,Anthro,Income,Characteristics of human population,Anthro
 Pollination,Anthro,Income,Characteristics of human population,Anthro
 SoilProtect,Anthro,Income,Characteristics of human population,Anthro
-Pollination,Env,initial Canopy density,Vegetation cover,Biotic
+Pollination,Env,initial Canopy density,Vegetation cover,Bio
 Food,Anthro,insecticide,Insecticides/fungicides/pesticides/herbicides,Anthro
 PestPath,Anthro,insecticide,Insecticides/fungicides/pesticides/herbicides,Anthro
 Food,Anthro,Insecticide spraying,Insecticides/fungicides/pesticides/herbicides,Anthro
@@ -373,7 +373,7 @@ Food,Env,Landscape types (Homogeneous,Land cover,Env
 Pollination,Env,Landscape types (Homogeneous,Land cover,Env
 Food,Env,latitude,Topography and position,Env
 Food,Env,Latitude,Topography and position,Env
-SoilProtect,Env,leaflitter,Vegetation cover,Biotic
+SoilProtect,Env,leaflitter,Vegetation cover,Bio
 SoilProtect,Bio,litter cover,Biotic characteristics of the plot,Bio
 Energy,Bio,livestock grazing legacy,Management,Anthro
 ClimReg,Anthro,livestock reduction,Management/restoration,Anthro
@@ -436,12 +436,12 @@ Food,Bio,native bee  diversity (Shannon index),Index,Bio
 Food,Bio,native bee abundance,Service provider abundance,Bio
 Food,Bio,native bee richness,Service provider diversity/richness,Bio
 Food,Bio,Natural enemy presences,Pathogens/natural enemies,Bio
-ClimReg,Env,NDVI,Productivity,Biotic
-coastWQReg,Env,NDVI,Productivity,Biotic
-freshWQReg,Env,NDVI,Productivity,Biotic
-MaintainOpts,Env,NDVI,Productivity,Biotic
-Pollination,Env,NDVI,Productivity,Biotic
-SoilProtect,Env,NDVI,Productivity,Biotic
+ClimReg,Env,NDVI,Productivity,Bio
+coastWQReg,Env,NDVI,Productivity,Bio
+freshWQReg,Env,NDVI,Productivity,Bio
+MaintainOpts,Env,NDVI,Productivity,Bio
+Pollination,Env,NDVI,Productivity,Bio
+SoilProtect,Env,NDVI,Productivity,Bio
 MaintainOpts,Env,NDWI,Abiotic characteristics of the landscape: terrestrial,Env
 Materials,Env,NDWI,Abiotic characteristics of the landscape: terrestrial,Env
 Energy,Anthro,Neighborhood educational attainment,Characteristics of human population,Anthro
@@ -580,7 +580,7 @@ Materials,Env,precipitation,Climate,Env
 SoilProtect,Env,precipitation,Climate,Env
 PestPath,Bio,Predator dispersal distance,Pathogens/natural enemies,Bio
 Food,Bio,Predator of prey (yield item),Pathogens/natural enemies,Bio
-Pollination,Env,Productivity,Productivity,Biotic
+Pollination,Env,Productivity,Productivity,Bio
 PestPath,Bio,proportion of natural habitat surrounding farms,Habitat,Bio
 ClimReg,Anthro,proportion treed,Land use and land cover change,Anthro
 CulturePsych,Anthro,Proximity to roads,Proximity to development,Anthro
@@ -597,7 +597,7 @@ Pollination,Anthro,Rehabilitation Gradient,Management/restoration,Anthro
 coastWQReg,Bio,Reproduction,Reproduction,Bio
 coastWQReg,Anthro,Restoration,Management/restoration,Anthro
 HabCreate,Anthro,Restoration,Management/restoration,Anthro
-Pollination,Env,rewiring,Network property,Biotic
+Pollination,Env,rewiring,Network property,Bio
 freshWQReg,Bio,riparian canopy,Biotic characteristics of the plot,Bio
 PestPath,Anthro,road edge effects,Proximity to development,Anthro
 Food,Anthro,roads within 1 km,Proximity to development,Anthro
@@ -684,7 +684,7 @@ Food,Bio,species richness,Service provider diversity/richness,Bio
 HabCreate,Bio,Species richness (ecosystem function not ESP),Service provider diversity/richness,Bio
 HabCreate,Anthro,stand age,Land use and land cover change,Anthro
 MaintainOpts,Anthro,stand age,Land use and land cover change,Anthro
-Pollination,Env,Stems per m2,Vegetation cover,Biotic
+Pollination,Env,Stems per m2,Vegetation cover,Bio
 HabCreate,Env,stream flow; chemical variables = alkalinity,Hydrology,Env
 MaintainOpts,Env,stream flow; chemical variables = alkalinity,Hydrology,Env
 HabCreate,Env,stream width,Hydrology,Env
@@ -748,8 +748,8 @@ MaintainOpts,Anthro,tree volume,Land use and land cover change,Anthro
 Food,Env,tributary nodes/drainline,Hydrology,Env
 coastWQReg,Env,turnover time,Abiotic characteristics of the landscape: aquatic,Env
 Food,Env,turnover time,Abiotic characteristics of the landscape: aquatic,Env
-ClimReg,Env,Type of vegetation (grassland vs. shrubland),Vegetation cover,Biotic
-SoilProtect,Env,Understory cover,Vegetation cover,Biotic
+ClimReg,Env,Type of vegetation (grassland vs. shrubland),Vegetation cover,Bio
+SoilProtect,Env,Understory cover,Vegetation cover,Bio
 Food,Anthro,urban area within 1km,Proximity to development,Anthro
 Pollination,Anthro,urban area within 1km,Proximity to development,Anthro
 ClimReg,Anthro,urban form: population density,Population growth and density,Anthro
@@ -760,8 +760,8 @@ HabCreate,Anthro,urbanization,Land use and land cover change,Anthro
 PestPath,Bio,various trout and fish species including invasive,Service provider diversity/richness,Bio
 SoilProtect,Bio,vegetation basal gap,Biotic characteristics of the plot,Bio
 SoilProtect,Bio,vegetation canopy gap,Biotic characteristics of the plot,Bio
-SoilProtect,Env,vegetation cover,Vegetation cover,Biotic
-SoilProtect,Env,Vegetation cover,Vegetation cover,Biotic
+SoilProtect,Env,vegetation cover,Vegetation cover,Bio
+SoilProtect,Env,Vegetation cover,Vegetation cover,Bio
 ClimReg,Bio,vegetation cover ,Biotic characteristics of the plot,Bio
 Food,Bio,vegetation cover ,Biotic characteristics of the plot,Bio
 freshWQReg,Bio,vegetation cover ,Biotic characteristics of the plot,Bio
