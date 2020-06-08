@@ -1900,6 +1900,8 @@ for(rid in kept_ResponseId){
                                            (Group == unique(Group[!is.na(answer)]) & grepl("Driver|Effect", abbr)) | !grepl("Driver|Effect", abbr)) %>%
         # assign missing
         mutate_at(vars("answer"), function(x) ifelse(is.na(x) & .[,"abbr"] %in% c("Response", "Yclass"), "MISSING", x))
+      # add qa note
+      temp_q12$qa_note[temp_q12$survey_order %in% temp_infill_responsedriver$survey_order] <- "Driver variables for ES provided, but no response variables"
     }
     if(unique(temp_infill_responsedriver$flag_noDriver)){
       temp_infill_responsedriver <- temp_infill_responsedriver %>%
@@ -1909,6 +1911,17 @@ for(rid in kept_ResponseId){
     # infill answers in working q12 df
     temp_q12$answer[temp_q12$survey_order %in% temp_infill_responsedriver$survey_order] <- temp_infill_responsedriver$answer
     temp_q12$clean_answer[temp_q12$survey_order %in% temp_infill_responsedriver$survey_order] <- temp_infill_responsedriver$answer
+    # add qa note
+    temp_q12$qa_note[temp_q12$answer == "MISSING" & temp_q12$abbr %in% c("Driver", "EffectDirect")] <- "Response variable for ES provided, but no driver variables"
+  }
+  
+  # infill MISSING to OtherDriver if id in othercheck
+  if(rid %in% unique(othercheck$ResponseId)){
+    temp_othercheck <- subset(othercheck, ResponseId == rid) 
+    temp_q12$answer[temp_q12$abbr == "OtherDriver" & temp_q12$Group %in% unique(temp_othercheck$Group)] <- "MISSING"
+    temp_q12$clean_answer[temp_q12$abbr == "OtherDriver" & temp_q12$Group %in% unique(temp_othercheck$Group)] <- "MISSING"
+  # add qa_notes
+    temp_q12$qa_note[temp_q12$abbr == "OtherDriver" & temp_q12$Group %in% unique(temp_othercheck$Group)] <- "'Other' checked for driver variable but no Other Driver provided"
   }
   
   # moving on..
@@ -2101,7 +2114,7 @@ for(rid in kept_ResponseId){
 
 # clean enviro after for loop done
 rm(i, rid, temp_q12, temp_q12_clean, temp_q12drivers, temp_q12responses, tempother_df,
-   temp_unique_ESresponse, temp_otheradded_rows, temp_otherdriver_grp)
+   temp_othercheck, temp_unique_ESresponse, temp_otheradded_rows, temp_otherdriver_grp)
 
 # final clean up then join to master prelimlong dataset
 master_clean_q12.2 <- dplyr::select(master_clean_q12, -track)
