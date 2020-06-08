@@ -2144,6 +2144,19 @@ write_csv(prelimlong1d, "round2_metareview/data/cleaned/ESqualtrics_r2keep_clean
 sapply(newscale, function(x) sort(unique(x)))
 # are all titles clean? (in original$Title?)
 summary(newscale$Title %in% original$Title) # great
+# any duplicates?
+newscale$Title[duplicated(newscale$Title)] # ruh roh..
+View(subset(newscale, Title %in% Title[duplicated(Title)])) # condense these, then add back in to wide df
+newscale_multi <- subset(newscale, Title %in% Title[duplicated(Title)]) %>%
+  group_by(Title) %>%
+  summarise_all(function(x) str_flatten(unique(x[!is.na(x)]), collapse = "; ")) %>%
+  ungroup() %>%
+  mutate_all(function(x) ifelse(x == "", NA, x)) %>%
+  mutate(Reviewed_by = "JL/GV")
+# put back in main newscale df
+newscale <- subset(newscale, !Title %in% newscale_multi$Title) %>%
+  rbind(newscale_multi[names(.)]) %>%
+  arrange(rownames(.))
 
 newscale_tidy <- dplyr::select(newscale, -'aquatic.') %>%
   rename(Init = Reviewed_by) %>%
@@ -2184,7 +2197,7 @@ newscale_tidy <- newscale_tidy %>%
                                       ifelse( abbr == "Nested", "Q8.2a: Does the study consider nested or multiple spatial scales in the analysis?",
                                               "Q8.2b: Reviewer notes on nested or multiple spatial scales (optional)."))),
          qa_note = "This Q8 replaces original Qualtrics multiscale Q8, and all but reviewer notes in Q9 (# sites and # plots question)")
-# not entirely sure what to do about reponse id.. if create col to indicate original or unified..
+# ResponseId will be assigned later..
 
 # keep ScaleNotes in Q9, but drop everything else
 prelimlong1e <- rbind(prelimlong1d, newscale_tidy) %>%
