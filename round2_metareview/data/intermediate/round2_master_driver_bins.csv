@@ -390,7 +390,7 @@ Food,Env,Longitudinal position,Topography and position,Env
 HabCreate,Env,Longitudinal position,Topography and position,Env
 coastWQReg,Env,longitudinal river length,Topography and position,Env
 Pollination,Bio,loss of seed source species,Service provider diversity/richness,Bio
-MaintainOpts,Bio,macroinvertebrate and fish population,Service provider diversity/richness,Bio
+MaintainOpts,Bio,macroinvertebrate and fish population,Service provider abundance,Bio
 coastWQReg,Bio,Maintenance,Management,Anthro
 CulturePsych,Anthro,management practice was burning. service would be recreational hunting,Management/restoration,Anthro
 HabCreate,Anthro,management practice was burning. service would be recreational hunting,Management/restoration,Anthro
@@ -432,7 +432,7 @@ Food,Env,mid-channel nodes,Hydrology,Env
 Food,Bio,modeled influences of 3 organisms: 2 beneficial insects,Service provider abundance,Bio
 Food,Anthro,Municipality (this mixes a bit with geographic location),Characteristics of locality,Anthro
 Food,Anthro,N inputs,Fertilization,Anthro
-Food,Bio,native bee  diversity (Shannon index),Index,Bio
+Food,Bio,native bee  diversity (Shannon index),Service provider diversity/richness,Bio
 Food,Bio,native bee abundance,Service provider abundance,Bio
 Food,Bio,native bee richness,Service provider diversity/richness,Bio
 Food,Bio,Natural enemy presences,Pathogens/natural enemies,Bio

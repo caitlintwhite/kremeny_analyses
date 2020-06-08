@@ -1592,14 +1592,14 @@ copydf <- prelimlong1c
 
 
 
-# 4. Driver/Response corrections (KG + SDJ) ----
+# 5. Driver/Response corrections (KG + SDJ) ----
 # 5/22/20: write basic code to read in and correct responses and drivers, can update when KG + SDJ finished
 
 # see if can collapse down response and driver categories based on work already done
 # i.e. if remove ES's, is everything labeled?
 
 
-# 4.a. Driver corrections -----
+# 5.a. Driver corrections -----
 # review bio drivers..
 test_biodrivers <- dplyr::select(biodrivecorrections, answer, Driver_Finer) %>%
   distinct() %>%
@@ -1608,7 +1608,7 @@ test_biodrivers <- dplyr::select(biodrivecorrections, answer, Driver_Finer) %>%
 # notes:
 # call land cover "habitat" as a biotic driver
 
-biodiv_terms <- "divers|shannon|richn|even|macroinvertebrate and fish|loss of seed source"
+biodiv_terms <- "divers|shannon|richn|even|loss of seed source" # LD says "macroinvertebrate and fish" shoud remain ESP abundance
 abund_terms <- "abundance"
 # clean up
 rm(test_biodrivers)
@@ -1631,12 +1631,12 @@ clean_biodriver_corrections <- subset(alldrivers_summary, Group == "Bio") %>%
          # characteristics of plot = biotic char of plot
          clean_driver_finer = gsub("characteristics of", "biotic characteristics of", clean_driver_finer),
          # infill others
+         # indices
+         clean_driver_finer = ifelse(grepl("index|82 different", answer, ignore.case = T), "index", clean_driver_finer),
          # diversity and richness drivers
          clean_driver_finer = ifelse(grepl(biodiv_terms, answer, ignore.case = T), "service provider diversity/richness", clean_driver_finer),
          # abundance drivers
          clean_driver_finer = ifelse(grepl(abund_terms, answer, ignore.case = T), "service provider abundance", clean_driver_finer),
-         # indices
-         clean_driver_finer = ifelse(grepl("index|82 different", answer, ignore.case = T), "index", clean_driver_finer),
          # general service provider option
          clean_driver_finer = ifelse(grepl("^service provider|biotic driver=|Aphodius", answer, ignore.case = T) & !grepl("yield", answer), "service provider identity", clean_driver_finer),
          # ESP density
@@ -1804,7 +1804,7 @@ write_csv(master_driver_corrections, "round2_metareview/data/intermediate/round2
 
 
 
-# 4.b. Response corrections -----
+# 5.b. Response corrections -----
 test_responses <- dplyr::select(responsecorrections, Response, Key.word) %>%
   distinct() %>%
   arrange(Response)
@@ -1879,7 +1879,7 @@ write_csv(responses_forLDAK, "round2_metareview/clean_qa_data/needs_classreview/
 # apply same keywords 
 
 
-# 4.c. Apply driver and response corrections -----
+# 5.c. Apply driver and response corrections -----
 # maybe try pulling out Q12 to clean and tidy on its own?
 q12df_clean <- subset(prelimlong1c, qnum == "Q12")
 
@@ -2137,7 +2137,7 @@ write_csv(prelimlong1d, "round2_metareview/data/cleaned/ESqualtrics_r2keep_clean
 
 
 
-# 5. Add in new scale data (JL & GV) -----
+# 6. Add in new scale data (JL & GV) -----
 # prep data
 # for now need dates, ResponseId, Init can be different.. some other cols will be different 
 # check for unique, consistent answers
@@ -2217,16 +2217,19 @@ prelimlong1e <- filter(prelimlong1e, !abbr %in% c("MultiScale", "Plots", "Sites"
 # write out for the homeez
 write_csv(prelimlong1e, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
+prelimlong1f <- prelimlong1e
 
 
-# 6. Logic check corrections -----
-checkother <- subset(prelimlong1e, (abbr == "Driver" & clean_answer_finer == "Other") | (!is.na(clean_answer) & abbr == "OtherDriver"))
-  group_by(ResponseId, Group, ES) %>%
-  mutate(needs_other = grepl("Other", clean_answer_finer),
-         has_other = !is.na(clean_answer_finer)[abbr == "OtherDriver"]) %>%
-  ungroup()
 
-# 6.1. Q13: Kremen ESP ----
+# 7. Logic check corrections -----
+# 6/8: CTW chatted with LD to confirm logic check corrections to Kremen Topics:
+# > KT 1 = ESP box checked, or has density or abundance [some property of ESP or small group of species--not enough to be composition type data] (CTW: will need to think through Nick's example case)
+# > KT 2 = composition, richness, diversity (property of community)
+# > KT 3 = has env driver (check to see related to biotic response OR ES/EF-- basically, env driver is not related to abiotic-type bin)
+# > KT 4 = spatial or temporal component (how does ES provision change through time or space?)
+
+
+# 7.1. Q13: Kremen ESP ----
 ## > if ESP check in Biotic drivers, then ESP checked in Kremen topics
 has_ESPdriver <- subset(prelimlong1e, abbr %in% c("Driver", "OtherDriver") | qnum %in% c("Q13", "Q14")) %>%
   arrange(RecordedDate) %>%
@@ -2255,24 +2258,72 @@ for(i in has_ESPdriver$ResponseId){
 
 
 
-# 6.2. Q13: Kremen Structure ----
+# 7.2. Q13: Kremen Structure ----
 ## > if structure keyword present in drivers (or responses?), then structure checked in Kremen topics
 
+# revisiting Kremen 2005 it seems like "structure-function" was much more about compensatory mechanisms, covariance, and response diversity...
+
+# what sorts of things did people enter for drivers if they selected kremen topic 2?
+hasKT2 <- subset(prelimlong1e, abbr %in% c("Driver", "OtherDriver") | qnum %in% c("Q13", "Q14")) %>%
+  filter(ResponseId %in% unique(ResponseId[grepl("Topic 2", clean_answer)])) %>%
+  filter(qnum != "Q12")
+
+# ugh.. idk what to do with this.. ask Laura
 
 
-# 6.3. Q13: Kremen Environment ----
+# 7.3. Q13: Kremen Environment ----
 ## > if environmental driver listed (either one of the canned answers or other AND other described), then env check in Kremen topics
 ## > if other described but other not checked, review (most likely errors looking at the review file)
 ## > also need to repeat screen because envcheck csv subsetted kremen notes, which only pulled records that had notes..
 
+# I don't even know if env factors can be logic checked bc revisiting kremen it says it has to do with env factors' influence on ESPs that in turn affect levels of ES provision..
+# so the ESP would need to be in the response, env in the driver..
 
-# 6.4. Q13: Kremen Scale ----
+
+
+# 7.4. Q13: Kremen Scale ----
 ## > if Multiscale == "Yes", then scale checked in Kremen topics
 ## > note, 5/21: waiting on Grant and Julie to confirm Multiscale reliable question for triggering correction (CTW sent email)
 
+# this feels like the only question i can actually logic check, based on GVJL new scale answer and how reviewer answered time
+scalecheck <- subset(prelimlong1e, abbr %in% c("TimeTrends", "KremenTopics")) %>%
+  dplyr::select(StartDate:Title, clean_answer, abbr) %>%
+  distinct() %>%
+  spread(abbr, clean_answer) %>%
+  left_join(distinct(newscale[c("Title", "nested_answer")])) %>%
+  group_by(ResponseId) %>%
+  # if time or nested == YES, then Topic 4: Scale should be present
+  # > # if KremenTopics is NA because reviewer excluded paper [doublereviewed, but LD judged allow] then both checks should be NA
+  mutate(needs_scale = ifelse(is.na(KremenTopics), NA, grepl("Yes", TimeTrends) | grepl("Yes", nested_answer)),
+         has_scale = ifelse(is.na(KremenTopics), NA, grepl("Topic 4", KremenTopics))) %>%
+  # filter to inconsistent answers
+  filter((needs_scale & !has_scale) | (!needs_scale & has_scale)) %>%
+  ungroup()
+
+# go in and correct Kremen Topic 4
+for(i in scalecheck$ResponseId){
+  temp_note <- prelimlong1e$qa_note[prelimlong1e$abbr == "KremenTopics" & prelimlong1e$ResponseId == i]
+  # if need_scale is TRUE, means does not have KT 4 and needs it
+  if(scalecheck$needs_scale[scalecheck$ResponseId == i]){
+    prelimlong1f$clean_answer[prelimlong1f$abbr == "KremenTopics" & prelimlong1f$ResponseId == i] <- ifelse(with(scalecheck, KremenTopics[ResponseId == i]) == "None", 
+                                                                                                            "Kremen Topic 4 : Scale", paste0(with(scalecheck, KremenTopics[ResponseId == i]), ",Kremen Topic 4 : Scale"))
+    # add QA note
+    prelimlong1f$qa_note[prelimlong1f$abbr == "KremenTopics" & prelimlong1f$ResponseId == i] <- ifelse(is.na(temp_note), "Appended KT 4:Scale (has multi time or spatial scale but KT 4 not checked)", 
+                                                                                                       paste0(temp_note, "; appended KT 4:Scale (has multi time or spatial scale but KT 4 not checked)"))
+  }else{
+    # needs KT 4 removed (needs scale is not true)
+    prelimlong1f$clean_answer[prelimlong1f$abbr == "KremenTopics" & prelimlong1f$ResponseId == i] <- gsub(",?Kremen Topic 4 : Scale", "", with(scalecheck, KremenTopics[ResponseId == i]))
+    # add QA note
+    prelimlong1f$qa_note[prelimlong1f$abbr == "KremenTopics" & prelimlong1f$ResponseId == i] <- ifelse(is.na(temp_note), "Removed KT 4:Scale (does not have multi time or spatial scale but KT 4 checked)", 
+                                                                                                       paste0(temp_note, "; removed KT 4:Scale (does not have multi time or spatial scale but KT 4 checked)"))
+  }
+}
+
+# clean up
+rm(temp_note, i, scalecheck)
 
 
-# 6.5. Q14: Service Providers ----
+# 7.5. Q14: Service Providers ----
 # > note: we should have had a "how many species in this study" question..
 # within = "genetic"
 # single.. hard to pull by keywrods
@@ -2283,9 +2334,11 @@ for(i in has_ESPdriver$ResponseId){
 
 
 
+
+
 # -- CONDENSE DOUBLE REVIEWED ----
 # add "unified" record to to double reviews
-doubleprelim <- subset(prelimlong1d, Title %in% doubletitles) %>%
+doubleprelim <- subset(prelimlong1f, Title %in% doubletitles) %>%
   group_by(Title, id) %>%
   mutate(same_answer = length(unique(clean_answer)) ==1) %>%
   ungroup() %>%
@@ -2294,7 +2347,7 @@ doubleprelim <- subset(prelimlong1d, Title %in% doubletitles) %>%
 # how many double reviewed?
 length(unique(doubleprelim$Title))
 # who?
-sapply(split(doubleprelim$Title, doubleprelim$Init), function(x) length(unique(x)))
+sort(sapply(split(doubleprelim$Title, doubleprelim$Init), function(x) length(unique(x))))
 write_csv(doubleprelim, "round2_metareview/data/intermediate/round2_doublereviewed_tidy.csv")
 
 # where are the most inconsistencies (by question)?
@@ -2318,7 +2371,35 @@ ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_doublereview_congruency.pdf"
 ## > if multi-choice answers are nested (e.g. rev1 = [a], rev2 = [a,b]), dissolve answer (we said as a group this would be okay rule)
 ## > if multi-choice answers do not agree (not nested).. kick back to outside reviewer or original reviewers
 
+# screen for congruency in ES 
+ES_check <- subset(doubleprelim, qnum == "Q12" & abbr == "Response") %>%
+  dplyr::select(RecordedDate, ResponseId, Init, Title, ES) %>%
+  distinct() %>%
+  arrange(RecordedDate, ES) %>%
+  group_by(ResponseId) %>%
+  mutate(allES = str_flatten(unique(ES))) %>%
+  ungroup() %>%
+  group_by(Title) %>%
+  mutate(sameanswer = length(unique(allES)) == 1) %>%
+  ungroup() %>%
+  arrange(Title)
+summary(ES_check$sameanswer) # pretty amazing all ES's by double reviewers agree. good!
 
+
+# go by question and condense into master df OR append to df for reviewers to re-review
+# refer to rev 1 answer as primary answer..
+# assign response id to unified titles.. based on alphabetic title to keep things simple (doesn't really matter)
+keptdoubles <- data.frame(Title = sort(unique(doubleprelim$Title))) %>%
+  left_join(original[c("Title", "Round2_reviewer1")]) %>%
+  left_join(data.frame(rev1init = initials, Name = names(initials)), by = c("Round2_reviewer1" = "Name")) %>%
+  left_join(original[c("Title", "Round2_reviewer2")]) %>%
+  left_join(data.frame(rev2init = initials, Name = names(initials)), by = c("Round2_reviewer2" = "Name")) %>%
+  # drop full first names
+  dplyr::select(-c(Round2_reviewer1, Round2_reviewer2)) %>%
+  # finally, assign new response id
+  mutate(new_rid = paste0("R", 1:nrow(.), "unified"))
+
+# notes get combined..
 
 # -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
 
