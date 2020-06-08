@@ -1608,7 +1608,7 @@ test_biodrivers <- dplyr::select(biodrivecorrections, answer, Driver_Finer) %>%
 # notes:
 # call land cover "habitat" as a biotic driver
 
-biodiv_terms <- "divers|shannon|richn|even|loss of seed source" # LD says "macroinvertebrate and fish" shoud remain ESP abundance
+biodiv_terms <- "divers|shannon|richn|even|loss of seed source|composition" # LD says "macroinvertebrate and fish" shoud remain ESP abundance, and composition should go in community structure
 abund_terms <- "abundance"
 # clean up
 rm(test_biodrivers)
@@ -2117,9 +2117,9 @@ rm(i, rid, temp_q12, temp_q12_clean, temp_q12drivers, temp_q12responses, tempoth
    temp_othercheck, temp_unique_ESresponse, temp_otheradded_rows, temp_otherdriver_grp)
 
 # final clean up then join to master prelimlong dataset
-master_clean_q12.2 <- dplyr::select(master_clean_q12, -track)
+master_clean_q12 <- dplyr::select(master_clean_q12, -track)
 # id new colnames to master dataset
-addcols <- names(master_clean_q12.2)[!names(master_clean_q12.2) %in% names(prelimlong1c)]
+addcols <- names(master_clean_q12)[!names(master_clean_q12) %in% names(prelimlong1c)]
 
 # new version prelimlong since including the expanded vars now
 prelimlong1d <- subset(prelimlong1c, qnum != "Q12") %>%
@@ -2127,13 +2127,13 @@ prelimlong1d <- subset(prelimlong1c, qnum != "Q12") %>%
   # need to add in new cols in master_clean_q12
   cbind(matrix(ncol = length(addcols), nrow = nrow(.), dimnames = list(NULL, addcols))) %>%
   data.frame() %>%
-  dplyr::select(names(master_clean_q12.2)) %>%
-  rbind(master_clean_q12.2) %>%
+  dplyr::select(names(master_clean_q12)) %>%
+  rbind(master_clean_q12) %>%
   arrange(RecordedDate, survey_order)
 
 
 # write out temp prelim cleaned so ppl can start code for analysis..
-write_csv(prelimlong1d, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+#write_csv(prelimlong1d, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
 
@@ -2225,12 +2225,10 @@ prelimlong1e <- filter(prelimlong1e, !abbr %in% c("MultiScale", "Plots", "Sites"
   # reorder cols.. put after doublrev, since it mostly has to do with that?
   dplyr::select(StartDate:doublerev, version, Title:ncol(.)) %>%
   # drop certain cols that aren't needed anymore
-  dplyr::select(-'order') # only applied to sites/plots queztion
+  dplyr::select(-'order') # only applied to sites/plots question
 
 # write out for the homeez
 write_csv(prelimlong1e, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
-
-prelimlong1f <- prelimlong1e
 
 
 
@@ -2241,10 +2239,13 @@ prelimlong1f <- prelimlong1e
 # > KT 3 = has env driver (check to see related to biotic response OR ES/EF-- basically, env driver is not related to abiotic-type bin)
 # > KT 4 = spatial or temporal component (how does ES provision change through time or space?)
 
+# assign new iteration of working df in case need to start over with logic corrections
+prelimlong1f <- prelimlong1e
+
 
 # 7.1. Q13: Kremen ESP ----
 ## > if ESP check in Biotic drivers, then ESP checked in Kremen topics
-has_ESPdriver <- subset(prelimlong1e, abbr %in% c("Driver", "OtherDriver") | qnum %in% c("Q13", "Q14")) %>%
+has_ESPdriver <- subset(prelimlong1f, abbr %in% c("Driver", "OtherDriver") | qnum %in% c("Q13", "Q14")) %>%
   arrange(RecordedDate) %>%
   # check for "Service Provider" in clean_answer_finer by ResponseId
   group_by(ResponseId) %>%
@@ -2265,7 +2266,7 @@ has_ESPdriver <- subset(prelimlong1e, abbr %in% c("Driver", "OtherDriver") | qnu
 # > if driver answer is MISSING and ESP checked in KT topics, assume it probably included ESP.. give reviewer benefit of doubt.. but also see how many cases that applies to..
   
 for(i in has_ESPdriver$ResponseId){
-  prelimlong1e$clean_answer
+  prelimlong1f$clean_answer
 }
 
 
@@ -2277,7 +2278,7 @@ for(i in has_ESPdriver$ResponseId){
 # revisiting Kremen 2005 it seems like "structure-function" was much more about compensatory mechanisms, covariance, and response diversity...
 
 # what sorts of things did people enter for drivers if they selected kremen topic 2?
-hasKT2 <- subset(prelimlong1e, abbr %in% c("Driver", "OtherDriver") | qnum %in% c("Q13", "Q14")) %>%
+hasKT2 <- subset(prelimlong1f, abbr %in% c("Driver", "OtherDriver") | qnum %in% c("Q13", "Q14")) %>%
   filter(ResponseId %in% unique(ResponseId[grepl("Topic 2", clean_answer)])) %>%
   filter(qnum != "Q12")
 
@@ -2299,7 +2300,7 @@ hasKT2 <- subset(prelimlong1e, abbr %in% c("Driver", "OtherDriver") | qnum %in% 
 ## > note, 5/21: waiting on Grant and Julie to confirm Multiscale reliable question for triggering correction (CTW sent email)
 
 # this feels like the only question i can actually logic check, based on GVJL new scale answer and how reviewer answered time
-scalecheck <- subset(prelimlong1e, abbr %in% c("TimeTrends", "KremenTopics")) %>%
+scalecheck <- subset(prelimlong1f, abbr %in% c("TimeTrends", "KremenTopics")) %>%
   dplyr::select(StartDate:Title, clean_answer, abbr) %>%
   distinct() %>%
   spread(abbr, clean_answer) %>%
@@ -2315,7 +2316,7 @@ scalecheck <- subset(prelimlong1e, abbr %in% c("TimeTrends", "KremenTopics")) %>
 
 # go in and correct Kremen Topic 4
 for(i in scalecheck$ResponseId){
-  temp_note <- prelimlong1e$qa_note[prelimlong1e$abbr == "KremenTopics" & prelimlong1e$ResponseId == i]
+  temp_note <- prelimlong1f$qa_note[prelimlong1f$abbr == "KremenTopics" & prelimlong1f$ResponseId == i]
   # if need_scale is TRUE, means does not have KT 4 and needs it
   if(scalecheck$needs_scale[scalecheck$ResponseId == i]){
     prelimlong1f$clean_answer[prelimlong1f$abbr == "KremenTopics" & prelimlong1f$ResponseId == i] <- ifelse(with(scalecheck, KremenTopics[ResponseId == i]) == "None", 

@@ -678,8 +678,8 @@ ClimReg,Env,soil type,Soil physiochemical characteristics,Env
 freshWQReg,Env,solar radiation,Climate,Env
 ClimReg,Anthro,spatial aggregation,Characteristics of locality,Anthro
 PestPath,Env,Spatial arrangement of landscape,Land cover,Env
-ClimReg,Bio,species composition,Service provider abundance,Bio
-Materials,Bio,species composition,Service provider abundance,Bio
+ClimReg,Bio,species composition,Service provider diversity/richness,Bio
+Materials,Bio,species composition,Service provider diversity/richness,Bio
 Food,Bio,species richness,Service provider diversity/richness,Bio
 HabCreate,Bio,Species richness (ecosystem function not ESP),Service provider diversity/richness,Bio
 HabCreate,Anthro,stand age,Land use and land cover change,Anthro
