@@ -1883,6 +1883,21 @@ write_csv(responses_forLDAK, "round2_metareview/clean_qa_data/needs_classreview/
 # 5.c. Apply driver and response corrections -----
 # maybe try pulling out Q12 to clean and tidy on its own?
 q12df_clean <- subset(prelimlong1c, qnum == "Q12")
+# importante! need to erase commas from drivers where shouldn't be comma-split (and so pairs appropriately with driver corrections)
+## Exploitation (hunting, fishing) -> (hunting or fishing)
+## Water level (current and previous year..) -> gsub out commas
+
+driver_commacheck <- subset(q12df_clean, abbr %in% c("Driver", "OtherDriver") & !is.na(answer) & grepl(",", answer)) %>%
+  dplyr::select(answer) %>%
+  arrange(answer) %>%
+  distinct()
+q12df_clean <- 
+  #gsub("hunting, fishing", "hunting or fishing", answer))
+  # mutate(OtherDriver = gsub("\\[city 1, city 2\\]", "\\[city 1; city 2\\]", OtherDriver),
+  #        OtherDriver = gsub("system function, not ESP", "system function not ESP", OtherDriver),
+  #        OtherDriver = gsub("current and previous years min,max,mean", "current and previous years min max mean", OtherDriver))
+#Landscape types (Homogeneous, Heterogeneous)
+# "different olive grove types could be considered land use or management type (organic, conventional, abandoned, natural areas)"
 
 kept_ResponseId <- unique(q12df_clean$ResponseId)
 master_clean_q12 <- data.frame()
