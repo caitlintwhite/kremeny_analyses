@@ -1,3 +1,0 @@
-#### PRACTICING 
-
-x <- 123
