@@ -243,7 +243,7 @@ MaintainOpts,Env,Extreme Events,Extreme events,Env
 Materials,Env,Extreme Events,Extreme events,Env
 SoilProtect,Env,Extreme Events,Extreme events,Env
 HabCreate,Anthro,farmland conservation planning (prioritization),Exploitation/harvest,Anthro
-coastWQReg,Bio,Feeding,Management,Anthro
+coastWQReg,Bio,Feeding,"Service provider reproduction, growth, and population maintenance",Bio
 Food,Anthro,fertilization practices,Fertilization,Anthro
 Food,Anthro,fertilizer,Fertilization,Anthro
 PestPath,Anthro,fertilizer,Fertilization,Anthro
@@ -277,7 +277,7 @@ freshWQReg,Anthro,grazing,Exploitation/harvest,Anthro
 SoilProtect,Anthro,grazing,Exploitation/harvest,Anthro
 PestPath,Anthro,green roofs,Characteristics of locality,Anthro
 PestPath,Env,growing season week,Climate,Env
-coastWQReg,Bio,Growth,Biotic characteristics of the plot,Bio
+coastWQReg,Bio,Growth,"Service provider reproduction, growth, and population maintenance",Bio
 Food,Env,Habitat type (type of coral environment),Land cover,Env
 HabCreate,Env,Habitat type (type of coral environment),Land cover,Env
 PestPath,Env,habtitat heterogeneity,Land cover,Env
@@ -391,7 +391,7 @@ HabCreate,Env,Longitudinal position,Topography and position,Env
 coastWQReg,Env,longitudinal river length,Topography and position,Env
 Pollination,Bio,loss of seed source species,Service provider diversity/richness,Bio
 MaintainOpts,Bio,macroinvertebrate and fish population,Service provider abundance,Bio
-coastWQReg,Bio,Maintenance,Management,Anthro
+coastWQReg,Bio,Maintenance,"Service provider reproduction, growth, and population maintenance",Bio
 CulturePsych,Anthro,management practice was burning. service would be recreational hunting,Management/restoration,Anthro
 HabCreate,Anthro,management practice was burning. service would be recreational hunting,Management/restoration,Anthro
 Food,Anthro,Management practice=fertilizer,Management/restoration,Anthro
@@ -594,7 +594,7 @@ SoilProtect,Env,rainfall,Climate,Env
 Food,Env,Rainfall,Climate,Env
 SoilProtect,Env,Reforestation age,Management,Anthro
 Pollination,Anthro,Rehabilitation Gradient,Management/restoration,Anthro
-coastWQReg,Bio,Reproduction,Reproduction,Bio
+coastWQReg,Bio,Reproduction,"Service provider reproduction, growth, and population maintenance",Bio
 coastWQReg,Anthro,Restoration,Management/restoration,Anthro
 HabCreate,Anthro,Restoration,Management/restoration,Anthro
 Pollination,Env,rewiring,Network property,Bio
@@ -625,7 +625,7 @@ PestPath,Bio,Service Provider (Q17),Service provider identity,Bio
 Pollination,Bio,Service Provider (Q17),Service provider identity,Bio
 SoilProtect,Bio,Service Provider (Q17),Service provider identity,Bio
 PestPath,Bio,Service provider(aphid)=rove beetles;wolf spiders;vegetation-dwelling predators,Service provider identity,Bio
-PestPath,Bio,Service provider(yield)=aphid growth,Service provider abundance,Bio
+PestPath,Bio,Service provider(yield)=aphid growth,"Service provider reproduction, growth, and population maintenance",Bio
 SoilProtect,Bio,Service provider=Shrub (as compared to grass),Service provider identity,Bio
 PestPath,Anthro,shade,Abiotic characteristics of the landscape: terrestrial,Env
 coastWQReg,Env,shade effect of riparian ecosystem,Abiotic characteristics of the landscape: terrestrial,Env

@@ -1643,7 +1643,8 @@ clean_biodriver_corrections <- subset(alldrivers_summary, Group == "Bio") %>%
          clean_driver_finer = ifelse(grepl("density", answer, ignore.case = T), "service provider density", clean_driver_finer),
          # clean up randos
          clean_driver_finer = ifelse(grepl("polychaete", answer), "pathogens/natural enemies",
-                                     ifelse(grepl("reproduc", answer, ignore.case = T), "reproduction",
+                                     # these particular variables go with one of AK's papers on population modeling and individual maintenance, feeding, groth, and reproduction
+                                     ifelse(grepl("reproduc|maintenance|growth|feeding", answer, ignore.case = T), "Service provider reproduction, growth, and population maintenance",
                                             ifelse(grepl("root depth|vegetation cover", answer, ignore.case = T), "biotic characteristics of the plot", clean_driver_finer))),
          # call Other 'Other' just in case no otherdriver text entered (can at least count Other, if other text available, can drop Other)
          clean_driver_finer = ifelse(answer == "Other", "other", clean_driver_finer),
@@ -2251,16 +2252,29 @@ has_ESPdriver <- subset(prelimlong1f, abbr %in% c("Driver", "OtherDriver") | qnu
   group_by(ResponseId) %>%
   mutate(Bio_answer = str_flatten(unique(clean_answer_finer[Group == "Bio" & !is.na(clean_answer_finer)])), # flatten all biotic driver bin labels that aren't NA
          # screen for Service provider in all Bio group coarse bins
-         has_ESP = grepl("Service provider", Bio_answer),
+         has_ESP = grepl("identity|abundan|densi", Bio_answer),
+         has_biodiv = grepl("diver", Bio_answer),
          # check the Kremen topics indicates ESP
-         KT_ESP = grepl("Kremen Topic 1 : ESP", clean_answer[qnum == "Q13"])) %>%
+         KT_ESP = grepl("Kremen Topic 1 : ESP", clean_answer[qnum == "Q13"]),
+         KT = clean_answer[abbr == "KremenTopics"],
+         across_spp = grepl("Across", clean_answer[abbr == "ESP_type"]),
+         singlemulti_ESP = grepl("Single|Multiple", clean_answer[abbr == "ESP_type"]),
+         ESP_type = clean_answer[abbr == "ESP_type"]) %>%
   # keep only conflicting records -- ESP indicated in driver but not in KT topics, or vv
   filter((has_ESP & !KT_ESP) | (!has_ESP & KT_ESP)) %>%
   ungroup() %>%
   # keep only ResponseId, Title and flagging
-  dplyr::select(ResponseId, Title, has_ESP, KT_ESP) %>%
+  dplyr::select(ResponseId, doublerev, Title, Bio_answer:ncol(.)) %>%
+  #subset(abbr %in%  c("KremenTopics", "KremenNotes", "ESP_type", "Driver", "OtherDriver") & !is.na(clean_answer)) %>%
+  #filter(is.na(clean_group) | clean_group == "Bio") %>%
   distinct()
 
+# > lookin at notes, it seems like people had reasons to check community structure even if only ESP checked, or to check KT2 even if measurement is abundance..
+# > so best practice is to ensure X checked if y present, but not remove any KT topic (except for scale, because that's more cut and dry)
+# > assume if people answered KT 1 or KT 2, they had good reason to do it
+
+has_ESPdriver2 <- dplyr::select(has_ESPdriver, ResponseId, Title, has_ESP, KT_ESP) %>%
+  distinct()
 
 # correct and add QA note
 # > if driver answer is MISSING and ESP checked in KT topics, assume it probably included ESP.. give reviewer benefit of doubt.. but also see how many cases that applies to..
