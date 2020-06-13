@@ -173,7 +173,7 @@ Food,community structure,0,0,0,1,,too vague,,TEST_VALUE
 PestPath,Community Structure,0,0,0,1,,too vague,,TEST_VALUE
 Pollination,Community Structure,0,0,0,1,,too vague,,TEST_VALUE
 Pollination,Community structure of flower longicorn beetles,0,0,0,1,Service provider diversity/richness/composition,,service provider species biodiversity,service provider species biodiversity
-SoilProtect,composition,0,0,0,1,,too vague,,TEST_VALUE
+SoilProtect,composition,0,0,0,1,,too vague,,service provider species biodiversity
 MaintainOpts,conifer seedling abundance,0,0,1,0,Service provider abundance,,service provider abundance,service provider abundance
 HabCreate,connectivity,0,1,0,0,Land cover,,land cover,land cover
 HabCreate,connectivity between grasslands,0,0,0,1,Land cover,,land cover,land cover
@@ -428,7 +428,7 @@ Food,livestock production,0,0,0,1,Exploitation/harvest,,exploitation/harvest,exp
 ClimReg,Loss of Co2 from forest fires,0,0,0,1,"Extreme events, Carbon",,"extreme events, carbon",carbon
 CulturePsych,Love of nature,0,1,0,0,Characteristics of human population,,characteristics of human population,characteristics of human population
 HabCreate,macro invertebrate rayon richness and diversity,0,0,0,1,Service provider diversity/richness/composition,,service provider species biodiversity,service provider species biodiversity
-coastWQReg,macroinvertebrate abundance and composition,0,0,0,1,"Service provider abunance, Service provider diversity/richness/composition",,"service provider abunance, service provider species biodiversity",service provider abundance
+coastWQReg,macroinvertebrate abundance and composition,0,0,0,1,"Service provider abunance, Service provider diversity/richness/composition",,"service provider abunance, service provider species biodiversity",service provider species biodiversity
 HabCreate,Manning's roughness Coefficient,1,0,0,0,,no idea,,TEST_VALUE
 SoilProtect,many soil chemistry variables,1,0,0,0,Soil characteristics,,soil physiochemical characteristics,soil physiochemical characteristics
 Food,Maple syrup,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
@@ -567,7 +567,7 @@ PestPath,Pest abundance,0,1,0,0,,,,service provider abundance
 PestPath,Pest Abundance,0,1,0,0,,,,service provider abundance
 PestPath,Pest and disease control,0,1,0,0,,,,TEST_VALUE
 PestPath,pest attack rate,0,0,1,0,,,,TEST_VALUE
-PestPath,pest community composition,0,0,1,0,,,,TEST_VALUE
+PestPath,pest community composition,0,0,1,0,,,,service provider species biodiversity
 ClimReg,Pest control,0,1,0,0,,,,TEST_VALUE
 PestPath,pest diversity index,0,0,0,1,,,,index
 Food,pest load,0,0,0,1,,,,TEST_VALUE
@@ -590,8 +590,8 @@ Food,pigs,0,1,0,0,,,,TEST_VALUE
 coastWQReg,Plankton and macroinvertebrate community structure,1,0,0,0,,,,TEST_VALUE
 CulturePsych,Plant biodiversity,0,0,0,1,,,,service provider species biodiversity
 Energy,plant biomass,1,0,0,0,,,,productivity
-HabCreate,plant community composition,1,0,0,0,,,,TEST_VALUE
-MaintainOpts,Plant community composition,1,0,0,0,,,,TEST_VALUE
+HabCreate,plant community composition,1,0,0,0,,,,service provider species biodiversity
+MaintainOpts,Plant community composition,1,0,0,0,,,,service provider species biodiversity
 SoilProtect,plant density,0,0,0,1,,,,TEST_VALUE
 CulturePsych,plant diversity,0,0,0,1,,,,service provider species biodiversity
 MaintainOpts,plant diversity,0,1,0,0,,,,service provider species biodiversity
@@ -600,7 +600,7 @@ MaintainOpts,Plant diversity maintenance,0,1,0,0,,,,service provider species bio
 ClimReg,plant productivity,1,0,0,0,,,,TEST_VALUE
 HabCreate,plant productivity,0,1,0,0,,,,TEST_VALUE
 Materials,Plant quality,1,0,0,0,,,,exploitation/harvest
-HabCreate,Plant species composition,0,1,0,0,,,,TEST_VALUE
+HabCreate,Plant species composition,0,1,0,0,,,,service provider species biodiversity
 MaintainOpts,Plant species richness,0,0,0,1,,,,service provider species biodiversity
 SoilProtect,plant-available N,1,0,0,0,,,,TEST_VALUE
 Pollination,pollen deposition (grains),0,1,0,0,,,,TEST_VALUE
@@ -620,7 +620,7 @@ Pollination,pollinator evenness,0,0,0,1,,,,service provider species biodiversity
 HabCreate,Pollinator habitat use,0,1,0,0,,,,TEST_VALUE
 Pollination,pollinator richness,0,0,0,2,,,,service provider species biodiversity
 Pollination,Pollinator richness,0,0,0,1,,,,service provider species biodiversity
-Pollination,pollinator species composition,0,0,0,1,,,,TEST_VALUE
+Pollination,pollinator species composition,0,0,0,1,,,,service provider species biodiversity
 Pollination,pollinator species richness,0,0,0,1,,,,service provider species biodiversity
 Pollination,pollinator taxonomic breadth,0,0,0,1,,,,TEST_VALUE
 Pollination,Pollinator visitation (identity of pollinator,0,1,0,0,,,,TEST_VALUE
@@ -784,7 +784,7 @@ ClimReg,soil carbon pool,0,1,0,1,,,,carbon
 ClimReg,Soil carbon stocks,0,1,0,0,,,,carbon
 ClimReg,soil carbon storage,1,0,0,0,,,,carbon
 coastWQReg,Soil chemical quality index,0,0,0,1,,,,index
-SoilProtect,Soil community composition,0,1,0,0,,,,TEST_VALUE
+SoilProtect,Soil community composition,0,1,0,0,,,,service provider species biodiversity
 SoilProtect,soil conductivity,1,0,0,0,,,,TEST_VALUE
 SoilProtect,soil conservation,0,2,0,0,,,,TEST_VALUE
 SoilProtect,Soil conservation,1,1,0,0,,,,TEST_VALUE
@@ -803,7 +803,7 @@ SoilProtect,Soil formation and retention,1,1,0,0,,,,TEST_VALUE
 SoilProtect,soil loss potential,0,0,0,1,,,,TEST_VALUE
 SoilProtect,soil microbial biomass,1,0,0,0,,,,productivity
 SoilProtect,soil microbial biomass carbon,1,0,0,1,,,,carbon
-SoilProtect,soil microbial composition,0,1,0,1,,,,TEST_VALUE
+SoilProtect,soil microbial composition,0,1,0,1,,,,service provider species biodiversity
 SoilProtect,soil microbial extracellular enzyme activity,0,1,0,1,,,,TEST_VALUE
 SoilProtect,soil microbial metabolics,0,1,0,1,,,,TEST_VALUE
 SoilProtect,soil moisture,0,0,0,1,,,,TEST_VALUE
@@ -916,7 +916,7 @@ CulturePsych,tourism,0,1,0,0,,,,TEST_VALUE
 CulturePsych,tourist visits,0,1,0,0,,,,TEST_VALUE
 ClimReg,tree above ground carbon,0,1,0,0,,,,carbon
 ClimReg,tree biomass,0,1,0,1,,,,productivity
-HabCreate,Tree composition,0,0,0,1,,,,TEST_VALUE
+HabCreate,Tree composition,0,0,0,1,,,,service provider species biodiversity
 ClimReg,Tree DBH,0,0,0,1,,,,TEST_VALUE
 ClimReg,tree density,1,1,0,0,,,,TEST_VALUE
 AQReg,tree growth and survival,0,0,0,1,,,,TEST_VALUE
