@@ -678,7 +678,7 @@ wetland_abstracts <- subset(prelimlong1b, Title %in% unique(c(wetlands$Title, wa
 
 
 # write out
-write_csv(wetland_abstracts, "round2_metareview/clean_qa_data/needs_classreview/wetland_abstracts.csv", na = "")
+#write_csv(wetland_abstracts, "round2_metareview/clean_qa_data/needs_classreview/wetland_abstracts.csv", na = "")
 
 
 
@@ -1400,7 +1400,7 @@ r2excluded_final <- rbind(exclude_r2, exclude_r2LD[names(exclude_r2)]) %>%
   ungroup()
 
 # write out excluded papers
-write_csv(r2excluded_final, "round2_metareview/data/intermediate/round2_excluded.csv")
+write_csv(r2excluded_final, "round2_metareview/data/intermediate/round2_excluded.csv", na = "")
 
 
 # retain kept papers in prelimlong_1c
@@ -1713,7 +1713,7 @@ clean_envdriver_corrections <- subset(alldrivers_summary, Group == "Env") %>%
     # assign biotic driver bin to rewiring
     clean_driver_finer = ifelse(grepl("rewiring", answer, ignore.case = T), "network property", clean_driver_finer),
     # maybe to be sure specify "Ecosystem service types," as "remove"
-    clean_driver_finer = ifelse(grepl("^Ecosystem service", answer), "REMOVE", clean_driver_finer),
+    clean_driver_finer = ifelse(grepl("^Ecosystem service", answer), "index", clean_driver_finer), # "Ecosystem service types = ES bundles
     # call Other 'Other' just in case no otherdriver text entered (can at least count Other, if other text available, can drop Other)
     clean_driver_finer = ifelse(answer == "Other", "other", clean_driver_finer),
     # ådd col for new driver type if needs to be re-assigned
@@ -1722,6 +1722,14 @@ clean_envdriver_corrections <- subset(alldrivers_summary, Group == "Env") %>%
     # infill group for NA just in case (only applies to answer == Other)
     clean_driver_group = ifelse(answer == "Other", Driver_Group, clean_driver_group))
 
+# clean up driver answers that need commas adjusted
+clean_envdriver_corrections <- clean_envdriver_corrections %>%
+  # remove heterogenous bc should be split
+  filter(!grepl("Heterogeneous\\)", answer)) %>%
+  # add Heterogeneous back to Landscape type and clean up other comma answers
+  mutate(answer = ifelse(grepl("^Landscape types", answer), paste0(answer, "; Heterogeneous)"), 
+                         ifelse(grepl("olive grove type", answer), gsub(",", ";", answer), gsub(",", "", answer))),
+         answer = trimws(answer))
 
 
 # review human drivers..
@@ -1785,7 +1793,9 @@ clean_anthdriver_corrections <- subset(alldrivers_summary, Group == "Anthro") %>
          # call Other 'Other' just in case no otherdriver text entered (can at least count Other, if other text available, can drop Other)
          clean_driver_finer = ifelse(answer == "Other", "other", clean_driver_finer),
          # clean up group
-         clean_driver_group = ifelse(grepl("abiotic", clean_driver_finer), "Env", Driver_Group))
+         clean_driver_group = ifelse(grepl("abiotic", clean_driver_finer), "Env", Driver_Group)) %>%
+  # change Exploitation from or to semicolon
+  mutate(answer = gsub("hunting or fishing", "hunting; fishing", answer))
 
 
 # stack all for master driver reference set
@@ -1852,9 +1862,11 @@ clean_responses_corrections <- response_summary %>%
          # abundance
          rf2 = ifelse(grepl(abund_terms, Response, ignore.case = T), "service provider abundance", rf2),
          # species biodiversity (richness, diversity, evenness)
-         rf2 = ifelse(grepl(biodiv_terms, Response, ignore.case = T), "service provider species biodiversity", rf2),
+         rf2 = ifelse(grepl(biodiv_terms, Response, ignore.case = T)  & !grepl("decomposition", Response, ignore.case = T), "service provider species biodiversity", rf2),
          # functional biodiversity and traits -- needs to come after species biodiversity to replace
          rf2 = ifelse(grepl(fxnlbiodiv_terms, Response,ignore.case = T), "service provider functional biodiversity and traits", rf2),
+         # change decomposition to TEST_VALUE (placeholder) -- got assigned biodiv since has "composition" in it
+         #rf2 = ifelse(grepl("decomposition", Response, ignore.case = T), "TEST_VALUE"
          # if has biomass or aboveground or AGB, productivity
          rf2 = ifelse(grepl("biomass|AGB|aboveground|NPP|NDVI", Response, ignore.case = T), "productivity", rf2),
          # if it has carbon, then carbon
@@ -1873,9 +1885,7 @@ clean_responses_corrections <- response_summary %>%
 
 # write file for LD and AK to finish assigning
 responses_forLDAK <- clean_responses_corrections
-# quote NAs
-responses_forLDAK[is.na(responses_forLDAK)] <- ""
-write_csv(responses_forLDAK, "round2_metareview/clean_qa_data/needs_classreview/partially_binned_ESresponse_review.csv")
+write_csv(responses_forLDAK, "round2_metareview/clean_qa_data/needs_classreview/partially_binned_ESresponse_review.csv", na = "")
 
 # apply same keywords 
 
@@ -1885,19 +1895,20 @@ write_csv(responses_forLDAK, "round2_metareview/clean_qa_data/needs_classreview/
 q12df_clean <- subset(prelimlong1c, qnum == "Q12")
 # importante! need to erase commas from drivers where shouldn't be comma-split (and so pairs appropriately with driver corrections)
 ## Exploitation (hunting, fishing) -> (hunting or fishing)
-## Water level (current and previous year..) -> gsub out commas
+## Water level (current and previous years min,max,mean), -> gsub out commas
 
+drivers_removesinglecommas <- c("previous years min,max,mean") 
+drivers_removedblcommas <- c("not just land use change, but|system function, not ESP")
+drivers_comma2semicol <- c("Homogeneous, Heterogeneous|organic, conventional, abandoned, natural areas")
 driver_commacheck <- subset(q12df_clean, abbr %in% c("Driver", "OtherDriver") & !is.na(answer) & grepl(",", answer)) %>%
   dplyr::select(answer) %>%
   arrange(answer) %>%
   distinct()
-q12df_clean <- 
-  #gsub("hunting, fishing", "hunting or fishing", answer))
-  # mutate(OtherDriver = gsub("\\[city 1, city 2\\]", "\\[city 1; city 2\\]", OtherDriver),
-  #        OtherDriver = gsub("system function, not ESP", "system function not ESP", OtherDriver),
-  #        OtherDriver = gsub("current and previous years min,max,mean", "current and previous years min max mean", OtherDriver))
-#Landscape types (Homogeneous, Heterogeneous)
-# "different olive grove types could be considered land use or management type (organic, conventional, abandoned, natural areas)"
+q12df_clean <- q12df_clean %>%
+  mutate(clean_answer = ifelse(grepl(drivers_removesinglecommas, clean_answer), gsub(",", " ", clean_answer),
+                               ifelse(grepl(drivers_removedblcommas, clean_answer), gsub(",", "", clean_answer),
+                                      ifelse(grepl(drivers_comma2semicol, clean_answer), gsub(",", ";", clean_answer), 
+                                             gsub("hunting, fishing", "hunting; fishing", clean_answer)))))
 
 kept_ResponseId <- unique(q12df_clean$ResponseId)
 master_clean_q12 <- data.frame()
@@ -2284,7 +2295,7 @@ has_ESPdriver <- subset(prelimlong1f, abbr %in% c("Driver", "OtherDriver") | qnu
   #filter(is.na(clean_group) | clean_group == "Bio") %>%
   distinct()
 
-# > lookin at notes, it seems like people had reasons to check community structure even if only ESP checked, or to check KT2 even if measurement is abundance..
+# > looking at notes, it seems like people had reasons to check community structure even if only ESP checked, or to check KT2 even if measurement is abundance..
 # > so best practice is to ensure X checked if y present, but not remove any KT topic (except for scale, because that's more cut and dry)
 # > assume if people answered KT 1 or KT 2, they had good reason to do it
 
