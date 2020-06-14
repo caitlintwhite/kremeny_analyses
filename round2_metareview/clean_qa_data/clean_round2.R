@@ -1651,7 +1651,13 @@ clean_biodriver_corrections <- subset(alldrivers_summary, Group == "Bio") %>%
          # move management to anthro category
          clean_driver_group = ifelse(clean_driver_finer == "management", "Anthro", Driver_Group)) %>%
   #didn't get NAs
-  replace_na(list(clean_driver_group ="Bio"))
+  replace_na(list(clean_driver_group ="Bio")) %>%
+  # fix various trout (correct original group -- should be Env but CTW wrote out changed to Bio, so code below doesn't pick it up)
+  mutate(Driver_Group = ifelse(grepl("various trout", answer), "Env", Driver_Group)) %>%
+         # also change "measured 82 variables.." back to NA [CTW infilled to "no ES selected" when wrote out above]
+         #ES = ifelse(grepl("^measured 82 different", answer), NA, ES)) %>%
+  #trim ws on all
+  mutate_all(trimws)
 
 
 
@@ -1796,7 +1802,13 @@ clean_anthdriver_corrections <- subset(alldrivers_summary, Group == "Anthro") %>
          clean_driver_group = ifelse(grepl("abiotic", clean_driver_finer), "Env", Driver_Group)) %>%
   # change Exploitation from or to semicolon
   mutate(answer = gsub("hunting or fishing", "hunting; fishing", answer))
-
+# fix "not just land use change but..." (had a comma)
+p1 <- grep("^not just land use change", clean_anthdriver_corrections$answer)
+p2 <- grep("^but land use intensification", clean_anthdriver_corrections$answer)
+clean_anthdriver_corrections$answer[p2] <- paste(clean_anthdriver_corrections$answer[p1], clean_anthdriver_corrections$answer[p2])
+# remove p1
+clean_anthdriver_corrections <- clean_anthdriver_corrections[-p1,]
+rm(p1, p2)
 
 # stack all for master driver reference set
 master_driver_corrections <- dplyr::select(clean_biodriver_corrections, -c('Binning Notes', Driver_Finer)) %>%
@@ -1808,7 +1820,9 @@ master_driver_corrections <- dplyr::select(clean_biodriver_corrections, -c('Binn
                                      clean_driver_finer)) %>%
   # make driver group and driver_finer more generic (so can rbind with cleaned responses)
   rename(clean_answer_finer = clean_driver_finer,
-         clean_group = clean_driver_group)
+         clean_group = clean_driver_group) %>%
+  # be sure all has no white space
+  mutate_all(trimws)
 
 # write out for LD, AK, SDJ, and KG to review
 write_csv(master_driver_corrections, "round2_metareview/data/intermediate/round2_master_driver_bins.csv", na = "")
@@ -1893,6 +1907,7 @@ write_csv(responses_forLDAK, "round2_metareview/clean_qa_data/needs_classreview/
 # 5.c. Apply driver and response corrections -----
 # maybe try pulling out Q12 to clean and tidy on its own?
 q12df_clean <- subset(prelimlong1c, qnum == "Q12")
+
 # importante! need to erase commas from drivers where shouldn't be comma-split (and so pairs appropriately with driver corrections)
 ## Exploitation (hunting, fishing) -> (hunting or fishing)
 ## Water level (current and previous years min,max,mean), -> gsub out commas
@@ -1951,9 +1966,26 @@ for(rid in kept_ResponseId){
     temp_q12$qa_note[temp_q12$abbr == "OtherDriver" & temp_q12$Group %in% unique(temp_othercheck$Group)] <- "'Other' checked for driver variable but no Other Driver provided"
   }
   
+  # catch missing "Other" in abbr == Driver if OtherDriver present so code below infills clean_answer_finer correctly
+  otherdrivergrps <- unique(with(temp_q12, Group[abbr == "OtherDriver" & !is.na(clean_answer)]))
+  # just need to be sure there is some Driver entered for given group ["Other" will be appended below if not there but some other Driver is]
+  drivergrps <- unique(with(temp_q12, Group[abbr == "Driver" & !is.na(clean_answer)]))
+  missinggrps <- otherdrivergrps[!otherdrivergrps %in% drivergrps]
+  if(length(missinggrps)>0){
+    # assign "Other" and add qa note
+    # > need to assume Other applies to any Response ES
+    temp_unique_ES <- unique(with(temp_q12, as.character(ES[!is.na(answer) & !is.na(ES) & grepl("Driver|Response", abbr)])))
+    # id rows for applicable ES and Driver
+    temprows <- which(temp_q12$ES %in% temp_unique_ES & temp_q12$abbr =="Driver" & temp_q12$Group %in% missinggrps)
+    temp_q12$clean_answer[temprows] <- "Other"
+    temp_q12$qa_note[temprows] <- "Appended 'Other' to Driver (Other driver entered but 'Other' not checked)"
+  }
+  # clean up
+  rm(otherdrivergrps, drivergrps, missinggrps)
+  
   # moving on..
   temp_q12 <- temp_q12 %>%
-    filter(!is.na(answer)) %>%
+    filter(!is.na(answer) | (is.na(answer) & !is.na(clean_answer))) %>%
     # unfactor ES's
     mutate(ES = as.character(ES))
   
@@ -2005,7 +2037,7 @@ for(rid in kept_ResponseId){
   
   # add QA note for Other
   # id rows that have "Other"
-  temp_otheradded_rows <- with(temp_q12drivers, which(answer == "Other" & !grepl("Other", orig_answer)))
+  temp_otheradded_rows <- with(temp_q12drivers, which(answer == "Other" & !grepl("Other", orig_answer) & !is.na(orig_answer)))
   # append QA note
   # > if no "Other" added to abbr== Driver rows, for-loop will not do anything
   for(i in temp_otheradded_rows){
@@ -2024,6 +2056,8 @@ for(rid in kept_ResponseId){
     temp_ESdriver_list <- list("Env" = sort(with(temp_q12drivers, unique(ES[answer == "Other" & Group == "Env"]))),
                                "Anthro" = sort(with(temp_q12drivers, unique(ES[answer == "Other" & Group == "Anthro"]))),
                                "Bio" = sort(with(temp_q12drivers, unique(ES[answer == "Other" & Group == "Bio"]))))
+    # only keep the components that have "Other" listed
+    temp_ESdriver_list <- temp_ESdriver_list[sapply(temp_ESdriver_list, length) > 0]
     # if no ESs ID'd. generate list from ES's available where Driver entered
     # > ex. case: RID R_306ID7zs5CnvD81, Drivers entered for Anthro group in several ES's, OtherDriver entered for Env with NA ES (bc other).. Env Driver never entered 
     if(length(unlist(temp_ESdriver_list)) == 0){
@@ -2107,7 +2141,9 @@ for(rid in kept_ResponseId){
   temp_q12drivers <- temp_q12drivers %>%
     left_join(master_driver_corrections, by = c("ES", "Group" = "Driver_Group", "answer")) %>%
     # assign clean_driver_finer for MISSING answers
-    mutate(clean_answer_finer = ifelse(answer == "MISSING", "MISSING", clean_answer_finer)) %>%
+    mutate(clean_answer_finer = ifelse(answer == "MISSING", "MISSING", clean_answer_finer),
+           # infill clean_answer finer for any clean_answer that's "Other" and wasn't caught in driver binning
+           clean_answer_finer = ifelse(answer == "Other" & is.na(clean_answer_finer) & abbr == "Driver", "Other", clean_answer_finer)) %>%
     # reorder cols
     dplyr::select(StartDate:num, clean_answer_finer, fullquestion, abbr, order, Group, clean_group, ESnum:ncol(.)) %>%
     # rename answers back to answer and clean_answer
@@ -2143,6 +2179,13 @@ for(rid in kept_ResponseId){
 rm(i, rid, temp_q12, temp_q12_clean, temp_q12drivers, temp_q12responses, tempother_df,
    temp_othercheck, temp_unique_ESresponse, temp_otheradded_rows, temp_otherdriver_grp)
 
+# check for any drivers or responses that didn't have clean_answer_finer assigned
+missingbin <- subset(master_clean_q12, is.na(clean_answer_finer) & !is.na(clean_answer) & grepl("Driver|Response", abbr))
+# only 1 missing.. (can change to for loop later if more)
+for(i in unique(missingbin$clean_answer)){
+  temprows <- as.numeric(rownames(missingbin[missingbin$clean_answer == i,]))
+  master_clean_q12$clean_answer_finer[temprows] <- unique(master_driver_corrections$clean_answer_finer[master_driver_corrections$answer == i])
+}
 # final clean up then join to master prelimlong dataset
 master_clean_q12 <- dplyr::select(master_clean_q12, -track)
 # id new colnames to master dataset
@@ -2161,6 +2204,9 @@ prelimlong1d <- subset(prelimlong1c, qnum != "Q12") %>%
 
 # write out temp prelim cleaned so ppl can start code for analysis..
 #write_csv(prelimlong1d, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+
+# clean up
+rm(missingbin, addcols)
 
 
 
@@ -2375,6 +2421,9 @@ for(i in scalecheck$ResponseId){
 
 # clean up
 rm(temp_note, i, scalecheck)
+
+# write out working csv
+write_csv(prelimlong1f, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
 # 7.5. Q14: Service Providers ----
