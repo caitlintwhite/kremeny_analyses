@@ -2568,6 +2568,9 @@ for(i in scalecheck$ResponseId){
 # clean up
 rm(temp_note, i, scalecheck)
 
+# clean up env driver answer so that comma split function doesn't split answer
+prelimlong1f$clean_answer <- gsub("drivers, not including human drivers))", "drivers not including human drivers)", prelimlong1f$clean_answer)
+
 # write out working csv
 write_csv(prelimlong1f, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
