@@ -1654,8 +1654,8 @@ clean_biodriver_corrections <- subset(alldrivers_summary, Group == "Bio") %>%
   replace_na(list(clean_driver_group ="Bio")) %>%
   # fix various trout (correct original group -- should be Env but CTW wrote out changed to Bio, so code below doesn't pick it up)
   mutate(Driver_Group = ifelse(grepl("various trout", answer), "Env", Driver_Group)) %>%
-         # also change "measured 82 variables.." back to NA [CTW infilled to "no ES selected" when wrote out above]
-         #ES = ifelse(grepl("^measured 82 different", answer), NA, ES)) %>%
+  # also change "measured 82 variables.." back to NA [CTW infilled to "no ES selected" when wrote out above]
+  #ES = ifelse(grepl("^measured 82 different", answer), NA, ES)) %>%
   #trim ws on all
   mutate_all(trimws)
 
@@ -1962,7 +1962,7 @@ for(rid in kept_ResponseId){
     temp_othercheck <- subset(othercheck, ResponseId == rid) 
     temp_q12$answer[temp_q12$abbr == "OtherDriver" & temp_q12$Group %in% unique(temp_othercheck$Group)] <- "MISSING"
     temp_q12$clean_answer[temp_q12$abbr == "OtherDriver" & temp_q12$Group %in% unique(temp_othercheck$Group)] <- "MISSING"
-  # add qa_notes
+    # add qa_notes
     temp_q12$qa_note[temp_q12$abbr == "OtherDriver" & temp_q12$Group %in% unique(temp_othercheck$Group)] <- "'Other' checked for driver variable but no Other Driver provided"
   }
   
@@ -2322,9 +2322,9 @@ has_ESPdriver <- subset(prelimlong1f, abbr %in% c("Driver", "OtherDriver") | qnu
   arrange(RecordedDate) %>%
   # check for "Service Provider" in clean_answer_finer by ResponseId
   group_by(ResponseId) %>%
-  mutate(Bio_answer = str_flatten(unique(clean_answer_finer[Group == "Bio" & !is.na(clean_answer_finer)])), # flatten all biotic driver bin labels that aren't NA
+  mutate(Bio_answer = str_flatten(unique(clean_answer_finer[clean_group == "Bio" & !is.na(clean_answer_finer)])), # flatten all biotic driver bin labels that aren't NA
          # screen for Service provider in all Bio group coarse bins
-         has_ESP = grepl("identity|abundan|densi", Bio_answer),
+         has_ESP = grepl("identity|abundan|densi|reproduc", Bio_answer),
          has_biodiv = grepl("diver", Bio_answer),
          # check the Kremen topics indicates ESP
          KT_ESP = grepl("Kremen Topic 1 : ESP", clean_answer[qnum == "Q13"]),
@@ -2334,41 +2334,111 @@ has_ESPdriver <- subset(prelimlong1f, abbr %in% c("Driver", "OtherDriver") | qnu
          ESP_type = clean_answer[abbr == "ESP_type"]) %>%
   # keep only conflicting records -- ESP indicated in driver but not in KT topics, or vv
   filter((has_ESP & !KT_ESP) | (!has_ESP & KT_ESP)) %>%
+  # can allow KT_ESP IFF singlemulti_ESP == TRUE
   ungroup() %>%
   # keep only ResponseId, Title and flagging
-  dplyr::select(ResponseId, doublerev, Title, Bio_answer:ncol(.)) %>%
-  #subset(abbr %in%  c("KremenTopics", "KremenNotes", "ESP_type", "Driver", "OtherDriver") & !is.na(clean_answer)) %>%
-  #filter(is.na(clean_group) | clean_group == "Bio") %>%
+  #dplyr::select(ResponseId, doublerev, Title, Bio_answer:ncol(.)) %>%
+  subset(abbr %in%  c("KremenTopics", "KremenNotes", "ESP_type", "Driver", "OtherDriver") & !is.na(clean_answer)) %>%
+  filter(is.na(clean_group) | clean_group == "Bio") %>%
   distinct()
 
 # > looking at notes, it seems like people had reasons to check community structure even if only ESP checked, or to check KT2 even if measurement is abundance..
 # > so best practice is to ensure X checked if y present, but not remove any KT topic (except for scale, because that's more cut and dry)
 # > assume if people answered KT 1 or KT 2, they had good reason to do it
-
-has_ESPdriver2 <- dplyr::select(has_ESPdriver, ResponseId, Title, has_ESP, KT_ESP) %>%
-  distinct()
-
-# correct and add QA note
 # > if driver answer is MISSING and ESP checked in KT topics, assume it probably included ESP.. give reviewer benefit of doubt.. but also see how many cases that applies to..
-  
-for(i in has_ESPdriver$ResponseId){
-  prelimlong1f$clean_answer
-}
 
+## RULES for KT1:
+# 1) If "Single species" in Q14 and has_ESP, then KT1 should be appended
+# 2) has ESP indicated, no KT1 or KT2 in Q13
+
+addKT1 <- has_ESPdriver %>%
+  group_by(ResponseId) %>%
+  # either has ESP driver indicated and "Single Species" checked in Q14
+  # OR has ESP driver indicated, no Response to Q14 and KT1 or KT2 not indicated
+  filter((has_ESP & grepl("Single", ESP_type)) | (has_ESP & !grepl("1|2", KT))) %>%
+  ungroup()
+
+for(i in unique(addKT1$ResponseId)){
+  # id row
+  temprow <- which(prelimlong1f$qnum == "Q13" & prelimlong1f$ResponseId == i)
+  # add KT1 -- if "None" checked change answer, otherwise append to front of answer
+  if(prelimlong1f$clean_answer[temprow] == "None"){
+    prelimlong1f$clean_answer[temprow] <- "Kremen Topic 1 : ESPs"
+  }else{
+    prelimlong1f$clean_answer[temprow] <- paste("Kremen Topic 1 : ESPs", prelimlong1f$clean_answer[temprow], sep = ",")
+  }
+  # add qa note
+  if(is.na(prelimlong1f$qa_note[temprow])){
+    prelimlong1f$qa_note[temprow] <- "Added KT1 based on biotic driver and Q14 Single Species response or non-response"
+  }else{
+    prelimlong1f$qa_note[temprow] <- paste0(prelimlong1f$qa_note[temprow], "; added KT1 based on biotic driver and Q14 response or non-response")
+  }
+}
 
 
 
 # 7.2. Q13: Kremen Structure ----
 ## > if structure keyword present in drivers (or responses?), then structure checked in Kremen topics
+## pull records with biodiv in clean_answer_finer or across species in ESP_type & KT2 not checked
 
-# revisiting Kremen 2005 it seems like "structure-function" was much more about compensatory mechanisms, covariance, and response diversity...
+has_commstr <- subset(prelimlong1f, abbr %in% c("Driver", "OtherDriver", "Response") | qnum %in% c("Q13", "Q14")) %>%
+  arrange(RecordedDate) %>%
+  # check for "Service Provider" in clean_answer_finer by ResponseId
+  group_by(ResponseId) %>%
+  mutate(Bio_answer = str_flatten(unique(clean_answer_finer[clean_group == "Bio" & !is.na(clean_answer_finer) & !is.na(clean_group)])), # flatten all biotic driver bin labels that aren't NA
+         # screen for Service provider in all Bio group coarse bins
+         has_ESP = grepl("identity|abundan|densi|reproduc", Bio_answer),
+         has_biodiv = grepl("diver", Bio_answer),
+         # check the Kremen topics indicates ESP
+         KT_CS = grepl("Kremen Topic 2", clean_answer[qnum == "Q13"]),
+         KT = clean_answer[abbr == "KremenTopics"],
+         across_spp = grepl("Across", clean_answer[abbr == "ESP_type"]),
+         singlemulti_ESP = grepl("Single|Multiple", clean_answer[abbr == "ESP_type"]),
+         ESP_type = clean_answer[abbr == "ESP_type"]) %>%
+  # keep only conflicting records -- diversity indicated in driver but not in KT topics, or vv
+  # also grab any title that has "composition" in response
+  filter((has_biodiv & !KT_CS) | (!has_biodiv & KT_CS)) %>%
+  # can allow KT_ESP IFF singlemulti_ESP == TRUE
+  ungroup() %>%
+  # keep only ResponseId, Title and flagging
+  #dplyr::select(ResponseId, doublerev, Title, Bio_answer:ncol(.)) %>%
+  subset(abbr %in%  c("KremenTopics", "KremenNotes", "ESP_type", "Driver", "OtherDriver", "Response") & !is.na(clean_answer)) %>%
+  filter(is.na(clean_group) | clean_group == "Bio") %>%
+  distinct()
 
-# what sorts of things did people enter for drivers if they selected kremen topic 2?
-hasKT2 <- subset(prelimlong1f, abbr %in% c("Driver", "OtherDriver") | qnum %in% c("Q13", "Q14")) %>%
-  filter(ResponseId %in% unique(ResponseId[grepl("Topic 2", clean_answer)])) %>%
-  filter(qnum != "Q12")
+# RULES FOR KT2:
+# 1) has_biodiv in driver bin and no KT1
+# 2) across_spp & no KT2 [no cases! anyone who checked across also checked KT 2]
+addKT2 <- subset(has_commstr, (has_biodiv & !grepl("1", KT)) | (across_spp & !KT_CS))
+KT2answer <- "Kremen Topic 2 : Community structure influencing function"
 
-# ugh.. idk what to do with this.. ask Laura
+for(i in unique(addKT2$ResponseId)){
+  # id row
+  temprow <- which(prelimlong1f$qnum == "Q13" & prelimlong1f$ResponseId == i)
+  # add KT2 -- KT1 present, add behind otherwise append to front of answer
+  if(grepl("1", prelimlong1f$clean_answer[temprow])){
+    prelimlong1f$clean_answer[temprow] <- gsub("ESPs|ESPs,", paste0("ESPs,", KT2answer), prelimlong1f$clean_answer[temprow])
+  }else{
+    # append to front
+    prelimlong1f$clean_answer[temprow] <- paste(KT2answer, prelimlong1f$clean_answer[temprow], sep = ",")
+  }
+  # clean up NA or None
+  prelimlong1f$clean_answer[temprow] <- gsub(",NA|,None", "", prelimlong1f$clean_answer[temprow])
+  
+  # add qa note
+  if(is.na(prelimlong1f$qa_note[temprow])){
+    prelimlong1f$qa_note[temprow] <- "Added KT2 based on biodiversity biotic driver and no KT1 or KT2 checked"
+  }else{
+    prelimlong1f$qa_note[temprow] <- paste0(prelimlong1f$qa_note[temprow], "; added KT2 based on biodiversity biotic driver and no KT1 or KT2 checked")
+  }
+}
+
+View(subset(prelimlong1f, ResponseId %in% addKT2$ResponseId))
+
+# in these cases, KT2 doesn't seem appropriate:
+# 1) No ESP indicated, no biodiv indicated, and no across spp in ESP type .. but wait for response bins to be complete.. bc I guess KT2 could be checked based on response?
+removeKT2 <- subset(has_commstr, !has_ESP & !has_biodiv) # looking at response variables.. I guess best thing to do is leave as is?
+
 
 
 # 7.3. Q13: Kremen Environment ----
@@ -2378,6 +2448,58 @@ hasKT2 <- subset(prelimlong1f, abbr %in% c("Driver", "OtherDriver") | qnum %in% 
 
 # I don't even know if env factors can be logic checked bc revisiting kremen it says it has to do with env factors' influence on ESPs that in turn affect levels of ES provision..
 # so the ESP would need to be in the response, env in the driver..
+# > LD says to interpret environment more loosely .. if study included env driver, then KT env should be checked. simple rule.
+
+has_env <- subset(prelimlong1f, abbr %in% c("Driver", "OtherDriver") | qnum %in% c("Q13", "Q14")) %>%
+  arrange(RecordedDate) %>%
+  # check for "Service Provider" in clean_answer_finer by ResponseId
+  group_by(ResponseId) %>%
+  mutate(env_answer = str_flatten(unique(clean_answer_finer[clean_group == "Env" & !is.na(clean_answer_finer) & !is.na(clean_group)])), # flatten all biotic driver bin labels that aren't NA
+         # screen for Service provider in all Bio group coarse bins
+         has_env = env_answer != "",
+         KT = clean_answer[abbr == "KremenTopics"],
+         KT_env = grepl("3", KT)) %>%
+  filter((has_env & !KT_env) | (KT_env & !has_env)) %>%
+  ungroup() %>%
+  # keep only ResponseId, Title and flagging
+  #dplyr::select(ResponseId, doublerev, Title, Bio_answer:ncol(.)) %>%
+  subset(abbr %in%  c("KremenTopics", "KremenNotes", "ESP_type", "Driver", "OtherDriver", "Response") & !is.na(clean_answer)) %>%
+  #filter(is.na(clean_group)) %>%
+  distinct()
+
+# RULES FOR KT ENV (this is more clear cut)
+# 1) has env driver (has_env) but Env not checked in KT Topics (!KT_env)
+# 2) does NOT have env driver (!has_env) but Env check in KT Topics (KT_env)
+
+add_KTenv <- unique(with(has_env, ResponseId[has_env & !KT_env]))
+remove_KTenv <- unique(with(has_env, ResponseId[!has_env & KT_env]))
+KT3answer <- "Kremen Topic 3 : Environmental factors that influence provision (env. drivers not including human drivers)"
+for(i in add_KTenv){
+  # id row
+  temprow <- which(prelimlong1f$qnum == "Q13" & prelimlong1f$ResponseId == i)
+  # add KT3 -- if "None" checked change answer, otherwise append end or before KT 4
+  if(grepl("4", prelimlong1f$clean_answer[temprow])){
+    prelimlong1f$clean_answer[temprow] <- gsub("Kremen Topic 4", paste0(KT3answer, ",Kremen Topic 4"), prelimlong1f$clean_answer[temprow])
+  }else{
+    # append to back because will be comma split anyway
+    prelimlong1f$clean_answer[temprow] <- paste(prelimlong1f$clean_answer[temprow], KT3answer, sep = ",")
+  }
+  # clean up NA or None if needed
+  prelimlong1f$clean_answer[temprow] <- gsub("NA,|None,", "", prelimlong1f$clean_answer[temprow])
+  #clean up double commas
+  prelimlong1f$clean_answer[temprow] <- gsub(",,", ",", prelimlong1f$clean_answer[temprow])
+  
+  # add qa note
+  if(is.na(prelimlong1f$qa_note[temprow])){
+    prelimlong1f$qa_note[temprow] <- "Added KT3 based on environmental driver and no KT3 checked"
+  }else{
+    prelimlong1f$qa_note[temprow] <- paste0(prelimlong1f$qa_note[temprow], "; added KT3 based on environmental driver and no KT3 checked")
+  }
+}
+
+View(subset(prelimlong1f, ResponseId %in% add_KTenv))
+
+# remove KT env if no env driver provided
 
 
 
