@@ -2473,7 +2473,7 @@ has_env <- subset(prelimlong1f, abbr %in% c("Driver", "OtherDriver") | qnum %in%
 
 add_KTenv <- unique(with(has_env, ResponseId[has_env & !KT_env]))
 remove_KTenv <- unique(with(has_env, ResponseId[!has_env & KT_env]))
-KT3answer <- "Kremen Topic 3 : Environmental factors that influence provision (env. drivers not including human drivers)"
+KT3answer <- "Kremen Topic 3 : Environmental factors that influence provision (env. drivers, not including human drivers))"
 for(i in add_KTenv){
   # id row
   temprow <- which(prelimlong1f$qnum == "Q13" & prelimlong1f$ResponseId == i)
@@ -2500,8 +2500,32 @@ for(i in add_KTenv){
 View(subset(prelimlong1f, ResponseId %in% add_KTenv))
 
 # remove KT env if no env driver provided
+for(i in remove_KTenv){
+  # id row
+  temprow <- which(prelimlong1f$qnum == "Q13" & prelimlong1f$ResponseId == i)
+  # remove KT3 -- if only answer is KT3 change to None, otherwise gsub out
+  if(prelimlong1f$clean_answer[temprow] == KT3answer){
+    prelimlong1f$clean_answer[temprow] <- "None"
+  }else{
+    # gsub out
+    prelimlong1f$clean_answer[temprow] <- gsub(KT3answer, "", prelimlong1f$clean_answer[temprow], fixed = T)
+  }
+  #clean up double commas or end comma
+  prelimlong1f$clean_answer[temprow] <- gsub(",,", ",", prelimlong1f$clean_answer[temprow])
+  prelimlong1f$clean_answer[temprow] <- gsub(",$", "", prelimlong1f$clean_answer[temprow])
+  
+  # add qa note
+  if(is.na(prelimlong1f$qa_note[temprow])){
+    prelimlong1f$qa_note[temprow] <- "Removed KT3 based on lack of environmental driver"
+  }else{
+    prelimlong1f$qa_note[temprow] <- paste0(prelimlong1f$qa_note[temprow], "; removed KT3 based on lack of environmental driver")
+  }
+}
+
+View(subset(prelimlong1f, ResponseId %in% remove_KTenv & abbr == "KremenTopics"))
 
 
+copy <- prelimlong1f
 
 # 7.4. Q13: Kremen Scale ----
 ## > if Multiscale == "Yes", then scale checked in Kremen topics
