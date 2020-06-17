@@ -2575,15 +2575,35 @@ prelimlong1f$clean_answer <- gsub("drivers, not including human drivers))", "dri
 write_csv(prelimlong1f, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
+
 # 7.5. Q14: Service Providers ----
 # > note: we should have had a "how many species in this study" question..
 # within = "genetic"
-# single.. hard to pull by keywrods
+# single.. hard to pull by keywords
 # multiple ESPs.. also tough
-# across = "structure|diversity"
+# across = "structure|diversity" <-- this is not always true tho
 # among = "interact"
 # only land cover .. not sure how to screen for this one either..
 
+# CAN look for responses with no answer and infill none? or maybe should leave NA with flag.. see how many papers it is, maybe need to write out to have ppl answer
+
+check_ESPtype <- subset(prelimlong1f, qnum %in% c("Q14", "Q13") | grepl("Driver|Response", abbr)) %>%
+  arrange(RecordedDate) %>%
+  # check for "Service Provider" in clean_answer_finer by ResponseId
+  group_by(ResponseId) %>%
+  mutate(Bio_answer = str_flatten(unique(clean_answer_finer[clean_group == "Bio" & grepl("Driver", abbr) & !is.na(clean_answer_finer)])), # flatten all biotic driver bin labels that aren't NA
+         Response_answer = str_flatten(unique(clean_answer_finer[grepl("Response", abbr) & !is.na(clean_answer_finer)])),
+         # screen for Service provider in all Bio group coarse bins
+         has_ESPdriver = grepl("identity|abundan|densi|reproduc", Bio_answer),
+         has_biodiv = grepl("diver", Bio_answer),
+         missing_ESPtype = is.na(clean_answer[abbr == "ESP_type"]),
+         ESP_type = clean_answer[abbr == "ESP_type"],
+         KT = clean_answer[abbr == "KremenTopics"],
+         KT_ESP = grepl("1", KT),
+         KT_CS = grepl("2", KT)) %>%
+  ungroup() %>%
+  subset(abbr == "KremenNotes")
+# assign no ESP in NA answers so it's clear .. but do confirm no ESP indicated in those papers
 
 
 
@@ -2592,7 +2612,7 @@ write_csv(prelimlong1f, "round2_metareview/data/cleaned/ESqualtrics_r2keep_clean
 # add "unified" record to to double reviews
 doubleprelim <- subset(prelimlong1f, Title %in% doubletitles) %>%
   group_by(Title, id) %>%
-  mutate(same_answer = length(unique(clean_answer)) ==1) %>%
+  mutate(same_answer = length(unique(clean_answer)) == 1) %>%
   ungroup() %>%
   filter(!(same_answer & is.na(clean_answer))) %>%
   arrange(Title, survey_order, RecordedDate)
@@ -2617,7 +2637,6 @@ doubleprelim %>%
 ggsave("round2_metareview/clean_qa_data/qafigs/r2qa_doublereview_congruency.pdf",
        width = 5, height = 5, units = "in")
 
-
 # see what can be dissolved..
 ## > any text field can be combined (e.g. paste(notes from rev1, notes from rev2))
 ## > if multi-choice answers are nested (e.g. rev1 = [a], rev2 = [a,b]), dissolve answer (we said as a group this would be okay rule)
@@ -2637,11 +2656,15 @@ ES_check <- subset(doubleprelim, qnum == "Q12" & abbr == "Response") %>%
   arrange(Title)
 summary(ES_check$sameanswer) # pretty amazing all ES's by double reviewers agree. good!
 
+# clean up
+rm(doubleprelim, ES_check)
 
 # go by question and condense into master df OR append to df for reviewers to re-review
 # refer to rev 1 answer as primary answer..
 # assign response id to unified titles.. based on alphabetic title to keep things simple (doesn't really matter)
-keptdoubles <- data.frame(Title = sort(unique(doubleprelim$Title))) %>%
+keptdoubles <- data.frame(Title = sort(doubletitles)) %>%
+  # only keep papers note excluded in r2
+  filter(!Title %in% r2excluded_final$Title) %>%
   left_join(original[c("Title", "Round2_reviewer1")]) %>%
   left_join(data.frame(rev1init = initials, Name = names(initials)), by = c("Round2_reviewer1" = "Name")) %>%
   left_join(original[c("Title", "Round2_reviewer2")]) %>%
@@ -2651,7 +2674,76 @@ keptdoubles <- data.frame(Title = sort(unique(doubleprelim$Title))) %>%
   # finally, assign new response id
   mutate(new_rid = paste0("R", 1:nrow(.), "unified"))
 
+# 1. Collapse inconsisent exclusions reviewed by LD -----
+# deal with papers that were kept after LD's review but reviewers disagreed (those are easy to collapse)
+Q3doubles <- subset(prelimlong1f, Title %in% Title[answer == "Yes" & qnum == "Q3"]) %>%
+  # easiest thing to do is probably ID the person who did not exclude paper and keep their answers
+  group_by(Title) %>%
+  mutate(keepInit = unique(Init[!is.na(clean_answer) & abbr == "Ecosystem"])) %>%
+  ungroup()
+# > want to append who initially said exclude, and who said keep, and on which of the q3 questions, and preserve note that LD cleared it
+# > after that can collapse remove (NA answers)
+
+q3rows <- subset(Q3doubles, qnum == "Q3" & answer == "Yes") %>%
+  dplyr::select(ResponseId, Title, Init, id, answer, clean_answer, abbr, qa_note, keepInit) %>%
+  # edit qa_note
+  group_by(ResponseId) %>%
+  mutate(qa_note = paste("Double reviewed and inconsistent answers.", Init, "answered 'Yes' to ", abbr, "exclusion question but", keepInit, "answered 'No'.", qa_note),
+         # add period to end
+         qa_note = paste0(qa_note, "."))
+# replace qa_note
+for(i in unique(q3rows$Title)){
+  # id pertinent rows in Q3doubles
+  temprows <- which(Q3doubles$Title == i & Q3doubles$abbr == q3rows$abbr[q3rows$Title == i])
+  Q3doubles$qa_note[temprows] <- q3rows$qa_note[q3rows$Title == i]
+}
+
+# subset to answers from keepInit
+Q3doubles <- filter(Q3doubles, keepInit == Init | qnum == "Q8")
+for(i in unique(q3rows$Title)){
+  # replace Init (not for Q8, which is new scale questions) and ResponseId
+  Q3doubles$Init[Q3doubles$Title == i & Q3doubles$qnum != "Q8"] <- paste(keptdoubles$rev1init[keptdoubles$Title == i], keptdoubles$rev2init[keptdoubles$Title == i], sep = "/")
+  Q3doubles$ResponseId[Q3doubles$Title == i] <- keptdoubles$new_rid[keptdoubles$Title == i]
+}
+# idk about dates.. leaving as is..
+
+
+# 2. Collapse all else: notes fields -----
 # notes get combined..
+# scale notes already single reviewed by JL + GV
+# > generally, Q8 can just be taken out then added back in since only single rows for each
+# double notes that need to be collapsed are abbr %in% c("GenInfo", "ScaleNotes", "KremenNotes", "SurveyNotes)
+notesfields <- c("GenInfo", "ScaleNotes", "KremenNotes", "SurveyNotes")
+doublenotes <- subset(prelimlong1f, abbr %in% notesfields & Title %in% doubletitles) %>%
+  # take out Q3doubles dealt with above
+  filter(!Title %in% unique(Q3doubles$Title)) %>%
+  #first, both answer and clean_answer need reviewer init appended in front
+  # qa_notes present scale notes (which are the same for all, because that was the only subquestion kept from the original q9) and sometimes Q6
+  mutate(answer = ifelse(!is.na(answer), paste(Init, answer, sep = ": "), answer),
+         qa_note = ifelse(!is.na(qa_note) & qnum != "Q9", paste(Init, "review only:", qa_note, sep = " "), qa_note)) %>%
+  left_join(keptdoubles) %>%
+  mutate(initorder = ifelse(rev1init == Init, 1, 2)) %>%
+  arrange(Title, survey_order, initorder) %>%
+  group_by(Title, abbr) %>%
+  mutate(clean_answer = str_flatten(answer[!is.na(answer)], collapse = "; "),
+         qa_note = str_flatten(qa_note[!is.na(qa_note)], collapse = "; ")) %>%
+  ungroup() %>%
+  mutate(Init = paste(rev1init, rev2init, sep = "/"),
+         ResponseId = new_rid,
+         answer = clean_answer,
+         version = "final") %>%
+  mutate_at(vars("StartDate", "EndDate", "RecordedDate"), function(x) x <- as.character(Sys.time())) %>%
+  dplyr::select(StartDate:ordercol) %>%
+  distinct() %>%
+  mutate_at(vars("answer", "clean_answer", "qa_note"), function(x) ifelse(x == "", NA, x))
+
+
+
+
+# 3. Collapse all else: non-notes fields -----
+
+
+
 
 # -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
 
