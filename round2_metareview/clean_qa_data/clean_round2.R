@@ -2705,7 +2705,10 @@ for(i in unique(q3rows$Title)){
   Q3doubles$Init[Q3doubles$Title == i & Q3doubles$qnum != "Q8"] <- paste(keptdoubles$rev1init[keptdoubles$Title == i], keptdoubles$rev2init[keptdoubles$Title == i], sep = "/")
   Q3doubles$ResponseId[Q3doubles$Title == i] <- keptdoubles$new_rid[keptdoubles$Title == i]
 }
-# idk about dates.. leaving as is..
+# make dates as time processed (sys.time), except for Julie and Grant's new scale data
+Q3doubles[Q3doubles$qnum != "Q8", c("StartDate", "EndDate", "RecordedDate")] <- as.character(Sys.time())
+# change version to final
+Q3doubles$version <- "final"
 
 
 # 2. Collapse all else: notes fields -----
@@ -2741,7 +2744,12 @@ doublenotes <- subset(prelimlong1f, abbr %in% notesfields & Title %in% doubletit
 
 
 # 3. Collapse all else: non-notes fields -----
+# > may need to triage Q12 separate from the rest??
+# > or go by question? (and make a function?)
 
+
+
+# 4. Combine all cleaned up double reviews -----
 
 
 
@@ -2751,11 +2759,30 @@ doublenotes <- subset(prelimlong1f, abbr %in% notesfields & Title %in% doubletit
 
 # -- WRITE OUT CLEANED L1 DATASET FOR POST-PROCESSING AND ANALYSIS -----
 # write out data as it's ready for others to work on.. (e.g. Q12 matrix will probably come later)
-
-# writing out temp file for now so people can start working with data
-write_csv(cleandf_long, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+# temp add scale in double revs not yet cleaned for grant
 
 
+# stack final, clean single reviews and original doubles, and cleaned up doubles
+# remove Q8 from double review original answers because will be in final
+# > note.. Julie and Grant answers for single review don't have a response id.. infill yay or nay?
+clean_master <- subset(prelimlong1f, !(doublerev & qnum == "Q8")) %>%
+  # infill ResponseId for single review JL/GV scale answers
+  fill(ResponseId) %>%
+  rbind(Q3doubles[names(prelimlong1f)]) %>%
+  # double check single ResponseId per title (except for original double revs)
+  group_by(Title) %>%
+  mutate(ridcheck = length(unique(ResponseId))) %>%
+  ungroup()
+
+sapply(split(clean_master$ridcheck, clean_master$doublerev), unique) # 2 for double reviews that aren't processed yet, and 3 for ones that are..
+# check stucture
+str(clean_master) # can drop ordercol and ridcheck, as well as order (obsolete-- only applied to old scale question)
+
+# drop rid check
+head(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck")])
+
+# write out
+write_csv(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck")], "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
 
