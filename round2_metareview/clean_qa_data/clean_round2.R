@@ -2716,7 +2716,7 @@ Q3doubles$version <- "final"
 # scale notes already single reviewed by JL + GV
 # > generally, Q8 can just be taken out then added back in since only single rows for each
 # double notes that need to be collapsed are abbr %in% c("GenInfo", "ScaleNotes", "KremenNotes", "SurveyNotes)
-notesfields <- c("GenInfo", "ScaleNotes", "KremenNotes", "SurveyNotes")
+notesfields <- c( "EcosystemNotes", "GenInfo", "ScaleNotes", "KremenNotes", "Uncertainty", "SurveyNotes")
 doublenotes <- subset(prelimlong1f, abbr %in% notesfields & Title %in% doubletitles) %>%
   # take out Q3doubles dealt with above
   filter(!Title %in% unique(Q3doubles$Title)) %>%
@@ -2747,10 +2747,71 @@ doublenotes <- subset(prelimlong1f, abbr %in% notesfields & Title %in% doubletit
 # > may need to triage Q12 separate from the rest??
 # > or go by question? (and make a function?)
 
+#q8 won't be an issue so could break that out and just deal with other q's that aren't notes
+doublemulti <- subset(prelimlong1f, qnum != "Q8" & Title %in% doubletitles[!doubletitles %in% Q3doubles$Title]) %>%
+  # remove notes fields since those are already cleaned
+  subset(!abbr %in% notesfields)
+
+# need to go by question because each consolidation (answer prioritization) will be slightly unique to that question
+# 3.3 ----
+# Exclusion question -- all of these are No because paper kept, so just need to fix reviewer, rid, date cols, and version
+q3no_doubles <- subset(doublemulti, qnum == "Q3") %>%
+  left_join(keptdoubles) %>%
+  # make clean_answer No for all bc should be
+  # > some Review Only q's are NA from both reviewers, but if this were a problem would have got pulled.. can add a qa_note all the same
+  mutate(clean_answer = unique(clean_answer[!is.na(clean_answer)]),
+          # assign new inits, rids, times
+         Init = paste(rev1init, rev2init, sep = "/"),
+         ResponseId = new_rid) %>%
+  # make all times for write out the same, so NA for now -- can also assign "final" to version at the end
+  mutate_at(vars(StartDate, EndDate, RecordedDate), function(x) x <- NA) %>%
+  # infill orxiginal answer with whatever non-NA was there (if any)
+  group_by(Title, abbr) %>%
+  mutate(answer = ifelse(any(unique(answer) == "No"), "No", unique(answer))) %>%
+  ungroup() %>%
+  distinct() %>%
+  # append qa note to infilled No's (applied to Review Only-- that question not created when ppl filled out survey)
+  # > this probably needs to be checked in single review also
+  mutate(qa_note = ifelse(is.na(answer), "Infill 'No'; question not yet created in survey when reviewers completed but nothing in answers to indicate paper should be excluded", qa_note))
+
+
+# 3.4 ----
+# ecosystem
+
+
+# 3.5 ----
+# place
+
+
+# 3.6 ----
+# methods
+
+
+# 3.7 ----
+# temporal component
+
+
+# 3.10-11 ----
+# connectivity
+
+# 3.12 ----
+# ES response and drivers
+
+# 3.13 ----
+# Kremen Topics
+
+# 3.14 ---- 
+# ESP types
+
+# 3.15 ----
+# Feedbacks
+
+# 3.16 ----
+# Thresholds
 
 
 # 4. Combine all cleaned up double reviews -----
-
+# add scale question back in
 
 
 # -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
