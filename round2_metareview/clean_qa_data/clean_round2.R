@@ -1400,7 +1400,7 @@ r2excluded_final <- rbind(exclude_r2, exclude_r2LD[names(exclude_r2)]) %>%
   ungroup()
 
 # write out excluded papers
-write_csv(r2excluded_final, "round2_metareview/data/intermediate/round2_excluded.csv", na = "")
+write_csv(r2excluded_final, "round2_metareview/data/intermediate/round2_excluded.csv") #, na = ""
 
 
 # retain kept papers in prelimlong_1c
@@ -1539,7 +1539,16 @@ for(i in methodsRIDs){
   prelimlong1c$qa_note[temprow] <- "Removed 'observational' method. Used published data in model/data sim, did not collect, ND+AK review"
 }
 
-View(subset(prelimlong1c, ResponseId %in% methodsRIDs & abbr == "Methods"))
+# also append note to others reviewed by ND and AK to confirm response valid
+allowmethods <- methodscorrections$ResponseId[is.na(methodscorrections$Changed)]
+for(i in allowmethods){
+  # ID row
+  temprow <- which(prelimlong1c$ResponseId == i & prelimlong1c$abbr == "Methods")
+  # add QA note
+  prelimlong1c$qa_note[temprow] <- "Experiment, observation, and/or modeling methods confirmed by ND+AK review"
+  
+}
+View(subset(prelimlong1c, ResponseId %in% c(methodsRIDs, allowmethods) & abbr == "Methods"))
 # remove "Other" from Data Simulation records (Other value is "used open data from published sources" which is implicit)
 # what are the records with Other in methods?
 othermethodsRIDs <- with(prelimlong1c, ResponseId[grepl("Other", clean_answer) & abbr == "Methods"])
@@ -2756,8 +2765,8 @@ doublemulti <- subset(prelimlong1f, qnum != "Q8" & Title %in% doubletitles[!doub
   subset(!abbr %in% notesfields)
 
 # need to go by question because each consolidation (answer prioritization) will be slightly unique to that question
-# 3.3 ----
-# Exclusion question -- all of these are No because paper kept, so just need to fix reviewer, rid, date cols, and version
+# 3.1 Exclusion question----
+# all of these are No because paper kept, so just need to fix reviewer, rid, date cols, and version
 q3no_doubles <- subset(doublemulti, qnum == "Q3") %>%
   left_join(keptdoubles) %>%
   # make clean_answer No for all bc should be
@@ -2778,6 +2787,83 @@ q3no_doubles <- subset(doublemulti, qnum == "Q3") %>%
   mutate(qa_note = ifelse(is.na(answer), "Infill 'No'; question not yet created in survey when reviewers completed but nothing in answers to indicate paper should be excluded", qa_note))
 
 
+# 3.2 Collapse all else multi-choice (not Q12-Q14) ----- 
+# might be best to first ID clean_answers that are inconsistent (everything together), 
+# then separate ready to go from inconsistent
+# then apply nested dissolve
+# then write out anything that still needs review, sorted by paper (so that ppl volunteering to triage can be responsible for paper)
+# then clean all else that's ready to go
+# q12 will likely still need to be handled separately .. but Q13 and Q14 dependent on what was entered in Q12
+
+doublemulti_base <- subset(doublemulti, !abbr %in% notesfields & !qnum %in% c("Q3", "Q12", "Q13", "Q14")) %>%
+  group_by(Title, abbr) %>%
+  # ignore NAs
+  mutate(sameanswer =  ifelse(!any(is.na(clean_answer)), # if neither answer is NA
+                              length(unique(clean_answer))==1, # are they the same answer?
+                              TRUE)) %>% # otherwise, either both are NA or 1 is NA, in which case default to whichever row has answer
+  ungroup() %>%
+  # exception: if Q10 doesn't agree on yes/no then Q11 won't agree (can't overwrite NA)
+  group_by(Title) %>%
+  mutate(connectdiff = unique(sameanswer[qnum == "Q10"])) %>%
+  ungroup() %>%
+  # update Q11 sameanswer
+  mutate(sameanswer = ifelse(sameanswer & qnum == "Q11" & !connectdiff, FALSE, sameanswer)) %>%
+  # drop connectdiff
+  dplyr::select(-connectdiff) %>%
+  left_join(keptdoubles) %>%
+  mutate(revorder = ifelse(rev1init == Init, 1, 2),
+         clean_answer2 = NA)
+
+length(unique(doublemulti_base$Title[!doublemulti_base$sameanswer])) # 27/31 papers have some sort of inconsistency, not including Q12-Q14..
+# where are the most inconsistences?
+group_by(doublemulti_base, abbr, sameanswer) %>%
+  summarise(nobs = length(unique(Title))) %>%
+  ggplot(aes(sameanswer, nobs)) +
+  geom_col() +
+  facet_wrap(~abbr)
+
+# pull out what's different
+doublemulti_inconsistent <- subset(doublemulti_base, !sameanswer)
+
+temptitle <- unique(doublemulti_inconsistent$Title)
+tempabbr <- unique(doublemulti_inconsistent$abbr)
+# need to go through and collapse nested answers, by abbr..
+# but the only questions I'll be able to do that for is methods and ecosystem.. all else is more binary
+
+for(i in unique(doublemulti_inconsistent$Title)){
+  tempdat <- subset(doublemulti_inconsistent, Title == i)
+  # pull reviewers
+  rev1 <- unique(tempdat$rev1init)
+  rev2 <- unique(tempdat$rev2init)
+  for(a in unique(tempdat$abbr)){
+    tempdat2 <- subset(tempdat, abbr ==a)
+    # methods and ecosystem need to be treated slightly differently (prioritize answer with qa_note because those were reviewed by AK/ND and LD/IS)
+    # > clean_answer MUST be nested within one and defer to row with qa_note
+    if(a == "Methods"){
+      # if any of these are things AK and ND looked at, prioritize that answer
+      if(any(!is.na(tempdat2$qa_note))){
+        # go with answer that has qa_note
+        tempdat2$clean_answer2 <- tempdat2$clean_answer[!is.na(tempdat2$qa_note)]
+        tempdat2$qa_note[is.na(tempdat2$qa_note)] <- "Assign answer reviewed by AK/ND"
+      }else{
+        # check to see if one answer nested in the other
+        tempanswer <- c(grepl(tempdat2$clean_answer[2], tempdat2$clean_answer[1], fixed = T), grepl(tempdat2$clean_answer[1], tempdat2$clean_answer[2], fixed = T))
+        tempdat2$clean_answer2 <- tempdat2$answer[which(tempanswer==TRUE)]
+      }
+      
+     
+      
+      
+    }
+    if(a == "Ecosystem"){
+      
+    }
+  }
+}
+
+test <- subset(doublemulti_inconsistent, abbr == "Methods")
+unique(test$Title)[unique(test$Title) %in% unique(methodscorrections$Title)]
+
 # 3.4 ----
 # ecosystem
 # answer should have clean_answer with inits prefixed (because original answer will be in the version = original row)
@@ -2790,22 +2876,17 @@ q4_doubles <- subset(doublemulti, qnum == "Q4")
 
 
 
-# might be best to first ID clean_answers that are inconsistent (everything together), 
-# then separate ready to go from inconsistent
-# then apply nested dissolve
-# then write out anything that still needs review, sorted by paper (so that ppl volunteering to triage can be responsible for paper)
-# then clean all else that's ready to go
-# q12 will likely still need to be handled separately
 
-doublemulti_base <- subset(doublemulti, !abbr %in% notesfields & !qnum %in% c("Q3", "Q12")) %>%
-  group_by(Title, abbr) %>%
-  # ignore NAs
-  mutate(sameanswer =  ifelse(!any(is.na(clean_answer)), # if neither answer is NA
-                              length(unique(clean_answer))==1, # are they the same answer?
-                              TRUE)) # otherwise, either both are NA or 1 is NA, in which case default to whichever row has answer
-                             
-length(unique(doublemulti_base$Title[!doublemulti_base$sameanswer])) # 28/31 papers have some sort of inconsistency, not including Q12..
+Q12doubles <- subset(doublemulti, qnum == "Q12") %>%
+  mutate(sameanswer = NA) %>%
+  # response should be grouped by ES, and checked on clean_answer_finer
+  # I think only need to check unique answer agreement, not number of variables? .. altho could add in a count check
+  group_by(Title, ES)
 
+# driver should be grouped by ES, clean_group, and abbr, and checked on clean_answer_finer
+# proxy answer and direction can just be grouped by ES and abbr because only 1 answer per matrix row entered
+# may need to do for loop to combine similar response answers
+# abbr == "Driver" can be condensed because standardized answers
 
 
 # 3.5 ----
@@ -2836,8 +2917,8 @@ q5doubles2 <- subset(q5doubles, sameanswer) %>%
   dplyr::select(StartDate:qa_note) %>%
   distinct()
 
-  
-  
+
+
 
 
 
