@@ -2675,6 +2675,9 @@ keptdoubles <- data.frame(Title = sort(doubletitles)) %>%
   mutate(new_rid = paste0("R", 1:nrow(.), "unified"))
 
 # 1. Collapse inconsisent exclusions reviewed by LD -----
+# specify date cols to avoid repeat typing
+datecols <- c("StartDate", "EndDate", "RecordedDate")
+
 # deal with papers that were kept after LD's review but reviewers disagreed (those are easy to collapse)
 Q3doubles <- subset(prelimlong1f, Title %in% Title[answer == "Yes" & qnum == "Q3"]) %>%
   # easiest thing to do is probably ID the person who did not exclude paper and keep their answers
@@ -2706,7 +2709,7 @@ for(i in unique(q3rows$Title)){
   Q3doubles$ResponseId[Q3doubles$Title == i] <- keptdoubles$new_rid[keptdoubles$Title == i]
 }
 # make dates as time processed (sys.time), except for Julie and Grant's new scale data
-Q3doubles[Q3doubles$qnum != "Q8", c("StartDate", "EndDate", "RecordedDate")] <- as.character(Sys.time())
+Q3doubles[Q3doubles$qnum != "Q8", datecols] <- as.character(Sys.time())
 # change version to final
 Q3doubles$version <- "final"
 
@@ -2716,7 +2719,7 @@ Q3doubles$version <- "final"
 # scale notes already single reviewed by JL + GV
 # > generally, Q8 can just be taken out then added back in since only single rows for each
 # double notes that need to be collapsed are abbr %in% c("GenInfo", "ScaleNotes", "KremenNotes", "SurveyNotes)
-notesfields <- c( "EcosystemNotes", "GenInfo", "ScaleNotes", "KremenNotes", "Uncertainty", "SurveyNotes")
+notesfields <- c("EcosystemNotes", "GenInfo", "ScaleNotes", "KremenNotes", "Uncertainty", "SurveyNotes")
 doublenotes <- subset(prelimlong1f, abbr %in% notesfields & Title %in% doubletitles) %>%
   # take out Q3doubles dealt with above
   filter(!Title %in% unique(Q3doubles$Title)) %>%
@@ -2735,7 +2738,7 @@ doublenotes <- subset(prelimlong1f, abbr %in% notesfields & Title %in% doubletit
          ResponseId = new_rid,
          answer = clean_answer,
          version = "final") %>%
-  mutate_at(vars("StartDate", "EndDate", "RecordedDate"), function(x) x <- as.character(Sys.time())) %>%
+  mutate_at(vars(datecols), function(x) x <- as.character(Sys.time())) %>%
   dplyr::select(StartDate:ordercol) %>%
   distinct() %>%
   mutate_at(vars("answer", "clean_answer", "qa_note"), function(x) ifelse(x == "", NA, x))
@@ -2760,7 +2763,7 @@ q3no_doubles <- subset(doublemulti, qnum == "Q3") %>%
   # make clean_answer No for all bc should be
   # > some Review Only q's are NA from both reviewers, but if this were a problem would have got pulled.. can add a qa_note all the same
   mutate(clean_answer = unique(clean_answer[!is.na(clean_answer)]),
-          # assign new inits, rids, times
+         # assign new inits, rids, times
          Init = paste(rev1init, rev2init, sep = "/"),
          ResponseId = new_rid) %>%
   # make all times for write out the same, so NA for now -- can also assign "final" to version at the end
@@ -2777,31 +2780,108 @@ q3no_doubles <- subset(doublemulti, qnum == "Q3") %>%
 
 # 3.4 ----
 # ecosystem
+# answer should have clean_answer with inits prefixed (because original answer will be in the version = original row)
+# then clean answer will have the collapse answer to use in analysis
+# and the rule is, if shorter answer within longer answer, then proceed with collapse
+# BUT, if LD and IS made a correction, prioritize that over whatever answer is there
+# .. or keep original answer and qa notes with inits appended
+
+q4_doubles <- subset(doublemulti, qnum == "Q4")
+
+
+
+# might be best to first ID clean_answers that are inconsistent (everything together), 
+# then separate ready to go from inconsistent
+# then apply nested dissolve
+# then write out anything that still needs review, sorted by paper (so that ppl volunteering to triage can be responsible for paper)
+# then clean all else that's ready to go
+# q12 will likely still need to be handled separately
+
+doublemulti_base <- subset(doublemulti, !abbr %in% notesfields & !qnum %in% c("Q3", "Q12")) %>%
+  group_by(Title, abbr) %>%
+  # ignore NAs
+  mutate(sameanswer =  ifelse(!any(is.na(clean_answer)), # if neither answer is NA
+                              length(unique(clean_answer))==1, # are they the same answer?
+                              TRUE)) # otherwise, either both are NA or 1 is NA, in which case default to whichever row has answer
+                             
+length(unique(doublemulti_base$Title[!doublemulti_base$sameanswer])) # 28/31 papers have some sort of inconsistency, not including Q12..
+
 
 
 # 3.5 ----
 # place
+q5doubles <- subset(doublemulti, qnum == "Q5") %>%
+  left_join(keptdoubles) %>%
+  mutate(answer = paste(Init, answer, sep = ": "),
+         # id the rows that are rev1
+         rev1 = ifelse(rev1init == Init, 1, 2)) %>%
+  arrange(Title, rev1) %>%
+  group_by(Title) %>%
+  mutate(answer2 = str_flatten(answer, collapse = "; "),
+         Init2 = str_flatten(Init, collapse = "/"),
+         sameanswer = length(unique(clean_answer))==1) %>%
+  ungroup()
+
+# break out inconsistent answers from same
+q5doubles_review <- subset(q5doubles, !sameanswer)
+
+
+# continue with consistent answers
+q5doubles2 <- subset(q5doubles, sameanswer) %>%
+  mutate_at(vars(datecols), function(x) x <- NA) %>%
+  mutate(ResponseId = new_rid,
+         Init = Init2,
+         answer = answer2,
+         version = "final") %>%
+  dplyr::select(StartDate:qa_note) %>%
+  distinct()
+
+  
+  
+
 
 
 # 3.6 ----
 # methods
+q6doubles <- subset(doublemulti, qnum == "Q6") %>%
+  left_join(keptdoubles) %>%
+  mutate(answer = ifelse(!is.na(clean_answer), paste(Init, clean_answer, sep = ": "), answer),
+         # and qa_note
+         qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, " only: ", qa_note), qa_note),
+         # id the rows that are rev1
+         rev1 = ifelse(rev1init == Init, 1, 2)) %>%
+  arrange(Title, rev1) %>%
+  group_by(Title, abbr) %>%
+  # collapsed answer for these should be clean_answer, so then clean_answer for "final" is the clean collapsed answer
+  # can still preserve qa notes, so it's clear what all was done to get the final clean answer
+  mutate(answer2 = str_flatten(answer, collapse = "; "),
+         Init2 = str_flatten(Init, collapse = "/"),
+         sameanswer = length(unique(clean_answer))==1) %>%
+  ungroup()
+
+
 
 
 # 3.7 ----
 # temporal component
 
 
+
 # 3.10-11 ----
 # connectivity
+
 
 # 3.12 ----
 # ES response and drivers
 
+
 # 3.13 ----
 # Kremen Topics
 
+
 # 3.14 ---- 
 # ESP types
+
 
 # 3.15 ----
 # Feedbacks
