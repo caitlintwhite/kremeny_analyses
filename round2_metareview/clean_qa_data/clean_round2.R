@@ -2686,6 +2686,19 @@ keptdoubles <- data.frame(Title = sort(doubletitles)) %>%
   dplyr::select(-c(Round2_reviewer1, Round2_reviewer2)) %>%
   # finally, assign new response id
   mutate(new_rid = paste0("R", 1:nrow(.), "unified"))
+# need to correct for papers KCG reviewed (shifted assignment during review)
+
+KCGpapers <- subset(prelimlong1f, Init == "KCG") %>%
+  dplyr::select(Title, Init) %>%
+  distinct()
+
+keptdoubles <- left_join(keptdoubles, KCGpapers) %>%
+  # Kathryn replaced Julie (rev2) on double-review
+  mutate(rev2init = ifelse(!is.na(Init), Init, rev2init)) %>%
+  # drop Init col
+  dplyr::select(-Init)
+
+
 
 # 1. Collapse inconsisent exclusions reviewed by LD -----
 # specify date cols to avoid repeat typing
@@ -2799,7 +2812,7 @@ q3no_doubles <- subset(doublemulti, qnum == "Q3") %>%
 # then clean all else that's ready to go
 # q12 will likely still need to be handled separately .. but Q13 and Q14 dependent on what was entered in Q12
 
-doublemulti_base <- subset(doublemulti, !abbr %in% notesfields & !qnum %in% c("Q3", "Q12", "Q13", "Q14")) %>%
+doublemulti_base <- subset(doublemulti, !abbr %in% notesfields & !qnum %in% c("Q3", "Q12")) %>%
   group_by(Title, abbr) %>%
   # ignore NAs
   mutate(sameanswer =  ifelse(abbr %in% c("YrsData", "ConnectDist"), # these are follow up questions to TimeTrends and Connect -- if one has answer and other NA, can't overwrite NA
@@ -2829,6 +2842,8 @@ doublemulti_inconsistent <- subset(doublemulti_base, !sameanswer)
 # but the only questions I'll be able to do that for is methods and ecosystem.. all else is more binary
 doublemulti_notsame_metheco <- subset(doublemulti_inconsistent, abbr %in% c("Methods", "Ecosystem"))
 
+temptitle <- unique(doublemulti_notsame_metheco$Title)
+tempabbr <- unique(doublemulti_notsame_metheco$abbr)
 
 doublemulti_dissolved <- data.frame()
 for(i in unique(doublemulti_notsame_metheco$Title)){
@@ -2841,7 +2856,7 @@ for(i in unique(doublemulti_notsame_metheco$Title)){
     # check for nestedness first
     tempanswer <- c(grepl(tempdat2$clean_answer[2], tempdat2$clean_answer[1], fixed = T), grepl(tempdat2$clean_answer[1], tempdat2$clean_answer[2], fixed = T))
     if(any(tempanswer)){
-      tempdat2$clean_answer2 <- tempdat2$answer[which(tempanswer==TRUE)]
+      tempdat2$clean_answer2 <- tempdat2$clean_answer[which(tempanswer==TRUE)]
       # update qa note for whatever row was dissolved
       tempdat2$qa_note[which(!tempanswer)] <- paste0(tempdat2$qa_note[which(!tempanswer)], "; dissolved ", tempdat2$Init[which(!tempanswer)], " clean answer into ", tempdat2$Init[which(tempanswer)], " clean answer")
       # clean up NA
@@ -2866,7 +2881,7 @@ rm(tempdat, tempdat2,i,a, doublemulti_notsame_metheco)
 # drop whatever was cleand up from doublemulti_inconsistent
 doublemulti_inconsistent <- anti_join(doublemulti_inconsistent, doublemulti_dissolved[c("ResponseId", "abbr")])
 # clean up dissolved
-doublemulti_dissolved2 <- doublemulti_dissolved %>%
+doublemulti_dissolved <- doublemulti_dissolved %>%
   # need to assign original clean_answer to answer with inits
   mutate(clean_answer = paste(Init, clean_answer, sep = ": "),
          # add inits to qa_note
@@ -2888,7 +2903,7 @@ doublemulti_dissolved2 <- doublemulti_dissolved %>%
   
 
 
-# 3.2.b Collapse consistent answers -----
+# 3.3 Collapse consistent answers -----
 # collapse double reviewed answers that agree
 doublemulti_consistent <- subset(doublemulti_base, sameanswer) %>%
   # append inits to clean_answer and qa_note (if present)
@@ -2905,17 +2920,34 @@ doublemulti_consistent <- subset(doublemulti_base, sameanswer) %>%
   mutate_at(vars(datecols), function(x) x <- NA) %>%
   group_by(Title, abbr) %>%
   mutate(answer = str_flatten(clean_answer, collapse = "; "),
-         qa_note = str_flatten(clean_answer, collapse = "; "))
+         qa_note = str_flatten(qa_note, collapse = "; ")) %>%
+  ungroup() %>%
+  mutate(clean_answer = clean_answer2,
+         version = "final") %>%
+  dplyr::select(StartDate:qa_note) %>%
+  distinct() %>%
+  #append dissolved answers
+  rbind(doublemulti_dissolved) %>%
+  # add cleaned up Q3
+  rbind(Q3doubles[names(.)]) %>%
+  rbind(q3no_doubles[names(.)]) %>%
+  # add cleaned up notes
+  rbind(doublenotes[names(.)]) %>%
+  
+  arrange(Title, survey_order)
 
 
 
 Q12doubles <- subset(doublemulti, qnum %in% c("Q12")) %>%
+  # sort clean answer alphabetically within question for easier comparison
+  arrange(Title, survey_order, clean_answer) %>%
   # only keep records where at least one answer is not NA
   group_by(Title, survey_order) %>%
-  mutate(hasanswer = length(answer[!is.na(answer)])>0) %>%
+  mutate(hasanswer = length(answer[!is.na(answer)])>0,
+         sameanswer = length(unique(clean_answer))==1 | length(unique(answer))==1) %>%
   subset(hasanswer) %>%
   left_join(keptdoubles) %>%
-  mutate(clean_answer2 = NA) %>%
+  mutate(clean_answer2 = NA)
   # drop cols not needed for review
   
   
