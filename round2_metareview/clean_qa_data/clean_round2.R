@@ -357,6 +357,7 @@ firstreview <- prelimlong %>%
   ungroup()
 # write to cleaned data folder for now..
 #write_csv(firstreview, "round2_metareview/data/intermediate/round2_prelim_singlereview.csv")
+rm(firstreview)
 
 
 ## -- 2020/03/18: LOOP TO SUSBET PAIRED REVIEWERS [only run this one time (pre spring bring)] -----
@@ -1310,7 +1311,8 @@ for(i in unique(othercheck$Init)){
 # -- APPLY CORRECTIONS -----
 # clean up work environment
 rm(current_ecosystemnotes, current_kremennotes, current_methodsnotes, current_possibleexclude, current_scalenotes, 
-   exclude_notes, exclude_notes_ids, maybe_exclude_ids, maybe_exclude_notes, possibleexclude_df, watertitles, wetlands)
+   exclude_notes, exclude_notes_ids, maybe_exclude_ids, maybe_exclude_notes, possibleexclude_df, watertitles, wetlands,
+   q4_qa, noKremen, kremennotes, envcheck, scalenotes, methodsnotes, ESPcheck)
 
 # start with exclusions, because if paper excluded then other corrections are moot
 ## notes from Laura on exclusions (email from LD to CTW 5/13/20):
@@ -2239,6 +2241,8 @@ newscale_multi <- subset(newscale, Title %in% Title[duplicated(Title)]) %>%
 newscale <- subset(newscale, !Title %in% newscale_multi$Title) %>%
   rbind(newscale_multi[names(.)]) %>%
   arrange(rownames(.))
+# clean up
+rm(newscale_multi)
 
 newscale_tidy <- dplyr::select(newscale, -'aquatic.') %>%
   rename(Init = Reviewed_by) %>%
@@ -2534,7 +2538,7 @@ for(i in remove_KTenv){
 View(subset(prelimlong1f, ResponseId %in% remove_KTenv & abbr == "KremenTopics"))
 
 
-copy <- prelimlong1f
+copydf <- prelimlong1f
 
 # 7.4. Q13: Kremen Scale ----
 ## > if Multiscale == "Yes", then scale checked in Kremen topics
@@ -2817,293 +2821,231 @@ group_by(doublemulti_base, abbr, sameanswer) %>%
   geom_col() +
   facet_wrap(~abbr)
 
+# 3.2.a Dissolve inconsistent (if possible) -----
 # pull out what's different
 doublemulti_inconsistent <- subset(doublemulti_base, !sameanswer)
 
 # need to go through and collapse nested answers, by abbr..
 # but the only questions I'll be able to do that for is methods and ecosystem.. all else is more binary
 doublemulti_notsame_metheco <- subset(doublemulti_inconsistent, abbr %in% c("Methods", "Ecosystem"))
-temptitle <- unique(doublemulti_notsame_metheco$Title)
-tempabbr <- unique(doublemulti_notsame_metheco$abbr)
 
+
+doublemulti_dissolved <- data.frame()
 for(i in unique(doublemulti_notsame_metheco$Title)){
+  # iterate by title
   tempdat <- subset(doublemulti_notsame_metheco, Title == i)
-  # pull reviewers
-  rev1 <- unique(tempdat$rev1init)
-  rev2 <- unique(tempdat$rev2init)
+  
+  # iterate by question
   for(a in unique(tempdat$abbr)){
     tempdat2 <- subset(tempdat, abbr ==a)
-    # methods and ecosystem need to be treated slightly differently (prioritize answer with qa_note because those were reviewed by AK/ND and LD/IS)
-    # > clean_answer MUST be nested within one and defer to row with qa_note
-    
-    # check for nestedness
+    # check for nestedness first
     tempanswer <- c(grepl(tempdat2$clean_answer[2], tempdat2$clean_answer[1], fixed = T), grepl(tempdat2$clean_answer[1], tempdat2$clean_answer[2], fixed = T))
     if(any(tempanswer)){
       tempdat2$clean_answer2 <- tempdat2$answer[which(tempanswer==TRUE)]
+      # update qa note for whatever row was dissolved
+      tempdat2$qa_note[which(!tempanswer)] <- paste0(tempdat2$qa_note[which(!tempanswer)], "; dissolved ", tempdat2$Init[which(!tempanswer)], " clean answer into ", tempdat2$Init[which(tempanswer)], " clean answer")
+      # clean up NA
+      tempdat2$qa_note[which(!tempanswer)] <- gsub("NA; d", "D", tempdat2$qa_note[which(!tempanswer)])
+      doublemulti_dissolved <- rbind(doublemulti_dissolved, tempdat2)
     }else{
-      if(a == "Methods"){
-        # if any of these are things AK and ND looked at, prioritize that answer
-        if(any(!is.na(tempdat2$qa_note))){
-          # go with answer that has qa_note
-          tempdat2$clean_answer2 <- tempdat2$clean_answer[!is.na(tempdat2$qa_note)]
-          tempdat2$qa_note[is.na(tempdat2$qa_note)] <- "Assign answer reviewed by AK/ND"
-          # append inits, combine clean_answer and qa_note, then collapse
-        }
-      }
-      if(a == "Ecosystem"){
-        
+      # if not nested, prioritize answer looked at by AK/ND or LD/IS (if there)
+      if(any(!is.na(tempdat2$qa_note))){
+        # check for multiple reviews
+        stopifnot(sum(!is.na(tempdat2$qa_note))==1)
+        # go with answer that has qa_note
+        tempdat2$clean_answer2 <- tempdat2$clean_answer[!is.na(tempdat2$qa_note)]
+        tempdat2$qa_note[is.na(tempdat2$qa_note)] <- ifelse(a == "Methods","Assign answer reviewed by ND+ÀK",
+                                                            "Assign answer reviewed by LD+IS")
+        doublemulti_dissolved <- rbind(doublemulti_dissolved, tempdat2)
       }
     }
-    
-    
   }
-    
-  }
+}
+#clean up
+rm(tempdat, tempdat2,i,a, doublemulti_notsame_metheco)
+# drop whatever was cleand up from doublemulti_inconsistent
+doublemulti_inconsistent <- anti_join(doublemulti_inconsistent, doublemulti_dissolved[c("ResponseId", "abbr")])
+# clean up dissolved
+doublemulti_dissolved2 <- doublemulti_dissolved %>%
+  # need to assign original clean_answer to answer with inits
+  mutate(clean_answer = paste(Init, clean_answer, sep = ": "),
+         # add inits to qa_note
+         qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, " review only: ", qa_note), qa_note)) %>%
+  group_by(Title, abbr) %>%
+  # then collapse each, assign clean_answer2 to clean_answer
+  mutate(answer = str_flatten(clean_answer, collapse = "; "),
+         qa_note = str_flatten(qa_note[!is.na(qa_note)], collapse = "; ")) %>%
+  ungroup() %>%
+  # assign new_rid, NA dates, combine inits
+  mutate(clean_answer = clean_answer2, 
+         ResponseId = new_rid,
+         Init = paste(rev1init, rev2init, sep = "/"),
+         version = "final") %>%
+  mutate_at(vars(datecols), function(x) x <- NA) %>%
+  # drop cols then winnow to unique rows
+  dplyr::select(StartDate:qa_note) %>%
+  distinct()
   
-  test <- subset(doublemulti_inconsistent, abbr == "Methods")
-  unique(test$Title)[unique(test$Title) %in% unique(methodscorrections$Title)]
-  
-  
-  # collapse double reviewed answers that agree
-  doublemulti_consistent <- subset(doublemulti_base, sameanswer) %>%
-    # append inits to clean_answer and qa_note (if present)
-    # then assigned collapsed clean_answer to "answer" and final (no inits) to clean_answer
-    # order of answer and qa_note determined by order of reviewer (1 or 2)
-    # also assign new rid and NA date cols
-    group_by(Title, abbr) %>%
-    mutate(clean_answer2 = unique(clean_answer)) %>%
-    ungroup() %>%
-    mutate(clean_answer = ifelse(!is.na(clean_answer), paste(Init, clean_answer, sep = ": "), clean_answer),
-           qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, " review only: ", qa_note), qa_note),
-           Init = paste(rev1init, rev2init, sep = "/"),
-           ResponseId = new_rid) %>%
-    mutate_at(vars(datecols), function(x) x <- NA) %>%
-    group_by(Title, abbr) %>%
-    mutate(answer = str_flatten(clean_answer, collapse = "; "),
-           qa_note = str_flatten(clean_answer, collapse = "; "))
-  
-  
-  # 3.4 ----
-  # ecosystem
-  # answer should have clean_answer with inits prefixed (because original answer will be in the version = original row)
-  # then clean answer will have the collapse answer to use in analysis
-  # and the rule is, if shorter answer within longer answer, then proceed with collapse
-  # BUT, if LD and IS made a correction, prioritize that over whatever answer is there
-  # .. or keep original answer and qa notes with inits appended
-  
-  q4_doubles <- subset(doublemulti, qnum == "Q4")
-  
-  
-  
-  
-  Q12doubles <- subset(doublemulti, qnum == "Q12") %>%
-    mutate(sameanswer = NA) %>%
-    # response should be grouped by ES, and checked on clean_answer_finer
-    # I think only need to check unique answer agreement, not number of variables? .. altho could add in a count check
-    group_by(Title, ES)
-  
-  # driver should be grouped by ES, clean_group, and abbr, and checked on clean_answer_finer
-  # proxy answer and direction can just be grouped by ES and abbr because only 1 answer per matrix row entered
-  # may need to do for loop to combine similar response answers
-  # abbr == "Driver" can be condensed because standardized answers
-  
-  
-  # 3.5 ----
-  # place
-  q5doubles <- subset(doublemulti, qnum == "Q5") %>%
-    left_join(keptdoubles) %>%
-    mutate(answer = paste(Init, answer, sep = ": "),
-           # id the rows that are rev1
-           rev1 = ifelse(rev1init == Init, 1, 2)) %>%
-    arrange(Title, rev1) %>%
-    group_by(Title) %>%
-    mutate(answer2 = str_flatten(answer, collapse = "; "),
-           Init2 = str_flatten(Init, collapse = "/"),
-           sameanswer = length(unique(clean_answer))==1) %>%
-    ungroup()
-  
-  # break out inconsistent answers from same
-  q5doubles_review <- subset(q5doubles, !sameanswer)
+
+
+# 3.2.b Collapse consistent answers -----
+# collapse double reviewed answers that agree
+doublemulti_consistent <- subset(doublemulti_base, sameanswer) %>%
+  # append inits to clean_answer and qa_note (if present)
+  # then assigned collapsed clean_answer to "answer" and final (no inits) to clean_answer
+  # order of answer and qa_note determined by order of reviewer (1 or 2)
+  # also assign new rid and NA date cols
+  group_by(Title, abbr) %>%
+  mutate(clean_answer2 = unique(clean_answer)) %>%
+  ungroup() %>%
+  mutate(clean_answer = ifelse(!is.na(clean_answer), paste(Init, clean_answer, sep = ": "), clean_answer),
+         qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, " review only: ", qa_note), qa_note),
+         Init = paste(rev1init, rev2init, sep = "/"),
+         ResponseId = new_rid) %>%
+  mutate_at(vars(datecols), function(x) x <- NA) %>%
+  group_by(Title, abbr) %>%
+  mutate(answer = str_flatten(clean_answer, collapse = "; "),
+         qa_note = str_flatten(clean_answer, collapse = "; "))
+
+
+
+Q12doubles <- subset(doublemulti, qnum %in% c("Q12")) %>%
+  # only keep records where at least one answer is not NA
+  group_by(Title, survey_order) %>%
+  mutate(hasanswer = length(answer[!is.na(answer)])>0) %>%
+  subset(hasanswer) %>%
+  left_join(keptdoubles) %>%
+  mutate(clean_answer2 = NA) %>%
+  # drop cols not needed for review
   
   
-  # continue with consistent answers
-  q5doubles2 <- subset(q5doubles, sameanswer) %>%
-    mutate_at(vars(datecols), function(x) x <- NA) %>%
-    mutate(ResponseId = new_rid,
-           Init = Init2,
-           answer = answer2,
-           version = "final") %>%
-    dplyr::select(StartDate:qa_note) %>%
-    distinct()
-  
-  
-  
-  
-  
-  
-  # 3.6 ----
-  # methods
-  q6doubles <- subset(doublemulti, qnum == "Q6") %>%
-    left_join(keptdoubles) %>%
-    mutate(answer = ifelse(!is.na(clean_answer), paste(Init, clean_answer, sep = ": "), answer),
-           # and qa_note
-           qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, " only: ", qa_note), qa_note),
-           # id the rows that are rev1
-           rev1 = ifelse(rev1init == Init, 1, 2)) %>%
-    arrange(Title, rev1) %>%
-    group_by(Title, abbr) %>%
-    # collapsed answer for these should be clean_answer, so then clean_answer for "final" is the clean collapsed answer
-    # can still preserve qa notes, so it's clear what all was done to get the final clean answer
-    mutate(answer2 = str_flatten(answer, collapse = "; "),
-           Init2 = str_flatten(Init, collapse = "/"),
-           sameanswer = length(unique(clean_answer))==1) %>%
-    ungroup()
-  
-  
-  
-  
-  # 3.7 ----
-  # temporal component
-  
-  
-  
-  # 3.10-11 ----
-  # connectivity
-  
-  
-  # 3.12 ----
-  # ES response and drivers
-  
-  
-  # 3.13 ----
-  # Kremen Topics
-  
-  
-  # 3.14 ---- 
-  # ESP types
-  
-  
-  # 3.15 ----
-  # Feedbacks
-  
-  # 3.16 ----
-  # Thresholds
-  
-  
-  # 4. Combine all cleaned up double reviews -----
-  # add scale question back in
-  
-  
-  # -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
-  
-  
-  
-  # -- WRITE OUT CLEANED L1 DATASET FOR POST-PROCESSING AND ANALYSIS -----
-  # write out data as it's ready for others to work on.. (e.g. Q12 matrix will probably come later)
-  # temp add scale in double revs not yet cleaned for grant
-  
-  
-  # stack final, clean single reviews and original doubles, and cleaned up doubles
-  # remove Q8 from double review original answers because will be in final
-  # > note.. Julie and Grant answers for single review don't have a response id.. infill yay or nay?
-  clean_master <- subset(prelimlong1f, !(doublerev & qnum == "Q8")) %>%
-    # infill ResponseId for single review JL/GV scale answers
-    fill(ResponseId) %>%
-    rbind(Q3doubles[names(prelimlong1f)]) %>%
-    # double check single ResponseId per title (except for original double revs)
-    group_by(Title) %>%
-    mutate(ridcheck = length(unique(ResponseId))) %>%
-    ungroup()
-  
-  sapply(split(clean_master$ridcheck, clean_master$doublerev), unique) # 2 for double reviews that aren't processed yet, and 3 for ones that are..
-  # check stucture
-  str(clean_master) # can drop ordercol and ridcheck, as well as order (obsolete-- only applied to old scale question)
-  
-  # drop rid check
-  head(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck")])
-  
-  # write out
-  write_csv(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck")], "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
-  
-  
-  
-  # -- PRELIM SUMMARY FIGURE ----
-  
-  select(q12df, Init, Title, ES) %>%
-    filter(!is.na(ES)) %>%
-    distinct() %>%
-    ggplot(aes(ES)) +
-    geom_bar() +
-    coord_flip()
-  
-  ytypefig <- select(q12df, Init, Title, ES, abbr, answer) %>%
-    filter(abbr == "Yclass") %>%
-    distinct() %>%
-    mutate(answer = gsub("Proxy for ES", "ES proxy", answer),
-           answer = factor(answer, levels = c("EF", "ES,EF", "ES", "ES,ES proxy", "ES proxy"))) %>%
-    ggplot(aes(ES, fill = answer)) +
-    geom_bar(color = "grey30") +
-    labs(x = "Ecosystem service", y = "# of papers") +
-    scale_y_continuous(expand = c(0,0)) +
-    scale_fill_viridis_d(name = "Response\ntype") +
-    facet_wrap(~"") +
-    theme(strip.background = element_blank(),
-          strip.text = element_text(face = "bold"),
-          legend.position = "bottom",
-          #legend.justification = c(-1,-1),
-          legend.title = element_text(size = 10, face = "bold"),
-          axis.title = element_text(face = "bold")) +
-    guides(fill = guide_legend(nrow = 2)) +
-    coord_flip()
-  ytypefig
-  
-  test <- select(q12df, Init, Title, ES, abbr, Group, answer) %>%
-    # for now fill down any NAs with ES above it, grouped by Title
-    group_by(Title) %>%
-    fill(ES) %>%
-    ungroup() %>%
-    filter(grepl("Drive", abbr)) %>%
-    distinct() %>%
-    # remove other from Driver (assume if there was something people answered)
-    mutate(count_driver = str_count(answer, "(,|;)(?!Other)"),
-           #if Exploitation, subtract 1 bc has comma in answer
-           #count_driver = ifelse(grepl("Exploitation [(]hunt", answer), count_driver-1, count_driver),
-           count_driver = ifelse(!grepl("Other|Exploit", answer), count_driver+1, count_driver)) %>%
-    select(-answer) %>%
-    group_by(Init, Title, ES, Group) %>%
-    summarise(CountDrivers = sum(count_driver, na.rm = T)) %>% #IDK if we can use other...
-    ungroup()
-  # count the number of commas in each -- assume there is 1 answer provided if not NA
-  
-  ggplot(test, aes(ES, fill = Group)) +
-    geom_bar() +
-    coord_flip()
-  
-  driversfig <- test %>%
-    mutate(CountDrivers = ifelse(CountDrivers == 0, 1, CountDrivers)) %>%
-    group_by(Init, Title, ES, Group) %>%
-    summarise(numberDrivers = sum(CountDrivers)) %>%
-    ungroup()  %>%
-    ggplot(aes(ES, fill = as.factor(numberDrivers))) + #as.factor(numberDrivers)
-    geom_bar(color = "grey30") +
-    labs(y = "# of papers") +
-    scale_y_continuous(expand = c(0,0)) +
-    scale_fill_manual(name = "Number of\ndrivers", values = colors()[591:606]) + #length(unique(test$CountDrivers))
-    facet_wrap(~Group, labeller = as_labeller(c("Anthro" = "Human", "Bio" = "Biotic", "Env"="Environmental"))) +
-    theme(strip.background = element_blank(),
-          strip.text = element_text(face = "bold"),
-          legend.position = "bottom",
-          axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.title.x = element_text(face = "bold"),
-          legend.title = element_text(size = 10, face = "bold")) +
-    guides(guide_legend(byrow = T)) +
-    coord_flip()
-  
-  prelimfig <- plot_grid(ytypefig, driversfig, nrow = 1, labels = "AUTO", align = "v") #, 
-  ggsave("round2_metareview/figs/round2_prelimfig.pdf", prelimfig, 
-         width = 8, height = 5, units = "in", scale = 1.1)  
-  # google slides doesn't like pdfs
-  ggsave("round2_metareview/figs/round2_prelimfig.png", prelimfig, 
-         width = 8, height = 5, units = "in", scale = 1.1)  
-  
+  # response should be grouped by ES, and checked on clean_answer_finer
+  # I think only need to check unique answer agreement, not number of variables? .. altho could add in a count check
+  group_by(Title, ES)
+
+# driver should be grouped by ES, clean_group, and abbr, and checked on clean_answer_finer
+# proxy answer and direction can just be grouped by ES and abbr because only 1 answer per matrix row entered
+# may need to do for loop to combine similar response answers
+# abbr == "Driver" can be condensed because standardized answers
+
+
+
+
+
+
+# 4. Combine all cleaned up double reviews -----
+# add scale question back in
+
+
+# -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
+
+
+
+# -- WRITE OUT CLEANED L1 DATASET FOR POST-PROCESSING AND ANALYSIS -----
+# write out data as it's ready for others to work on.. (e.g. Q12 matrix will probably come later)
+# temp add scale in double revs not yet cleaned for grant
+
+
+# stack final, clean single reviews and original doubles, and cleaned up doubles
+# remove Q8 from double review original answers because will be in final
+# > note.. Julie and Grant answers for single review don't have a response id.. infill yay or nay?
+clean_master <- subset(prelimlong1f, !(doublerev & qnum == "Q8")) %>%
+  # infill ResponseId for single review JL/GV scale answers
+  fill(ResponseId) %>%
+  rbind(Q3doubles[names(prelimlong1f)]) %>%
+  # double check single ResponseId per title (except for original double revs)
+  group_by(Title) %>%
+  mutate(ridcheck = length(unique(ResponseId))) %>%
+  ungroup()
+
+sapply(split(clean_master$ridcheck, clean_master$doublerev), unique) # 2 for double reviews that aren't processed yet, and 3 for ones that are..
+# check stucture
+str(clean_master) # can drop ordercol and ridcheck, as well as order (obsolete-- only applied to old scale question)
+
+# drop rid check
+head(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck")])
+
+# write out
+write_csv(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck")], "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+
+
+
+# -- PRELIM SUMMARY FIGURE ----
+
+select(q12df, Init, Title, ES) %>%
+  filter(!is.na(ES)) %>%
+  distinct() %>%
+  ggplot(aes(ES)) +
+  geom_bar() +
+  coord_flip()
+
+ytypefig <- select(q12df, Init, Title, ES, abbr, answer) %>%
+  filter(abbr == "Yclass") %>%
+  distinct() %>%
+  mutate(answer = gsub("Proxy for ES", "ES proxy", answer),
+         answer = factor(answer, levels = c("EF", "ES,EF", "ES", "ES,ES proxy", "ES proxy"))) %>%
+  ggplot(aes(ES, fill = answer)) +
+  geom_bar(color = "grey30") +
+  labs(x = "Ecosystem service", y = "# of papers") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_fill_viridis_d(name = "Response\ntype") +
+  facet_wrap(~"") +
+  theme(strip.background = element_blank(),
+        strip.text = element_text(face = "bold"),
+        legend.position = "bottom",
+        #legend.justification = c(-1,-1),
+        legend.title = element_text(size = 10, face = "bold"),
+        axis.title = element_text(face = "bold")) +
+  guides(fill = guide_legend(nrow = 2)) +
+  coord_flip()
+ytypefig
+
+test <- select(q12df, Init, Title, ES, abbr, Group, answer) %>%
+  # for now fill down any NAs with ES above it, grouped by Title
+  group_by(Title) %>%
+  fill(ES) %>%
+  ungroup() %>%
+  filter(grepl("Drive", abbr)) %>%
+  distinct() %>%
+  # remove other from Driver (assume if there was something people answered)
+  mutate(count_driver = str_count(answer, "(,|;)(?!Other)"),
+         #if Exploitation, subtract 1 bc has comma in answer
+         #count_driver = ifelse(grepl("Exploitation [(]hunt", answer), count_driver-1, count_driver),
+         count_driver = ifelse(!grepl("Other|Exploit", answer), count_driver+1, count_driver)) %>%
+  select(-answer) %>%
+  group_by(Init, Title, ES, Group) %>%
+  summarise(CountDrivers = sum(count_driver, na.rm = T)) %>% #IDK if we can use other...
+  ungroup()
+# count the number of commas in each -- assume there is 1 answer provided if not NA
+
+ggplot(test, aes(ES, fill = Group)) +
+  geom_bar() +
+  coord_flip()
+
+driversfig <- test %>%
+  mutate(CountDrivers = ifelse(CountDrivers == 0, 1, CountDrivers)) %>%
+  group_by(Init, Title, ES, Group) %>%
+  summarise(numberDrivers = sum(CountDrivers)) %>%
+  ungroup()  %>%
+  ggplot(aes(ES, fill = as.factor(numberDrivers))) + #as.factor(numberDrivers)
+  geom_bar(color = "grey30") +
+  labs(y = "# of papers") +
+  scale_y_continuous(expand = c(0,0)) +
+  scale_fill_manual(name = "Number of\ndrivers", values = colors()[591:606]) + #length(unique(test$CountDrivers))
+  facet_wrap(~Group, labeller = as_labeller(c("Anthro" = "Human", "Bio" = "Biotic", "Env"="Environmental"))) +
+  theme(strip.background = element_blank(),
+        strip.text = element_text(face = "bold"),
+        legend.position = "bottom",
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.title.x = element_text(face = "bold"),
+        legend.title = element_text(size = 10, face = "bold")) +
+  guides(guide_legend(byrow = T)) +
+  coord_flip()
+
+prelimfig <- plot_grid(ytypefig, driversfig, nrow = 1, labels = "AUTO", align = "v") #, 
+ggsave("round2_metareview/figs/round2_prelimfig.pdf", prelimfig, 
+       width = 8, height = 5, units = "in", scale = 1.1)  
+# google slides doesn't like pdfs
+ggsave("round2_metareview/figs/round2_prelimfig.png", prelimfig, 
+       width = 8, height = 5, units = "in", scale = 1.1)  
