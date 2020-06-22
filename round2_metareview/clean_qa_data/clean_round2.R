@@ -2977,17 +2977,26 @@ double_inconsistent_all <- doublemulti_inconsistent %>%
   distinct() %>%
   arrange(Title, survey_order, revorder) %>%
   #drop varnum, clean_answer_finer, rev1 and 2 inits -- drop double rev too because they're all doublerev
-  dplyr::select(-c(doublerev, varnum, clean_answer_finer, rev1init, rev2init)) %>%
+  dplyr::select(-c(doublerev, varnum, clean_answer_finer)) %>%
   # add col for final_answer and reviewer_notes
   mutate(final_answer = NA,
          review_notes = NA) %>%
   # move same answer to near double rev
   dplyr::select(ResponseId:id, sameanswer, answer:clean_answer, final_answer, review_notes, fullquestion:ncol(.))
-  
+
+# what's the breakdown by person?
+sort(sapply(split(double_inconsistent_all$Title, double_inconsistent_all$Init), function(x) length(unique(x))))
+dbl_init <- sort(unique(double_inconsistent_all$Init))
+# remove CK and AIS
+dbl_init <- dbl_init[!dbl_init %in% c("AIS", "CK")]
 # write out by people who are responsive.. they can figure out how to divvy out work
 # Laura (paired with Tim), Aislyn (just her and Anna papers), Grant, Julie, Kathryn, Sierra
+# send Tim and Sierra all of theirs.. but include in Laura, Kathryn, Julie and Grant's (let them decide how to manage)
 
-
+for(i in dbl_init){
+  tempdat <- subset(double_inconsistent_all, rev1init == i | rev2init == i)
+  write_csv(tempdat,paste0("round2_metareview/clean_qa_data/needs_classreview/doublerev_inconsistent/doublerev_inconsistent_", i,".csv"), na = "")
+}
 
 
 
