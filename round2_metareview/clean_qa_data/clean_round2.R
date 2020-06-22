@@ -2706,6 +2706,8 @@ datecols <- c("StartDate", "EndDate", "RecordedDate")
 
 # deal with papers that were kept after LD's review but reviewers disagreed (those are easy to collapse)
 Q3doubles <- subset(prelimlong1f, Title %in% Title[answer == "Yes" & qnum == "Q3"]) %>%
+  # drop scale question (will add back in at the end)
+  subset(qnum != "Q8") %>%
   # easiest thing to do is probably ID the person who did not exclude paper and keep their answers
   group_by(Title) %>%
   mutate(keepInit = unique(Init[!is.na(clean_answer) & abbr == "Ecosystem"])) %>%
@@ -2734,8 +2736,8 @@ for(i in unique(q3rows$Title)){
   Q3doubles$Init[Q3doubles$Title == i & Q3doubles$qnum != "Q8"] <- paste(keptdoubles$rev1init[keptdoubles$Title == i], keptdoubles$rev2init[keptdoubles$Title == i], sep = "/")
   Q3doubles$ResponseId[Q3doubles$Title == i] <- keptdoubles$new_rid[keptdoubles$Title == i]
 }
-# make dates as time processed (sys.time), except for Julie and Grant's new scale data
-Q3doubles[Q3doubles$qnum != "Q8", datecols] <- as.character(Sys.time())
+# NA dates
+Q3doubles[, datecols] <- NA
 # change version to final
 Q3doubles$version <- "final"
 
@@ -2788,20 +2790,26 @@ q3no_doubles <- subset(doublemulti, qnum == "Q3") %>%
   left_join(keptdoubles) %>%
   # make clean_answer No for all bc should be
   # > some Review Only q's are NA from both reviewers, but if this were a problem would have got pulled.. can add a qa_note all the same
-  mutate(clean_answer = unique(clean_answer[!is.na(clean_answer)]),
+  mutate(rev1 = ifelse(rev1init == Init, 1, 2),
+         # append init to answer (same as clean_answer for now)
+         answer = ifelse(!is.na(answer), paste(Init, answer, sep = ": "), answer)) %>%
+  arrange(Title, survey_order, rev1) %>%
+  group_by(Title, abbr) %>%
+  mutate(clean_answer2 = ifelse(length(unique(clean_answer[!is.na(clean_answer)]))>0, unique(clean_answer[!is.na(clean_answer)]), NA),
+         answer = ifelse(is.na(clean_answer2), unique(clean_answer2), str_flatten(answer[!is.na(answer)], collapse = "; "))) %>%
+  ungroup() %>%
+  # add qa note if infilling double NA with no
+  mutate(qa_note = ifelse(is.na(clean_answer2), "For both reviewers: Infilled 'No'; question not yet created in survey when reviewers completed but nothing in answers to indicate paper should be excluded", qa_note),
          # assign new inits, rids, times
          Init = paste(rev1init, rev2init, sep = "/"),
-         ResponseId = new_rid) %>%
+         ResponseId = new_rid,
+         version = "final",
+         # fill all
+         clean_answer = ifelse(!is.na(clean_answer2), clean_answer2, "No")) %>%
   # make all times for write out the same, so NA for now -- can also assign "final" to version at the end
   mutate_at(vars(StartDate, EndDate, RecordedDate), function(x) x <- NA) %>%
-  # infill orxiginal answer with whatever non-NA was there (if any)
-  group_by(Title, abbr) %>%
-  mutate(answer = ifelse(any(unique(answer) == "No"), "No", unique(answer))) %>%
-  ungroup() %>%
-  distinct() %>%
-  # append qa note to infilled No's (applied to Review Only-- that question not created when ppl filled out survey)
-  # > this probably needs to be checked in single review also
-  mutate(qa_note = ifelse(is.na(answer), "Infill 'No'; question not yet created in survey when reviewers completed but nothing in answers to indicate paper should be excluded", qa_note))
+  dplyr::select(StartDate:qa_note) %>%
+  distinct()
 
 
 # 3.2 Collapse all else multi-choice (not Q12-Q14) ----- 
@@ -2826,7 +2834,7 @@ doublemulti_base <- subset(doublemulti, !abbr %in% notesfields & !qnum %in% c("Q
   mutate(revorder = ifelse(rev1init == Init, 1, 2),
          clean_answer2 = NA)
 
-length(unique(doublemulti_base$Title[!doublemulti_base$sameanswer])) # 27/31 papers have some sort of inconsistency, not including Q12-Q14..
+length(unique(doublemulti_base$Title[!doublemulti_base$sameanswer])) # 28/31 papers have some sort of inconsistency, not including Q12-Q14..
 # where are the most inconsistences?
 group_by(doublemulti_base, abbr, sameanswer) %>%
   summarise(nobs = length(unique(Title))) %>%
@@ -2842,8 +2850,6 @@ doublemulti_inconsistent <- subset(doublemulti_base, !sameanswer)
 # but the only questions I'll be able to do that for is methods and ecosystem.. all else is more binary
 doublemulti_notsame_metheco <- subset(doublemulti_inconsistent, abbr %in% c("Methods", "Ecosystem"))
 
-temptitle <- unique(doublemulti_notsame_metheco$Title)
-tempabbr <- unique(doublemulti_notsame_metheco$abbr)
 
 doublemulti_dissolved <- data.frame()
 for(i in unique(doublemulti_notsame_metheco$Title)){
@@ -2900,10 +2906,16 @@ doublemulti_dissolved <- doublemulti_dissolved %>%
   # drop cols then winnow to unique rows
   dplyr::select(StartDate:qa_note) %>%
   distinct()
-  
 
 
-# 3.3 Collapse consistent answers -----
+
+# 3.2b Collapse consistent answers -----
+# prep newscale questions to rbind
+newscale_double <- subset(newscale_tidy, Title %in% keptdoubles$Title) %>%
+  left_join(keptdoubles) %>%
+  mutate(version = "final",
+         ResponseId = new_rid)
+
 # collapse double reviewed answers that agree
 doublemulti_consistent <- subset(doublemulti_base, sameanswer) %>%
   # append inits to clean_answer and qa_note (if present)
@@ -2933,11 +2945,15 @@ doublemulti_consistent <- subset(doublemulti_base, sameanswer) %>%
   rbind(q3no_doubles[names(.)]) %>%
   # add cleaned up notes
   rbind(doublenotes[names(.)]) %>%
-  
+  # add sys time
+  mutate_at(vars(datecols), function(x) x = Sys.time()) %>%
+  #rbind new scale double reviewed papers
+  rbind(newscale_double[names(.)]) %>%
   arrange(Title, survey_order)
 
 
 
+# 3.3 Write out Q12, inconsistent answers that need review still -----
 Q12doubles <- subset(doublemulti, qnum %in% c("Q12")) %>%
   # sort clean answer alphabetically within question for easier comparison
   arrange(Title, survey_order, clean_answer) %>%
@@ -2947,26 +2963,33 @@ Q12doubles <- subset(doublemulti, qnum %in% c("Q12")) %>%
          sameanswer = length(unique(clean_answer))==1 | length(unique(answer))==1) %>%
   subset(hasanswer) %>%
   left_join(keptdoubles) %>%
-  mutate(clean_answer2 = NA)
-  # drop cols not needed for review
+  data.frame()
+# drop cols not needed for review
+# > can drop dates, version, ordercol, varnum, ESnum, hasanswer, new_rid
+# and move clean_answer2 after clean_answer.. call reviewed_answer or something
+
+
+
+double_inconsistent_all <- doublemulti_inconsistent %>%
+  dplyr::select(ResponseId:doublerev, Title:clean_group, qnum:qa_note, sameanswer:rev2init) %>%
+  rbind(Q12doubles[names(.)]) %>%
+  mutate(revorder = ifelse(Init == rev1init, 1, 2)) %>%
+  distinct() %>%
+  arrange(Title, survey_order, revorder) %>%
+  #drop varnum, clean_answer_finer, rev1 and 2 inits -- drop double rev too because they're all doublerev
+  dplyr::select(-c(doublerev, varnum, clean_answer_finer, rev1init, rev2init)) %>%
+  # add col for final_answer and reviewer_notes
+  mutate(final_answer = NA,
+         review_notes = NA) %>%
+  # move same answer to near double rev
+  dplyr::select(ResponseId:id, sameanswer, answer:clean_answer, final_answer, review_notes, fullquestion:ncol(.))
   
-  
-  # response should be grouped by ES, and checked on clean_answer_finer
-  # I think only need to check unique answer agreement, not number of variables? .. altho could add in a count check
-  group_by(Title, ES)
-
-# driver should be grouped by ES, clean_group, and abbr, and checked on clean_answer_finer
-# proxy answer and direction can just be grouped by ES and abbr because only 1 answer per matrix row entered
-# may need to do for loop to combine similar response answers
-# abbr == "Driver" can be condensed because standardized answers
+# write out by people who are responsive.. they can figure out how to divvy out work
+# Laura (paired with Tim), Aislyn (just her and Anna papers), Grant, Julie, Kathryn, Sierra
 
 
 
 
-
-
-# 4. Combine all cleaned up double reviews -----
-# add scale question back in
 
 
 # -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
@@ -2982,9 +3005,15 @@ Q12doubles <- subset(doublemulti, qnum %in% c("Q12")) %>%
 # remove Q8 from double review original answers because will be in final
 # > note.. Julie and Grant answers for single review don't have a response id.. infill yay or nay?
 clean_master <- subset(prelimlong1f, !(doublerev & qnum == "Q8")) %>%
+  # drop ordercol
+  dplyr::select(-ordercol) %>%
   # infill ResponseId for single review JL/GV scale answers
   fill(ResponseId) %>%
-  rbind(Q3doubles[names(prelimlong1f)]) %>%
+  #rbind(Q3doubles[names(prelimlong1f)]) %>%
+  # add consistent double reviewed papers
+  rbind(doublemulti_consistent[names(.)]) %>%
+  # arrange by Title, then survey_order then RecordedDate?
+  arrange(Title, survey_order, RecordedDate) %>%
   # double check single ResponseId per title (except for original double revs)
   group_by(Title) %>%
   mutate(ridcheck = length(unique(ResponseId))) %>%
