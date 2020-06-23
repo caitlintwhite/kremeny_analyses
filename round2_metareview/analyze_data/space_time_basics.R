@@ -68,12 +68,14 @@ dat %>%
   filter(abbr=='TimeTrends') %>%
   group_by(clean_answer) %>%
   summarise(count = n()) %>%
+  mutate(clean_answer = gsub(" \\(.*\\)", '', clean_answer)) %>%
   ggplot(aes(x = clean_answer, y = count, label = count)) +
   geom_col() +
   geom_label() +
   theme_bw() +
   xlab('Time considered?') +
-  ylab('Number of papers')
+  ylab('Number of papers') +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
 dat %>%
@@ -81,9 +83,11 @@ dat %>%
   group_by(clean_answer) %>%
   summarise(count = n()) %>%
   filter(!is.na(clean_answer)) %>%
+  mutate(clean_answer = factor(clean_answer, levels = c('1 year or less','2–5 years','6–10 years', '10+ years'))) %>%
   ggplot(aes(x = clean_answer, y = count, label = count)) +
   geom_col() +
-  geom_label()
+  geom_label() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
  
 
@@ -125,6 +129,8 @@ dat %>%
   xlab("Nested, TimeTrends") +
   ylab("Number of papers") +
   theme_bw()
+
+  # should make a heat map, excluding space for time, for this to show better maybe
 
 # TimeTrends across extents
 
