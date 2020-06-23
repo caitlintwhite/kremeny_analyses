@@ -98,14 +98,29 @@ splitcom <- function(df, keepcols = c("Title", "answer"), splitcol = "answer"){
 
 # read in reviewer revisions/comments/corrections
 corrections <- list.files("round2_metareview/data/reviewer_revisions", full.names = T)
+# > individual corrections
 IScorrections <- read.csv(corrections[grep("IS", corrections)], na.strings = na_vals)
+AIScorrections <- read.csv(corrections[grep("AIS", corrections)], na.strings = na_vals)
+SJDcorrections <- read_excel(corrections[grep("SDJ", corrections)], na = na_vals, trim_ws = T)
+# > NOTE!: Julie sent written corrections in an email
+# > paper exclusions
 excludecorrections <- read.csv(corrections[grep("exclude", corrections)], na.strings = na_vals)
+# > ecosystem classification
 systemcorrections <- read.csv(corrections[grep("ecosystem_class", corrections)], na.strings = na_vals)
+# >> Isabel's wetland reclassification
+wetlandcorrections <- read_excel(corrections[grep("wetland_abs", corrections)], sheet = 1, na = na_vals, trim_ws = T)
+wetlandcode <- read_excel(corrections[grep("wetland_abs", corrections)], sheet = 2, na = na_vals, trim_ws = T)
+# >>join code for wetland abstracts
+wetlandcorrections <- left_join(wetlandcorrections, wetlandcode)
+rm(wetlandcode)
+# > Nick and Aislyn's methods corrections
 methodscorrections <- read.csv(corrections[grep("model", corrections)], na.strings = na_vals)
+# > response and driver binning
 biodrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Bio")
 anthdrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Anthro")
 envdrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Environ")
 responsecorrections <- read.csv(corrections[grep("response", corrections)], na.strings = na_vals)
+
 
 
 # -- RM JUNK ROWS + ID DOUBLE-REVIEWED PAPERS -----
@@ -1343,6 +1358,9 @@ for(i in which(is.na(excludecorrections$ResponseId))){
   # infill reason
   excludecorrections$Reason_LD[i] <- "Q3 - Nick et al. review" 
 }
+# Grant and Anna's ResponseIds not recognized for some reason, clean up
+excludecorrections$ResponseId[grepl("^Adapting the adaptive", excludecorrections$Title)] <- unique(prelimlong1b$ResponseId[grepl("^Adapting the adaptive", prelimlong1b$Title)])
+excludecorrections$ResponseId[grepl("^Habitat connectivity for pollinator", excludecorrections$Title)] <- unique(prelimlong1b$ResponseId[grepl("^Habitat connectivity for pollinator", prelimlong1b$Title)])
 # clean up "TRUE" in reason_LD, it's not a reason..
 excludecorrections$Reason_LD[excludecorrections$Reason_LD == "TRUE"] <- NA
 # add missing reason to Check dam paper (Nick's review)
@@ -1357,7 +1375,7 @@ excludecorrections <- excludecorrections %>%
 
 
 # pull out any to exclude based on LD and ND review by their responseID and Title
-excludeLD <- with(excludecorrections, ResponseId[exclude_LD])
+excludeLD <- unique(with(excludecorrections, ResponseId[exclude_LD]))
 keepLD <- excludecorrections$ResponseId[!excludecorrections$exclude_LD]
 # also grab straightforward excluded papers (didn't need LD's review), combine with 
 exclude_qualtrics <- unique(prelimlong1b$ResponseId[prelimlong1b$exclude == "Exclude" & !prelimlong1b$Title %in% excludecorrections$Title])
@@ -1520,6 +1538,11 @@ for(i in agRIDs){
 rm(replacetemp, temp, agRIDs, ecosystemRIDs, i, temprowAG,
    temp_Q4geninfo, temprow_Q4geninfo, temprow_Q4, temprow_Q4notes,
    IScorrections, systemcorrections)
+
+
+# apply wetland corrections from IS
+
+
 
 
 
@@ -2968,8 +2991,6 @@ Q12doubles <- subset(doublemulti, qnum %in% c("Q12")) %>%
 # > can drop dates, version, ordercol, varnum, ESnum, hasanswer, new_rid
 # and move clean_answer2 after clean_answer.. call reviewed_answer or something
 
-
-
 double_inconsistent_all <- doublemulti_inconsistent %>%
   dplyr::select(ResponseId:doublerev, Title:clean_group, qnum:qa_note, sameanswer:rev2init) %>%
   rbind(Q12doubles[names(.)]) %>%
@@ -2990,7 +3011,7 @@ dbl_init <- sort(unique(double_inconsistent_all$Init))
 # remove CK and AIS
 dbl_init <- dbl_init[!dbl_init %in% c("AIS", "CK")]
 # write out by people who are responsive.. they can figure out how to divvy out work
-# Laura (paired with Tim), Aislyn (just her and Anna papers), Grant, Julie, Kathryn, Sierra
+# Laura (paired with Tim), Aislyn (Anna and Grant), Grant (AK and Sierra), Julie (Tim and Claire), Kathryn (Tim), Sierra (Grant)
 # send Tim and Sierra all of theirs.. but include in Laura, Kathryn, Julie and Grant's (let them decide how to manage)
 
 for(i in dbl_init){
