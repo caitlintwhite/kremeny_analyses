@@ -99,7 +99,7 @@ splitcom <- function(df, keepcols = c("Title", "answer"), splitcol = "answer"){
 # read in reviewer revisions/comments/corrections
 corrections <- list.files("round2_metareview/data/reviewer_revisions", full.names = T)
 # > individual corrections
-IScorrections <- read.csv(corrections[grep("IS", corrections)], na.strings = na_vals)
+IScorrections <- read.csv(corrections[grep("ISreview", corrections)], na.strings = na_vals)
 AIScorrections <- read.csv(corrections[grep("AIS", corrections)], na.strings = na_vals)
 SJDcorrections <- read_excel(corrections[grep("SDJ", corrections)], na = na_vals, trim_ws = T)
 # > NOTE!: Julie sent written corrections in an email
@@ -230,7 +230,7 @@ doubletitles <- unique(forAK$clean_title)
 length(doubletitles)
 
 # clean up environment
-rm(doubles, qualtrix, unwanted, title_df, needs_match, https, tm_papers, tm_update)
+rm(doubles, qualtrix, unwanted, title_df, needs_match, https, tm_papers, tm_update, forAK)
 
 
 
@@ -466,7 +466,7 @@ rm(KG_outstanding, rTim4KG, Tim_remain)
 
 
 # clean up work environment
-rm(stat_byname, stat_byrev, effort, supporting, regulating, provisioning, cultural, needs_match, forAK)
+rm(stat_byname, stat_byrev, effort, supporting, regulating, provisioning, cultural, needs_match)
 
 ## 1) Check exclusion -----
 # look for "exclude" in final notes if answered before Q3b and c created
@@ -1327,7 +1327,7 @@ for(i in unique(othercheck$Init)){
 # clean up work environment
 rm(current_ecosystemnotes, current_kremennotes, current_methodsnotes, current_possibleexclude, current_scalenotes, 
    exclude_notes, exclude_notes_ids, maybe_exclude_ids, maybe_exclude_notes, possibleexclude_df, watertitles, wetlands,
-   q4_qa, noKremen, kremennotes, envcheck, scalenotes, methodsnotes, ESPcheck)
+   noKremen, kremennotes, envcheck, scalenotes, methodsnotes, ESPcheck, needs_match, rawdat, Datapapers, records)
 
 # start with exclusions, because if paper excluded then other corrections are moot
 ## notes from Laura on exclusions (email from LD to CTW 5/13/20):
@@ -1541,8 +1541,63 @@ rm(replacetemp, temp, agRIDs, ecosystemRIDs, i, temprowAG,
 
 
 # apply wetland corrections from IS
+# > clean up df a little bit so easier to look at
+wetlandcorrections <- dplyr::select(wetlandcorrections, ResponseId:abbr, aquatic_JLGV:designation)
+# > UseEcoAnswer_IS: 0 means ignore, 1 means keep as is, 2 mean change
+# > will need to clean up IS's reclass codes.. and can add her comments to qa_note (for both 1 and 2 codes)
+
+# look at new bins
+sort(unique(wetlandcorrections$EcoAnswerReview_IS))
+# Ag/Rural needs new code created by LD and IS
+# "Coastal/Marine/Off-shore" needs correction
+wetlandclass <- str_flatten(sort(unique(wetlandcorrections$EcoAnswerReview_IS)), collapse = ",") %>%
+  strsplit(., ",") %>%
+  data.frame() %>%
+  rename_all(function(x) x <- "code") %>%
+  distinct() %>%
+  arrange(code)
+View(wetlandclass) # maybe easiest just to gsub in Isabel's df..
 
 
+wetlandcorrections <- wetlandcorrections %>%
+  mutate(EcoAnswerReview_IS = gsub(" ?, ?", ",", EcoAnswerReview_IS), # trimws before or after comma
+         # clean up coastal/marine/off-shore
+         EcoAnswerReview_IS = gsub("Coastal/Marine", "Coastal,Marine", EcoAnswerReview_IS, fixed = T),
+         # assign new ag code
+         EcoAnswerReview_IS = gsub("Agricultural/Rural", "Agricultural/Agroforestry/Rural", EcoAnswerReview_IS, fixed = T),
+         # aquatic to freshwater,
+         EcoAnswerReview_IS = gsub("Aquatic", "Freshwater", EcoAnswerReview_IS, fixed = T),
+         # standardize wetland/riparian
+         EcoAnswerReview_IS = gsub("Riparian/Wetland", "Wetland/Riparian", EcoAnswerReview_IS, fixed = T)) %>%
+  # keep only titles that need to be changed
+  subset(UseEcoAnswer_IS == 2) %>%
+  # add col for clean_answer
+  mutate(clean_answer = NA)
+# now need to go through and order categories how ordered in survey.. so not creating combo-categories that are actually the same but appear distinct because of IS ordering
+# order on the survey goes:
+# > Terr, Urb, Ag, Mar, Coast, Fresh, Other (which are now all addressed), then can add IS's wetland/riparian
+ecosystem_order <- data.frame(system = c("Terrestrial", "Urban", "Agricultural/Agroforestry/Rural", "Marine/Off-shore", "Coastal", "Freshwater", "Wetland/Riparian", "Other")) %>%
+  mutate(orderseq = seq(1, nrow(.)))
+for(i in 1:nrow(wetlandcorrections)){
+  # pull current answer
+  tempanswer <- data.frame(strsplit(wetlandcorrections$EcoAnswerReview_IS[i], split = ",")) %>%
+    rename("system" = names(.)) %>%
+    left_join(ecosystem_order, by = "system") %>%
+    arrange(orderseq)
+  # check that all systems have a number for ordering
+  stopifnot(all(!is.na(tempanswer$orderseq)))
+  # reorder based on number sequence
+  wetlandcorrections$clean_answer[i] <- str_flatten(tempanswer$system, collapse = ",")
+}
+# adjust: Tomscha paper should have terrestrial appended (has ag and assessed land cover in floodplains), but nortey paper no -- was done in mangroves
+wetlandcorrections$clean_answer[grepl("The spatial organization of ecosystem services", wetlandcorrections$Title)] <-paste0("Terrestrial,",wetlandcorrections$clean_answer[grepl("The spatial organization of ecosystem services", wetlandcorrections$Title)])
+# remove "looked at paper" and clean up
+wetlandcorrections$EcoAnswerReview_IS_notes <- gsub("looked at paper,?;? ?", "", wetlandcorrections$EcoAnswerReview_IS_notes)
+wetlandcorrections$EcoAnswerReview_IS_notes[wetlandcorrections$EcoAnswerReview_IS_notes == ""] <- NA
+# append note to Tomscha paper (is NA currently)
+wetlandcorrections$EcoAnswerReview_IS_notes[grepl("The spatial organization of ecosystem services", wetlandcorrections$Title)] <- "Added 'Terrestrial' as well--paper assessed land cover in floodplains."
+# append note to mangrove paper (is NA currently)
+wetlandcorrections$EcoAnswerReview_IS_notes[grepl("Comparative Assessment of Mangrove Biomass", wetlandcorrections$Title)] <- "Although ag, is not terrestrial. Assessed mangroves."
 
 
 
