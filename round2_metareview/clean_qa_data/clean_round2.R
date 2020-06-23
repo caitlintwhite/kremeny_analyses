@@ -466,7 +466,7 @@ rm(KG_outstanding, rTim4KG, Tim_remain)
 
 
 # clean up work environment
-rm(stat_byname, stat_byrev, effort, supporting, regulating, provisioning, cultural, needs_match)
+rm(stat_byname, stat_byrev, effort, supporting, regulating, provisioning, cultural)
 
 ## 1) Check exclusion -----
 # look for "exclude" in final notes if answered before Q3b and c created
@@ -1534,11 +1534,6 @@ for(i in agRIDs){
   }
 }
 
-# clean up environment
-rm(replacetemp, temp, agRIDs, ecosystemRIDs, i, temprowAG,
-   temp_Q4geninfo, temprow_Q4geninfo, temprow_Q4, temprow_Q4notes,
-   IScorrections, systemcorrections)
-
 
 # apply wetland corrections from IS
 # > clean up df a little bit so easier to look at
@@ -1595,9 +1590,40 @@ wetlandcorrections$clean_answer[grepl("The spatial organization of ecosystem ser
 wetlandcorrections$EcoAnswerReview_IS_notes <- gsub("looked at paper,?;? ?", "", wetlandcorrections$EcoAnswerReview_IS_notes)
 wetlandcorrections$EcoAnswerReview_IS_notes[wetlandcorrections$EcoAnswerReview_IS_notes == ""] <- NA
 # append note to Tomscha paper (is NA currently)
-wetlandcorrections$EcoAnswerReview_IS_notes[grepl("The spatial organization of ecosystem services", wetlandcorrections$Title)] <- "Added 'Terrestrial' as well--paper assessed land cover in floodplains."
+wetlandcorrections$EcoAnswerReview_IS_notes[grepl("The spatial organization of ecosystem services", wetlandcorrections$Title)] <- "added 'Terrestrial' as well--paper assessed land cover in floodplains."
 # append note to mangrove paper (is NA currently)
-wetlandcorrections$EcoAnswerReview_IS_notes[grepl("Comparative Assessment of Mangrove Biomass", wetlandcorrections$Title)] <- "Although ag, is not terrestrial. Assessed mangroves."
+wetlandcorrections$EcoAnswerReview_IS_notes[grepl("Comparative Assessment of Mangrove Biomass", wetlandcorrections$Title)] <- "although ag, is not terrestrial. Assessed mangroves."
+
+# now go through working master dataset by title, correct system, and add qa_note
+for(i in unique(wetlandcorrections$Title)){
+  tempdat <- subset(prelimlong1c, qnum == "Q4" & Title == i)
+  #id rows
+  # > system
+  temprows <- with(prelimlong1c, which(abbr == "Ecosystem" & Title == i))
+  # > other (there shouldn't be anything but to be sure)
+  temprows_other <- with(prelimlong1c, which(abbr == "EcosystemNotes" & Title == i))
+  # assign wetland ecosystem
+  prelimlong1c$clean_answer[temprows] <- wetlandcorrections$clean_answer[wetlandcorrections$Title == i]
+  # NA other field
+  prelimlong1c$clean_answer[temprows_other] <- NA
+  # add qa note (and IS note if there)
+  if(!is.na(wetlandcorrections$EcoAnswerReview_IS_notes[wetlandcorrections$Title == i])){
+    prelimlong1c$qa_note[temprows] <- paste("Ecosystem reviewed and assigned by IS;", wetlandcorrections$EcoAnswerReview_IS_notes[wetlandcorrections$Title == i])
+  }else{
+    prelimlong1c$qa_note[temprows] <- "Ecosystem reviewed and assigned by IS" 
+  }                    
+}
+
+# need to undo reclass systems for double-reviewed papers where reviewers excluded paper
+excludeddbl <- unique(with(prelimlong1c, ResponseId[qnum == "Q3" & answer == "Yes" & !is.na(answer)]))
+prelimlong1c$clean_answer[prelimlong1c$ResponseId %in% excludeddbl & prelimlong1c$abbr == "Ecosystem"] <- NA
+prelimlong1c$qa_note[prelimlong1c$ResponseId %in% excludeddbl & prelimlong1c$abbr == "Ecosystem"] <- NA
+
+
+# clean up environment
+rm(replacetemp, temp, agRIDs, ecosystemRIDs, i, temprowAG,
+   temp_Q4geninfo, temprow_Q4geninfo, temprow_Q4, temprow_Q4notes,
+   IScorrections, systemcorrections)
 
 
 
