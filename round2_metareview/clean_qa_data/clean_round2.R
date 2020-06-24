@@ -1824,7 +1824,7 @@ copydf <- prelimlong1c
 
 
 # update no response/driver df before proceeding
-correctedRIDs <- unique(c(SDJcorrections$ResponseId, JLcorrections$ResponseId, AIScorrections$ResponseId))
+correctedRIDs <- unique(c(SDJcorrections$ResponseId, JLcorrections$ResponseId, AIScorrections$ResponseId, ))
 noResponseDriver <- subset(noResponseDriver, !ResponseId %in% correctedRIDs)
 
 
@@ -3264,6 +3264,8 @@ for(i in dbl_init){
   tempdat <- subset(double_inconsistent_all, rev1init == i | rev2init == i)
   write_csv(tempdat,paste0("round2_metareview/clean_qa_data/needs_classreview/doublerev_inconsistent/doublerev_inconsistent_", i,".csv"), na = "")
 }
+
+# 
 
 
 
