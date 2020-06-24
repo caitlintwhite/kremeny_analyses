@@ -79,6 +79,7 @@ SoilProtect,Env,aspect,Topography and position,Env
 ClimReg,Env,Availability of dissolved organic carbon,Soil characteristics,Env
 CulturePsych,Env,Availability of water sources,Hydrology,Env
 ClimReg,Bio,bark thickness,Biotic characteristics of the plot,Bio
+,Bio,biodiversity of grassland plant community,Service provider diversity/richness,Bio
 Pollination,Bio,Biotic driver= a bat species ESP,Service provider identity,Bio
 coastWQReg,Bio,Biotic driver= ESP identity (which of three invasive species provided greatest ES potential),Service provider identity,Bio
 Energy,Bio,Biotic driver= ESP identity (which of three invasive species provided greatest ES potential),Service provider identity,Bio
@@ -96,7 +97,6 @@ freshWQReg,Anthro,building density,Population growth and density,Anthro
 MaintainOpts,Anthro,building density,Population growth and density,Anthro
 Materials,Env,Burn regime,Extreme events,Env
 MaintainOpts,Env,burn severity,Extreme events,Env
-freshWQReg,Anthro,but land use intensification. management scenarios for stormwater and riparian development,Management/restoration,Anthro
 ClimReg,Bio,canopy cover,Biotic characteristics of the plot,Bio
 PestPath,Anthro,canopy cover,Abiotic characteristics of the landscape: terrestrial,Env
 coastWQReg,Bio,Canopy cover,Biotic characteristics of the plot,Bio
@@ -156,7 +156,7 @@ freshWQReg,Env,DEM,Topography and position,Env
 SoilProtect,Env,DEM,Topography and position,Env
 Food,Bio,Density of honeybee hives,Service provider density,Bio
 Pollination,Bio,Density of honeybee hives,Service provider density,Bio
-HabCreate,Env,"different olive grove types could be considered land use or management type (organic, conventional, abandoned, natural areas)",Management,Anthro
+HabCreate,Env,different olive grove types could be considered land use or management type (organic; conventional; abandoned; natural areas),Management,Anthro
 coastWQReg,Anthro,direct impacts to natural stream channel,Human disturbance,Anthro
 HabCreate,Anthro,direct impacts to natural stream channel,Human disturbance,Anthro
 MaintainOpts,Anthro,direct impacts to natural stream channel,Human disturbance,Anthro
@@ -199,11 +199,11 @@ SoilProtect,Bio,earthworms,Service provider abundance,Bio
 Food,Bio,Eclosion time of pest,Pathogens/natural enemies,Bio
 ClimReg,Anthro,ecological rehabilitation,Management/restoration,Anthro
 freshWQReg,Anthro,ecological rehabilitation,Management/restoration,Anthro
-ClimReg,Env,"Ecosystem service types, ",REMOVE,Env
-CulturePsych,Env,"Ecosystem service types, ",REMOVE,Env
-Food,Env,"Ecosystem service types, ",REMOVE,Env
-freshWQReg,Env,"Ecosystem service types, ",REMOVE,Env
-SoilProtect,Env,"Ecosystem service types, ",REMOVE,Env
+ClimReg,Env,Ecosystem service types,Index,Env
+CulturePsych,Env,Ecosystem service types,Index,Env
+Food,Env,Ecosystem service types,Index,Env
+freshWQReg,Env,Ecosystem service types,Index,Env
+SoilProtect,Env,Ecosystem service types,Index,Env
 SoilProtect,Env,edge and flat),Land cover,Env
 coastWQReg,Anthro,education,Characteristics of human population,Anthro
 CulturePsych,Anthro,education,Characteristics of human population,Anthro
@@ -225,12 +225,12 @@ Energy,Anthro,experimental manipulation of salt content in water and water level
 Food,Anthro,experimental manipulation of salt content in water and water level,Management/restoration,Anthro
 Food,Anthro,experimental polytunnel manipulation type,Management/restoration,Anthro
 Pollination,Anthro,experimental polytunnel manipulation type,Management/restoration,Anthro
-CulturePsych,Anthro,Exploitation (hunting or fishing),Exploitation/harvest,Anthro
-Food,Anthro,Exploitation (hunting or fishing),Exploitation/harvest,Anthro
-HabCreate,Anthro,Exploitation (hunting or fishing),Exploitation/harvest,Anthro
-Materials,Anthro,Exploitation (hunting or fishing),Exploitation/harvest,Anthro
-OceanReg,Anthro,Exploitation (hunting or fishing),Exploitation/harvest,Anthro
-Pollination,Anthro,Exploitation (hunting or fishing),Exploitation/harvest,Anthro
+CulturePsych,Anthro,Exploitation (hunting; fishing),Exploitation/harvest,Anthro
+Food,Anthro,Exploitation (hunting; fishing),Exploitation/harvest,Anthro
+HabCreate,Anthro,Exploitation (hunting; fishing),Exploitation/harvest,Anthro
+Materials,Anthro,Exploitation (hunting; fishing),Exploitation/harvest,Anthro
+OceanReg,Anthro,Exploitation (hunting; fishing),Exploitation/harvest,Anthro
+Pollination,Anthro,Exploitation (hunting; fishing),Exploitation/harvest,Anthro
 coastWQReg,Env,exposure),Abiotic characteristics of the landscape: terrestrial,Env
 Food,Env,exposure),Abiotic characteristics of the landscape: terrestrial,Env
 ClimReg,Env,Extreme Events,Extreme events,Env
@@ -278,6 +278,7 @@ SoilProtect,Anthro,grazing,Exploitation/harvest,Anthro
 PestPath,Anthro,green roofs,Characteristics of locality,Anthro
 PestPath,Env,growing season week,Climate,Env
 coastWQReg,Bio,Growth,"Service provider reproduction, growth, and population maintenance",Bio
+,Env,habitat provision,Land cover,Env
 Food,Env,Habitat type (type of coral environment),Land cover,Env
 HabCreate,Env,Habitat type (type of coral environment),Land cover,Env
 PestPath,Env,habtitat heterogeneity,Land cover,Env
@@ -288,8 +289,6 @@ MaintainOpts,Env,HDO saturation,Abiotic characteristics of the landscape: aquati
 MaintainOpts,Bio,herbaceous cover diversity,Service provider diversity/richness,Bio
 Food,Anthro,herbicide spraying,Insecticides/fungicides/pesticides/herbicides,Anthro
 Pollination,Anthro,herbicide spraying,Insecticides/fungicides/pesticides/herbicides,Anthro
-Food,Env,Heterogeneous),Land cover,Env
-Pollination,Env,Heterogeneous),Land cover,Env
 Energy,Anthro,homeowner stability,Characteristics of human population,Anthro
 Food,Bio,honeybees near farm,Pollination,Bio
 Pollination,Bio,honeybees near farm,Pollination,Bio
@@ -339,6 +338,7 @@ Pollination,Bio,Land cover,Habitat,Bio
 SoilProtect,Bio,Land cover,Habitat,Bio
 MaintainOpts,Env,land cover type,Land cover,Env
 Materials,Env,land cover type,Land cover,Env
+,Env,Land cover type,Land cover,Env
 Food,Anthro,land ownership),Land use and land cover change,Anthro
 AQReg,Anthro,Land use change,Land use and land cover change,Anthro
 ClimReg,Anthro,Land use change,Land use and land cover change,Anthro
@@ -369,8 +369,8 @@ coastWQReg,Anthro,land use on both sides of the corridor,Land use and land cover
 HabCreate,Anthro,land use on both sides of the corridor,Land use and land cover change,Anthro
 MaintainOpts,Anthro,land use on both sides of the corridor,Land use and land cover change,Anthro
 Food,Anthro,landscape context,Land use and land cover change,Anthro
-Food,Env,Landscape types (Homogeneous,Land cover,Env
-Pollination,Env,Landscape types (Homogeneous,Land cover,Env
+Food,Env,Landscape types (Homogeneous; Heterogeneous),Land cover,Env
+Pollination,Env,Landscape types (Homogeneous; Heterogeneous),Land cover,Env
 Food,Env,latitude,Topography and position,Env
 Food,Env,Latitude,Topography and position,Env
 SoilProtect,Env,leaflitter,Vegetation cover,Bio
@@ -427,7 +427,8 @@ ClimReg,Anthro,mean dwelling density,Population growth and density,Anthro
 ClimReg,Anthro,mean edge/area ratio,Characteristics of locality,Anthro
 ClimReg,Anthro,mean lot size,Characteristics of locality,Anthro
 ClimReg,Anthro,mean patch size,Characteristics of locality,Anthro
-no ES selected,Bio,measured 82 different ecosystem function variables ,Index,Bio
+,Bio,Mean species richness (by plot and by site),Service provider diversity/richness,Bio
+no ES selected,Bio,measured 82 different ecosystem function variables,Index,Bio
 Food,Env,mid-channel nodes,Hydrology,Env
 Food,Bio,modeled influences of 3 organisms: 2 beneficial insects,Service provider abundance,Bio
 Food,Anthro,Municipality (this mixes a bit with geographic location),Characteristics of locality,Anthro
@@ -452,7 +453,7 @@ Pollination,Env,Nitrogen availability,Soil characteristics,Env
 coastWQReg,Env,nitrogen deposition,Soil characteristics,Env
 HabCreate,Env,NO2 + NO3,Soil characteristics,Env
 MaintainOpts,Env,NO2 + NO3,Soil characteristics,Env
-freshWQReg,Anthro,not just land use change,Land use and land cover change,Anthro
+freshWQReg,Anthro,not just land use change but land use intensification. management scenarios for stormwater and riparian development,Management/restoration,Anthro
 HabCreate,Anthro,Note: human exploitation driver is oil exploitation,Exploitation/harvest,Anthro
 Food,Bio,number of bumblebee colonies used per year,Pollination,Bio
 Pollination,Bio,number of bumblebee colonies used per year,Pollination,Bio
@@ -752,21 +753,22 @@ ClimReg,Env,Type of vegetation (grassland vs. shrubland),Vegetation cover,Bio
 SoilProtect,Env,Understory cover,Vegetation cover,Bio
 Food,Anthro,urban area within 1km,Proximity to development,Anthro
 Pollination,Anthro,urban area within 1km,Proximity to development,Anthro
+,Anthro,Urban development,Land use and land cover change,Anthro
 ClimReg,Anthro,urban form: population density,Population growth and density,Anthro
 freshWQReg,Anthro,urban form: population density,Population growth and density,Anthro
 HabCreate,Anthro,urban form: population density,Population growth and density,Anthro
 CulturePsych,Anthro,Urban to rural gradient of land use.,Land use and land cover change,Anthro
 HabCreate,Anthro,urbanization,Land use and land cover change,Anthro
-PestPath,Bio,various trout and fish species including invasive,Service provider diversity/richness,Bio
+PestPath,Env,various trout and fish species including invasive,Service provider diversity/richness,Bio
 SoilProtect,Bio,vegetation basal gap,Biotic characteristics of the plot,Bio
 SoilProtect,Bio,vegetation canopy gap,Biotic characteristics of the plot,Bio
+ClimReg,Bio,vegetation cover,Biotic characteristics of the plot,Bio
+Food,Bio,vegetation cover,Biotic characteristics of the plot,Bio
+freshWQReg,Bio,vegetation cover,Biotic characteristics of the plot,Bio
+Hazards,Bio,vegetation cover,Biotic characteristics of the plot,Bio
+SoilProtect,Bio,vegetation cover,Biotic characteristics of the plot,Bio
 SoilProtect,Env,vegetation cover,Vegetation cover,Bio
 SoilProtect,Env,Vegetation cover,Vegetation cover,Bio
-ClimReg,Bio,vegetation cover ,Biotic characteristics of the plot,Bio
-Food,Bio,vegetation cover ,Biotic characteristics of the plot,Bio
-freshWQReg,Bio,vegetation cover ,Biotic characteristics of the plot,Bio
-Hazards,Bio,vegetation cover ,Biotic characteristics of the plot,Bio
-SoilProtect,Bio,vegetation cover ,Biotic characteristics of the plot,Bio
 ClimReg,Bio,vegetation type,Biotic characteristics of the plot,Bio
 coastWQReg,Anthro,visible human impacts around the channel,Human disturbance,Anthro
 HabCreate,Anthro,visible human impacts around the channel,Human disturbance,Anthro

@@ -447,6 +447,11 @@ SoilProtect,Microbial biomass,1,0,0,0,Productivity,?,productivity,productivity
 CulturePsych,moose hunting,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
 Food,Moose hunting,0,1,0,0,Exploitation/harvest,,exploitation/harvest,exploitation/harvest
 HabCreate,multifunctional hotspots,0,1,0,0,Habitat,no idea,habitat,habitat
+AQReg,Multifunctionality index (from 82 indicator variables),,,,,,,,index
+HabCreate,Multifunctionality index (from 82 indicator variables),,,,,,,,index
+PestPath,Multifunctionality index (from 82 indicator variables),,,,,,,,index
+Pollination,Multifunctionality index (from 82 indicator variables),,,,,,,,index
+SoilProtect,Multifunctionality index (from 82 indicator variables),,,,,,,,index
 SoilProtect,N,1,0,0,1,Soil characteristics,Nitrogen ?,soil physiochemical characteristics,soil physiochemical characteristics
 coastWQReg,N and P excretion rates,0,0,1,0,Aquatic biogeochemistry,,aquatic biogeochemistry,aquatic biogeochemistry
 ClimReg,N avaliability,0,1,0,1,Soil characteristics,vague,soil physiochemical characteristics,soil physiochemical characteristics

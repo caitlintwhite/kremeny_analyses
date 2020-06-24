@@ -1751,7 +1751,6 @@ for(i in 1:nrow(tempdat)){
 }
 
 copydf <- prelimlong1c
-rm(JLcorrections, tempES, tempdat)
 
 # Anna
 # iterate through corrections with for-loop, as done for JL corrections
@@ -1805,7 +1804,6 @@ for(i in 1:nrow(tempdat)){
 }
 
 copydf <- prelimlong1c
-rm(MeyerES, SDJcorrections, SDJtocorrect, tempdat, AIScorrections, r)
 
 # Caitlin corrections
 # Breland et al. should have "No" for threshold question (accidentally checked Mentioned)
@@ -1825,6 +1823,14 @@ prelimlong1c$qa_note[prelimlong1c$ResponseId == "R_3PNBrx8CScS4JTm" & prelimlong
 copydf <- prelimlong1c
 
 
+# update no response/driver df before proceeding
+correctedRIDs <- unique(c(SDJcorrections$ResponseId, JLcorrections$ResponseId, AIScorrections$ResponseId))
+noResponseDriver <- subset(noResponseDriver, !ResponseId %in% correctedRIDs)
+
+
+
+rm(MeyerES, SDJcorrections, SDJtocorrect, tempdat, AIScorrections, r, tempES, JLcorrections)
+
 
 # 5.a. Driver corrections -----
 # !> note: need to add in *new* response and driver variables from corrections in section preceeding this one..
@@ -1842,7 +1848,9 @@ all_driver_summary2 <- subset(prelimlong1c, abbr %in% c("Driver", "OtherDriver")
   subset(!answer %in% unique(alldrivers_summary$answer)) %>%
   arrange(Group, answer) %>%
   # drop vars i know are already accounted for
-  subset(!grepl("different olive grove|Ecosystem service types", answer))
+  subset(!grepl("different olive grove|Ecosystem service types", answer)) %>%
+  # add count col (to rbind with drivers)
+  rename(count = num)
 
 
 # review bio drivers..
@@ -1859,7 +1867,10 @@ abund_terms <- "abundance"
 rm(test_biodrivers)
 
 # go through environmental drivers and clean up bins, and assign what's outstanding
-clean_biodriver_corrections <- subset(alldrivers_summary, Group == "Bio") %>%
+clean_biodriver_corrections <- rbind(alldrivers_summary, all_driver_summary2[names(alldrivers_summary)]) %>%
+  subset(Group == "Bio") %>%
+  #subset(alldrivers_summary, Group == "Bio") %>%
+  #rbind(all_driver_summary2[names(alldrivers_summary)])
   #remove count since that may have changed
   dplyr::select(-count) %>%
   # rename group so joins properly
@@ -1931,7 +1942,8 @@ topo_keywords <- "distance|DEM|elevation|slope|aspect|geograph|altitude|latitud|
 rm(test_envdrivers)
 
 # go through environmental drivers and clean up bins, and assign what's outstanding
-clean_envdriver_corrections <- subset(alldrivers_summary, Group == "Env") %>%
+clean_envdriver_corrections <- rbind(alldrivers_summary, all_driver_summary2[names(alldrivers_summary)]) %>%
+  subset(Group == "Env") %>%
   #remove count since that may have changed
   dplyr::select(-count) %>%
   # rename group so joins properly
@@ -1954,7 +1966,7 @@ clean_envdriver_corrections <- subset(alldrivers_summary, Group == "Env") %>%
     # assign topography and landscape position
     clean_driver_finer = ifelse(grepl(topo_keywords, answer, ignore.case = T), "topography and position", clean_driver_finer),
     # landscape goes in land cover
-    clean_driver_finer = ifelse(grepl("landscape", answer, ignore.case = T), "land cover", clean_driver_finer),
+    clean_driver_finer = ifelse(grepl("landscape|habitat provis|land cover type", answer, ignore.case = T), "land cover", clean_driver_finer),
     # add weirdos to abiotic char--aquatic
     clean_driver_finer = ifelse(grepl("daytime light|turnover|HDO satu", answer, ignore.case = T), "abiotic characteristics of the landscape: aquatic", clean_driver_finer),
     # add weirdos to abiotic char--terrestrial
@@ -2000,12 +2012,13 @@ development_terms <- "distance|proximity|roads|urban areas"
 human_disturbance_terms <- "disturbance|impacts|ditching"
 char_humanpop <- "composition|structure of the homog|orientation|policy|socioecon"
 place_terms <- "city|apartment|municipal|green roof|location|street density|mean edge|mean lot|mean patch|spatial agg" #characteristics of place
-landuse_terms <- "deforestation|urbanization|land use change|tree volume|stand age" # as long as stand age comes after setting mgmt terms, will apply correct finer driver
+landuse_terms <- "deforestation|urbanization|land use change|tree volume|stand age|urban devel" # as long as stand age comes after setting mgmt terms, will apply correct finer driver
 # clean up
 rm(test_anthdrivers)
 
 # go through environmental drivers and clean up bins, and assign what's outstanding
-clean_anthdriver_corrections <- subset(alldrivers_summary, Group == "Anthro") %>%
+clean_anthdriver_corrections <- rbind(alldrivers_summary, all_driver_summary2[names(alldrivers_summary)]) %>%
+  subset(Group == "Anthro") %>%
   #remove count since that may have changed
   dplyr::select(-count) %>%
   # rename group so joins properly
@@ -2174,6 +2187,7 @@ write_csv(responses_forLDAK, "round2_metareview/clean_qa_data/needs_classreview/
 # maybe try pulling out Q12 to clean and tidy on its own?
 q12df_clean <- subset(prelimlong1c, qnum == "Q12")
 
+copydf <- prelimlong1c
 # importante! need to erase commas from drivers where shouldn't be comma-split (and so pairs appropriately with driver corrections)
 ## Exploitation (hunting, fishing) -> (hunting or fishing)
 ## Water level (current and previous years min,max,mean), -> gsub out commas
@@ -3089,7 +3103,7 @@ doublemulti_base <- subset(doublemulti, !abbr %in% notesfields & !qnum %in% c("Q
   mutate(revorder = ifelse(rev1init == Init, 1, 2),
          clean_answer2 = NA)
 
-length(unique(doublemulti_base$Title[!doublemulti_base$sameanswer])) # 28/31 papers have some sort of inconsistency, not including Q12-Q14..
+length(unique(doublemulti_base$Title[!doublemulti_base$sameanswer])) # 27/31 papers have some sort of inconsistency, not including Q12-Q14..
 # where are the most inconsistences?
 group_by(doublemulti_base, abbr, sameanswer) %>%
   summarise(nobs = length(unique(Title))) %>%
@@ -3279,7 +3293,8 @@ clean_master <- subset(prelimlong1f, !(doublerev & qnum == "Q8")) %>%
   # double check single ResponseId per title (except for original double revs)
   group_by(Title) %>%
   mutate(ridcheck = length(unique(ResponseId))) %>%
-  ungroup()
+  ungroup() %>%
+  data.frame()
 
 sapply(split(clean_master$ridcheck, clean_master$doublerev), unique) # 2 for double reviews that aren't processed yet, and 3 for ones that are..
 # check stucture
