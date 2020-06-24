@@ -101,7 +101,7 @@ corrections <- list.files("round2_metareview/data/reviewer_revisions", full.name
 # > individual corrections
 IScorrections <- read.csv(corrections[grep("ISreview", corrections)], na.strings = na_vals)
 AIScorrections <- read.csv(corrections[grep("AIS", corrections)], na.strings = na_vals)
-SJDcorrections <- read_excel(corrections[grep("SDJ", corrections)], na = na_vals, trim_ws = T)
+SDJcorrections <- read_excel(corrections[grep("SDJ", corrections)], na = na_vals, trim_ws = T)
 # > NOTE!: Julie sent written corrections in an email
 # > paper exclusions
 excludecorrections <- read.csv(corrections[grep("exclude", corrections)], na.strings = na_vals)
@@ -1621,9 +1621,13 @@ prelimlong1c$qa_note[prelimlong1c$ResponseId %in% excludeddbl & prelimlong1c$abb
 
 
 # clean up environment
-rm(replacetemp, temp, agRIDs, ecosystemRIDs, i, temprowAG,
-   temp_Q4geninfo, temprow_Q4geninfo, temprow_Q4, temprow_Q4notes,
-   IScorrections, systemcorrections)
+rm(replacetemp, temp, agRIDs, ecosystemRIDs, i, temprowAG, wetlandclass, wetlandcorrections,
+   temp_Q4geninfo, temprow_Q4geninfo, temprow_Q4, temprow_Q4notes, ecosystem_order,
+   IScorrections, systemcorrections, wetland_abstracts, temprows, temprows_other)
+
+
+# save work
+copydf <- prelimlong1c
 
 
 
@@ -1712,6 +1716,55 @@ copydf <- prelimlong1c
 
 # see if can collapse down response and driver categories based on work already done
 # i.e. if remove ES's, is everything labeled?
+
+# need to first add in missing driver/response corrections from ppl here before apply bins
+
+# Julie
+# > in email from JL to CTW, 6/12/20
+# So for my paper, I entered 'other' under environmental driver, and I believe this is a mistake.
+# The only non-biotic driver in this paper was a compost treatment, which I believe should fall under the 'human driver' category, especially since the groups' later discussions about environment vs management drivers.
+# I checked out the full data for this paper, however, and it looks like I did NOT enter it as an anthropogenic driver, but rather was going to or mistakenly entered it as an 'other' environmental driver. 
+# So I think the best thing would be to both remove the reference to an 'other' environmental driver, but also add compost as an anthropogenic driver via the category 'Management Practices' for all three of the services the paper considered (AQreg, ClimReg, coastWQReg). 
+# > CTW: correction needed is remove "Other" from Env driver and check "Management Practices" in Anthro for the three ES's
+
+# read in Julie's to-correct csv to ID paper that needs update
+allmissing <- list.files("round2_metareview/clean_qa_data/needs_classreview/missing_responsedriver/", full.names = T)
+JLcorrections <- read.csv(allmissing[grep("JL", allmissing)], na.strings = na_vals)
+# for each ES where "Other" entered in enviro driver, want to pull EffectDirect, assign to Anthro Driver, and NA the driver and check Management Practices
+
+# subset dataset and apply corrections in temp df, then apply to master
+tempdat <- subset(prelimlong1c, ResponseId == JLcorrections$ResponseId & qnum == "Q12")
+tempES <- tempdat$ES[tempdat$clean_answer == "Other" & !is.na(tempdat$clean_answer)]
+# correct driver answer
+tempdat$clean_answer[tempdat$ES %in% tempES & tempdat$Group == "Anthro" & tempdat$abbr == "Driver"] <- "Management Practices"
+tempdat$clean_answer[tempdat$ES %in% tempES & tempdat$Group == "Env" & tempdat$abbr == "Driver"] <- NA
+# correct effect direct answer
+tempdat$clean_answer[tempdat$ES %in% tempES & tempdat$Group == "Anthro" & tempdat$abbr == "EffectDirect"] <- tempdat$clean_answer[tempdat$ES %in% tempES & tempdat$Group == "Env" & tempdat$abbr == "EffectDirect"]
+tempdat$clean_answer[tempdat$ES %in% tempES & tempdat$Group == "Env" & tempdat$abbr == "EffectDirect"] <- NA
+# subset tempdat to just those rows that need update
+tempdat <- subset(tempdat, is.na(answer) & !is.na(clean_answer) | !is.na(answer) & is.na(clean_answer))
+
+# iterate through and correct
+for(i in 1:nrow(tempdat)){
+  prelimlong1c$clean_answer[prelimlong1c$ResponseId == unique(tempdat$ResponseId) & prelimlong1c$survey_order == tempdat$survey_order[i]] <- tempdat$clean_answer[i]
+  prelimlong1c$qa_note[prelimlong1c$ResponseId == unique(tempdat$ResponseId) & prelimlong1c$survey_order == tempdat$survey_order[i]] <- "Reviewer correction"
+}
+
+copydf <- prelimlong1c
+rm(JLcorrections, tempES, tempdat)
+
+
+# Anna
+# iterate through corrections with for-loop, as done for JL corrections
+
+
+
+# Sierra
+
+
+
+# Caitlin
+
 
 
 # 5.a. Driver corrections -----
