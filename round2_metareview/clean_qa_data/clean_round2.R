@@ -3302,11 +3302,11 @@ sapply(split(clean_master$ridcheck, clean_master$doublerev), unique) # 2 for dou
 # check stucture
 str(clean_master) # can drop ordercol and ridcheck, as well as order (obsolete-- only applied to old scale question)
 
-# drop rid check
-head(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck")])
+# drop rid check and other cols not needed
+head(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck", "varnum", "ESnum")])
 
 # write out
-write_csv(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck")], "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+write_csv(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck", "varnum", "ESnum")], "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
 
