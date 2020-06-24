@@ -19,7 +19,7 @@ extent_df = dat %>%
 time_trends_df = dat %>%
   filter(abbr=='TimeTrends') %>%
   dplyr::select(Title, TimeTrends = clean_answer) %>%
-  group_by(Title) %>%
+  #group_by(Title) %>%
   #summarise(TimeTrends = paste0(unique(TimeTrends), collapse = '_')) %>% # deal with double reviews
   #filter(!grepl('_', TimeTrends)) %>% # TEMPORARY - remove studies with double review disagreements
   mutate(TimeTrends = gsub(" \\(.*\\)", '', TimeTrends)) # get rid of the 'e.g' text
@@ -28,7 +28,7 @@ yrs_df = dat %>%
   filter(abbr=='YrsData') %>%
   dplyr::select(Title, YrsData = clean_answer) %>%
   filter(!is.na(YrsData)) %>% # excludes the No's in timetrends
-  group_by(Title) #%>%
+  #group_by(Title) #%>%
   #summarise(YrsData = paste0(unique(YrsData), collapse = '_')) %>% # deal with double reviews
   #filter(!grepl('_', YrsData)) # TEMPORARY - remove studies with double review disagreements
 
