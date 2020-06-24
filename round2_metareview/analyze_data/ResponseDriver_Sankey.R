@@ -1,20 +1,25 @@
 ######################################################
 #### Alluvial - Sankey Figure ########################
 ## Written by: Aislyn Keyes 
-## Last edited: June 15, 2020
+## Last edited: June 23, 2020
 
 # Load packages 
 #library(ggalluvial)
+install.packages("htmlwidgets")
 library(tidyverse)
 library(dplyr)
 library(ggfittext)
 library(networkD3)
+library(htmlwidgets)
 
 # Load data, process data -------------------------------------------------------------------
 data <- read.csv("round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
+data <- data[data$version == "final",] # final data
 df <- data[,c(8,11:13,15:20)] # pull relevant columns
 df <- df[df$qnum == "Q12",] # subset to only Q12
+
+
 
 response.df <- df[df$abbr=="Response",] # pull just response rows
 response.df <- response.df[,c(1,4,7,8,10)] # pull important columns
@@ -36,12 +41,29 @@ nodes <- nodes[!is.na(nodes$name),] # get rid of NA values
 x <- nrow(nodes) - 1
 nodes$ID <- 0:x
 
+nodes$NodeType <- c("Env","Anthro","Bio", "Provisioning", "Regulating","Supporting",
+                    "Supporting","Cultural","Supporting","Regulating","Regulating",
+                    "Provisioning","Provisioning","Regulating","Regulating","Regulating",
+                    "Cultural","Provisioning","Regulating")
+nodes$FullName <- c("Environmental", "Anthropogenic", "Biotic",
+                    "Food and Feed", "Regulation of pests/pathogens",
+                    "Pollination", "Habitat Creation","Physical and Psychological exp.",
+                    "Soil Formation/Protection", "Climate Regulation",
+                    "Coastal Water Quality", "Materials","Medicinal",
+                    "Fresh Water Quality", "Hazard Regulation",
+                    "Air Quality", "Maintenance of Options",
+                    "Energy", "Regulation of Ocean Acidification")
+
+#attach(nodes)
+#nodes <- nodes[order(NodeType),]
+#detach(nodes)
+
 ## Link data frame for sankey
 # link VALUES
 values <- driver.df[,c(2,3,4)]
 values$num.papers <- 1 # add column to sum
-values <- aggregate(formula = num.papers ~ ES + clean_group + clean_answer_finer, data = values, FUN = sum)
-col <- c("TargetName","SourceName","Group","value")
+values <- aggregate(formula = num.papers ~ ES + clean_group , data = values, FUN = sum)
+col <- c("TargetName","SourceName","value")
 colnames(values) <- col
 
 
@@ -54,19 +76,43 @@ links <- data.frame(SourceName = rep(c("Bio","Anthro","Env"), each=nrow(nodes[no
 
 s.links <- merge(x=links, y=values, by = c("SourceName","TargetName"), all.x = T)
 s.links <- s.links[!is.na(s.links$value),] # get rid of NA values
+s.links <- s.links[,-5]
 
+
+names(s.links)[names(s.links)=="x"] <- "value"
+
+
+colors <-  'd3.scaleOrdinal() .domain(["Anthro", "Env","Bio", "Supporting","Cultural","Regulating","Provisioning"]) .range(["#69b3a2", "steelblue" , "purple", "red", "orange", "yellow", "FF3399"])'
 
 # BASE SANKEY CODE
-sankeyNetwork(Links = s.links, Nodes = nodes, Source = "Source",
-              Target = "Target", Value = "value", NodeID = "name",
-              units = "papers", fontSize = 12, nodeWidth = 30,
+sn <- sankeyNetwork(Links = s.links, Nodes = nodes, Source = "Source",
+              Target = "Target", Value = "value", NodeID = "FullName",
+              units = "papers", fontSize = 18, nodeWidth = 40,
               fontFamily = "Arial",
-              LinkGroup = "Group",
-              NodeGroup = "NodeType")
+              LinkGroup = "SourceName",
+              NodeGroup = "NodeType",
+              colourScale = colors,
+              margin = list(left=300, right=50))
 
 
+right <- c("Food and Feed", "Regulation of pests/pathogens",
+           "Habitat Creation","Pollination","Physical and Psychological exp.",
+           "Soil Formation/Protection","Climate Regulation","Fresh Water Quality",
+           "Materials", "Medicinal","Coastal Water Quality", "Hazard Regulation",
+           "Maintenance of Options", "Air Quality","Energy","Regulation of Ocean Acidification")
 
-
+onRender(
+  sn,
+  paste0('
+        function(el,x){
+        d3.select(el)
+        .selectAll(".node text")
+        .filter(function(d) { return (["',paste0(right,collapse = '","'),'"].indexOf(d.name) > -1);})
+        .attr("x", 6 + x.options.nodeWidth)
+        .attr("text-anchor", "begin");
+        }
+        ')
+)
 
 
 
