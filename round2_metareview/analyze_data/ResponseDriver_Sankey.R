@@ -5,7 +5,7 @@
 
 # Load packages 
 #library(ggalluvial)
-install.packages("htmlwidgets")
+#install.packages("htmlwidgets")
 library(tidyverse)
 library(dplyr)
 library(ggfittext)
@@ -25,6 +25,7 @@ response.df <- df[df$abbr=="Response",] # pull just response rows
 response.df <- response.df[,c(1,4,7,8,10)] # pull important columns
 response.df <- response.df[!is.na(response.df$clean_answer_finer),] # get rid of NA response bin for now
 response.df <- response.df[!duplicated(response.df),]
+
 
 driver.df <- df[df$abbr=="Driver",] # pull just driver rows
 driver.df <- driver.df[,c(1,4,7,10)] # pull important columns 
@@ -54,6 +55,8 @@ nodes$FullName <- c("Environmental", "Anthropogenic", "Biotic",
                     "Air Quality", "Maintenance of Options",
                     "Energy", "Regulation of Ocean Acidification")
 
+nodes$Type <- c(rep("Driver", times = 3), rep("eco.serv", times=16))
+
 #attach(nodes)
 #nodes <- nodes[order(NodeType),]
 #detach(nodes)
@@ -68,15 +71,15 @@ colnames(values) <- col
 
 
 # create data frame to merge later
-links <- data.frame(SourceName = rep(c("Bio","Anthro","Env"), each=nrow(nodes[nodes$NodeType=="eco.serv",])),
-                    Source = rep(c(2,1,0), each=nrow(nodes[nodes$NodeType=="eco.serv",])),
+links <- data.frame(SourceName = rep(c("Bio","Anthro","Env"), each=nrow(nodes[nodes$Type=="eco.serv",])),
+                    Source = rep(c(2,1,0), each=nrow(nodes[nodes$Type=="eco.serv",])),
                     TargetName = rep(nodes.ES$name, times = 3),
                     Target = rep(nodes$ID[4:nrow(nodes)], times=3)
 ) 
 
 s.links <- merge(x=links, y=values, by = c("SourceName","TargetName"), all.x = T)
 s.links <- s.links[!is.na(s.links$value),] # get rid of NA values
-s.links <- s.links[,-5]
+
 
 
 names(s.links)[names(s.links)=="x"] <- "value"
