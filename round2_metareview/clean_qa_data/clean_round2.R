@@ -1753,21 +1753,98 @@ for(i in 1:nrow(tempdat)){
 copydf <- prelimlong1c
 rm(JLcorrections, tempES, tempdat)
 
-
 # Anna
 # iterate through corrections with for-loop, as done for JL corrections
+for(r in unique(AIScorrections$ResponseId)){
+  # check that review still in working dataset (not excluded)
+  if(!r %in% unique(prelimlong1c$ResponseId)){
+    next
+  }
+  # subset corrections df to just answers that need corrections
+  # Anna only put something in clean_answer if it was a correction, so can subset for that
+  tempdat <- subset(AIScorrections, ResponseId == r & !is.na(clean_answer))
+  for(i in 1:nrow(tempdat)){
+    prelimlong1c$clean_answer[prelimlong1c$ResponseId == r & prelimlong1c$survey_order == tempdat$survey_order[i]] <- tempdat$clean_answer[i]
+    prelimlong1c$qa_note[prelimlong1c$ResponseId == r & prelimlong1c$survey_order == tempdat$survey_order[i]] <- "Reviewer correction"
+  }
+}
 
-
+copydf <- prelimlong1c
 
 # Sierra
+# remove empty rows
+SDJcorrections <- subset(SDJcorrections, !is.na(ResponseId))
+# > SDJ coded all 82 inidividual indicator variables used in Meyer et al. 2018, but looking at papers those were used in combination for a multifunctionality index and that index is the main y-var of interest in the paper
+# > infilling Response as "multifunctionality index" to not inflate # of response variables across studies (since others did not break down all variables that went into indices in other papers)
+# > and "mixed" for effect direction since that's what it was based on Sierra's review of all indicators
+# > can add note to say see Sierra's excel sheet for more detailed review
+# > "Other" for driver and use her OtherDriver response
+# > will need to correct this paper manually
 
+# apply corrections to other paper (Staes et al. 2017) with for loop
+tempdat <- subset(SDJcorrections, grepl("Quantification of the potential impact of nature ", Title) & !is.na(clean_answer)) 
+for(i in 1:nrow(tempdat)){
+  prelimlong1c$clean_answer[prelimlong1c$ResponseId == unique(tempdat$ResponseId) & prelimlong1c$survey_order == tempdat$survey_order[i]] <- tempdat$clean_answer[i]
+  prelimlong1c$qa_note[prelimlong1c$ResponseId == unique(tempdat$ResponseId) & prelimlong1c$survey_order == tempdat$survey_order[i]] <- "Reviewer correction"
+}
 
+# treat Meyer et al. 2018
+# read in SDJ to-correct file
+SDJtocorrect <- read.csv("round2_metareview/clean_qa_data/needs_classreview/missing_responsedriver/q12_reviewSDJ.csv", na.strings = na_vals)
+MeyerES <- unique(with(SDJcorrections, ES[grepl("multifunctionality", Title)]))
+tempdat <- subset(SDJtocorrect, grepl("multifunctionality", Title) & ES %in% MeyerES) %>%
+  # infill with info from Sierra
+  mutate(clean_answer = ifelse(abbr == "Response", "Multifunctionality index (from 82 indicator variables)", clean_answer),
+         clean_answer = ifelse(abbr == "Yclass", unique(SDJcorrections$clean_answer[SDJcorrections$abbr == "Yclass" & grepl("multifunc", SDJcorrections$Title)]), clean_answer), #& !is.na(SDJcorrections$clean_answer
+         clean_answer = ifelse(abbr == "EffectDirect" & Group == "Bio", "Mixed", clean_answer),
+         clean_answer = ifelse(abbr == "Driver" & Group == "Bio", "Other", clean_answer),
+         clean_answer = ifelse(abbr == "OtherDriver" & Group == "Bio", with(SDJcorrections, clean_answer[abbr == "OtherDriver" & grepl("multifunc", Title) & !is.na(clean_answer)]), clean_answer))
+for(i in 1:nrow(tempdat)){
+  prelimlong1c$clean_answer[prelimlong1c$ResponseId == unique(tempdat$ResponseId) & prelimlong1c$survey_order == tempdat$survey_order[i]] <- tempdat$clean_answer[i]
+  prelimlong1c$qa_note[prelimlong1c$ResponseId == unique(tempdat$ResponseId) & prelimlong1c$survey_order == tempdat$survey_order[i]] <- "Reviewer correction"
+}
 
-# Caitlin
+copydf <- prelimlong1c
+rm(MeyerES, SDJcorrections, SDJtocorrect, tempdat, AIScorrections, r)
+
+# Caitlin corrections
+# Breland et al. should have "No" for threshold question (accidentally checked Mentioned)
+prelimlong1c$clean_answer[prelimlong1c$ResponseId == "R_1QaoAiXNrrXyPUS" & prelimlong1c$abbr == "Thresholds"] <- "No"
+prelimlong1c$qa_note[prelimlong1c$ResponseId == "R_1QaoAiXNrrXyPUS" & prelimlong1c$abbr == "Thresholds"] <- "Reviewer correction"
+
+# also correction species richness and ESP for Chalcraft et al. 2013
+# study used "local" mean species richness (plot level) and mean "regional" (site-level)
+prelimlong1c$clean_answer[prelimlong1c$ResponseId == "R_3PNBrx8CScS4JTm" & prelimlong1c$survey_order == 205] <- "Mean species richness (by plot and by site)"
+prelimlong1c$qa_note[prelimlong1c$ResponseId == "R_3PNBrx8CScS4JTm" & prelimlong1c$survey_order == 205] <- "Reviewer correction"
+# correct ESP type (and notes)
+prelimlong1c$clean_answer[prelimlong1c$ResponseId == "R_3PNBrx8CScS4JTm" & prelimlong1c$abbr == "ESP_type"] <- "Across species  [e.g. community structure, diversity]"
+prelimlong1c$clean_answer[prelimlong1c$ResponseId == "R_3PNBrx8CScS4JTm" & prelimlong1c$abbr == "KremenNotes"] <- "Mean species richnes"
+prelimlong1c$qa_note[prelimlong1c$ResponseId == "R_3PNBrx8CScS4JTm" & prelimlong1c$qnum == "Q14"] <- "Reviewer correction"
+
+# save working copy
+copydf <- prelimlong1c
 
 
 
 # 5.a. Driver corrections -----
+# !> note: need to add in *new* response and driver variables from corrections in section preceeding this one..
+# > .. maybe remake all_drivers_summary and response_summary?
+
+all_driver_summary2 <- subset(prelimlong1c, abbr %in% c("Driver", "OtherDriver")) %>%
+  # clean up answers that should be split
+  mutate(clean_answer = gsub("hunting, fishing", "hunting or fishing", clean_answer),
+         clean_answer = ifelse(grepl("^different olive grove |^Water level ", clean_answer), gsub(",", " ", clean_answer), clean_answer)) %>%
+  dplyr::select(clean_answer, Group, ES) %>%
+  arrange(clean_answer) %>%
+  distinct() %>%
+  splitcom(keepcols = names(.), splitcol = "clean_answer") %>%
+  distinct() %>%
+  subset(!answer %in% unique(alldrivers_summary$answer)) %>%
+  arrange(Group, answer) %>%
+  # drop vars i know are already accounted for
+  subset(!grepl("different olive grove|Ecosystem service types", answer))
+
+
 # review bio drivers..
 test_biodrivers <- dplyr::select(biodrivecorrections, answer, Driver_Finer) %>%
   distinct() %>%
@@ -1998,6 +2075,26 @@ write_csv(master_driver_corrections, "round2_metareview/data/intermediate/round2
 
 
 # 5.b. Response corrections -----
+# pull added response vars from corrections
+all_responses2 <- subset(prelimlong1c, abbr == "Response") %>%
+  # clean up answers that should be split
+  # mutate(clean_answer = gsub("hunting, fishing", "hunting or fishing", clean_answer),
+  #        clean_answer = ifelse(grepl("^different olive grove |^Water level ", clean_answer), gsub(",", " ", clean_answer), clean_answer)) %>%
+  dplyr::select(clean_answer, ES) %>%
+  arrange(clean_answer) %>%
+  distinct() %>%
+  splitcom(keepcols = names(.), splitcol = "clean_answer") %>%
+  distinct() %>%
+  subset(!answer %in% unique(response_summary$Response)) %>%
+  arrange(answer) %>%
+  rename(Response = answer, EcoServ = ES) %>%
+  # add cols in corrections not here so can rbind
+  cbind(data.frame(matrix(nrow = nrow(.), ncol = length(names(response_summary)[!names(response_summary) %in% names(.)]),
+                          dimnames = list(NULL, names(response_summary)[!names(response_summary) %in% names(.)])))) %>%
+  rename_all(function(x) gsub("[.]", " ", x)) %>%
+  dplyr::select(names(response_summary))
+
+
 test_responses <- dplyr::select(responsecorrections, Response, Key.word) %>%
   distinct() %>%
   arrange(Response)
@@ -2008,6 +2105,7 @@ fxnlbiodiv_terms <- "functional even|functional disp|functional diver|functional
 
 # go through responses and clean up bins, assign what's outstanding
 clean_responses_corrections <- response_summary %>%
+  rbind(all_responses2) %>%
   # drop EF/ES counts in corrections file since not up to date
   left_join(dplyr::select(responsecorrections, EcoServ:Notes)) %>%
   mutate(response_finer = trimws(casefold(Key.word))) %>%
