@@ -3265,9 +3265,21 @@ for(i in dbl_init){
   write_csv(tempdat,paste0("round2_metareview/clean_qa_data/needs_classreview/doublerev_inconsistent/doublerev_inconsistent_", i,".csv"), na = "")
 }
 
-# 
+# check which of Tim's corrections needed are double review papers
+#othercheck, #noresponsedriver, #double_inconsistent
+timcheck <- dplyr::select(noResponseDriver, Init, Title) %>%
+  rbind(othercheck[c("Init", "Title")]) %>%
+  rbind(double_inconsistent_all[c("Init", "Title")]) %>%
+  subset(Init == "TK") %>%
+  distinct() %>%
+  mutate(doublerev = Title %in% doubletitles) %>%
+  left_join(distinct(double_inconsistent_all[double_inconsistent_all$rev1init == "TK" | double_inconsistent_all$rev2init == "TK", c("Title", "rev1init", "rev2init")])) %>%
+  replace_na(list("rev1init" = "TK")) %>%
+  mutate(missing_otherdriver = ifelse(Title %in% othercheck$Title[othercheck$Init == "TK"], "X", NA),
+         missing_driver_response = ifelse(Title %in% noResponseDriver$Title[noResponseDriver$Init == "TK"], "X", NA)) %>%
+  left_join(original[c("Title", "FirstAuthor", "PublicationYear")])
 
-
+write_csv(timcheck, "round2_metareview/clean_qa_data/needs_classreview/missing_responsedriver/TK_ESoutstanding_20200624.csv", na = "")
 
 
 # -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
