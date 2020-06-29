@@ -27,7 +27,7 @@ time_trends_df = dat %>%
 yrs_df = dat %>%
   filter(abbr=='YrsData') %>%
   dplyr::select(Title, YrsData = clean_answer) %>%
-  filter(!is.na(YrsData)) %>% # excludes the No's in timetrends
+  filter(!is.na(YrsData)) # %>% # excludes the No's in timetrends
   #group_by(Title) #%>%
   #summarise(YrsData = paste0(unique(YrsData), collapse = '_')) %>% # deal with double reviews
   #filter(!grepl('_', YrsData)) # TEMPORARY - remove studies with double review disagreements
@@ -46,6 +46,11 @@ study_type = dat %>%
 # multi-scale?
 study_type %>%
   left_join(nested_df, by = 'Title') %>%
+  separate_rows(Methods, sep = ',') %>% 
+  arrange(Methods) %>%
+  group_by(Title) %>%
+  summarise(Methods = paste0(unique(Methods), collapse = ','),
+            Nested = paste0(unique(Nested), collapse = ',')) %>%
   group_by(Methods, Nested) %>%
   summarise(count = n()) %>%
   # need to deal with order of the different options - not sure why they can go in different orders
