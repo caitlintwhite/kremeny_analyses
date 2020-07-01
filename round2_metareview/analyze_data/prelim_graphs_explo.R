@@ -1,10 +1,10 @@
 #' ---
 #' title: "Preliminary graphs for results exploration"
-#' output: html_document
+#' output: pdf_document
 #' ---
 
 
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 
 #+ messsage=FALSE, warnings=FALSE
 ### Preliminary graphs for exploration of results ###
@@ -19,7 +19,10 @@ dat = read.csv("../data/cleaned/ESqualtrics_r2keep_cleaned.csv") %>%
 
 
 #+
-#' ## Study system
+#' # 1) How are we studying the ecology of ecosystem services?
+#' 
+#' ## Study systems, places, methods
+#' #### Study system
 dat %>% 
   filter(abbr == 'Ecosystem') %>%
   dplyr::select(Title, clean_answer) %>%
@@ -32,7 +35,7 @@ dat %>%
   upset(nsets = ncol(.)-1) # lots of parameters can be added here to make the plot look better
 
 #+
-#' ## Places
+#' #### Places
 dat %>% 
   filter(abbr == 'Place') %>%
   dplyr::select(Title, clean_answer) %>%
@@ -46,7 +49,7 @@ dat %>%
 # intersections probably not useful, since most of the intersections have just 1 record
 
 #+
-#' ## Study type
+#' #### Study type
 dat %>% 
   filter(abbr == 'Methods') %>%
   mutate(clean_answer = gsub(" \\(.*\\)", '', clean_answer)) %>%
@@ -74,7 +77,7 @@ dat %>%
 #' Most studies fall in single ES type bin, some 2 or 3 ES types. Max 11 ES bins in single study (see below)
 
 #+
-#' ##### Looking at number of studies (bottom row) with number of service types considered (top row)
+#' Looking at number of studies (bottom row) with number of service types considered (top row)
 dat %>%
   filter(abbr=='Yclass') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
@@ -93,7 +96,11 @@ dat %>%
 #' response var's which is probably too much to bother with)
 
 #+
-#' ## ESPs - single, multiple, interacting
+#' # 2) Biotic drivers of ecosystem services
+#' 
+#' ## Ecosystem service providers
+
+#' #### ESPs - single, multiple, interacting
 dat %>%
   filter(abbr=='ESP_type') %>%
   dplyr::select(Title, clean_answer) %>%
@@ -130,7 +137,7 @@ dat %>%
 #   upset(nsets = ncol(.)-1)
 
 #+
-#' ## ESPs and ES type
+#' #### ESPs and ES type
 dat %>%
   filter(abbr=='ESP_type') %>%
   dplyr::select(Title, clean_answer) %>%
@@ -173,7 +180,9 @@ dat %>%
 
 
 #+
-#' ## Community structure - how many?
+#' ## Community structure
+#' A 'Yes' means that the box for community structure in the Kremen themes
+#' question was checked.
 
 dat %>%
   filter(abbr=='KremenTopics') %>%
@@ -200,11 +209,11 @@ dat %>%
 #' 79 studies look at comm structure influencing function and got included
 
 #+
-#' ### Community structure - how many stopped at biodiversity?
+#' #### Community structure - how many stopped at biodiversity?
 #' will have to ask Caitlin about this one (or she might be doing it already?)
 
 #+
-#' ### Community structure and ES type
+#' #### Community structure and ES type
 dat %>%
   filter(abbr=='KremenTopics') %>%
   dplyr::select(Title, clean_answer) %>%
@@ -243,68 +252,33 @@ dat %>%
 #' Pest pathogens, Habitat creation, Climate regulation pretty even (which
 #' means more Yes than expected), Pollination may have more No's than expected
 
-
 #+
-#' ## Abiotic driver through biotic driver? 
+#' # 3) Abiotic drivers of ecosystem services
+#+
+#' ## Environmental drivers
+#' SANKEY
+#+
+#' ## Human drivers
+#' SANKEY
+#+
+#' ## Mediation through biotic driver
 #' not sure exactly what this means or if/how we could test it?
 
-#+ 
-#' ## Feedbacks
-dat %>% 
-  filter(abbr=='Feedbacks') %>%
-  dplyr::select(Title, clean_answer) %>%
-  separate_rows(clean_answer, sep = ',') %>%
-  mutate(clean_answer = case_when(
-    clean_answer=='No feedbacks measured directly' ~ 'None',
-    TRUE ~ clean_answer
-  )) %>%
-  mutate(pres_holder = 1) %>%
-  pivot_wider(id_cols = 'Title', names_from = 'clean_answer', values_from = 'pres_holder') %>% 
-  replace(is.na(.), 0) %>% 
-  data.frame() %>%
-  upset(nsets = ncol(.)-1)
 
-dat %>% 
-  filter(abbr=='Feedbacks') %>%
-  dplyr::select(Title, clean_answer) %>%
-  group_by(clean_answer) %>%
-  summarise(count = n())
 
 #+
-#' ## Non-linearities/thresholds
-dat %>% 
-  filter(abbr=='Thresholds') %>%
-  dplyr::select(Title, clean_answer) %>%
-  group_by(clean_answer) %>%
-  summarise(count = n()) %>%
-  mutate(clean_answer = factor(clean_answer, levels = c('No', 'Mentioned or discussed but not measured','Yes'))) %>%
-  ggplot(aes(x = clean_answer, y = count, label = count)) +
-  geom_col() +
-  geom_label() +
-  theme_bw() +
-  xlab('Thresholds considered?') 
-
-
-#' # SPATIO-TEMPORAL SCALE - LARGE SECTION
+#' # 4) Temporal and spatial scale
 #' This section contains three subsections. First, there are some basic plots of
 #' the overall trends of spatio-temporal scale across all papers. Second, there
 #' is a section looking at space-time tradeoffs. Third, there is a section on
 #' scale biases for Methods used, ES type, and Driver group.
 #' 
-#' In sections two and three, the dashed line represents what we would expect if
-#' subgroups were selected at random from the overall distribution from Yes's
-#' and No's. Thus, bars larger or smaller than the dashed line show that either
-#' time or space is more/less likely to be considered in that group. (I'm still
-#' working on how to write this up more specifically in a non-confusing way...so
-#' let me know if you have questions!). It's also useful to keep in mind that
-#' these proportions can also be considered in absolute terms, not just with
-#' respect to the dashed line. So, for example, even if something is more likely
-#' than expected to be multi-scale, it still may be the case that less than half
-#' of the studies in that group are multi-scale (which would still point to some
-#' sort of absolute gap).
+
+
+#+ ## How many studies considered spatio-temporal scale?
 
 #+
-#' ### Time considered
+#' #### Time considered
 dat %>%
   filter(abbr=='TimeTrends') %>%
   group_by(clean_answer) %>%
@@ -334,7 +308,7 @@ dat %>%
   xlab('Number of years')
 
 #+
-#' ### Multi scale
+#' #### Multi scale
 dat %>%
   filter(abbr=='Nested') %>%
   group_by(clean_answer) %>%
@@ -347,7 +321,7 @@ dat %>%
   ylab('Number of papers')
 
 #+
-#' ### Connectivity considered
+#' #### Connectivity considered
 dat %>%
   filter(abbr=='Connect') %>%
   group_by(clean_answer) %>%
@@ -360,7 +334,7 @@ dat %>%
   ylab('Number of papers')
 
 #+ 
-#' ### Spatial extent
+#' #### Spatial extent
 dat %>% 
   filter(abbr=='Extent') %>%
   group_by(clean_answer) %>%
@@ -375,9 +349,25 @@ dat %>%
 
 
 #+
-#' ## Space-time tradeoffs
-#' Reminder that the dashed line represents the overall proportion before
-#' grouping into the different categories.
+#' ## Scale biases
+#' In this section, the dashed line represents what we would expect if
+#' subgroups were selected at random from the overall distribution from Yes's
+#' and No's. Thus, bars larger or smaller than the dashed line show that either
+#' time or space is more/less likely to be considered in that group. (I'm still
+#' working on how to write this up more specifically in a non-confusing way...so
+#' let me know if you have questions!). It's also useful to keep in mind that
+#' these proportions can also be considered in absolute terms, not just with
+#' respect to the dashed line. So, for example, even if something is more likely
+#' than expected to be multi-scale, it still may be the case that less than half
+#' of the studies in that group are multi-scale (which would still point to some
+#' sort of absolute gap).
+#' 
+#' For temporal trends, a study was considered as a 'Yes' if it used 'space for
+#' time' to simplify plotting.
+
+
+#+
+#' #### Space-time tradeoffs
 
 nested_df = dat %>%
   filter(abbr=='Nested') %>%
@@ -399,7 +389,7 @@ yrs_df = dat %>%
 
 
 #+
-#' ### Time trends and space
+#' ##### Time trends and space
 nested_timetrends = dat %>% 
   filter(abbr %in% c('TimeTrends')) %>% 
   dplyr::select(Title, abbr, clean_answer) %>%
@@ -476,7 +466,7 @@ ggplot(extent_timetrends, aes(x = fct_rev(Group), y = prop_yes, label = paste0('
 
 
 #+
-#' ### Multi-scale and time
+#' ##### Multi-scale and time
 
 timetrends_nested = dat %>% 
   filter(abbr %in% c('Nested')) %>% 
@@ -584,7 +574,7 @@ ggplot(yrs_nested, aes(x = fct_rev(Group), y = prop_yes, label = paste0('n=',cou
 
 
 #+
-#' ## Methods scale biases
+#' ### Methods scale biases
 #' For these biases plots, a single paper can fit into multiple groups (e.g. a
 #' paper that used Observational and Model/data simulation methods). The dashed
 #' line accounts for this, so that it still serves as a 'random expectation',
@@ -594,10 +584,14 @@ ggplot(yrs_nested, aes(x = fct_rev(Group), y = prop_yes, label = paste0('n=',cou
 study_type = dat %>%
   filter(abbr=='Methods') %>%
   dplyr::select(Title, Methods = clean_answer) %>%
-  mutate(Methods = gsub(" \\(.*\\)", '', Methods))
+  mutate(Methods = gsub(" \\(.*\\)", '', Methods)) %>%
+  separate_rows(Methods, sep = ',') %>%
+  arrange(Methods) %>%
+  group_by(Title) %>%
+  summarise(Methods = paste0(unique(Methods), collapse = ','))
 
 #+
-#' ### TimeTrends
+#' #### TimeTrends
 methods_timetrends = dat %>% 
   filter(abbr %in% c('TimeTrends')) %>% 
   dplyr::select(Title, abbr, clean_answer) %>%
@@ -638,7 +632,7 @@ ggplot(methods_timetrends, aes(x = fct_reorder(value, prop_yes), y = prop_yes, l
   ylim(c(0,1))
 
 #+
-#' ### Number of years
+#' #### Number of years
 #' Unlike the above plots which double count papers that are in multiple groups,
 #' these plots keep papers single counted because it shows the counts and not
 #' proportions. These also keep all intersecting groups separate instead of only
@@ -659,7 +653,7 @@ study_type %>%
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 #+
-#' ### Multi-scale
+#' #### Multi-scale
 
 methods_nested = dat %>% 
   filter(abbr %in% c('Nested')) %>% 
@@ -696,7 +690,7 @@ ggplot(methods_nested, aes(x = fct_reorder(value, prop_yes), y = prop_yes, label
   ylim(c(0,1))
 
 #+
-#' ### Spatial extent
+#' #### Spatial extent
 #' Unlike the above plots which double count papers that are in multiple groups,
 #' these plots keep papers single counted because it shows the counts and not
 #' proportions. These also keep all intersecting groups separate instead of only
@@ -717,7 +711,7 @@ study_type %>%
 
 
 #+
-#' ## ES type scale biases
+#' ### ES type scale biases
 #' For these biases plots, a single paper can fit into multiple groups (e.g. a
 #' paper that used Observational and Model/data simulation methods). The dashed
 #' line accounts for this, so that it still serves as a 'random expectation',
@@ -739,7 +733,7 @@ ES_groups_to_plot = service_bins %>%
 
 
 #+
-#' ### TimeTrends
+#' #### TimeTrends
 es_timetrends = dat %>% 
   filter(abbr %in% c('TimeTrends')) %>% 
   dplyr::select(Title, abbr, clean_answer) %>%
@@ -779,7 +773,7 @@ ggplot(es_timetrends, aes(x = fct_reorder(value, prop_yes), y = prop_yes, label 
   ylim(c(0,1))
 
 #+
-#' ### Number of years
+#' #### Number of years
 #' Unlike the above plots which double count papers that are in multiple groups,
 #' these plots keep papers single counted because it shows the counts and not
 #' proportions. These also keep all intersecting groups separate instead of only
@@ -801,7 +795,7 @@ service_bins %>%
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 #+
-#' ### Multi-scale
+#' #### Multi-scale
 es_nested = dat %>% 
   filter(abbr %in% c('Nested')) %>% 
   dplyr::select(Title, abbr, clean_answer) %>%
@@ -836,7 +830,7 @@ ggplot(es_nested, aes(x = fct_reorder(value, prop_yes), y = prop_yes, label = pa
   ylim(c(0,1))
 
 #+
-#' ### Spatial extent
+#' #### Spatial extent
 #' Unlike the above plots which double count papers that are in multiple groups,
 #' these plots keep papers single counted because it shows the counts and not
 #' proportions. These also keep all intersecting groups separate instead of only
@@ -858,7 +852,7 @@ service_bins %>%
 
 
 #+
-#' ## Driver scale biases
+#' ### Driver scale biases
 #' For these biases plots, a single paper can fit into multiple groups (e.g. a
 #' paper that used Observational and Model/data simulation methods). The dashed
 #' line accounts for this, so that it still serves as a 'random expectation',
@@ -875,7 +869,7 @@ driver_groups =  dat %>%
 
 
 #+
-#' ### TimeTrends
+#' #### TimeTrends
 drivers_timetrends = dat %>% 
   filter(abbr %in% c('TimeTrends')) %>% 
   dplyr::select(Title, abbr, clean_answer) %>%
@@ -917,7 +911,7 @@ ggplot(drivers_timetrends, aes(x = fct_reorder(value, prop_yes), y = prop_yes, l
   ylim(c(0,1))
 
 #+
-#' ### Number of years
+#' #### Number of years
 #' Unlike the above plots which double count papers that are in multiple groups,
 #' these plots keep papers single counted because it shows the counts and not
 #' proportions. These also keep all intersecting groups separate instead of only
@@ -938,7 +932,7 @@ driver_groups %>%
 
 
 #+
-#' ### Multi-scale
+#' #### Multi-scale
 drivers_nested = dat %>% 
   filter(abbr %in% c('Nested')) %>% 
   dplyr::select(Title, abbr, clean_answer) %>%
@@ -976,7 +970,7 @@ ggplot(drivers_nested, aes(x = fct_reorder(value, prop_yes), y = prop_yes, label
 
 
 #+
-#' ### Spatial extent
+#' #### Spatial extent
 #' Unlike the above plots which double count papers that are in multiple groups,
 #' these plots keep papers single counted because it shows the counts and not
 #' proportions. These also keep all intersecting groups separate instead of only
@@ -995,3 +989,43 @@ driver_groups %>%
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
+
+
+#+
+#' # 5) Analytical methods
+
+#+ 
+#' ## Feedbacks
+dat %>% 
+  filter(abbr=='Feedbacks') %>%
+  dplyr::select(Title, clean_answer) %>%
+  separate_rows(clean_answer, sep = ',') %>%
+  mutate(clean_answer = case_when(
+    clean_answer=='No feedbacks measured directly' ~ 'None',
+    TRUE ~ clean_answer
+  )) %>%
+  mutate(pres_holder = 1) %>%
+  pivot_wider(id_cols = 'Title', names_from = 'clean_answer', values_from = 'pres_holder') %>% 
+  replace(is.na(.), 0) %>% 
+  data.frame() %>%
+  upset(nsets = ncol(.)-1)
+
+dat %>% 
+  filter(abbr=='Feedbacks') %>%
+  dplyr::select(Title, clean_answer) %>%
+  group_by(clean_answer) %>%
+  summarise(count = n())
+
+#+
+#' ## Non-linearities/thresholds
+dat %>% 
+  filter(abbr=='Thresholds') %>%
+  dplyr::select(Title, clean_answer) %>%
+  group_by(clean_answer) %>%
+  summarise(count = n()) %>%
+  mutate(clean_answer = factor(clean_answer, levels = c('No', 'Mentioned or discussed but not measured','Yes'))) %>%
+  ggplot(aes(x = clean_answer, y = count, label = count)) +
+  geom_col() +
+  geom_label() +
+  theme_bw() +
+  xlab('Thresholds considered?') 
