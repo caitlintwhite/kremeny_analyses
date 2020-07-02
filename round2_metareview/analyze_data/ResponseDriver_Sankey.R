@@ -16,20 +16,19 @@ library(htmlwidgets)
 data <- read.csv("round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 data <- data[data$version == "final",] # final data
-df <- data[,c(8,11:13,15:20)] # pull relevant columns
+df <- data[,c(14,16:18)] # pull relevant columns
 df <- df[df$qnum == "Q12",] # subset to only Q12
 
 
 
 response.df <- df[df$abbr=="Response",] # pull just response rows
-response.df <- response.df[,c(1,4,7,8,10)] # pull important columns
-response.df <- response.df[!is.na(response.df$clean_answer_finer),] # get rid of NA response bin for now
+#response.df <- response.df[!is.na(response.df$clean_answer_finer),] # get rid of NA response bin for now
 response.df <- response.df[!duplicated(response.df),]
 
 
 driver.df <- df[df$abbr=="Driver",] # pull just driver rows
-driver.df <- driver.df[,c(1,4,7,10)] # pull important columns 
-driver.df <- driver.df[!duplicated(driver.df),] # remove duplicate rows 
+#driver.df <- driver.df[,c(1,4,7,10)] # pull important columns 
+#driver.df <- driver.df[!duplicated(driver.df),] # remove duplicate rows 
 
 #### SMALL SANKEY: Drive type-ES type ---------------------------------------------------------
 ## Node date frame for sankey
@@ -39,27 +38,39 @@ nodes.ES <- data.frame(name = unique(response.df$ES), NodeType = "eco.serv")
 nodes <- rbind(nodes.driver.bins, nodes.ES)
 nodes <- nodes[!is.na(nodes$name),] # get rid of NA values
 
-x <- nrow(nodes) - 1
-nodes$ID <- 0:x
+attach(nodes)
+nodes <- nodes[order(NodeType,name),]
+detach(nodes)
 
-nodes$NodeType <- c("Env","Anthro","Bio", "Provisioning", "Regulating","Supporting",
-                    "Supporting","Cultural","Supporting","Regulating","Regulating",
-                    "Provisioning","Provisioning","Regulating","Regulating","Regulating",
-                    "Cultural","Provisioning","Regulating")
-nodes$FullName <- c("Environmental", "Anthropogenic", "Biotic",
-                    "Food and Feed", "Regulation of pests/pathogens",
-                    "Pollination", "Habitat Creation","Physical and Psychological exp.",
-                    "Soil Formation/Protection", "Climate Regulation",
-                    "Coastal Water Quality", "Materials","Medicinal",
-                    "Fresh Water Quality", "Hazard Regulation",
-                    "Air Quality", "Maintenance of Options",
-                    "Energy", "Regulation of Ocean Acidification")
+
+nodes$NodeType <- c("Anthro","Bio","Env", "Regulating", "Regulating","Regulating",
+                    "Cultural","Provisioning","Provisioning","Regulating","Supporting",
+                    "Regulating","Cultural","Provisioning","Provisioning","Regulating",
+                    "Regulating","Supporting","Supporting")
+
 
 nodes$Type <- c(rep("Driver", times = 3), rep("eco.serv", times=16))
 
-#attach(nodes)
-#nodes <- nodes[order(NodeType),]
-#detach(nodes)
+attach(nodes)
+nodes <- nodes[order(Type, NodeType),]
+detach(nodes)
+
+nodes <- nodes[c(1,2,3,10:16,17:19,6:9,4,5),] # reorder for sorting purposes on the actual plot
+
+nodes$FullName <- c("Anthropogenic", "Biotic", "Environmental",
+                    "Air Quality","Climate Regulation","Coastal Water Quality",
+                    "Fresh Water Quality","Hazard Regulation","Regulation of Ocean Acidification",
+                    "Regulation of pests/pathogens","Habitat Creation","Pollination",
+                    "Soil Formation/Protection","Energy","Food and Feed","Materials",
+                    "Medical","Physical and Psychological exp.","Maintenance of Options")
+
+
+nodes <- nodes[c(1,2,3,5,10,6,7,8,4,9,13,11,12,15,16,14,17,18,19),] # reorder based on number of papers...this is just manual at this point
+
+x <- nrow(nodes) - 1
+nodes$ID <- 0:x
+
+colnames(nodes)[colnames(nodes)=="name"] <- "TargetName"
 
 ## Link data frame for sankey
 # link VALUES
@@ -72,8 +83,8 @@ colnames(values) <- col
 
 # create data frame to merge later
 links <- data.frame(SourceName = rep(c("Bio","Anthro","Env"), each=nrow(nodes[nodes$Type=="eco.serv",])),
-                    Source = rep(c(2,1,0), each=nrow(nodes[nodes$Type=="eco.serv",])),
-                    TargetName = rep(nodes.ES$name, times = 3),
+                    Source = rep(c(1,0,2), each=nrow(nodes[nodes$Type=="eco.serv",])),
+                    TargetName = rep(nodes$name[c(4:19)], times = 3),
                     Target = rep(nodes$ID[4:nrow(nodes)], times=3)
 ) 
 
@@ -84,26 +95,34 @@ s.links <- s.links[!is.na(s.links$value),] # get rid of NA values
 
 names(s.links)[names(s.links)=="x"] <- "value"
 
+s.links <- merge(s.links,nodes,by="TargetName", all.x=T)
 
-colors <-  'd3.scaleOrdinal() .domain(["Anthro", "Env","Bio", "Supporting","Cultural","Regulating","Provisioning"]) .range(["#69b3a2", "steelblue" , "purple", "red", "orange", "yellow", "FF3399"])'
+attach(s.links)
+s.links <- s.links[order(TargetName,NodeType),]
+detach(s.links)
+
+colors <-  'd3.scaleOrdinal() .domain(["Anthro", "Bio","Env", "Regulating","Supporting","Provisioning","Cultural"]) 
+.range(["#ADD8E6", "#117733","#00008B","#000000","#808080","#D3D3D3","#FFFFFF"])'
+
+
 
 # BASE SANKEY CODE
 sn <- sankeyNetwork(Links = s.links, Nodes = nodes, Source = "Source",
               Target = "Target", Value = "value", NodeID = "FullName",
-              units = "papers", fontSize = 18, nodeWidth = 40,
+              units = "papers", fontSize = 20, nodeWidth = 30,
               fontFamily = "Arial",
               LinkGroup = "SourceName",
               NodeGroup = "NodeType",
               colourScale = colors,
-              margin = list(left=300, right=50))
+              margin = list(left=300, right=50),
+              iterations=0)
 
 
-right <- c("Food and Feed", "Regulation of pests/pathogens",
-           "Habitat Creation","Pollination","Physical and Psychological exp.",
-           "Soil Formation/Protection","Climate Regulation","Fresh Water Quality",
-           "Materials", "Medicinal","Coastal Water Quality", "Hazard Regulation",
-           "Maintenance of Options", "Air Quality","Energy","Regulation of Ocean Acidification")
-
+right <- c("Climate Regulation","Regulation of pests/pathogens","Coastal Water Quality",
+           "Fresh Water Quality","Hazard Regulation","Air Quality","Regulation of Ocean Acidification",
+           "Soil Formation/Protection","Habitat Creation","Pollination","Food and Feed",
+           "Materials","Energy","Medical","Physical and Psychological exp.","Maintenance of Options")
+  
 onRender(
   sn,
   paste0('

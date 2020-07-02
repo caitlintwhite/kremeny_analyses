@@ -138,42 +138,42 @@ dat %>%
 
 #+
 #' #### ESPs and ES type
-dat %>%
-  filter(abbr=='ESP_type') %>%
-  dplyr::select(Title, clean_answer) %>%
-  filter(!is.na(clean_answer)) %>%
-  mutate(clean_answer = gsub(" \\[.*\\]", "", clean_answer)) %>% 
-  mutate(clean_answer = gsub('Across species ', 'Across species', clean_answer)) %>%
-  mutate(clean_answer = gsub('Single species ', 'Single species', clean_answer)) %>%
-  mutate(clean_answer = gsub('Within species  ', 'Within species', clean_answer)) %>%
-  full_join(
-    dat %>%
-      filter(abbr=='Yclass') %>%
-      filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
-      dplyr::select(Title, ES) %>%
-      group_by(Title) %>%
-      summarise(ES = paste0(unique(ES), collapse = ',')),
-    by = 'Title'
-  ) %>%
-  group_by(clean_answer, ES) %>%
-  summarise(count = n()) %>%
-  # filter out all with multiple ES for better plotting
-  filter(!grepl(',', ES)) %>%
-  # also filter out the single species, only land cover study for ease of viz
-  filter(!grepl(',', clean_answer)) %>%
-  ungroup() %>%
-  mutate(clean_answer = case_when(
-    clean_answer=='Only land cover or habitat type as proxy' ~ 'Land cover/habitat type',
-    TRUE ~ clean_answer
+testdat1 <- subset(dat, grepl("Response|Driver", abbr)) %>%
+  subset(!is.na(clean_answer)) %>%
+  subset(version == "final") %>%
+  dplyr::select(Title, clean_answer, abbr, clean_group, ES) %>%
+  left_join(with(dat, dat[abbr == "ESP_type" &  version == "final", c("Title", "clean_answer")]), by = "Title") %>%
+  rename(clean_answer = clean_answer.x,
+         ESP = clean_answer.y) 
+
+hasbio1 <- subset(testdat1, clean_group == "Bio")
+
+testdat1[testdat1$Title %in% unique(hasbio1$Title),]  %>%
+  dplyr::select(Title, ES, ESP) %>%
+  distinct() %>%
+  mutate(ESP = gsub(', ', '_', ESP)) %>%
+  separate_rows(ESP, sep = ',') %>%
+  mutate(ESP = gsub(" \\[.*\\]", "", ESP)) %>%
+  mutate(ESP = str_trim(ESP)) %>% 
+  group_by(ES, ESP) %>%
+  summarise(count = n()) %>% 
+  mutate(ESP = case_when(
+    ESP == 'Only land cover or habitat type as proxy' ~ 'Land cover/habitat type',
+    TRUE ~ ESP
   )) %>%
-  ggplot(aes(x = clean_answer, y = count, label = count)) +
+  ggplot(aes(x = ESP, y = count, label = count)) +
   geom_col() +
   geom_label() +
   facet_wrap(~ES) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
-#' Notes: 
+
+
+#' Notes: For this plot, papers that have multiple ES types were included in
+#' multiple categories. Thus, the total number will not add up to the total
+#' number of papers.
+#' 
 #' pest pathogens more 'across species', climate regulation more NA thus less
 #' often ESPs considered, Pollination more 'multiple ESP species'
 
@@ -214,41 +214,32 @@ dat %>%
 
 #+
 #' #### Community structure and ES type
-dat %>%
-  filter(abbr=='KremenTopics') %>%
-  dplyr::select(Title, clean_answer) %>%
-  separate_rows(clean_answer, sep = ',') %>%
-  mutate(comm_struct = case_when(
-    clean_answer == "Kremen Topic 2 : Community structure influencing function" ~ 'Yes',
-    TRUE ~ 'No'
-  )) %>% 
-  group_by(Title) %>%
-  summarise(comm_struct = paste0(unique(comm_struct), collapse = ',')) %>%
-  mutate(comm_struct = case_when(
-    comm_struct %in% c('Yes,No', 'No,Yes') ~ 'Yes',
-    TRUE ~ comm_struct
-  )) %>% 
-  full_join(
-    dat %>%
-      filter(abbr=='Yclass') %>%
-      filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
-      dplyr::select(Title, ES) %>%
-      group_by(Title) %>%
-      summarise(ES = paste0(unique(ES), collapse = ',')),
-    by = 'Title'
-  ) %>% 
-  group_by(comm_struct, ES) %>%
-  summarise(count = n()) %>%
-  # filter out all with multiple ES for better plotting
-  filter(!grepl(',', ES)) %>%
-  ggplot(aes(x = comm_struct, y = count, label = count)) +
+testdat <- subset(dat, grepl("Response|Driver", abbr)) %>%
+  subset(!is.na(clean_answer)) %>%
+  subset(version == "final") %>%
+  dplyr::select(Title, clean_answer, abbr, clean_group, ES) %>%
+  left_join(with(dat, dat[abbr == "KremenTopics" &  version == "final", c("Title", "clean_answer")]), by = "Title") %>%
+  rename(clean_answer = clean_answer.x,
+         KT = clean_answer.y) %>%
+  mutate(commstruct = ifelse(grepl("2", KT), "Yes", "No"))
+
+hasbio <- subset(testdat, clean_group == "Bio")
+
+testdat[testdat$Title %in% unique(hasbio$Title),] %>%
+  dplyr::select(Title, ES, KT, commstruct) %>%
+  distinct() %>%
+  group_by(ES, commstruct) %>%
+  summarise(count = n()) %>% 
+  ggplot(aes(x = commstruct, y = count, label = count)) +
   geom_col() +
   geom_label() +
   facet_wrap(~ES) +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme_bw()
 
-#' Notes: 
+#' Notes: For this plot, papers that have multiple ES types were included in
+#' multiple categories. Thus, the total number will not add up to the total
+#' number of papers.
+#' 
 #' Pest pathogens, Habitat creation, Climate regulation pretty even (which
 #' means more Yes than expected), Pollination may have more No's than expected
 
