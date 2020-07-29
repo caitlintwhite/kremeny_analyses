@@ -17,18 +17,18 @@ services_overall = dat %>%
   summarise(count = n()) %>%
   mutate(proportion = count/num_papers)
 
-nested_df = dat %>%
-  filter(abbr=='Nested') %>%
-  dplyr::select(Title, Nested = clean_answer)
+connect_df = dat %>%
+  filter(abbr=='Connect') %>%
+  dplyr::select(Title, Connectivity = clean_answer)
 
 overall_yes_prop = dat %>%
-  filter(abbr=='Nested') %>%
-  dplyr::select(Title, Nested = clean_answer) %>%
-  dplyr::select(Nested) %>%
-  group_by(Nested) %>%
+  filter(abbr=='Connect') %>%
+  dplyr::select(Title, Connectivity = clean_answer) %>%
+  dplyr::select(Connectivity) %>%
+  group_by(Connectivity) %>%
   summarise(count = n()) %>%
   mutate(proportion = count/sum(count)) %>%
-  filter(Nested=='Yes') %>%
+  filter(Connectivity=='Yes') %>%
   pull(proportion)
 
 
@@ -36,11 +36,11 @@ dat %>%
   filter(abbr=='Yclass') %>%
   filter(!is.na(clean_answer)) %>%
   dplyr::select(Title, ES) %>%
-  left_join(nested_df, by = 'Title') %>% 
-  group_by(ES, Nested) %>%
+  left_join(connect_df, by = 'Title') %>% 
+  group_by(ES, Connectivity) %>%
   summarise(count_yesno = n()) %>%
   left_join(services_overall, by = 'ES') %>%
-  filter(Nested == 'Yes') %>%
+  filter(Connectivity == 'Yes') %>%
   rename(prop_overall = proportion, count_yes = count_yesno) %>%
   mutate(prop_yes = count_yes/num_papers) %>%
   mutate(prop_expected_yes = overall_yes_prop * prop_overall) %>%
@@ -49,20 +49,24 @@ dat %>%
   geom_col(aes(y = prop_yes), fill = 'black') +
   geom_point(aes(y = prop_expected_yes), colour = 'yellow', shape = '|', size = 6) +
   xlab('Ecosystem service type') +
-  ylab('Proportion of studies that looked at multiple spatial scales \n (with overall proportion in light gray)') +
-  ggtitle('Multiple spatial scales?') +
+  ylab('Proportion of studies that looked at connectivity \n (with overall proportion in light gray)') +
+  ggtitle("Spatial connectivity?") +
   coord_flip() +
   theme_bw()
 
-ggsave('round2_metareview/analyze_data/ES_type_panel/fig_files/es_type_multiscale.pdf', width = 5, height = 5, dpi = 'retina')
-
+ggsave('round2_metareview/analyze_data/ES_type_panel/fig_files/es_type_connectivity.pdf', width = 5, height = 5, dpi = 'retina')
 
 # here the yellow bar indicates the proportion yes expected if the group was mirroring the number of overall studies that looked at temporal trends
 # would need a good caption to explain this, but I think it's really informative
-# yellow bar = # of studies that were multi-scale / total # of studies * proportion of studies that studied that ES type
-
+# yellow bar = # of studies that looked at connectivity / total # of studies * proportion of studies that studied that ES type
 
 # To-do's for plot aesthetics:
   # figure out the best option for the yellow bar - dashed line? etc.
   # figure out best size for the yellow bar indicator
+
+
+
+
+
+
 

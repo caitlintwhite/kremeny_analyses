@@ -23,7 +23,7 @@ dat %>%
 
 num_1plus_papers = 12 # this is the number of intersections that contain more than one paper, counted from above plot
 
-dat %>%
+pl2 = dat %>%
   filter(abbr=='Yclass') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
   dplyr::select(Title, ES) %>% 
@@ -36,8 +36,13 @@ dat %>%
   upset(nsets = ncol(.)-1, 
         nintersects = num_1plus_papers, 
         order.by = 'freq',
+        sets.x.label = '# of multifunctional papers \n with each ES type',
         mainbar.y.label = 'Number of papers'
         )
+
+pdf(file = 'round2_metareview/analyze_data/ES_type_panel/fig_files/multifun_upset.pdf')
+pl2
+dev.off()
 
 
 
@@ -80,12 +85,20 @@ dat %>%
   mutate(proportion = num_papers/sum(num_papers)) %>% 
   ggplot(aes(x = fct_rev(multifun), y = proportion, fill = count)) +
   geom_col() +
-  xlab('Multifunctional?') +
+  xlab('Multiple ecosystem service types?') +
   ylab('Proportion of papers') +
   coord_flip() +
   labs(fill = 'Number of ES types considered') +
   theme_bw()
 
+ggsave('round2_metareview/analyze_data/ES_type_panel/fig_files/multifun_yesno.pdf', width = 5, height = 5, dpi = 'retina')
 
+
+
+
+# Notes: might need to rethink how to show the upset plots as proportions (not
+# possible in UpSetR), might be able to do manually, or put together a bar chart
+# manually that shows exactly what we want it to but that would take some manual
+# construction
 
 
