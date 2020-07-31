@@ -100,9 +100,18 @@ splitcom <- function(df, keepcols = c("Title", "answer"), splitcol = "answer"){
 corrections <- list.files("round2_metareview/data/reviewer_revisions", full.names = T)
 # > individual corrections
 IScorrections <- read.csv(corrections[grep("ISreview", corrections)], na.strings = na_vals)
-AIScorrections <- read.csv(corrections[grep("AIS", corrections)], na.strings = na_vals)
-SDJcorrections <- read_excel(corrections[grep("SDJ", corrections)], na = na_vals, trim_ws = T)
+AIScorrections <- read.csv(corrections[grep("reviewAIS", corrections)], na.strings = na_vals)
+SDJcorrections <- read_excel(corrections[grep("reviewSDJ", corrections)], na = na_vals, trim_ws = T)
+TMcorrections <- read.csv(corrections[grep("reviewTM", corrections)], na.strings = na_vals, strip.white = T)
+TKcorrections <- read.csv(corrections[grep("reviewTK", corrections)], na.strings = na_vals, strip.white = T)
 # > NOTE!: Julie sent written corrections in an email
+# > missing other drivers
+CKcorrections <- read.csv(corrections[grep("reviewCK", corrections)], na.strings = na_vals, strip.white = T)
+LDcorrections <- read.csv(corrections[grep("reviewLD", corrections)], na.strings = na_vals, strip.white = T)
+# > double rev corrections
+dblcorSDJ <- read_excel(corrections[grep("inconsistent_SDJ", corrections)], na = na_vals, trim_ws = T)
+dblcorGV <- read.csv(corrections[grep("inconsistent_GV", corrections)], na.strings = na_vals, strip.white = T)
+dblcorAK <- read.csv(corrections[grep("inconsistent_AK", corrections)], na.strings = na_vals, strip.white = T)
 # > paper exclusions
 excludecorrections <- read.csv(corrections[grep("exclude", corrections)], na.strings = na_vals)
 # > ecosystem classification
@@ -114,7 +123,7 @@ wetlandcode <- read_excel(corrections[grep("wetland_abs", corrections)], sheet =
 wetlandcorrections <- left_join(wetlandcorrections, wetlandcode)
 rm(wetlandcode)
 # > Nick and Aislyn's methods corrections
-methodscorrections <- read.csv(corrections[grep("model", corrections)], na.strings = na_vals)
+methodscorrections <- read.csv(corrections[grep("model.check", corrections)], na.strings = na_vals)
 # > response and driver binning
 biodrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Bio")
 anthdrivecorrections <- read_excel(corrections[grep("driversfreq", corrections)], sheet = "Anthro")
@@ -1271,10 +1280,10 @@ sort(unique(noResponseDriver$Title))
 #quote all so not annoying to look at in Excel
 #noResponseDriver2[is.na(noResponseDriver2)] <- ""
 # write out by person
-for(i in sort(unique(noResponseDriver$Init))){
-  tempdat <- subset(noResponseDriver, Init == i)
-  write_csv(tempdat, paste0("round2_metareview/clean_qa_data/needs_classreview/missing_responsedriver/q12_review", i, ".csv"), na = "")
-}
+# for(i in sort(unique(noResponseDriver$Init))){
+#   tempdat <- subset(noResponseDriver, Init == i)
+#   write_csv(tempdat, paste0("round2_metareview/clean_qa_data/needs_classreview/missing_responsedriver/q12_review", i, ".csv"), na = "")
+#}
 
 
 # check how much was entered for each (e.g. directions, response var type)
@@ -1315,10 +1324,10 @@ othercheck <- subset(prelimlong1b, (abbr == "Driver" & !is.na(answer)) | abbr ==
 nrow(othercheck) # 15 titles.. dang
 
 # write out to needs review
-for(i in unique(othercheck$Init)){
-  tempdat <- subset(othercheck, Init == i)
-  write_csv(tempdat, paste0("round2_metareview/clean_qa_data/needs_classreview/missing_responsedriver/q12_otherdriver_review", i, ".csv"), na = "")
-}
+# for(i in unique(othercheck$Init)){
+#   tempdat <- subset(othercheck, Init == i)
+#   write_csv(tempdat, paste0("round2_metareview/clean_qa_data/needs_classreview/missing_responsedriver/q12_otherdriver_review", i, ".csv"), na = "")
+# }
 
 
 
@@ -1822,6 +1831,84 @@ prelimlong1c$qa_note[prelimlong1c$ResponseId == "R_3PNBrx8CScS4JTm" & prelimlong
 # save working copy
 copydf <- prelimlong1c
 
+# Tim corrections
+# check typed in answers
+sort(unique(TKcorrections$clean_answer))
+# iterate through corrections with for-loop, as done for JL corrections
+for(r in unique(TKcorrections$ResponseId)){
+  # check that review still in working dataset (not excluded)
+  if(!r %in% unique(prelimlong1c$ResponseId)){
+    next
+  }
+  # subset corrections df to just answers that need corrections
+  tempdat <- subset(TKcorrections, ResponseId == r & !is.na(clean_answer))
+  for(i in 1:nrow(tempdat)){
+    prelimlong1c$clean_answer[prelimlong1c$ResponseId == r & prelimlong1c$survey_order == tempdat$survey_order[i]] <- tempdat$clean_answer[i]
+    prelimlong1c$qa_note[prelimlong1c$ResponseId == r & prelimlong1c$survey_order == tempdat$survey_order[i]] <- "Reviewer correction"
+  }
+}
+
+# Travis corrections (by Nick)
+# check typed in answers
+sort(unique(TMcorrections$clean_answer))
+# fix service provider
+TMcorrections$clean_answer <- gsub("service pr", "Service Pr", TMcorrections$clean_answer)
+# iterate through corrections with for-loop, as done for JL corrections
+for(r in unique(TMcorrections$ResponseId)){
+  # check that review still in working dataset (not excluded)
+  if(!r %in% unique(prelimlong1c$ResponseId)){
+    next
+  }
+  # subset corrections df to just answers that need corrections
+  # Anna only put something in clean_answer if it was a correction, so can subset for that
+  tempdat <- subset(TMcorrections, ResponseId == r & !is.na(clean_answer))
+  for(i in 1:nrow(tempdat)){
+    prelimlong1c$clean_answer[prelimlong1c$ResponseId == r & prelimlong1c$survey_order == tempdat$survey_order[i]] <- tempdat$clean_answer[i]
+    prelimlong1c$qa_note[prelimlong1c$ResponseId == r & prelimlong1c$survey_order == tempdat$survey_order[i]] <- "Reviewer correction"
+  }
+}
+
+
+# > Infill missing OTHER DRIVER corrections -----
+# Claire correction (by Nick/Caitlin)
+# check typed in answers
+sort(unique(CKcorrections$OtherDriver)) #hm..
+View(subset(prelimlong1c, ResponseId %in% CKcorrections$ResponseId & abbr == "Driver" & !is.na(clean_answer)))
+
+
+# LD corrections -- infill missing other driver
+unique(LDcorrections$OtherDriver)
+# append survey_order so works
+LDcorrections <- left_join(LDcorrections, subset(headerLUT, abbr == "OtherDriver"))
+# iterate through corrections with for-loop, as done for JL corrections
+for(r in unique(LDcorrections$ResponseId)){
+  # check that review still in working dataset (not excluded)
+  if(!r %in% unique(prelimlong1c$ResponseId)){
+    next
+  }
+  # Anna only put something in clean_answer if it was a correction, so can subset for that
+  tempdat <- subset(LDcorrections2, ResponseId == r)
+  for(i in 1:nrow(tempdat)){
+    prelimlong1c$clean_answer[prelimlong1c$ResponseId == r & prelimlong1c$survey_order == tempdat$survey_order[i]] <- tempdat$OtherDriver[i]
+    prelimlong1c$qa_note[prelimlong1c$ResponseId == r & prelimlong1c$survey_order == tempdat$survey_order[i]] <- "Reviewer correction"
+  }
+}
+
+
+# Aislyn other driver
+# > email from AK to CTW:
+# >> I just revisited my outstanding paper ('Other' driver). 
+# >> I don't know if that was an accident, but it looks like they just looked at different climate scenarios and land cover changes. 
+# >> What is the best way to adjust that response, since neither are really an 'Other'."
+# ID paper that's missing (just as done for JL above)
+AKcorrections <- read.csv(allmissing[grepl("reviewAK", allmissing)], na.strings = na_vals) %>%
+  # join survey_order
+  left_join(subset(headerLUT, abbr == "OtherDriver"))
+temprow <- with(prelimlong1c, which(ResponseId == AKcorrections$ResponseId & abbr == "Driver" & Group == AKcorrections$Group & clean_answer == "Other"))
+# remove "Other" from drivers
+prelimlong1c$clean_answer[temprow] <- NA
+prelimlong1c$qa_note[temprow] <- "Reviewer correction, remove 'Other' driver"
+
 
 # update no response/driver df before proceeding
 correctedRIDs <- unique(c(SDJcorrections$ResponseId, JLcorrections$ResponseId, AIScorrections$ResponseId, ))
@@ -1829,7 +1916,8 @@ noResponseDriver <- subset(noResponseDriver, !ResponseId %in% correctedRIDs)
 
 
 
-rm(MeyerES, SDJcorrections, SDJtocorrect, tempdat, AIScorrections, r, tempES, JLcorrections)
+rm(MeyerES, SDJcorrections, SDJtocorrect, tempdat, AIScorrections, r, tempES, JLcorrections,
+   LDcorrections, TMcorrections, CKcorrections, TKcorrections, AKcorrections)
 
 
 # 5.a. Driver corrections -----
