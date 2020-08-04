@@ -959,19 +959,8 @@ mutate(kremennotes, ESP_type = str_replace_all(ESP_type, " \\[e.g.,? ([:alpha:]|
 #        width = 8, height = 5, units = "in", scale = 1.2)
 
 
-# pull ESP
 
-
-# 3) If-then questions -----
-# 1) Time
-
-
-# 2) Multiple scales
-
-# 3) Connectivity
-
-
-# 4) Kremen topics -----
+# 3) Kremen topics -----
 # 0) pull NO Kremen checked (usually at least 1 should be? probably some cases where they really didn't, and those would be interesting to pull out)
 noKremen <- kremennotes %>%
   subset(Title %in% Title[KT_None == 1]) %>%
@@ -1759,6 +1748,70 @@ for(i in 1:nrow(tempdat)){
   prelimlong1c$qa_note[prelimlong1c$ResponseId == unique(tempdat$ResponseId) & prelimlong1c$survey_order == tempdat$survey_order[i]] <- "Reviewer correction"
 }
 
+# also move any notes JL entered in "OtherDriver" field to general notes based on word match at start of string
+View(subset(prelimlong1c, Init == "JL" & !is.na(answer) & abbr == "OtherDriver")) # use grepl (^Land use|^Biotic driver|^Land use|^Management)
+sort(with(prelimlong1c, answer[Init == "JL" & !is.na(answer) & abbr == "OtherDriver"])) # use grepl (^Land use|^Biotic driver|^Land use|^Management)
+# specify strings to match (that should be moved to notes)
+JLnotes <- "^Biotic driver|^Land use ch|Management practice|^Service provider"
+# grab records that have notes entered in otherdriver field
+# > Sierra has a comment in other driver field so take care of that here as well
+movenotes <- subset(prelimlong1c, grepl(JLnotes, answer, ignore.case = T) &  abbr == "OtherDriver")
+# iterate through and move comments to general survey notes
+# > note -- there is one paper where "Other" should have been checked [comes behind list of ESP notes]
+for(i in unique(movenotes$ResponseId)){
+  # id which groups comments in 
+  tempgroups <- with(movenotes[movenotes$abbr == "OtherDriver" & movenotes$ResponseId == i,], Group[grep(JLnotes, answer, ignore.case = T)])
+  tempdat <- subset(prelimlong1c, ResponseId == i & (Group %in% tempgroups | abbr == "SurveyNotes"))
+  # iterate through each driver group and correct
+  for(g in tempgroups){
+    tempnotes <- tempdat$clean_answer[tempdat$Group == g & tempdat$abbr == "OtherDriver"]
+    # extract any actual Other driver present (JL noted with 'Other =...')
+    tempkeep <- str_extract_all(tempnotes, "Other= .*,") %>% unlist()
+    # write more code if length of other is greater than 1
+    stopifnot(length(tempkeep) <= 1)
+    # remove from notes to move  
+    tempmove <- ifelse(length(tempkeep) > 0, gsub(tempkeep, "", tempnotes), tempnotes)
+    # clean up trailing commas if whatever other driver to keep
+    if(length(tempkeep) > 0){
+      tempkeep <- gsub(" *,$", "", tempkeep)
+    }
+    
+    # id pertinent rows in dataset for otherdriver, driver, and surveynotes
+    surveyid <- with(prelimlong1c, which(abbr == "SurveyNotes" & ResponseId == i))
+    otherid <- with(prelimlong1c, which(abbr == "OtherDriver" & ResponseId == i & Group == g))
+    driveid <-  with(prelimlong1c, which(abbr == "Driver" & ResponseId == i & Group == g & grepl("Other", answer)))
+    # write more code if length driveid is ever greater than 1 [person entered other for more than 1 ES]
+    stopifnot(length(driveid)<=1)
+    # if tempkeep is empty and other present in driveid, remove "other" from driver answer (this should never occur, but to be sure)
+    if(length(tempkeep)==0 & length(driveid)!=0){
+      # remove "Other" and note in qa_note
+      prelimlong1c$clean_answer[driveid] <- gsub("Other,*", "", prelimlong1c$clean_answer[driveid])
+      # note in qa_note
+      driveexp <- "'Other driver' entered were notes only; moved notes to general notes and removed 'Other' from Driver answer"
+      prelimlong1c$qa_note[driveid] <- ifelse(is.na(prelimlong1c$qa_note[driveid]), driveexp, paste0(prelimlong1c$qa_note[driveid], "; ", driveexp))
+    }
+    # move comments to general survey notes and add qa note
+    formalg <- recode(g, "Bio" = "Biotic", "Anthro" = "Human", "Env" = "Environmental")
+    surveyexp <- trimws(paste("Comment on", formalg, "driver:", tempmove))
+    # clean up trailing commas (if present at end)
+    surveyexp <- gsub(" *,$", "", surveyexp)
+    prelimlong1c$clean_answer[surveyid] <- ifelse(is.na(prelimlong1c$clean_answer[surveyid]), surveyexp,
+                                                  # if not NA append to what's there
+                                                  paste0(prelimlong1c$clean_answer[surveyid], "; ", surveyexp))
+    # clean up OtherDriver
+    prelimlong1c$clean_answer[otherid] <- ifelse(length(tempkeep)==0, NA, tempkeep)
+    # add qa note
+    otherexp <- paste("Comments about standardized", formalg, "driver entered in 'Other Driver'; retained only true other driver or NA if none and moved comments to general survey notes")
+    prelimlong1c$qa_note[otherid] <- ifelse(is.na(prelimlong1c$qa_note[otherid]), otherexp,
+                                                  # if not NA append to what's there
+                                                  paste0(prelimlong1c$qa_note[otherid], "; ", otherexp))
+  }
+  
+}
+
+View(subset(prelimlong1c, ResponseId %in% movenotes$ResponseId & grepl("Driver|SurveyNotes", abbr))) # looks okay
+# clean up environment
+rm(otherexp, driveexp, surveyexp, i, g, formalg, surveyid, otherid, driveid, tempgroups, tempdat, movenotes, JLnotes)
 copydf <- prelimlong1c
 
 # Anna
@@ -1871,6 +1924,9 @@ for(r in unique(TMcorrections$ResponseId)){
 
 # > Infill missing OTHER DRIVER corrections -----
 # Claire correction (by Nick/Caitlin)
+# > add in "Ecosystem" as Environmental other driver for Kleisner paper, for Food service (same as other services she picked for that paper)
+# > add "Management Practices" as Human driver for all responses in Garrido paper
+# > add "Vine stock density" as an "Other" bio driver for Muneret
 # check typed in answers
 sort(unique(CKcorrections$OtherDriver)) #hm..
 View(subset(prelimlong1c, ResponseId %in% CKcorrections$ResponseId & abbr == "Driver" & !is.na(clean_answer)))
