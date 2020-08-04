@@ -106,12 +106,17 @@ TMcorrections <- read.csv(corrections[grep("reviewTM", corrections)], na.strings
 TKcorrections <- read.csv(corrections[grep("reviewTK", corrections)], na.strings = na_vals, strip.white = T)
 # > NOTE!: Julie sent written corrections in an email
 # > missing other drivers
-CKcorrections <- read.csv(corrections[grep("reviewCK", corrections)], na.strings = na_vals, strip.white = T)
-LDcorrections <- read.csv(corrections[grep("reviewLD", corrections)], na.strings = na_vals, strip.white = T)
+otherdrivecor_CK <- read.csv(corrections[grep("otherdriver_reviewCK", corrections)], na.strings = na_vals, strip.white = T)
+# > note: read in for LD corrections throws a warning, idk why but it's not an issue. ignore warning.
+otherdrivecor_LD <- read.csv(corrections[grep("otherdriver_reviewLD", corrections)], na.strings = na_vals, strip.white = T)
+otherdrivercor_KCG <- read.csv(corrections[grep("otherdriver_reviewKCG", corrections)], na.strings = na_vals, strip.white = T)
 # > double rev corrections
-dblcorSDJ <- read_excel(corrections[grep("inconsistent_SDJ", corrections)], na = na_vals, trim_ws = T)
-dblcorGV <- read.csv(corrections[grep("inconsistent_GV", corrections)], na.strings = na_vals, strip.white = T)
 dblcorAK <- read.csv(corrections[grep("inconsistent_AK", corrections)], na.strings = na_vals, strip.white = T)
+dblcorGV <- read.csv(corrections[grep("inconsistent_GV", corrections)], na.strings = na_vals, strip.white = T)
+dblcorJL <- read.csv(corrections[grep("inconsistent_JL", corrections)], na.strings = na_vals, strip.white = T)
+dblcorKCG <- read.csv(corrections[grep("inconsistent_KCG", corrections)], na.strings = na_vals, strip.white = T)
+dblcorLD <- read.csv(corrections[grep("inconsistent_LD", corrections)], na.strings = na_vals, strip.white = T)
+dblcorSDJ <- read_excel(corrections[grep("inconsistent_SDJ", corrections)], na = na_vals, trim_ws = T)
 # > paper exclusions
 excludecorrections <- read.csv(corrections[grep("exclude", corrections)], na.strings = na_vals)
 # > ecosystem classification
@@ -1356,9 +1361,10 @@ for(i in which(is.na(excludecorrections$ResponseId))){
   # infill reason
   excludecorrections$Reason_LD[i] <- "Q3 - Nick et al. review" 
 }
-# Grant and Anna's ResponseIds not recognized for some reason, clean up
+# Grant, Anna, and Kathryn's ResponseIds not recognized for some reason, clean up
 excludecorrections$ResponseId[grepl("^Adapting the adaptive", excludecorrections$Title)] <- unique(prelimlong1b$ResponseId[grepl("^Adapting the adaptive", prelimlong1b$Title)])
 excludecorrections$ResponseId[grepl("^Habitat connectivity for pollinator", excludecorrections$Title)] <- unique(prelimlong1b$ResponseId[grepl("^Habitat connectivity for pollinator", prelimlong1b$Title)])
+excludecorrections$ResponseId[grepl("^Production of moss-dom", excludecorrections$Title)] <- unique(prelimlong1b$ResponseId[grepl("^Production of moss-dom", prelimlong1b$Title)])
 # clean up "TRUE" in reason_LD, it's not a reason..
 excludecorrections$Reason_LD[excludecorrections$Reason_LD == "TRUE"] <- NA
 # add missing reason to Check dam paper (Nick's review)
