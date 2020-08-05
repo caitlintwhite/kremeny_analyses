@@ -103,13 +103,14 @@ IScorrections <- read.csv(corrections[grep("ISreview", corrections)], na.strings
 AIScorrections <- read.csv(corrections[grep("reviewAIS", corrections)], na.strings = na_vals)
 SDJcorrections <- read_excel(corrections[grep("reviewSDJ", corrections)], na = na_vals, trim_ws = T)
 TMcorrections <- read.csv(corrections[grep("reviewTM", corrections)], na.strings = na_vals, strip.white = T)
-TKcorrections <- read.csv(corrections[grep("reviewTK", corrections)], na.strings = na_vals, strip.white = T)
+TKcorrections <- read.csv(corrections[grep("q12_reviewTK_fixed", corrections)], na.strings = na_vals, strip.white = T)
 # > NOTE!: Julie sent written corrections in an email
 # > missing other drivers
 otherdrivecor_CK <- read.csv(corrections[grep("otherdriver_reviewCK", corrections)], na.strings = na_vals, strip.white = T)
-# > note: read in for LD corrections throws a warning, idk why but it's not an issue. ignore warning.
+# > note: read in for LD and TK corrections throws a warning, idk why but it's not an issue. ignore warning.
 otherdrivecor_LD <- read.csv(corrections[grep("otherdriver_reviewLD", corrections)], na.strings = na_vals, strip.white = T)
 otherdrivecor_KCG <- read.csv(corrections[grep("otherdriver_reviewKCG", corrections)], na.strings = na_vals, strip.white = T)
+otherdrivercor_TK <- read.csv(corrections[grep("otherdriver_reviewTK", corrections)], na.strings = na_vals, strip.white = T)
 # > double rev corrections
 dblcorAK <- read.csv(corrections[grep("inconsistent_AK", corrections)], na.strings = na_vals, strip.white = T)
 dblcorGV <- read.csv(corrections[grep("inconsistent_GV", corrections)], na.strings = na_vals, strip.white = T)
@@ -286,8 +287,8 @@ regulating <- c("AQReg","ClimReg", "Hazards", "PestPath","SoilProtect", "freshWQ
 supporting <- c("HabCreate", "MaintainOpts", "MedGen", "Pollination")
 cultural <- c("CulturePsych")
 # specify ES field as factor for plotting
-ESlevels <- c(provisioning, regulating, supporting, cultural)
-headerLUT$ES <- factor(headerLUT$ES, levels = rev(ESlevels))
+#ESlevels <- c(provisioning, regulating, supporting, cultural)
+#headerLUT$ES <- factor(headerLUT$ES, levels = rev(ESlevels))
 
 
 
@@ -1938,6 +1939,7 @@ for(r in unique(TMcorrections$ResponseId)){
 # > add "Management Practices" as Human driver for all responses in Garrido paper
 # > add "Vine stock density" as an "Other" bio driver for Muneret
 otherdrivecor_stack <- rbind(otherdrivecor_CK, otherdrivecor_KCG) %>%
+  rbind(otherdrivercor_TK) %>%
   # add LD too
   rename(NOTES = ctw_notes) %>%
   rbind(cbind(otherdrivecor_LD, new = 0, EffectDirect = NA)) %>%
@@ -1945,7 +1947,6 @@ otherdrivecor_stack <- rbind(otherdrivecor_CK, otherdrivecor_KCG) %>%
   mutate(NOTES = ifelse(Init == "LD" & !is.na(NOTES), paste("LD:", NOTES), NOTES))
 
 copydf <- prelimlong1c
-prelimlong1c <- copydf
 
 for(i in unique(otherdrivecor_stack$ResponseId)){
   # subset corrections
@@ -2043,10 +2044,13 @@ prelimlong1c$qa_note[temprow] <- "Reviewer correction, remove 'Other' driver"
 correctedRIDs <- unique(c(SDJcorrections$ResponseId, JLcorrections$ResponseId, AIScorrections$ResponseId, TMcorrections$ResponseId, TKcorrections$ResponseId, otherdrivecor_stack$ResponseId, AKcorrections$ResponseId))
 noResponseDriver <- subset(noResponseDriver, !ResponseId %in% correctedRIDs)
 nrow(noResponseDriver)  # if 0, all clean! (all clean as of 8/4/2020)
- 
+# update othercheck
+othercheck <- subset(othercheck, !ResponseId %in% c(otherdrivecor_stack$ResponseId, JLcorrections$ResponseId, AKcorrections$ResponseId))
+nrow(othercheck) # 0 = all corrected
+
 # clean up environment before proceeding
-rm(MeyerES, SDJcorrections, SDJtocorrect, tempdat, AIScorrections, r, tempES, JLcorrections,
-   TMcorrections, TKcorrections, AKcorrections, otherdrivecor_CK, otherdrivecor_LD, otherdrivecor_KCG, otherdrivecor_stack,
+rm(MeyerES, SDJcorrections, SDJtocorrect, tempdat, AIScorrections, r, tempES, JLcorrections, correctedRIDs,
+   TMcorrections, TKcorrections, AKcorrections, otherdrivecor_CK, otherdrivecor_LD, otherdrivecor_KCG, otherdrivercor_TK, otherdrivecor_stack,
    otherrow, driverows, effectrows, tempnote, tempnotes, i, tempkeep, tempmove, temprow, tempcor)
 
 # save work in progress
@@ -2160,7 +2164,7 @@ test_envdrivers <- dplyr::select(envdrivecorrections, answer, Driver_Finer) %>%
 ## > "inundation" .. was from greenhouse study looking at roots and chemical response properties.. abiotic characteristics--terrestrial
 ## > "evapotrans" = climate (from NBD paper on Loess Plateau in China.. I've read that too and it's an remote sensing study, so used an ET layer, modeled off of climate and abiotic factors.. since ET function of plant and weather, binning as climate)
 
-topo_keywords <- "distance|DEM|elevation|slope|aspect|geograph|altitude|latitud|longitud|topography|topology| position" # considered nodes as well.. but leaving in hydrology.. could add "connectivity" to bin label though.. 
+topo_keywords <- "distance|DEM|elevation|slope|aspect|geograph|altitude|latitud|longitud|topography|topology| position|nodes" # considered nodes as well.. but leaving in hydrology.. could add "connectivity" to bin label though.. 
 # clean up
 rm(test_envdrivers)
 
@@ -2189,7 +2193,7 @@ clean_envdriver_corrections <- rbind(alldrivers_summary, all_driver_summary2[nam
     # assign topography and landscape position
     clean_driver_finer = ifelse(grepl(topo_keywords, answer, ignore.case = T), "topography and position", clean_driver_finer),
     # landscape goes in land cover
-    clean_driver_finer = ifelse(grepl("landscape|habitat provis|land cover type", answer, ignore.case = T), "land cover", clean_driver_finer),
+    clean_driver_finer = ifelse(grepl("landscape|habitat provis|land cover type|area", answer, ignore.case = T), "land cover", clean_driver_finer),
     # add weirdos to abiotic char--aquatic
     clean_driver_finer = ifelse(grepl("daytime light|turnover|HDO satu|marine sys", answer, ignore.case = T), "abiotic characteristics of the landscape: aquatic", clean_driver_finer),
     # add weirdos to abiotic char--terrestrial
