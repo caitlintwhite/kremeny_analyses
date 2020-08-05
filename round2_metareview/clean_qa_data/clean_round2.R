@@ -1628,7 +1628,7 @@ prelimlong1c$qa_note[prelimlong1c$ResponseId %in% excludeddbl & prelimlong1c$abb
 # clean up environment
 rm(replacetemp, temp, agRIDs, ecosystemRIDs, i, temprowAG, wetlandclass, wetlandcorrections,
    temp_Q4geninfo, temprow_Q4geninfo, temprow_Q4, temprow_Q4notes, ecosystem_order,
-   IScorrections, systemcorrections, wetland_abstracts, temprows, temprows_other)
+   IScorrections, systemcorrections, wetland_abstracts, temprows, temprows_other, q4_qa)
 
 
 # save work
@@ -2408,8 +2408,8 @@ clean_responses_corrections <- response_summary %>%
 # write file for LD and AK to finish assigning
 responses_forLDAK <- clean_responses_corrections
 write_csv(responses_forLDAK, "round2_metareview/clean_qa_data/needs_classreview/partially_binned_ESresponse_review.csv", na = "")
-
-# apply same keywords 
+# clean up
+rm(test_responses, responses_forLDAK)
 
 
 # 5.c. Apply driver and response corrections -----
@@ -2685,18 +2685,16 @@ for(rid in kept_ResponseId){
 }
 
 # clean enviro after for loop done
-rm(i, rid, temp_q12, temp_q12_clean, temp_q12drivers, temp_q12responses, tempother_df,
-   temp_othercheck, temp_unique_ESresponse, temp_otheradded_rows, temp_otherdriver_grp)
+rm(i, rid, temp_q12, temp_q12_clean, temp_q12drivers, temp_q12responses, tempother_df, temp_ESdriver_list,
+   temp_othercheck, temp_unique_ESresponse, temp_otheradded_rows, temp_otherdriver_grp, tempanswer)
 
-# check for any drivers or responses that didn't have clean_answer_finer assigned
+# check for any drivers or responses that didn't have clean_answer_finer assigned -- typically happens when ES in driver LUT not present
 missingbin <- subset(master_clean_q12, is.na(clean_answer_finer) & !is.na(clean_answer) & grepl("Driver|Response", abbr))
 # only 1 missing.. (can change to for loop later if more)
 for(i in unique(missingbin$clean_answer)){
-  if(i == "NA"){
-    next
-  }
   temprows <- as.numeric(rownames(missingbin[missingbin$clean_answer == i,]))
   master_clean_q12$clean_answer_finer[temprows] <- unique(master_driver_corrections$clean_answer_finer[master_driver_corrections$answer == i])
+  master_clean_q12$clean_group[temprows] <- unique(master_driver_corrections$clean_group[master_driver_corrections$answer == i])
 }
 # final clean up then join to master prelimlong dataset
 master_clean_q12 <- dplyr::select(master_clean_q12, -track)
@@ -2718,7 +2716,14 @@ prelimlong1d <- subset(prelimlong1c, qnum != "Q12") %>%
 #write_csv(prelimlong1d, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 # clean up
-rm(missingbin, addcols)
+rm(missingbin, addcols, all_driver_summary2, all_responses2, alldrivers, anthdrivecorrections, biodrivecorrections, envdrivecorrections,
+   driver_commacheck, drivers, clean_biodriver_corrections, clean_envdriver_corrections, clean_anthdriver_corrections, alldrivers_summary,
+   response_summary, responsecorrections, responses, stddrivers, q12df, landuse_terms, management_terms, kept_ResponseId,
+   abund_terms, biodiv_terms, allowmethods, allmissing, char_humanpop, development_terms, human_disturbance_terms, fxnlbiodiv_terms,
+   structurewords, tempmethod, temprows, topo_keywords, trigger_otherinfill, grprow, place_terms,
+   drivers_comma2semicol, drivers_removedblcommas, drivers_removesinglecommas, q12df_clean,
+   structurecheck, othercheck, otherdrivers, otherdrivers_errors, noResponseDriver, temp_unique_ES)
+
 
 
 
