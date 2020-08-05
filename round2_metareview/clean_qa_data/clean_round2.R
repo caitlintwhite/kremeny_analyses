@@ -109,7 +109,7 @@ TKcorrections <- read.csv(corrections[grep("reviewTK", corrections)], na.strings
 otherdrivecor_CK <- read.csv(corrections[grep("otherdriver_reviewCK", corrections)], na.strings = na_vals, strip.white = T)
 # > note: read in for LD corrections throws a warning, idk why but it's not an issue. ignore warning.
 otherdrivecor_LD <- read.csv(corrections[grep("otherdriver_reviewLD", corrections)], na.strings = na_vals, strip.white = T)
-otherdrivercor_KCG <- read.csv(corrections[grep("otherdriver_reviewKCG", corrections)], na.strings = na_vals, strip.white = T)
+otherdrivecor_KCG <- read.csv(corrections[grep("otherdriver_reviewKCG", corrections)], na.strings = na_vals, strip.white = T)
 # > double rev corrections
 dblcorAK <- read.csv(corrections[grep("inconsistent_AK", corrections)], na.strings = na_vals, strip.white = T)
 dblcorGV <- read.csv(corrections[grep("inconsistent_GV", corrections)], na.strings = na_vals, strip.white = T)
@@ -1809,15 +1809,15 @@ for(i in unique(movenotes$ResponseId)){
     # add qa note
     otherexp <- paste("Comments about standardized", formalg, "driver entered in 'Other Driver'; retained only true other driver or NA if none and moved comments to general survey notes")
     prelimlong1c$qa_note[otherid] <- ifelse(is.na(prelimlong1c$qa_note[otherid]), otherexp,
-                                                  # if not NA append to what's there
-                                                  paste0(prelimlong1c$qa_note[otherid], "; ", otherexp))
+                                            # if not NA append to what's there
+                                            paste0(prelimlong1c$qa_note[otherid], "; ", otherexp))
   }
   
 }
 
 View(subset(prelimlong1c, ResponseId %in% movenotes$ResponseId & grepl("Driver|SurveyNotes", abbr))) # looks okay
 # clean up environment
-rm(otherexp, driveexp, surveyexp, i, g, formalg, surveyid, otherid, driveid, tempgroups, tempdat, movenotes, JLnotes)
+rm(otherexp, surveyexp, i, g, formalg, surveyid, otherid, driveid, tempgroups, tempdat, movenotes, JLnotes)
 copydf <- prelimlong1c
 
 # Anna
@@ -1865,7 +1865,9 @@ tempdat <- subset(SDJtocorrect, grepl("multifunctionality", Title) & ES %in% Mey
          clean_answer = ifelse(abbr == "Yclass", unique(SDJcorrections$clean_answer[SDJcorrections$abbr == "Yclass" & grepl("multifunc", SDJcorrections$Title)]), clean_answer), #& !is.na(SDJcorrections$clean_answer
          clean_answer = ifelse(abbr == "EffectDirect" & Group == "Bio", "Mixed", clean_answer),
          clean_answer = ifelse(abbr == "Driver" & Group == "Bio", "Other", clean_answer),
-         clean_answer = ifelse(abbr == "OtherDriver" & Group == "Bio", with(SDJcorrections, clean_answer[abbr == "OtherDriver" & grepl("multifunc", Title) & !is.na(clean_answer)]), clean_answer))
+         clean_answer = ifelse(abbr == "OtherDriver" & Group == "Bio", with(SDJcorrections, clean_answer[abbr == "OtherDriver" & grepl("multifunc", Title) & !is.na(clean_answer)]), clean_answer)) %>%
+  # only keep records where clean_answer has been updated
+  subset((answer != clean_answer) | (is.na(answer) & !is.na(clean_answer)))
 for(i in 1:nrow(tempdat)){
   prelimlong1c$clean_answer[prelimlong1c$ResponseId == unique(tempdat$ResponseId) & prelimlong1c$survey_order == tempdat$survey_order[i]] <- tempdat$clean_answer[i]
   prelimlong1c$qa_note[prelimlong1c$ResponseId == unique(tempdat$ResponseId) & prelimlong1c$survey_order == tempdat$survey_order[i]] <- "Reviewer correction"
@@ -1929,32 +1931,119 @@ for(r in unique(TMcorrections$ResponseId)){
 
 
 # > Infill missing OTHER DRIVER corrections -----
-# Claire correction (by Nick/Caitlin)
+# can stack all corrections and run through same loop since correcting by response variable
+# Claire and Kathryn corrections (by Caitlin -- can stack both and incoporate in same loop)
+# for CK:
 # > add in "Ecosystem" as Environmental other driver for Kleisner paper, for Food service (same as other services she picked for that paper)
 # > add "Management Practices" as Human driver for all responses in Garrido paper
 # > add "Vine stock density" as an "Other" bio driver for Muneret
-# check typed in answers
-sort(unique(CKcorrections$OtherDriver)) #hm..
-View(subset(prelimlong1c, ResponseId %in% CKcorrections$ResponseId & abbr == "Driver" & !is.na(clean_answer)))
+otherdrivecor_stack <- rbind(otherdrivecor_CK, otherdrivecor_KCG) %>%
+  # add LD too
+  rename(NOTES = ctw_notes) %>%
+  rbind(cbind(otherdrivecor_LD, new = 0, EffectDirect = NA)) %>%
+  #prefix LD to her note
+  mutate(NOTES = ifelse(Init == "LD" & !is.na(NOTES), paste("LD:", NOTES), NOTES))
+
+copydf <- prelimlong1c
+prelimlong1c <- copydf
+
+for(i in unique(otherdrivecor_stack$ResponseId)){
+  # subset corrections
+  tempcor <- subset(otherdrivecor_stack, ResponseId == i)
+  # move on if paper excluded
+  if(any(grepl("EXCLUDE", tempcor$OtherDriver))){
+    next
+  }
+  # subset dataset
+  tempdat <- subset(prelimlong1c, ResponseId == i & abbr %in% c("EffectDirect", "Driver", "OtherDriver")) %>%
+    # subset to relevant ES's indicated by reviewer
+    subset(ES %in% ES[grepl("Other", clean_answer)] | is.na(ES)) %>%
+    # subset to relevant groups in corrections
+    subset(Group %in% unique(tempcor$Group))
+  
+  # replace tempdat clean answers with corrections and then place those in working prelimlong dataset 
+  for(r in 1:nrow(tempcor)){
+    # if REMOVE noted, remove "Other" as driver and if "Other" is only driver noted, remove effect direct
+    if(grepl("REMOVE", tempcor$OtherDriver[r])){
+      #id relevant driver row in working dataset
+      driverows <- with(prelimlong1c, which(ResponseId == i & ES %in% tempdat$ES[tempdat$Group == tempcor$Group[r]] & Group == tempcor$Group[r] & abbr == "Driver"))
+      effectrows <- with(prelimlong1c, which(ResponseId == i & ES %in% tempdat$ES[tempdat$Group == tempcor$Group[r]] & Group == tempcor$Group[r] & abbr == "EffectDirect")) 
+      # if there were any other drivers besides "Other" would have been noted in correction dataset sent to reviewers
+      # to be sure, can check only driver in working dataset is Other
+      stopifnot(unique(prelimlong1c$clean_answer[driverows]) == "Other")
+      # NA driver and effect direct and append qa_note
+      tempnote <- paste("CTW reviewed;", tempcor$NOTES[r])
+      prelimlong1c$clean_answer[c(driverows, effectrows)] <- NA
+      prelimlong1c$qa_note[c(driverows, effectrows)] <- tempnote
+      # move to next correction
+      next
+    }
+    
+    # for all infill other driver (as long as present)
+    if(tempcor$new[r] == 0){
+      #id applicable other driver row
+      otherrow <- with(prelimlong1c, which(ResponseId == i & abbr == "OtherDriver" & Group == tempcor$Group[r]))
+      # infill clean answer
+      prelimlong1c$clean_answer[otherrow] <- tempcor$OtherDriver[r]
+      # create note
+      tempnote <- ifelse(is.na(tempcor$NOTES[r]), "Other driver missing, reviewed and corrected by CTW", paste("Other driver missing, reviewed by CTW;", tempcor$NOTES[r]))
+      # append qa note
+      prelimlong1c$qa_note[otherrow] <- ifelse(is.na(prelimlong1c$qa_note[otherrow]), tempnote, paste0(prelimlong1c$qa_note[otherrow],"; ",tempnote))
+    }
+    # if new, fill in driver, other driver, and effect direct as needed
+    if(tempcor$new[r] == 1){
+      # id relevant rows
+      driverows <- with(prelimlong1c, which(ResponseId == i & abbr == "Driver" & Group == tempcor$Group[r] & ES %in% unique(tempdat$ES))) 
+      prelimlong1c$clean_answer[driverows] <- paste(prelimlong1c$clean_answer[driverows],tempcor$Driver[r], sep = ",")
+      # clean up any NA in driver(s)
+      prelimlong1c$clean_answer[driverows] <- gsub("NA,","", prelimlong1c$clean_answer[driverows])
+      # add effect direct
+      effectrows <- with(prelimlong1c, which(ResponseId == i & abbr == "EffectDirect" & Group == tempcor$Group[r] & ES %in% unique(tempdat$ES)))
+      prelimlong1c$clean_answer[effectrows] <- tempcor$EffectDirect[r]
+      # add note
+      prelimlong1c$qa_note[c(driverows, effectrows)] <- paste(prelimlong1c$qa_note[c(driverows, effectrows)], paste0("CTW reviewed; ", tempcor$NOTES[r]), sep = ",")
+      # clean up any NA in qa_note(s)
+      prelimlong1c$qa_note[c(driverows, effectrows)] <- gsub("NA,","", prelimlong1c$qa_note[c(driverows, effectrows)])
+      # if otherdriver not NA, infill that as well
+      if(!is.na(tempcor$OtherDriver[r])){
+        # id relevant row
+        otherrow <- with(prelimlong1c, which(ResponseId == i & Group == tempcor$Group[r] & abbr == "OtherDriver"))
+        # check that working dataset doesn't already have an answer (it shouldn't?)
+        stopifnot(is.na(prelimlong1c$clean_answer[otherrow]))
+        # infill
+        prelimlong1c$clean_answer[otherrow] <- tempcor$OtherDriver[r]
+        # add note -- qa_note should be empty
+        prelimlong1c$qa_note[otherrow] <- ifelse(is.na(tempcor$NOTES[r]), "CTW reviewed and corrected", paste0("CTW reviewed; ", tempcor$NOTES[r]))
+      }
+      
+    }
+  }
+  
+}
+
+View(subset(prelimlong1c, ResponseId %in% otherdrivecor_stack$ResponseId & qnum == "Q12")) # looks okay
 
 
 # LD corrections -- infill missing other driver
-unique(LDcorrections$OtherDriver)
+unique(otherdrivecor_LD$OtherDriver)
 # append survey_order so works
-LDcorrections <- left_join(LDcorrections, subset(headerLUT, abbr == "OtherDriver"))
+otherdrivecor_LD <- left_join(otherdrivecor_LD, subset(headerLUT, abbr == "OtherDriver"))
 # iterate through corrections with for-loop, as done for JL corrections
-for(r in unique(LDcorrections$ResponseId)){
+for(r in unique(otherdrivecor_LD$ResponseId)){
   # check that review still in working dataset (not excluded)
   if(!r %in% unique(prelimlong1c$ResponseId)){
     next
   }
   # Anna only put something in clean_answer if it was a correction, so can subset for that
-  tempdat <- subset(LDcorrections2, ResponseId == r)
+  tempdat <- subset(otherdrivecor_LD, ResponseId == r)
   for(i in 1:nrow(tempdat)){
     prelimlong1c$clean_answer[prelimlong1c$ResponseId == r & prelimlong1c$survey_order == tempdat$survey_order[i]] <- tempdat$OtherDriver[i]
     prelimlong1c$qa_note[prelimlong1c$ResponseId == r & prelimlong1c$survey_order == tempdat$survey_order[i]] <- "Reviewer correction"
   }
 }
+
+
+# Kathryn other driver
 
 
 # Aislyn other driver
@@ -1979,7 +2068,7 @@ noResponseDriver <- subset(noResponseDriver, !ResponseId %in% correctedRIDs)
 
 
 rm(MeyerES, SDJcorrections, SDJtocorrect, tempdat, AIScorrections, r, tempES, JLcorrections,
-   LDcorrections, TMcorrections, CKcorrections, TKcorrections, AKcorrections)
+   TMcorrections, TKcorrections, AKcorrections, otherdrivecor_CK, otherdrivecor_LD, otherdrivercor_KCG)
 
 
 # 5.a. Driver corrections -----
