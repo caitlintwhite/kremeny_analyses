@@ -1,6 +1,7 @@
 ES,Driver_Group,answer,clean_answer_finer,clean_group
 PestPath,Env,% of semi-natural habitats in a 265 m radius,Land cover,Env
 Food,Bio,1 crop pest,Pathogens/natural enemies,Bio
+,Bio,3 community indicators: proportion of predatory fish (PPF indicator),Pathogens/natural enemies,Bio
 ClimReg,Anthro,"4 ""other"" drivers: Distance(m) to cities with more than 20000 inhabitants",Proximity to development,Anthro
 HabCreate,Anthro,"4 ""other"" drivers: Distance(m) to cities with more than 20000 inhabitants",Proximity to development,Anthro
 SoilProtect,Anthro,"4 ""other"" drivers: Distance(m) to cities with more than 20000 inhabitants",Proximity to development,Anthro
@@ -61,6 +62,7 @@ ClimReg,Env,annual wind speed,Climate,Env
 freshWQReg,Env,annual wind speed,Climate,Env
 Hazards,Env,annual wind speed,Climate,Env
 SoilProtect,Env,annual wind speed,Climate,Env
+,Bio,Ant activity (number observed per timed interval),Service provider density,Bio
 Food,Bio,aphid abundance,Service provider abundance,Bio
 PestPath,Bio,aphid abundance,Service provider abundance,Bio
 SoilProtect,Bio,Aphodius beetles,Service provider identity,Bio
@@ -77,7 +79,9 @@ MaintainOpts,Env,aspect,Topography and position,Env
 Materials,Env,aspect,Topography and position,Env
 SoilProtect,Env,aspect,Topography and position,Env
 ClimReg,Env,Availability of dissolved organic carbon,Soil characteristics,Env
+,Bio,availability of semi-natural habitat (% area within 500m radius),Biotic characteristics of the plot,Bio
 CulturePsych,Env,Availability of water sources,Hydrology,Env
+,Bio,average trophic level of the surveyed community (TLsc indicator),Service provider identity,Bio
 ClimReg,Bio,bark thickness,Biotic characteristics of the plot,Bio
 ,Bio,biodiversity of grassland plant community,Service provider diversity/richness,Bio
 Pollination,Bio,Biotic driver= a bat species ESP,Service provider identity,Bio
@@ -162,6 +166,7 @@ HabCreate,Anthro,direct impacts to natural stream channel,Human disturbance,Anth
 MaintainOpts,Anthro,direct impacts to natural stream channel,Human disturbance,Anthro
 coastWQReg,Env,dish area (habitat area),Land cover,Env
 ClimReg,Env,distance from coast,Topography and position,Env
+,Env,Distance from hedgerows,Topography and position,Env
 ClimReg,Env,distance from rivers,Topography and position,Env
 HabCreate,Env,distance from rivers,Topography and position,Env
 SoilProtect,Env,distance from rivers,Topography and position,Env
@@ -199,6 +204,7 @@ SoilProtect,Bio,earthworms,Service provider abundance,Bio
 Food,Bio,Eclosion time of pest,Pathogens/natural enemies,Bio
 ClimReg,Anthro,ecological rehabilitation,Management/restoration,Anthro
 freshWQReg,Anthro,ecological rehabilitation,Management/restoration,Anthro
+,Env,Ecosystem (22 different marine systems),Abiotic characteristics of the landscape: aquatic,Env
 ClimReg,Env,Ecosystem service types,Index,Env
 CulturePsych,Env,Ecosystem service types,Index,Env
 Food,Env,Ecosystem service types,Index,Env
@@ -248,6 +254,7 @@ Food,Anthro,fertilization practices,Fertilization,Anthro
 Food,Anthro,fertilizer,Fertilization,Anthro
 PestPath,Anthro,fertilizer,Fertilization,Anthro
 PestPath,Anthro,Fertilizer strategy,Fertilization,Anthro
+,Env,field age,Abiotic characteristics of the landscape: terrestrial,Env
 Food,Bio,field margins left unmowed,Management,Anthro
 Pollination,Bio,field margins left unmowed,Management,Anthro
 Materials,Env,fire,Extreme events,Env
@@ -261,6 +268,7 @@ Food,Bio,flower species richness,Service provider diversity/richness,Bio
 SoilProtect,Bio,foliar cover,Biotic characteristics of the plot,Bio
 Food,Env,Forest stand age,Vegetation cover,Bio
 ClimReg,Bio,Forest type,Biotic characteristics of the plot,Bio
+,Bio,Forest type (dense; mixed; seasonal),Biotic characteristics of the plot,Bio
 SoilProtect,Env,four microhabitats (bottom,Land cover,Env
 coastWQReg,Bio,freshwater mussels,Service provider abundance,Bio
 MaintainOpts,Bio,freshwater mussels,Service provider abundance,Bio
@@ -275,8 +283,9 @@ Pollination,Anthro,golf course disturbance caused fewer flower visits,Human dist
 ClimReg,Anthro,grazing,Exploitation/harvest,Anthro
 freshWQReg,Anthro,grazing,Exploitation/harvest,Anthro
 SoilProtect,Anthro,grazing,Exploitation/harvest,Anthro
+,Bio,green infrastructure,Biotic characteristics of the plot,Bio
 PestPath,Anthro,green roofs,Characteristics of locality,Anthro
-PestPath,Env,growing season week,Climate,Env
+PestPath,Env,growing season week,Timing/seasonality,Env
 coastWQReg,Bio,Growth,"Service provider reproduction, growth, and population maintenance",Bio
 ,Env,habitat provision,Land cover,Env
 Food,Env,Habitat type (type of coral environment),Land cover,Env
@@ -286,6 +295,7 @@ CulturePsych,Anthro,harvesting experience,Exploitation/harvest,Anthro
 Food,Anthro,harvesting experience,Exploitation/harvest,Anthro
 HabCreate,Env,HDO saturation,Abiotic characteristics of the landscape: aquatic,Env
 MaintainOpts,Env,HDO saturation,Abiotic characteristics of the landscape: aquatic,Env
+,Bio,"Hedge quality (""good"" or ""poor"")",Biotic characteristics of the plot,Bio
 MaintainOpts,Bio,herbaceous cover diversity,Service provider diversity/richness,Bio
 Food,Anthro,herbicide spraying,Insecticides/fungicides/pesticides/herbicides,Anthro
 Pollination,Anthro,herbicide spraying,Insecticides/fungicides/pesticides/herbicides,Anthro
@@ -425,6 +435,7 @@ Pollination,Anthro,management type,Management/restoration,Anthro
 Food,Anthro,market orientation,Characteristics of human population,Anthro
 ClimReg,Anthro,mean dwelling density,Population growth and density,Anthro
 ClimReg,Anthro,mean edge/area ratio,Characteristics of locality,Anthro
+,Bio,mean lifespan (mLS indicator),"Service provider reproduction, growth, and population maintenance",Bio
 ClimReg,Anthro,mean lot size,Characteristics of locality,Anthro
 ClimReg,Anthro,mean patch size,Characteristics of locality,Anthro
 ,Bio,Mean species richness (by plot and by site),Service provider diversity/richness,Bio
@@ -545,6 +556,7 @@ Food,Env,Ph,Aquatic biogeochemistry,Env
 HabCreate,Env,physical site variables = slope,Topography and position,Env
 MaintainOpts,Env,physical site variables = slope,Topography and position,Env
 ClimReg,Bio,plant productivity,Productivity,Bio
+,Bio,Plant species richness,Service provider diversity/richness,Bio
 ClimReg,Bio,plant-soil feedbacks,Plant soil feedbacks,Bio
 HabCreate,Bio,plant-soil feedbacks,Plant soil feedbacks,Bio
 SoilProtect,Bio,plant-soil feedbacks,Plant soil feedbacks,Bio
@@ -582,7 +594,7 @@ SoilProtect,Env,precipitation,Climate,Env
 PestPath,Bio,Predator dispersal distance,Pathogens/natural enemies,Bio
 Food,Bio,Predator of prey (yield item),Pathogens/natural enemies,Bio
 Pollination,Env,Productivity,Productivity,Bio
-PestPath,Bio,proportion of natural habitat surrounding farms,Habitat,Bio
+PestPath,Bio,proportion of natural habitat surrounding farms,Biotic characteristics of the plot,Bio
 ClimReg,Anthro,proportion treed,Land use and land cover change,Anthro
 CulturePsych,Anthro,Proximity to roads,Proximity to development,Anthro
 Pollination,Env,radiation index,Index,Env
@@ -607,6 +619,7 @@ SoilProtect,Env,rock fragment cover,Land cover,Env
 PestPath,Bio,Rotation,Management,Anthro
 coastWQReg,Env,salinity),Aquatic biogeochemistry,Env
 Food,Env,salinity),Aquatic biogeochemistry,Env
+,Env,Seasonality (time of of season; e.g. early; mid; late),Timing/seasonality,Env
 ClimReg,Env,sediment type,Soil characteristics,Env
 SoilProtect,Env,sediment type,Soil characteristics,Env
 MaintainOpts,Anthro,separately assess diversity,Characteristics of human population,Anthro
@@ -770,6 +783,7 @@ SoilProtect,Bio,vegetation cover,Biotic characteristics of the plot,Bio
 SoilProtect,Env,vegetation cover,Vegetation cover,Bio
 SoilProtect,Env,Vegetation cover,Vegetation cover,Bio
 ClimReg,Bio,vegetation type,Biotic characteristics of the plot,Bio
+,Bio,Vine stock or trunk density,Service provider density,Bio
 coastWQReg,Anthro,visible human impacts around the channel,Human disturbance,Anthro
 HabCreate,Anthro,visible human impacts around the channel,Human disturbance,Anthro
 MaintainOpts,Anthro,visible human impacts around the channel,Human disturbance,Anthro
