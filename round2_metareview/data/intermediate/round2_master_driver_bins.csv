@@ -160,7 +160,7 @@ freshWQReg,Env,DEM,Topography and position,Env
 SoilProtect,Env,DEM,Topography and position,Env
 Food,Bio,Density of honeybee hives,Service provider density,Bio
 Pollination,Bio,Density of honeybee hives,Service provider density,Bio
-HabCreate,Env,different olive grove types could be considered land use or management type (organic; conventional; abandoned; natural areas),Management,Anthro
+HabCreate,Env,different olive grove types could be considered land use or management type (organic; conventional; abandoned; natural areas),Land cover,Env
 coastWQReg,Anthro,direct impacts to natural stream channel,Human disturbance,Anthro
 HabCreate,Anthro,direct impacts to natural stream channel,Human disturbance,Anthro
 MaintainOpts,Anthro,direct impacts to natural stream channel,Human disturbance,Anthro
@@ -279,6 +279,7 @@ Food,Anthro,gender,Characteristics of human population,Anthro
 PestPath,Bio,Genetic diversity,Service provider diversity/richness,Bio
 coastWQReg,Env,Geographic (latitude,Topography and position,Env
 Food,Env,Geographic (latitude,Topography and position,Env
+,Env,glacier area,Land cover,Env
 Pollination,Anthro,golf course disturbance caused fewer flower visits,Human disturbance,Anthro
 ClimReg,Anthro,grazing,Exploitation/harvest,Anthro
 freshWQReg,Anthro,grazing,Exploitation/harvest,Anthro
@@ -338,6 +339,7 @@ ClimReg,Env,inundation,Abiotic characteristics of the landscape: terrestrial,Env
 SoilProtect,Env,inundation,Abiotic characteristics of the landscape: terrestrial,Env
 PestPath,Bio,invasive species,Invasive species,Bio
 SoilProtect,Bio,invasive species,Invasive species,Bio
+,Env,lake area,Land cover,Env
 CulturePsych,Env,lake clarity (could be interpreted as a human driver but never explicitly stated as a direct reflection of water management),Management,Anthro
 CulturePsych,Env,lake size,Land cover,Env
 coastWQReg,Bio,Land cover,Habitat,Bio
@@ -440,7 +442,7 @@ ClimReg,Anthro,mean lot size,Characteristics of locality,Anthro
 ClimReg,Anthro,mean patch size,Characteristics of locality,Anthro
 ,Bio,Mean species richness (by plot and by site),Service provider diversity/richness,Bio
 no ES selected,Bio,measured 82 different ecosystem function variables,Index,Bio
-Food,Env,mid-channel nodes,Hydrology,Env
+Food,Env,mid-channel nodes,Topography and position,Env
 Food,Bio,modeled influences of 3 organisms: 2 beneficial insects,Service provider abundance,Bio
 Food,Anthro,Municipality (this mixes a bit with geographic location),Characteristics of locality,Anthro
 Food,Anthro,N inputs,Fertilization,Anthro
@@ -468,6 +470,8 @@ freshWQReg,Anthro,not just land use change but land use intensification. managem
 HabCreate,Anthro,Note: human exploitation driver is oil exploitation,Exploitation/harvest,Anthro
 Food,Bio,number of bumblebee colonies used per year,Pollination,Bio
 Pollination,Bio,number of bumblebee colonies used per year,Pollination,Bio
+,Env,number of mid-channel nodes,Topography and position,Env
+,Env,number of tributary nodes per drainage line,Topography and position,Env
 Pollination,Anthro,nutrient addition,Fertilization,Anthro
 ClimReg,Anthro,Nutrient enrichment,Fertilization,Anthro
 coastWQReg,Anthro,Nutrient enrichment,Fertilization,Anthro
@@ -475,8 +479,8 @@ Food,Anthro,Nutrient enrichment,Fertilization,Anthro
 HabCreate,Anthro,Nutrient enrichment,Fertilization,Anthro
 MaintainOpts,Env,nutrient-supplying capacity of the soil,Soil physiochemical characteristics,Env
 Materials,Env,nutrient-supplying capacity of the soil,Soil physiochemical characteristics,Env
-coastWQReg,Env,Oceanographical (area volume,Hydrology,Env
-Food,Env,Oceanographical (area volume,Hydrology,Env
+coastWQReg,Env,Oceanographical (area volume,Land cover,Env
+Food,Env,Oceanographical (area volume,Land cover,Env
 Food,Env,organic carbon),Soil characteristics,Env
 Food,Anthro,organic fertilizer,Fertilization,Anthro
 PestPath,Env,organic matter,Soil characteristics,Env
@@ -759,7 +763,7 @@ ClimReg,Bio,tree height,Biotic characteristics of the plot,Bio
 SoilProtect,Bio,tree size,Biotic characteristics of the plot,Bio
 HabCreate,Anthro,tree volume,Land use and land cover change,Anthro
 MaintainOpts,Anthro,tree volume,Land use and land cover change,Anthro
-Food,Env,tributary nodes/drainline,Hydrology,Env
+Food,Env,tributary nodes/drainline,Topography and position,Env
 coastWQReg,Env,turnover time,Abiotic characteristics of the landscape: aquatic,Env
 Food,Env,turnover time,Abiotic characteristics of the landscape: aquatic,Env
 ClimReg,Env,Type of vegetation (grassland vs. shrubland),Vegetation cover,Bio
