@@ -2024,28 +2024,6 @@ for(i in unique(otherdrivecor_stack$ResponseId)){
 View(subset(prelimlong1c, ResponseId %in% otherdrivecor_stack$ResponseId & qnum == "Q12")) # looks okay
 
 
-# LD corrections -- infill missing other driver
-unique(otherdrivecor_LD$OtherDriver)
-# append survey_order so works
-otherdrivecor_LD <- left_join(otherdrivecor_LD, subset(headerLUT, abbr == "OtherDriver"))
-# iterate through corrections with for-loop, as done for JL corrections
-for(r in unique(otherdrivecor_LD$ResponseId)){
-  # check that review still in working dataset (not excluded)
-  if(!r %in% unique(prelimlong1c$ResponseId)){
-    next
-  }
-  # Anna only put something in clean_answer if it was a correction, so can subset for that
-  tempdat <- subset(otherdrivecor_LD, ResponseId == r)
-  for(i in 1:nrow(tempdat)){
-    prelimlong1c$clean_answer[prelimlong1c$ResponseId == r & prelimlong1c$survey_order == tempdat$survey_order[i]] <- tempdat$OtherDriver[i]
-    prelimlong1c$qa_note[prelimlong1c$ResponseId == r & prelimlong1c$survey_order == tempdat$survey_order[i]] <- "Reviewer correction"
-  }
-}
-
-
-# Kathryn other driver
-
-
 # Aislyn other driver
 # > email from AK to CTW:
 # >> I just revisited my outstanding paper ('Other' driver). 
@@ -2062,13 +2040,16 @@ prelimlong1c$qa_note[temprow] <- "Reviewer correction, remove 'Other' driver"
 
 
 # update no response/driver df before proceeding
-correctedRIDs <- unique(c(SDJcorrections$ResponseId, JLcorrections$ResponseId, AIScorrections$ResponseId, ))
+correctedRIDs <- unique(c(SDJcorrections$ResponseId, JLcorrections$ResponseId, AIScorrections$ResponseId, TMcorrections$ResponseId, TKcorrections$ResponseId, otherdrivecor_stack$ResponseId, AKcorrections$ResponseId))
 noResponseDriver <- subset(noResponseDriver, !ResponseId %in% correctedRIDs)
-
-
-
+if(nrow(noResponseDriver)==0){  # if 0, all clean! (and can remove -- all clean as of 8/4/2020)
+  rm(noResponseDriver)
+}
+# clean up environment before proceeding
 rm(MeyerES, SDJcorrections, SDJtocorrect, tempdat, AIScorrections, r, tempES, JLcorrections,
-   TMcorrections, TKcorrections, AKcorrections, otherdrivecor_CK, otherdrivecor_LD, otherdrivercor_KCG)
+   TMcorrections, TKcorrections, AKcorrections, otherdrivecor_CK, otherdrivecor_LD, otherdrivecor_KCG, otherdrivecor_stack,
+   otherrow, driverows, effectrows, tempnote, tempnotes, i, tempkeep, tempmove, temprow, tempcor)
+
 
 
 # 5.a. Driver corrections -----
