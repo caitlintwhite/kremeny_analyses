@@ -1315,7 +1315,7 @@ othercheck <- subset(prelimlong1b, (abbr == "Driver" & !is.na(answer)) | abbr ==
   arrange(Init, Title) %>%
   #join citation info
   left_join(original[c("Title","FirstAuthor", "PublicationYear", "SourcePublication")])
-nrow(othercheck) # 15 titles.. dang
+nrow(othercheck) # 13 titles.. dang
 
 # write out to needs review
 # for(i in unique(othercheck$Init)){
@@ -2042,13 +2042,15 @@ prelimlong1c$qa_note[temprow] <- "Reviewer correction, remove 'Other' driver"
 # update no response/driver df before proceeding
 correctedRIDs <- unique(c(SDJcorrections$ResponseId, JLcorrections$ResponseId, AIScorrections$ResponseId, TMcorrections$ResponseId, TKcorrections$ResponseId, otherdrivecor_stack$ResponseId, AKcorrections$ResponseId))
 noResponseDriver <- subset(noResponseDriver, !ResponseId %in% correctedRIDs)
-if(nrow(noResponseDriver)==0){  # if 0, all clean! (and can remove -- all clean as of 8/4/2020)
-  rm(noResponseDriver)
-}
+nrow(noResponseDriver)  # if 0, all clean! (all clean as of 8/4/2020)
+ 
 # clean up environment before proceeding
 rm(MeyerES, SDJcorrections, SDJtocorrect, tempdat, AIScorrections, r, tempES, JLcorrections,
    TMcorrections, TKcorrections, AKcorrections, otherdrivecor_CK, otherdrivecor_LD, otherdrivecor_KCG, otherdrivecor_stack,
    otherrow, driverows, effectrows, tempnote, tempnotes, i, tempkeep, tempmove, temprow, tempcor)
+
+# save work in progress
+copydf <- prelimlong1c
 
 
 
@@ -2056,6 +2058,7 @@ rm(MeyerES, SDJcorrections, SDJtocorrect, tempdat, AIScorrections, r, tempES, JL
 # !> note: need to add in *new* response and driver variables from corrections in section preceeding this one..
 # > .. maybe remake all_drivers_summary and response_summary?
 
+# pull new drivers (not yet in dataset when KCG and SDJ reviewed drivers back in May)
 all_driver_summary2 <- subset(prelimlong1c, abbr %in% c("Driver", "OtherDriver")) %>%
   # clean up answers that should be split
   mutate(clean_answer = gsub("hunting, fishing", "hunting or fishing", clean_answer),
@@ -2114,14 +2117,14 @@ clean_biodriver_corrections <- rbind(alldrivers_summary, all_driver_summary2[nam
          # abundance drivers
          clean_driver_finer = ifelse(grepl(abund_terms, answer, ignore.case = T), "service provider abundance", clean_driver_finer),
          # general service provider option
-         clean_driver_finer = ifelse(grepl("^service provider|biotic driver=|Aphodius", answer, ignore.case = T) & !grepl("yield", answer), "service provider identity", clean_driver_finer),
+         clean_driver_finer = ifelse(grepl("^service provider|biotic driver=|Aphodius|trophic level", answer, ignore.case = T) & !grepl("yield", answer), "service provider identity", clean_driver_finer),
          # ESP density
-         clean_driver_finer = ifelse(grepl("density", answer, ignore.case = T), "service provider density", clean_driver_finer),
+         clean_driver_finer = ifelse(grepl("density|ant activity", answer, ignore.case = T), "service provider density", clean_driver_finer),
          # clean up randos
-         clean_driver_finer = ifelse(grepl("polychaete", answer), "pathogens/natural enemies",
+         clean_driver_finer = ifelse(grepl("polychaete|predatory", answer), "pathogens/natural enemies",
                                      # these particular variables go with one of AK's papers on population modeling and individual maintenance, feeding, groth, and reproduction
-                                     ifelse(grepl("reproduc|maintenance|growth|feeding", answer, ignore.case = T), "Service provider reproduction, growth, and population maintenance",
-                                            ifelse(grepl("root depth|vegetation cover", answer, ignore.case = T), "biotic characteristics of the plot", clean_driver_finer))),
+                                     ifelse(grepl("reproduc|maintenance|growth|feeding|lifespan", answer, ignore.case = T), "Service provider reproduction, growth, and population maintenance",
+                                            ifelse(grepl("root depth|vegetation cover|habitat|forest type|hedge qual|green infra", answer, ignore.case = T), "biotic characteristics of the plot", clean_driver_finer))),
          # call Other 'Other' just in case no otherdriver text entered (can at least count Other, if other text available, can drop Other)
          clean_driver_finer = ifelse(answer == "Other", "other", clean_driver_finer),
          # move management to anthro category
@@ -2188,9 +2191,9 @@ clean_envdriver_corrections <- rbind(alldrivers_summary, all_driver_summary2[nam
     # landscape goes in land cover
     clean_driver_finer = ifelse(grepl("landscape|habitat provis|land cover type", answer, ignore.case = T), "land cover", clean_driver_finer),
     # add weirdos to abiotic char--aquatic
-    clean_driver_finer = ifelse(grepl("daytime light|turnover|HDO satu", answer, ignore.case = T), "abiotic characteristics of the landscape: aquatic", clean_driver_finer),
+    clean_driver_finer = ifelse(grepl("daytime light|turnover|HDO satu|marine sys", answer, ignore.case = T), "abiotic characteristics of the landscape: aquatic", clean_driver_finer),
     # add weirdos to abiotic char--terrestrial
-    clean_driver_finer = ifelse(grepl("inundat|NDWI", answer, ignore.case = T), "abiotic characteristics of the landscape: terrestrial", clean_driver_finer),
+    clean_driver_finer = ifelse(grepl("inundat|NDWI|field age", answer, ignore.case = T), "abiotic characteristics of the landscape: terrestrial", clean_driver_finer),
     # add weirdos + newbies to climate (wind itself should be climate if annual windspeed is..)
     clean_driver_finer = ifelse(grepl("evapotrans|drought|annual wind", answer, ignore.case = T) | answer == "wind", "climate", clean_driver_finer),
     # assign biotic driver bin to rewiring
@@ -2199,6 +2202,8 @@ clean_envdriver_corrections <- rbind(alldrivers_summary, all_driver_summary2[nam
     clean_driver_finer = ifelse(grepl("^Ecosystem service", answer), "index", clean_driver_finer), # "Ecosystem service types = ES bundles
     # call Other 'Other' just in case no otherdriver text entered (can at least count Other, if other text available, can drop Other)
     clean_driver_finer = ifelse(answer == "Other", "other", clean_driver_finer),
+    # change growing season week and seasonality answers from climate to to timing/seasonality
+    clean_driver_finer = ifelse(grepl("season", answer), "timing/seasonality", clean_driver_finer),
     # ådd col for new driver type if needs to be re-assigned
     clean_driver_group = ifelse(clean_driver_finer %in% c("productivity", "vegetation cover") | answer == "rewiring", "Bio", 
                                 ifelse(clean_driver_finer == "management", "Anthro", Driver_Group)),
@@ -2683,6 +2688,9 @@ rm(i, rid, temp_q12, temp_q12_clean, temp_q12drivers, temp_q12responses, tempoth
 missingbin <- subset(master_clean_q12, is.na(clean_answer_finer) & !is.na(clean_answer) & grepl("Driver|Response", abbr))
 # only 1 missing.. (can change to for loop later if more)
 for(i in unique(missingbin$clean_answer)){
+  if(i == "NA"){
+    next
+  }
   temprows <- as.numeric(rownames(missingbin[missingbin$clean_answer == i,]))
   master_clean_q12$clean_answer_finer[temprows] <- unique(master_driver_corrections$clean_answer_finer[master_driver_corrections$answer == i])
 }
