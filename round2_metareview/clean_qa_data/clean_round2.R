@@ -1818,7 +1818,7 @@ for(i in unique(movenotes$ResponseId)){
 
 View(subset(prelimlong1c, ResponseId %in% movenotes$ResponseId & grepl("Driver|SurveyNotes", abbr))) # looks okay
 # clean up environment
-rm(otherexp, surveyexp, i, g, formalg, surveyid, otherid, driveid, tempgroups, tempdat, movenotes, JLnotes)
+#rm(otherexp, surveyexp, i, g, formalg, surveyid, otherid, driveid, tempgroups, tempdat, movenotes, JLnotes)
 copydf <- prelimlong1c
 
 # Anna
@@ -2522,7 +2522,7 @@ for(rid in kept_ResponseId){
   # break out drivers
   temp_q12drivers <- subset(temp_q12, grepl("Driver", abbr))
   # first, ID which has other drivers listed and whether Other present in Driver field
-  temp_otherdriver_grp <- unique(with(temp_q12drivers, Group[which(!is.na(answer) & abbr == "OtherDriver")]))
+  temp_otherdriver_grp <- unique(with(temp_q12drivers, Group[which(!is.na(clean_answer) & abbr == "OtherDriver")]))
   # then go through and check for Other in Driver, if not present append
   # > if other driver entered for a given group, must be checked in at least 1 ES for that group
   # > this for-loop won't do anything if temp_otherdriver_grp is empty (i.e. no other drivers entered)
@@ -3499,7 +3499,7 @@ dbl_init <- dbl_init[!dbl_init %in% c("AIS", "CK")]
 
 for(i in dbl_init){
   tempdat <- subset(double_inconsistent_all, rev1init == i | rev2init == i)
-  write_csv(tempdat,paste0("round2_metareview/clean_qa_data/needs_classreview/doublerev_inconsistent/doublerev_inconsistent_", i,".csv"), na = "")
+  write_csv(tempdat,paste0("round2_metareview/clean_qa_data/needs_classreview/doublerev_inconsistent/augcheck/doublerev_inconsistent2_", i,".csv"), na = "")
 }
 
 # check which of Tim's corrections needed are double review papers
@@ -3516,10 +3516,97 @@ timcheck <- dplyr::select(noResponseDriver, Init, Title) %>%
          missing_driver_response = ifelse(Title %in% noResponseDriver$Title[noResponseDriver$Init == "TK"], "X", NA)) %>%
   left_join(original[c("Title", "FirstAuthor", "PublicationYear")])
 
-write_csv(timcheck, "round2_metareview/clean_qa_data/needs_classreview/missing_responsedriver/TK_ESoutstanding_20200624.csv", na = "")
+#write_csv(timcheck, "round2_metareview/clean_qa_data/needs_classreview/missing_responsedriver/TK_ESoutstanding_20200624.csv", na = "")
 
 
 # -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
+# 1) Standardize double review so can run through same loop ----
+# prep AK corrections first
+dblcorAK2 <- dblcorAK %>%
+  mutate(keep = ifelse(is.na(final_answer), 0, 1)) %>%
+  # check only 1 final answer per question per paper (might get weird for q12)
+  group_by(Title, survey_order) %>%
+  mutate(nobs = length(!is.na(final_answer)))
+
+
+
+# figure out the process for the loop then come back to AK and GV dbl corrections
+dblcor_stacked <- rbind(dblcorJL, dblcorLD) %>%
+  rbind(cbind(dblcorKCG, new = NA)) %>%
+  # transform any NA in new to 0 (things that are new already have 1 markerd)
+  replace_na(list(new = 0))
+
+# prioritize final_answer over kept clean_answer, otherwise use clean_answer[keep == 1]
+
+names(dblcorKCG)
+names(dblcorJL)
+names(dblcorLD)
+
+test <- subset(dblcor_stacked, grepl("^Application of a rangeland soil erosion", Title))
+# 2) Run correction loop ----
+# notes on process:
+# > "answer" col should have the clean answer from each reviewer, prefixed by their initials (maybe also put "" for second reviewer if no answer?, or leave blank [which is what's done to now])
+# > also need to collapse notes in ctw_notes (or from reviewer), put in qa_notes
+
+# assign keep == 1 clean answer as final answer unless there is a different final answer noted
+# may need to treat Q12 differently if commas present.. wait and see -- or fix in grant's file correction file--that seems to be the only one
+# for all other questions besides q12 response and driver, string flatten clean answer; for those variables str_flatten "answer" (has commas) to store in final "answer" col but use un-comma'd responses in final_answer
+
+# different process for Q12 vs. all else
+
+test_noq12 <- subset(dblcor_stacked, qnum != "Q12") %>%
+  mutate(final_answer2 = ifelse(keep == 0, NA,
+                                ifelse(!is.na(final_answer), final_answer, clean_answer)),
+         clean_answer = ifelse(is.na(clean_answer), paste(Init, "(no answer or NA)", sep = ": "), paste(Init, clean_answer, sep = ": "))) %>%
+  # collapse notes
+  group_by(Title, survey_order) %>%
+  mutate(ctw_notes = ifelse(!is.na(review_notes), paste(review_notes, ctw_notes[!is.na(ctw_notes)], sep = "; "), ctw_notes),
+         # clean up any orphan semi-colons
+         ctw_notes = gsub("; $", "", ctw_notes),
+         qa_note2 = str_flatten(unique(ctw_notes[!is.na(ctw_notes)]), collapse = ";"),
+         clean_answer2 = str_flatten(clean_answer, collapse = "; ")) %>%
+  ungroup() %>%
+  # join new response id
+  left_join(keptdoubles) %>%
+  # attach original qa_note to final qa_note if there is one present for the kept answer
+  mutate(qa_note2 = ifelse(!is.na(qa_note) & keep == 1, paste(qa_note, qa_note2, sep = "; "), qa_note2),
+         # clean up empty junk pasting from empty qa_note2 and empty strings
+         qa_note2 = gsub("; $", "", qa_note2),
+         qa_note2 = ifelse(qa_note2 == "", NA, qa_note2),
+         # set init as rev1/rev2
+         Init = paste(rev1init, rev2init, sep = "/"),
+         ResponseId = new_rid,
+         version = "final",
+         doublerev = TRUE) %>%
+  # add start, end, and recorded cols
+  cbind(data.frame(StartDate = NA, EndDate = NA, RecordedDate = NA)) %>%
+  # subset to rows to keep
+  subset(keep == 1) %>%
+  dplyr::select(datecols,ResponseId, Init, doublerev, version, Title, id, clean_answer2, final_answer2, fullquestion:survey_order, qa_note2) %>%
+  rename_all(function(x) gsub("2$", "", x)) %>%
+  rename(answer = clean_answer,
+         clean_answer = final_answer) %>%
+  arrange(Title, survey_order)
+
+# finish with qa notes for any note field that is empty
+# > papers LD reviewed
+LDpapers <- c("Using citizen scientists to measure|Global evidence of positive impacts of freshwater|Abundance of urban male mosquitoes by green infrastructure")
+
+test_noq12 <- test_noq12 %>%
+  mutate(qa_note = ifelse(grepl(LDpapers, Title) & is.na(qa_note), "LD reviewed inconsistent answers", qa_note),
+         # add note for KCG papers
+         qa_note = ifelse(grepl("KCG", Init) & is.na(qa_note), "CTW reviewed inconsistent answers", qa_note))
+
+
+# test q12 compilation
+test_q12 <- subset(dblcor_stacked, qnum == "Q12")
+
+# 3) Recompile all double review answers -----
+
+
+# 4) Incorporate corrections in final dataset ----
+
+
 
 
 
