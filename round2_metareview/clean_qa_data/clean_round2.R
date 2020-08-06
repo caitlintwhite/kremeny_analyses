@@ -1818,7 +1818,7 @@ for(i in unique(movenotes$ResponseId)){
 
 View(subset(prelimlong1c, ResponseId %in% movenotes$ResponseId & grepl("Driver|SurveyNotes", abbr))) # looks okay
 # clean up environment
-#rm(otherexp, surveyexp, i, g, formalg, surveyid, otherid, driveid, tempgroups, tempdat, movenotes, JLnotes)
+rm(otherexp, surveyexp, i, g, formalg, surveyid, otherid, driveid, tempgroups, tempdat, movenotes, JLnotes)
 copydf <- prelimlong1c
 
 # Anna
