@@ -281,17 +281,7 @@ headerLUT <- headerLUT %>%
   mutate(abbr = gsub("_[1-9].*|_unk", "", abbr),
          survey_order = parse_number(row.names(.)))
 
-# specify ES type for all ES's considered
-provisioning <- c("Energy", "Food", "Materials")
-regulating <- c("AQReg","ClimReg", "Hazards", "PestPath","SoilProtect", "freshWQReg", "coastWQReg", "OceanReg")
-supporting <- c("HabCreate", "MaintainOpts", "MedGen", "Pollination")
-cultural <- c("CulturePsych")
-# specify ES field as factor for plotting
-#ESlevels <- c(provisioning, regulating, supporting, cultural)
-#headerLUT$ES <- factor(headerLUT$ES, levels = rev(ESlevels))
-
-
-
+  
 
 # -- ASSESS REVIEW STATUS + TIDY DATA ----
 names(prelim)
@@ -481,7 +471,7 @@ rm(KG_outstanding, rTim4KG, Tim_remain)
 
 
 # clean up work environment
-rm(stat_byname, stat_byrev, effort, supporting, regulating, provisioning, cultural)
+rm(stat_byname, stat_byrev)
 
 ## 1) Check exclusion -----
 # look for "exclude" in final notes if answered before Q3b and c created
@@ -2697,13 +2687,19 @@ for(i in unique(missingbin$clean_answer)){
   master_clean_q12$clean_group[temprows] <- unique(master_driver_corrections$clean_group[master_driver_corrections$answer == i])
 }
 # final clean up then join to master prelimlong dataset
-master_clean_q12 <- dplyr::select(master_clean_q12, -track)
+master_clean_q12 <- master_clean_q12[!names(master_clean_q12) %in% c("track", "ESnum")] %>%
+  # need to rejoin ESnum-- got messed up when expanded other driver
+  #select(-ESnum) %>%
+  left_join(distinct(headerLUT[c("ES", "ESnum")])) %>%
+  # update survey order for expanded other driver
+  mutate(survey_order = ifelse(abbr == "OtherDriver" & !is.na(clean_answer), paste(survey_order, ESnum, sep = "."), survey_order),
+         survey_order = as.numeric(survey_order)) %>%
+  select(StartDate:clean_group, ESnum, qnum:qa_note)
 # id new colnames to master dataset
 addcols <- names(master_clean_q12)[!names(master_clean_q12) %in% names(prelimlong1c)]
 
 # new version prelimlong since including the expanded vars now
 prelimlong1d <- subset(prelimlong1c, qnum != "Q12") %>%
-  mutate(ES = as.character(ES)) %>%
   # need to add in new cols in master_clean_q12
   cbind(matrix(ncol = length(addcols), nrow = nrow(.), dimnames = list(NULL, addcols))) %>%
   data.frame() %>%
@@ -2797,7 +2793,8 @@ prelimlong1e <- rbind(prelimlong1d, newscale_tidy) %>%
   group_by(Title) %>%
   mutate(ordercol = min(RecordedDate)) %>%
   ungroup() %>%
-  arrange(ordercol, survey_order)
+  arrange(ordercol, survey_order) %>%
+  distinct()
 
 # out of curiousity, compare JLGV multiscale with original multiscale
 ggplot(subset(prelimlong1e, survey_order %in% c(31, 31.3) & !doublerev), aes(Title, clean_answer, col = abbr, group = Title)) +
@@ -3599,9 +3596,89 @@ test_noq12 <- test_noq12 %>%
 
 
 # test q12 compilation
-test_q12 <- subset(dblcor_stacked, qnum == "Q12")
+test_q12 <- subset(newkcgtk, qnum == "Q12") %>%
+  # the only difference in clean answer and answer would be if Other appended..
+  # can append "other" to original answer if not present -- can screen based on qa_note grepl("^Appended 'Other' ")
+  # AND if comments in answer but remove in other drive bc inappropriate to enter comments in field
+  # prefix qa_note with init so data user knows whose data correction applies to
+  mutate(qa_note = ifelse(!is.na(qa_note), paste("For", Init, "review:", qa_note), qa_note),
+         final_answer2 = ifelse(keep == 1 & !is.na(final_answer), final_answer,
+                                ifelse(keep == 1, clean_answer, NA))) %>%
+  group_by(ResponseId, survey_order) %>%
+  mutate(answer2 = ifelse(grepl("Other", unique(str_flatten(clean_answer, collapse = ","))) & !grepl("Other", unique(answer)) & abbr == "Driver", paste0(unique(answer), ",Other"),
+                                ifelse(abbr == "OtherDriver" & is.na(clean_answer) & !is.na(answer), unique(clean_answer), unique(answer)))) %>%
+  ungroup() %>%
+  # append Inits
+  mutate(answer2 = ifelse(is.na(answer2), paste0(Init, ": (no answer or NA)"), paste(Init, answer2, sep = ": "))) %>%
+  # collapse and combine qa notes, answers 
+  group_by(Title, survey_order) %>%
+  mutate(answer2 = str_flatten(answer2, collapse = "; "),
+         qa_note2 = ifelse(!is.na(unique(qa_note)), str_flatten(qa_note[!is.na(qa_note)], collapse = "; "), unique(qa_note)),
+         # collapse ctw_notes
+         ctw_notes = ifelse(!all(ctw_notes %in% NA), str_flatten(ctw_notes[!is.na(ctw_notes)], collapse = "; "), unique(ctw_notes)),
+  qa_note2 = ifelse(!is.na(ctw_notes) | !is.na(qa_note2), paste(qa_note2[!is.na(qa_note2)], ctw_notes[!is.na(ctw_notes)], sep = "; "), ctw_notes)) %>%
+  ungroup() %>%
+  left_join(keptdoubles) %>%
+  # clean up notes
+  mutate(qa_note2 = gsub("^; ", "", qa_note2),
+         Init = paste(rev1init, rev2init, sep = "/"),
+         ResponseId = new_rid) %>%
+  subset(keep == 1) %>%
+  # add qa note to any that doesn't have anything
+  mutate(qa_note2 = ifelse(is.na(qa_note2), "CTW reviewed inconsistent answers", qa_note2),
+         StartDate = NA, EndDate = NA, RecordedDate = NA,
+         doublerev = TRUE,
+         version = "final") %>%
+  dplyr::select(StartDate:RecordedDate, ResponseId, Init, doublerev, version, Title, id, answer2, final_answer2, fullquestion:survey_order, qa_note2) %>%
+  rename_all(function(x) gsub("2$", "", x)) %>%
+  rename(clean_answer = final_answer)
+  
+  
+# need to add in Q12 row/questions that neither person answered         
+# build out empty dataframe with all questions and NAs, then take out whatever is in stacked answers, stack with corrected answers and arrange
+
+
+
 
 # 3) Recompile all double review answers -----
+# need to add in Q12 row/questions that neither person answered         
+# build out empty dataframe with all questions and NAs, then take out whatever is in stacked answers, stack with corrected answers and arrange
+dblempty <- subset(prelimlong1f, doublerev) %>%
+  mutate_at(vars(datecols, answer, clean_answer, varnum, qa_note), function(x) x <- NA) %>%
+  left_join(keptdoubles) %>%
+  mutate(Init = paste(rev1init, rev2init, sep = "/"),
+         ResponseId = new_rid,
+         version = "final") %>%
+  select(-c(varnum, ESnum, clean_answer_finer, clean_group, ordercol, rev1init:new_rid)) %>% # rejoin clean_answer_finer and clean_group
+  distinct() %>%
+  mutate(rowid = paste(ResponseId, survey_order, sep = "_")) %>%
+  group_by(Title, survey_order) %>%
+  mutate(tracker = 1:length(answer)) %>%
+  ungroup()
+
+# stack q12 and non-q12 dbl corrected
+correcteddbl_stacked <- rbind(test_noq12, test_q12) %>%
+  mutate(rowid = paste(ResponseId, survey_order, sep ="_"))
+
+# check that no corrected answers are in consistent
+consistenttest <- doublemulti_consistent %>%
+  mutate(rowid = paste(ResponseId, survey_order, sep ="_"))
+summary(correcteddbl_stacked$rowid %in% consistenttest$rowid)
+summary(consistenttest$rowid %in% correcteddbl_stacked$rowid)
+
+test_stack <- rbind(correcteddbl_stacked, consistenttest[names(correcteddbl_stacked)]) %>%
+  # preserve order
+  group_by(ResponseId, survey_order) %>%
+  mutate(tracker = 1:length(clean_answer)) %>%
+  ungroup() %>%
+  arrange(ResponseId, survey_order, tracker) %>%
+  select(-clean_group)
+
+combo_stack <- subset(dblempty, !rowid %in% test_stack$rowid) %>%
+  rbind(test_stack) %>%
+  mutate(paperorder = parse_number(ResponseId)) %>%
+  arrange(paperorder, survey_order, tracker) %>%
+  mutate_at(datecols, function(x) x <- Sys.time())
 
 
 # 4) Incorporate corrections in final dataset ----
