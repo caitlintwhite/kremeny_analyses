@@ -112,12 +112,12 @@ otherdrivecor_LD <- read.csv(corrections[grep("otherdriver_reviewLD", correction
 otherdrivecor_KCG <- read.csv(corrections[grep("otherdriver_reviewKCG", corrections)], na.strings = na_vals, strip.white = T)
 otherdrivercor_TK <- read.csv(corrections[grep("otherdriver_reviewTK", corrections)], na.strings = na_vals, strip.white = T)
 # > double rev corrections
-dblcorAK <- read.csv(corrections[grep("inconsistent_AK", corrections)], na.strings = na_vals, strip.white = T)
-dblcorGV <- read.csv(corrections[grep("inconsistent_GV", corrections)], na.strings = na_vals, strip.white = T)
-dblcorJL <- read.csv(corrections[grep("inconsistent_JL", corrections)], na.strings = na_vals, strip.white = T)
-dblcorKCG <- read.csv(corrections[grep("inconsistent_KCG", corrections)], na.strings = na_vals, strip.white = T)
-dblcorLD <- read.csv(corrections[grep("inconsistent_LD", corrections)], na.strings = na_vals, strip.white = T)
-dblcorSDJ <- read_excel(corrections[grep("inconsistent_SDJ", corrections)], na = na_vals, trim_ws = T)
+dblAKclean <- read.csv(corrections[grep("inconsistent_AK", corrections)], na.strings = na_vals, strip.white = T)
+dblGVclean <- read.csv(corrections[grep("inconsistent_GV", corrections)], na.strings = na_vals, strip.white = T)
+dblJLclean <- read.csv(corrections[grep("inconsistent_JL", corrections)], na.strings = na_vals, strip.white = T)
+dblKCGclean <- read.csv(corrections[grep("inconsistent_KCG", corrections)], na.strings = na_vals, strip.white = T)
+dblLDclean <- read.csv(corrections[grep("inconsistent_LD", corrections)], na.strings = na_vals, strip.white = T)
+dblSDJclean <- read_excel(corrections[grep("inconsistent_SDJ", corrections)], na = na_vals, trim_ws = T)
 # > paper exclusions
 excludecorrections <- read.csv(corrections[grep("exclude", corrections)], na.strings = na_vals)
 # > ecosystem classification
