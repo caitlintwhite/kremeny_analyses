@@ -2691,8 +2691,10 @@ master_clean_q12 <- master_clean_q12[!names(master_clean_q12) %in% c("track", "E
   # need to rejoin ESnum-- got messed up when expanded other driver
   #select(-ESnum) %>%
   left_join(distinct(headerLUT[c("ES", "ESnum")])) %>%
+  # convert ESnum to 2digit string (so orders correctly [e.g. 1 != 10, becomes 01 < 10])
+  mutate(ESnum = ifelse(ESnum < 10, paste0("0", as.character(ESnum)), as.character(ESnum))) %>%
   # update survey order for expanded other driver
-  mutate(survey_order = ifelse(abbr == "OtherDriver" & !is.na(clean_answer), paste(survey_order, ESnum, sep = "."), survey_order),
+  mutate(survey_order = ifelse(abbr == "OtherDriver" & !is.na(clean_answer), paste(as.character(survey_order), ESnum, sep = "."), as.character(survey_order)),
          survey_order = as.numeric(survey_order)) %>%
   select(StartDate:clean_group, ESnum, qnum:qa_note)
 # id new colnames to master dataset
