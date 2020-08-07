@@ -99,4 +99,4 @@ dbl2correct <- rbind(newjldbl, newlddbl) %>%
   rbind(newgvdbl) %>%
   rbind(newsdjdbl)
 
-write.csv(dbl2correct, "round2_metareview/clean_qa_data/needs_classreview/doublerev_inconsistent/augcheck/alldbl2review_aug2020.csv", row.names = F)
+write_csv(dbl2correct, "round2_metareview/clean_qa_data/needs_classreview/doublerev_inconsistent/augcheck/alldbl2review_aug2020.csv", na = "")
