@@ -112,12 +112,7 @@ otherdrivecor_LD <- read.csv(corrections[grep("otherdriver_reviewLD", correction
 otherdrivecor_KCG <- read.csv(corrections[grep("otherdriver_reviewKCG", corrections)], na.strings = na_vals, strip.white = T)
 otherdrivercor_TK <- read.csv(corrections[grep("otherdriver_reviewTK", corrections)], na.strings = na_vals, strip.white = T)
 # > double rev corrections
-dblAKclean <- read.csv(corrections[grep("inconsistent_AK", corrections)], na.strings = na_vals, strip.white = T)
-dblGVclean <- read.csv(corrections[grep("inconsistent_GV", corrections)], na.strings = na_vals, strip.white = T)
-dblJLclean <- read.csv(corrections[grep("inconsistent_JL", corrections)], na.strings = na_vals, strip.white = T)
-dblKCGclean <- read.csv(corrections[grep("inconsistent_KCG", corrections)], na.strings = na_vals, strip.white = T)
-dblLDclean <- read.csv(corrections[grep("inconsistent_LD", corrections)], na.strings = na_vals, strip.white = T)
-dblSDJclean <- read_excel(corrections[grep("inconsistent_SDJ", corrections)], na = na_vals, trim_ws = T)
+dblcor_all <- read.csv(corrections[grep("alldbl2", corrections)], na.strings = na_vals, strip.white = T)
 # > paper exclusions
 excludecorrections <- read.csv(corrections[grep("exclude", corrections)], na.strings = na_vals)
 # > ecosystem classification
@@ -3527,7 +3522,7 @@ dblcorAK2 <- dblcorAK %>%
   group_by(Title, survey_order) %>%
   mutate(nobs = length(!is.na(final_answer)))
 
-
+View(subset(dblcor_all, (final_answer!= clean_answer) & keep == 1))
 
 # figure out the process for the loop then come back to AK and GV dbl corrections
 dblcor_stacked <- rbind(dblcorJL, dblcorLD) %>%
