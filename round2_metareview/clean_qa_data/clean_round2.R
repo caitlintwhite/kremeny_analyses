@@ -3514,29 +3514,37 @@ timcheck <- dplyr::select(noResponseDriver, Init, Title) %>%
 
 
 # -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
-# 1) Standardize double review so can run through same loop ----
-# prep AK corrections first
-dblcorAK2 <- dblcorAK %>%
-  mutate(keep = ifelse(is.na(final_answer), 0, 1)) %>%
-  # check only 1 final answer per question per paper (might get weird for q12)
-  group_by(Title, survey_order) %>%
-  mutate(nobs = length(!is.na(final_answer)))
+# 1) Check double rev corrections file for completeness
+# do all questions per title have at least 1 row that is keep == 1?
+keepcheck <- group_by(dblcor_all, Title, survey_order) %>%
+  summarise(keeprows = length(keep[keep == 1]),
+            tossrows = length(keep[keep == 0])) %>%
+  distinct() %>% ungroup()
 
-View(subset(dblcor_all, (final_answer!= clean_answer) & keep == 1))
+# view the records that have 0 to keep
+left_join(dblcor_all, subset(keepcheck, keeprows == 0)) %>%
+  subset(!is.na(keeprows)) %>%
+  View() # seems okay ... some of these are other drivers removed, some old scale questions, others have new entry (changed ES so answers on different rows now)
 
-# figure out the process for the loop then come back to AK and GV dbl corrections
-dblcor_stacked <- rbind(dblcorJL, dblcorLD) %>%
-  rbind(cbind(dblcorKCG, new = NA)) %>%
-  # transform any NA in new to 0 (things that are new already have 1 markerd)
-  replace_na(list(new = 0))
+# view the records that have 0 to toss
+left_join(dblcor_all, subset(keepcheck, tossrows == 0)) %>%
+  subset(!is.na(tossrows)) %>%
+  View() # seems okay
 
-# prioritize final_answer over kept clean_answer, otherwise use clean_answer[keep == 1]
+subset(dblcor_all, final_answer != clean_answer) %>% View()
+# if it's not grepl("Response|Driver", abbr) can proceed with using answers in final answer as new answer
+subset(dblcor_all, final_answer != clean_answer & !grepl("Response|Driver", abbr)) %>% View()
+# separate adjusted final_answer that are Responses and Drivers from all else
+dblcor_newDriveResp <- subset(dblcor_all, final_answer != clean_answer & grepl("Response|Driver", abbr))
+dblcor_else <- subset(dblcor_all, !rownames(dblcor_all) %in% rownames(dblcor_newDriveResp))
 
-names(dblcorKCG)
-names(dblcorJL)
-names(dblcorLD)
 
-test <- subset(dblcor_stacked, grepl("^Application of a rangeland soil erosion", Title))
+# > id papers LD, GV, AK and SDJ reviewed -- noted in spreadsheet answers that JL reviewed
+LDpapers <- unique(c(dblcor_all$Title[grepl("LD reviewed|LD says", dblcor_all$ctw_notes)], dblcor_all$Title[grepl("Using citizen", dblcor_all$Title)]))
+GVpapers <- unique(dblcor_all$Title[grepl("GV reviewed", dblcor_all$ctw_notes)])
+AKpapers <- unique(dblcor_all$Title[dblcor_all$Init == "AK" & !dblcor_all$Title %in% GVpapers])
+SDJpapers <- unique(dblcor_all$Title[grepl("SDJ reviewed", dblcor_all$ctw_notes)])
+
 # 2) Run correction loop ----
 # notes on process:
 # > "answer" col should have the clean answer from each reviewer, prefixed by their initials (maybe also put "" for second reviewer if no answer?, or leave blank [which is what's done to now])
@@ -3547,8 +3555,7 @@ test <- subset(dblcor_stacked, grepl("^Application of a rangeland soil erosion",
 # for all other questions besides q12 response and driver, string flatten clean answer; for those variables str_flatten "answer" (has commas) to store in final "answer" col but use un-comma'd responses in final_answer
 
 # different process for Q12 vs. all else
-
-test_noq12 <- subset(dblcor_stacked, qnum != "Q12") %>%
+dblcor_noq12 <- subset(dblcor_else, qnum != "Q12" & is.na(new)) %>%
   mutate(final_answer2 = ifelse(keep == 0, NA,
                                 ifelse(!is.na(final_answer), final_answer, clean_answer)),
          clean_answer = ifelse(is.na(clean_answer), paste(Init, "(no answer or NA)", sep = ": "), paste(Init, clean_answer, sep = ": "))) %>%
@@ -3582,18 +3589,9 @@ test_noq12 <- subset(dblcor_stacked, qnum != "Q12") %>%
          clean_answer = final_answer) %>%
   arrange(Title, survey_order)
 
-# finish with qa notes for any note field that is empty
-# > papers LD reviewed
-LDpapers <- c("Using citizen scientists to measure|Global evidence of positive impacts of freshwater|Abundance of urban male mosquitoes by green infrastructure")
-
-test_noq12 <- test_noq12 %>%
-  mutate(qa_note = ifelse(grepl(LDpapers, Title) & is.na(qa_note), "LD reviewed inconsistent answers", qa_note),
-         # add note for KCG papers
-         qa_note = ifelse(grepl("KCG", Init) & is.na(qa_note), "CTW reviewed inconsistent answers", qa_note))
-
 
 # test q12 compilation
-test_q12 <- subset(newkcgtk, qnum == "Q12") %>%
+dblcor_q12 <- subset(dblcor_else, qnum == "Q12" & is.na(new)) %>%
   # the only difference in clean answer and answer would be if Other appended..
   # can append "other" to original answer if not present -- can screen based on qa_note grepl("^Appended 'Other' ")
   # AND if comments in answer but remove in other drive bc inappropriate to enter comments in field
@@ -3655,6 +3653,12 @@ dblempty <- subset(prelimlong1f, doublerev) %>%
 
 # stack q12 and non-q12 dbl corrected
 correcteddbl_stacked <- rbind(test_noq12, test_q12) %>%
+  # finish with qa notes for any note field that is empty
+  mutate(qa_note = ifelse(Title %in% LDpapers & is.na(qa_note), "LD reviewed inconsistent answers", 
+                          ifelse(Title %in% GVpapers & is.na(qa_note), "GV reviewed inconsistent answers",
+                                 ifelse(Title %in% AKpapers & is.na(qa_note), "AK reviewed inconsistent answers",
+                                        ifelse(Title %in% SDJpapers & is.na(qa_note), "SDJ reviewed inconsistent answers",
+                                               ifelse(is.na(qa_note), "CTW reviewed inconsistent answers", qa_note)))))) %>%
   mutate(rowid = paste(ResponseId, survey_order, sep ="_"))
 
 # check that no corrected answers are in consistent
