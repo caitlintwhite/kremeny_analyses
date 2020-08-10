@@ -276,7 +276,7 @@ headerLUT <- headerLUT %>%
   mutate(abbr = gsub("_[1-9].*|_unk", "", abbr),
          survey_order = parse_number(row.names(.)))
 
-  
+
 
 # -- ASSESS REVIEW STATUS + TIDY DATA ----
 names(prelim)
@@ -3514,7 +3514,7 @@ timcheck <- dplyr::select(noResponseDriver, Init, Title) %>%
 
 
 # -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
-# 1) Check double rev corrections file for completeness
+# 1) Check double rev corrections file for completeness ----
 # do all questions per title have at least 1 row that is keep == 1?
 keepcheck <- group_by(dblcor_all, Title, survey_order) %>%
   summarise(keeprows = length(keep[keep == 1]),
@@ -3553,6 +3553,73 @@ SDJpapers <- unique(dblcor_all$Title[grepl("SDJ reviewed", dblcor_all$ctw_notes)
 # assign keep == 1 clean answer as final answer unless there is a different final answer noted
 # may need to treat Q12 differently if commas present.. wait and see -- or fix in grant's file correction file--that seems to be the only one
 # for all other questions besides q12 response and driver, string flatten clean answer; for those variables str_flatten "answer" (has commas) to store in final "answer" col but use un-comma'd responses in final_answer
+
+
+# initiate data frame for storing collapsed clean answers
+dblcor_clean <- data.frame() 
+# iterate through by paper and by question
+for(t in unique(dblcor_all$Title)){
+  # subset to title
+  tempdat <- subset(dblcor_all, Title == t)
+  # within each title, iterate correction by survey_order
+  for(s in unique(tempdat$survey_order)){
+    tempanswers <- subset(tempdat, survey_order == s)
+    # assign who reviewed answer if nothing present in ctw_notes
+    if(all(is.na(unique(tempanswers$ctw_notes)))){
+      who <- with(tempanswers[1,], ifelse(Title %in% LDpapers, "LD",
+                                          ifelse(Title %in% AKpapers, "AK",
+                                                 ifelse(Title %in% GVpapers, "GV",
+                                                        ifelse(Title %in% SDJpapers, "SDJ", "CTW")))))
+      tempanswers$ctw_notes <- paste(who, "reviewed inconsistent answers")
+    }
+    # process new answers differently than retained answers
+    if(any(!is.na(tempanswers$new))){
+      # final answer should be new "answer"
+      
+    }else{
+      # process retained answers differently than new answers
+      # > if not a response or driver answer process certain way
+      if(!grepl("Response|Driver", unique(tempanswers$abbr))){
+        # collapse all else
+        tempanswers <- tempanswers %>%
+          mutate(final_answer = ifelse(is.na(final_answer) & keep == 1, clean_answer, final_answer),
+                 clean_answer2 = ifelse(is.na(clean_answer), paste0(Init, ": (no answer or NA)"), paste(Init, clean_answer, sep = ": ")),
+                 qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, "review only: ", qa_note), qa_note)) %>%
+          group_by(Title) %>%
+          mutate(clean_answer = ifelse(!is.na(unique(clean_answer)), str_flatten(clean_answer2, collapse = "; "), unique(clean_answer)),
+                 qa_note = ifelse(!is.na(unique(qa_note)), str_flatten(qa_note[!is.na(qa_note)], collapse = "; "),unique(qa_note)),
+                 ctw_notes = str_flatten(unique(ctw_notes[!is.na(ctw_notes)]), collapse = "; "),
+                 qa_note = ifelse(!is.na(unique(qa_note)), paste(qa_note, ctw_notes, sep = "; "), ctw_notes),
+                 Init = paste(rev1init, rev2init, sep = "/")) %>%
+          ungroup() %>%
+          subset(keep == 1) %>%
+          select(Init, Title, id, clean_answer, final_answer, varnum, clean_answer_finer, fullquestion:qa_note)
+      }else{
+        # > process Responses and Drivers differently 
+        tempanswers <- tempanswers %>%
+          # want to use "answer" as reviewer answer
+          mutate(clean_answer2 = ifelse(is.na(answer), paste(Init, "(no answer or NA)", sep = ": "), paste(Init, answer, sep = ": ")),
+                 final_answer = ifelse(is.na(final_answer) & keep == 1, clean_answer, final_answer),
+                 qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, "review only: ", qa_note), qa_note)) %>%
+          group_by(Title) %>%
+          mutate(clean_answer = str_flatten(clean_answer2, collapse = "; "),
+                 qa_note = ifelse(!is.na(unique(qa_note)), str_flatten(qa_note[!is.na(qa_note)], collapse = "; "),unique(qa_note)),
+                 ctw_notes = str_flatten(unique(ctw_notes[!is.na(ctw_notes)]), collapse = "; "),
+                 qa_note = ifelse(!is.na(unique(qa_note)), paste(qa_note, ctw_notes, sep = "; "), ctw_notes),
+                 Init = paste(rev1init, rev2init, sep = "/")) %>%
+          ungroup() %>%
+          subset(keep == 1) %>%
+          select(Init, Title, id, clean_answer, final_answer, varnum, clean_answer_finer, fullquestion:qa_note)
+      }
+    }
+    # rbind to master and move on to next survey order
+    dblcor_clean <- rbind(dblcor_clean, tempanswers)
+  }
+}
+
+# finishing
+# clean up notes, append new response id and datecols
+
 
 # different process for Q12 vs. all else
 dblcor_noq12 <- subset(dblcor_else, qnum != "Q12" & is.na(new)) %>%
@@ -3601,7 +3668,7 @@ dblcor_q12 <- subset(dblcor_else, qnum == "Q12" & is.na(new)) %>%
                                 ifelse(keep == 1, clean_answer, NA))) %>%
   group_by(ResponseId, survey_order) %>%
   mutate(answer2 = ifelse(grepl("Other", unique(str_flatten(clean_answer, collapse = ","))) & !grepl("Other", unique(answer)) & abbr == "Driver", paste0(unique(answer), ",Other"),
-                                ifelse(abbr == "OtherDriver" & is.na(clean_answer) & !is.na(answer), unique(clean_answer), unique(answer)))) %>%
+                          ifelse(abbr == "OtherDriver" & is.na(clean_answer) & !is.na(answer), unique(clean_answer), unique(answer)))) %>%
   ungroup() %>%
   # append Inits
   mutate(answer2 = ifelse(is.na(answer2), paste0(Init, ": (no answer or NA)"), paste(Init, answer2, sep = ": "))) %>%
@@ -3611,7 +3678,7 @@ dblcor_q12 <- subset(dblcor_else, qnum == "Q12" & is.na(new)) %>%
          qa_note2 = ifelse(!is.na(unique(qa_note)), str_flatten(qa_note[!is.na(qa_note)], collapse = "; "), unique(qa_note)),
          # collapse ctw_notes
          ctw_notes = ifelse(!all(ctw_notes %in% NA), str_flatten(ctw_notes[!is.na(ctw_notes)], collapse = "; "), unique(ctw_notes)),
-  qa_note2 = ifelse(!is.na(ctw_notes) | !is.na(qa_note2), paste(qa_note2[!is.na(qa_note2)], ctw_notes[!is.na(ctw_notes)], sep = "; "), ctw_notes)) %>%
+         qa_note2 = ifelse(!is.na(ctw_notes) | !is.na(qa_note2), paste(qa_note2[!is.na(qa_note2)], ctw_notes[!is.na(ctw_notes)], sep = "; "), ctw_notes)) %>%
   ungroup() %>%
   left_join(keptdoubles) %>%
   # clean up notes
@@ -3627,8 +3694,8 @@ dblcor_q12 <- subset(dblcor_else, qnum == "Q12" & is.na(new)) %>%
   dplyr::select(StartDate:RecordedDate, ResponseId, Init, doublerev, version, Title, id, answer2, final_answer2, fullquestion:survey_order, qa_note2) %>%
   rename_all(function(x) gsub("2$", "", x)) %>%
   rename(clean_answer = final_answer)
-  
-  
+
+
 # need to add in Q12 row/questions that neither person answered         
 # build out empty dataframe with all questions and NAs, then take out whatever is in stacked answers, stack with corrected answers and arrange
 
