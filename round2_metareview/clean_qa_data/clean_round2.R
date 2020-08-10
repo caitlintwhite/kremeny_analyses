@@ -3512,6 +3512,25 @@ timcheck <- dplyr::select(noResponseDriver, Init, Title) %>%
 
 #write_csv(timcheck, "round2_metareview/clean_qa_data/needs_classreview/missing_responsedriver/TK_ESoutstanding_20200624.csv", na = "")
 
+# 2020/8/10 -- CTW spots a handful more answers that don't agree and wasn't caught based on how code written
+# > mostly ESP_type, because when writing code above decided for all but time, connectivity, and Q12 questions, if one person entered response and other didn't could overwrite empty with answered reponse
+# > but that isn't quite right for some other questions.. e.g. ESP_type should not indicate ESP if not reflected in response or driver answers
+# > pull records from doublemulti_base that have sameanswer == TRUE but one is NA and the other is not
+doublemulti_NAconflict <- subset(doublemulti_base, sameanswer) %>%
+  # doublemulti_base does not have Q12 in it
+  group_by(Title, survey_order) %>%
+  mutate(lengthcheck = length(unique(clean_answer))) %>%
+  ungroup() %>%
+  subset(lengthcheck > 1) %>% # all ESP_type
+  # these should also be written out and reviewed
+  arrange(Title, survey_order, revorder) %>%
+  # format columns like dbl inconsistent, then manually append to final ctw correction file
+  mutate(sameanswer = FALSE, final_answer = NA, review_notes = NA) %>%
+  select(names(double_inconsistent_all))
+
+write_csv(doublemulti_NAconflict, "round2_metareview/clean_qa_data/needs_classreview/doublerev_inconsistent/augcheck/doublerev_inconsistent_ESPtype.csv", na = "")
+
+
 
 # -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
 # 1) Check double rev corrections file for completeness ----
@@ -3710,22 +3729,29 @@ summary(dblidcheck$check) # good, everything matches as it should with lookup co
 
 # finishing
 # clean up notes, append new response id and datecols
-# > add datecols, 
-
-
-
-  # add qa note to any that doesn't have anything
+# > add datecols, doublerev and version; rename answer cols
+dblcor_clean2 <- dblcor_clean %>%
+  # join final RID
+  left_join(keptdoubles[c("Title", "new_rid")]) %>%
+  rename(answer = clean_answer,
+         clean_answer = final_answer,
+         ResponseId = new_rid) %>%
   mutate(StartDate = NA, EndDate = NA, RecordedDate = NA,
          doublerev = TRUE,
          version = "final") %>%
-  dplyr::select(StartDate:RecordedDate, ResponseId, Init, doublerev, version, Title, id, answer2, final_answer2, fullquestion:survey_order, qa_note2) %>%
-  rename(clean_answer = final_answer)
+  dplyr::select(StartDate:RecordedDate, ResponseId, Init, doublerev, version, Title:ncol(.))
 
 
 # need to add in Q12 row/questions that neither person answered         
 # build out empty dataframe with all questions and NAs, then take out whatever is in stacked answers, stack with corrected answers and arrange
 
-
+dblrev_cleananswers <- mutate(dblcor_clean2, source = "corrected") %>%
+  rbind(mutate(doublemulti_consistent, source = "consistent")) %>%
+  arrange(Title, survey_order, varnum) %>%
+  group_by(Title, survey_order, varnum) %>%
+  mutate(dupcheck = length(clean_answer)) %>%
+  ungroup()
+View(subset(dblrev_cleananswers, dupcheck > 1))
 
 
 # 3) Recompile all double review answers -----
