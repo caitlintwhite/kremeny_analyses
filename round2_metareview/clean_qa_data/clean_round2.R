@@ -3525,8 +3525,7 @@ doublemulti_NAconflict <- subset(doublemulti_base, sameanswer) %>%
   # these should also be written out and reviewed
   arrange(Title, survey_order, revorder) %>%
   # format columns like dbl inconsistent, then manually append to final ctw correction file
-  mutate(sameanswer = FALSE, final_answer = NA, review_notes = NA) %>%
-  select(names(double_inconsistent_all))
+  mutate(sameanswer = FALSE, final_answer = NA, review_notes = NA)
 
 write_csv(doublemulti_NAconflict, "round2_metareview/clean_qa_data/needs_classreview/doublerev_inconsistent/augcheck/doublerev_inconsistent_ESPtype.csv", na = "")
 
