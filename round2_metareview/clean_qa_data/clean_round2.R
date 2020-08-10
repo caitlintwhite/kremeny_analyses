@@ -3574,8 +3574,64 @@ for(t in unique(dblcor_all$Title)){
     }
     # process new answers differently than retained answers
     if(any(!is.na(tempanswers$new))){
-      # final answer should be new "answer"
-      
+      # > note! there is at least 1 new record where both reviewers agreed in no response, but new answer has response
+      # > therefore, need to note no original answer from both reviewers to append to version = final "answer" col (showing both orig and final new answer)
+      if(sum(tempanswers$Init[tempanswers$keep == 0] %in% unique(tempdat$Init)) != 2){
+        tempdat2 <- subset(prelimlong1f, Title == t & survey_order == s) %>%
+          # subset to whichever reviewer is missing (1 or both)
+          subset(!Init %in% tempanswers$Init[tempanswers$keep == 0]) %>%
+          replace_na(list(clean_answer = "(no answer or NA)")) %>%
+          mutate(clean_answer = paste(Init, clean_answer, sep = ": ")) %>%
+          # sort by reviewer order
+          left_join(distinct(tempdat[c("Init", "revorder")])) %>%
+          arrange(revorder)
+        temporig <- str_flatten(tempdat2$clean_answer, collapse = "; ")
+        rm(tempdat2)
+      }
+      # > if not a response or driver answer process certain way
+      if(!grepl("Response|Driver", unique(tempanswers$abbr))){
+        # collapse all else
+        tempanswers <- tempanswers %>%
+          mutate(Init = ifelse(keep == 1, "New answer", Init),
+                 final_answer = ifelse(is.na(final_answer) & keep == 1, clean_answer, final_answer),
+                 clean_answer2 = ifelse(is.na(clean_answer), paste0(Init, ": (no answer or NA)"), paste(Init, clean_answer, sep = ": ")),
+                 qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, "review only: ", qa_note), qa_note)) %>%
+          group_by(Title) %>%
+          mutate(clean_answer = ifelse(!is.na(unique(clean_answer)), str_flatten(clean_answer2, collapse = "; "), unique(clean_answer)),
+                 qa_note = ifelse(!is.na(unique(qa_note)), str_flatten(qa_note[!is.na(qa_note)], collapse = "; "),unique(qa_note)),
+                 ctw_notes = str_flatten(unique(ctw_notes[!is.na(ctw_notes)]), collapse = "; "),
+                 qa_note = ifelse(!is.na(unique(qa_note)), paste(qa_note, ctw_notes, sep = "; "), ctw_notes),
+                 Init = paste(rev1init, rev2init, sep = "/")) %>%
+          ungroup() %>%
+          subset(keep == 1) %>%
+          select(Init, Title, id, clean_answer, final_answer, varnum, clean_answer_finer, fullquestion:qa_note)
+      }else{
+        # > process Responses and Drivers differently 
+        tempanswers <- tempanswers %>%
+          # want to use "answer" as reviewer answer
+          mutate(Init = ifelse(keep == 1, "New answer", Init),
+                 answer = ifelse(keep == 0 & is.na(answer), "(no answer or NA)", answer),
+                 final_answer = ifelse(keep == 1 & is.na(final_answer), answer, final_answer),
+                 clean_answer2 = ifelse(keep == 0, paste(Init, answer, sep = ": "), paste(Init, final_answer, sep = ": ")),
+                 final_answer = clean_answer,
+                 qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, "review only: ", qa_note), qa_note)) %>%
+          group_by(Title) %>%
+          mutate(clean_answer = str_flatten(unique(clean_answer2[!is.na(clean_answer2)]), collapse = "; "),
+                 qa_note = ifelse(!is.na(unique(qa_note)), str_flatten(qa_note[!is.na(qa_note)], collapse = "; "),unique(qa_note)),
+                 ctw_notes = str_flatten(unique(ctw_notes[!is.na(ctw_notes)]), collapse = "; "),
+                 qa_note = ifelse(!is.na(unique(qa_note)), paste(qa_note, ctw_notes, sep = "; "), ctw_notes),
+                 Init = paste(rev1init, rev2init, sep = "/")) %>%
+          ungroup() %>%
+          subset(keep == 1) %>%
+          select(Init, Title, id, clean_answer, final_answer, varnum, clean_answer_finer, fullquestion:qa_note) %>%
+          arrange(varnum)
+      }
+      # add temporig to answer if present
+      if(!is.na(temporig)){
+        tempanswers$clean_answer <- paste(temporig, tempanswers$clean_answer, sep = "; ")
+          #NA temporig after applied
+          temporig <- NA
+      }
     }else{
       # process retained answers differently than new answers
       # > if not a response or driver answer process certain way
@@ -3596,11 +3652,11 @@ for(t in unique(dblcor_all$Title)){
           select(Init, Title, id, clean_answer, final_answer, varnum, clean_answer_finer, fullquestion:qa_note)
       }else{
         # > process Responses and Drivers differently 
-        tempanswers <- tempanswers %>%
+        tempanswers2 <- tempanswers %>%
           # want to use "answer" as reviewer answer
           mutate(clean_answer2 = ifelse(is.na(answer), paste(Init, "(no answer or NA)", sep = ": "), paste(Init, answer, sep = ": ")),
                  final_answer = ifelse(is.na(final_answer) & keep == 1, clean_answer, final_answer),
-                 qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, "review only: ", qa_note), qa_note)) %>%
+                 qa_note = ifelse(!is.na(qa_note), paste("For", Init, "review only:", qa_note), qa_note)) #%>%
           group_by(Title) %>%
           mutate(clean_answer = str_flatten(clean_answer2, collapse = "; "),
                  qa_note = ifelse(!is.na(unique(qa_note)), str_flatten(qa_note[!is.na(qa_note)], collapse = "; "),unique(qa_note)),
@@ -3609,7 +3665,8 @@ for(t in unique(dblcor_all$Title)){
                  Init = paste(rev1init, rev2init, sep = "/")) %>%
           ungroup() %>%
           subset(keep == 1) %>%
-          select(Init, Title, id, clean_answer, final_answer, varnum, clean_answer_finer, fullquestion:qa_note)
+          select(Init, Title, id, clean_answer, final_answer, varnum, clean_answer_finer, fullquestion:qa_note) %>%
+          arrange(varnum)
       }
     }
     # rbind to master and move on to next survey order
