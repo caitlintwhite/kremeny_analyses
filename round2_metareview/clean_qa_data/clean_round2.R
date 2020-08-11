@@ -3203,15 +3203,20 @@ keptdoubles <- left_join(keptdoubles, KCGpapers) %>%
 # 1. Collapse inconsisent exclusions reviewed by LD -----
 # specify date cols to avoid repeat typing
 datecols <- c("StartDate", "EndDate", "RecordedDate")
+# double notes that need to be collapsed are abbr %in% c("GenInfo", "ScaleNotes", "KremenNotes", "Uncertainty", "SurveyNotes")
+notesfields <- c("EcosystemNotes", "GenInfo", "ScaleNotes", "KremenNotes", "Uncertainty", "SurveyNotes")
 
 # deal with papers that were kept after LD's review but reviewers disagreed (those are easy to collapse)
+# > need to note who original reviewers answered Q3 to show where disagreed.. and who the final answer corresponds to..
 Q3doubles <- subset(prelimlong1f, Title %in% Title[answer == "Yes" & qnum == "Q3"]) %>%
   # drop scale question (will add back in at the end)
   subset(qnum != "Q8") %>%
   # easiest thing to do is probably ID the person who did not exclude paper and keep their answers
   group_by(Title) %>%
-  mutate(keepInit = unique(Init[!is.na(clean_answer) & abbr == "Ecosystem"])) %>%
-  ungroup()
+  mutate(keepInit = unique(Init[!is.na(clean_answer) & abbr == "Ecosystem"]),
+         dropInit = unique(Init[is.na(clean_answer) & abbr == "Ecosystem"])) %>%
+  ungroup() %>%
+  data.frame()
 # > want to append who initially said exclude, and who said keep, and on which of the q3 questions, and preserve note that LD cleared it
 # > after that can collapse remove (NA answers)
 
@@ -3219,7 +3224,7 @@ q3rows <- subset(Q3doubles, qnum == "Q3" & answer == "Yes") %>%
   dplyr::select(ResponseId, Title, Init, id, answer, clean_answer, abbr, qa_note, keepInit) %>%
   # edit qa_note
   group_by(ResponseId) %>%
-  mutate(qa_note = paste("Double reviewed and inconsistent answers.", Init, "answered 'Yes' to ", abbr, "exclusion question but", keepInit, "answered 'No'.", qa_note),
+  mutate(qa_note = paste("Paper double reviewed and answers inconsistent.", Init, "answered 'Yes' to ", abbr, "exclusion question but", keepInit, "answered 'No'.", qa_note),
          # add period to end
          qa_note = paste0(qa_note, "."))
 # replace qa_note
@@ -3230,24 +3235,44 @@ for(i in unique(q3rows$Title)){
 }
 
 # subset to answers from keepInit
-Q3doubles <- filter(Q3doubles, keepInit == Init | qnum == "Q8")
-for(i in unique(q3rows$Title)){
-  # replace Init (not for Q8, which is new scale questions) and ResponseId
-  Q3doubles$Init[Q3doubles$Title == i & Q3doubles$qnum != "Q8"] <- paste(keptdoubles$rev1init[keptdoubles$Title == i], keptdoubles$rev2init[keptdoubles$Title == i], sep = "/")
-  Q3doubles$ResponseId[Q3doubles$Title == i] <- keptdoubles$new_rid[keptdoubles$Title == i]
-}
-# NA dates
-Q3doubles[, datecols] <- NA
-# change version to final
-Q3doubles$version <- "final"
+# > append reviewer inits to original answer here before subsetting to reviewer answers to keep
+# > also append inits to QA note if not Q3
+Q3doubles<- Q3doubles %>%
+  # join doublekept LUT to sort by rev order
+  left_join(keptdoubles) %>%
+  #group_by(rownames(.)) %>%
+  mutate(revorder = ifelse(rev1init == Init, 1, 2),
+         # append Inits to answer if Q3 (exclusion question) and clean_answer all else 
+         answer2 = ifelse(!is.na(answer) & qnum == "Q3", paste(Init, answer, sep = ": "), 
+                          ifelse(!grepl("Response|Driver", abbr) & !is.na(clean_answer), paste(Init, clean_answer, sep = ": "),
+                                 ifelse(grepl("Response|Driver", abbr) & !is.na(clean_answer), paste(Init, answer, sep = ": "), clean_answer))),
+         # append Inits to qa_note if not for Q3
+         qa_note = ifelse(!is.na(qa_note) & qnum != "Q3", paste("For", Init, "review only:", qa_note), qa_note)) %>%
+  arrange(Title, survey_order, varnum, revorder) %>%
+  group_by(Title, survey_order, varnum) %>%
+  mutate(answer2 = ifelse(length(answer2[!is.na(answer2)])==2, str_flatten(answer2[!is.na(answer2)], collapse = "; "), answer2[Init == keepInit])) %>%
+  ungroup() %>%
+  filter(keepInit == Init) %>%
+  group_by(rownames(.)) %>%
+  # clean up answer col, append whoever excluded paper did so for any record that has answer after Q3
+  mutate(answer2 = ifelse(!grepl(unique(dropInit), answer2) & qnum == "Q3", paste0(answer2, "; ", unique(dropInit), ": (excluded paper)"), answer2),
+         answer2 = ifelse(!is.na(answer2) & qnum != "Q3" & !abbr %in% notesfields, paste0(answer2, "; ", unique(dropInit), ": (excluded paper)"), answer2),
+         answer = answer2,
+         # clean up datecols, ResponseId and Init
+         ResponseId = new_rid, 
+         Init = paste(rev1init, rev2init, sep = "/"),
+         version = "final") %>%
+  ungroup() %>%
+  mutate_at(vars(datecols), function(x) x <- NA) %>%
+  dplyr::select(StartDate:qa_note)
+
+
 
 
 # 2. Collapse all else: notes fields -----
 # notes get combined..
 # scale notes already single reviewed by JL + GV
 # > generally, Q8 can just be taken out then added back in since only single rows for each
-# double notes that need to be collapsed are abbr %in% c("GenInfo", "ScaleNotes", "KremenNotes", "SurveyNotes)
-notesfields <- c("EcosystemNotes", "GenInfo", "ScaleNotes", "KremenNotes", "Uncertainty", "SurveyNotes")
 doublenotes <- subset(prelimlong1f, abbr %in% notesfields & Title %in% doubletitles) %>%
   # take out Q3doubles dealt with above
   filter(!Title %in% unique(Q3doubles$Title)) %>%
@@ -3266,7 +3291,7 @@ doublenotes <- subset(prelimlong1f, abbr %in% notesfields & Title %in% doubletit
          ResponseId = new_rid,
          answer = clean_answer,
          version = "final") %>%
-  mutate_at(vars(datecols), function(x) x <- as.character(Sys.time())) %>%
+  mutate_at(vars(datecols), function(x) x <- NA) %>%
   dplyr::select(StartDate:ordercol) %>%
   distinct() %>%
   mutate_at(vars("answer", "clean_answer", "qa_note"), function(x) ifelse(x == "", NA, x))
@@ -3290,10 +3315,10 @@ q3no_doubles <- subset(doublemulti, qnum == "Q3") %>%
   left_join(keptdoubles) %>%
   # make clean_answer No for all bc should be
   # > some Review Only q's are NA from both reviewers, but if this were a problem would have got pulled.. can add a qa_note all the same
-  mutate(rev1 = ifelse(rev1init == Init, 1, 2),
-         # append init to answer (same as clean_answer for now)
-         answer = ifelse(!is.na(answer), paste(Init, answer, sep = ": "), answer)) %>%
-  arrange(Title, survey_order, rev1) %>%
+  mutate(revorder = ifelse(rev1init == Init, 1, 2),
+         # append init to answer (same as clean_answer for now) -- if it's NA it's because question not yet created (e.g. social dimensions only, methods only)
+         answer = ifelse(!is.na(answer), paste(Init, answer, sep = ": "), paste0(Init, ": (no answer, question not yet created)"))) %>%
+  arrange(Title, survey_order, revorder) %>%
   group_by(Title, abbr) %>%
   mutate(clean_answer2 = ifelse(length(unique(clean_answer[!is.na(clean_answer)]))>0, unique(clean_answer[!is.na(clean_answer)]), NA),
          answer = ifelse(is.na(clean_answer2), unique(clean_answer2), str_flatten(answer[!is.na(answer)], collapse = "; "))) %>%
@@ -3409,7 +3434,7 @@ doublemulti_dissolved <- doublemulti_dissolved %>%
 
 
 
-# 3.2b Collapse consistent answers -----
+# 3.2.b Collapse consistent answers -----
 # prep newscale questions to rbind
 newscale_double <- subset(newscale_tidy, Title %in% keptdoubles$Title) %>%
   left_join(keptdoubles) %>%
@@ -3417,22 +3442,33 @@ newscale_double <- subset(newscale_tidy, Title %in% keptdoubles$Title) %>%
          ResponseId = new_rid)
 
 # collapse double reviewed answers that agree
-doublemulti_consistent <- subset(doublemulti_base, sameanswer) %>%
+doublemulti_consistent2 <- subset(doublemulti_base, sameanswer) %>%
+  data.frame() %>%
   # append inits to clean_answer and qa_note (if present)
   # then assigned collapsed clean_answer to "answer" and final (no inits) to clean_answer
   # order of answer and qa_note determined by order of reviewer (1 or 2)
   # also assign new rid and NA date cols
-  group_by(Title, abbr) %>%
-  mutate(clean_answer2 = unique(clean_answer)) %>%
+  group_by(Title, survey_order) %>%
+  # select final clean clean answer
+  mutate(clean_answer2 = ifelse(length(clean_answer[!is.na(clean_answer)])==0, unique(clean_answer),unique(clean_answer[!is.na(clean_answer)])),
+         # assess whether paper-question has same qa_note (same correction) or not
+         notecheck = ifelse(!is.na(unique(qa_note)), length(unique(qa_note)), NA)) %>%
   ungroup() %>%
-  mutate(clean_answer = ifelse(!is.na(clean_answer), paste(Init, clean_answer, sep = ": "), clean_answer),
-         qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, " review only: ", qa_note), qa_note),
+  # append inits to individual reviewer's clean answer if at least one clean answer is not NA
+  mutate(clean_answer = ifelse(is.na(clean_answer2), clean_answer, 
+                               # if one reviewer didn't answer question, note that
+                               ifelse(!is.na(clean_answer), paste(Init, clean_answer, sep = ": "), paste0(Init, ": (no answer or NA)"))),
+         # append inits to qa_note dependent on whether same correction made for both reviewers or only 1
+         qa_note = ifelse(notecheck == 1, paste("For both", rev1init, "and", rev2init, "reviews:", qa_note),
+                          ifelse(notecheck == 2, paste("For", Init, "review only:", qa_note), qa_note)),
          Init = paste(rev1init, rev2init, sep = "/"),
          ResponseId = new_rid) %>%
+  # NA date cols (will assign sys date later down in code)
   mutate_at(vars(datecols), function(x) x <- NA) %>%
   group_by(Title, abbr) %>%
-  mutate(answer = str_flatten(clean_answer, collapse = "; "),
-         qa_note = str_flatten(qa_note, collapse = "; ")) %>%
+  # "answer" col will get init-appended clean answer, "clean answer" will get the standardized answer
+  mutate(answer = ifelse(!is.na(clean_answer2), str_flatten(clean_answer, collapse = "; "), clean_answer),
+         qa_note = ifelse(is.na(unique(qa_note)), NA, str_flatten(qa_note[!is.na(qa_note)], collapse = "; "))) %>%
   ungroup() %>%
   mutate(clean_answer = clean_answer2,
          version = "final") %>%
@@ -3446,10 +3482,11 @@ doublemulti_consistent <- subset(doublemulti_base, sameanswer) %>%
   # add cleaned up notes
   rbind(doublenotes[names(.)]) %>%
   # add sys time
-  mutate_at(vars(datecols), function(x) x = Sys.time()) %>%
+  #mutate_at(vars(datecols), function(x) x = Sys.time()) %>%
   #rbind new scale double reviewed papers
   rbind(newscale_double[names(.)]) %>%
   arrange(Title, survey_order)
+
 
 
 
@@ -3528,6 +3565,9 @@ doublemulti_NAconflict <- subset(doublemulti_base, sameanswer) %>%
   mutate(sameanswer = FALSE, final_answer = NA, review_notes = NA)
 
 write_csv(doublemulti_NAconflict, "round2_metareview/clean_qa_data/needs_classreview/doublerev_inconsistent/augcheck/doublerev_inconsistent_ESPtype.csv", na = "")
+
+# remove NAconflict records from doublemulti_consistent
+doublemulti_consistent <- anti_join(doublemulti_consistent, select(doublemulti_NAconflict, Title, id))
 
 
 
@@ -3650,8 +3690,8 @@ for(t in unique(dblcor_all$Title)){
       # add temporig to answer if present
       if(!is.na(temporig)){
         tempanswers$clean_answer <- paste(temporig, tempanswers$clean_answer, sep = "; ")
-          #NA temporig after applied
-          temporig <- NA
+        #NA temporig after applied
+        temporig <- NA
       }
     }else{
       # process retained answers differently than new answers
