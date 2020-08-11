@@ -605,10 +605,9 @@ possibleexclude_df <- dplyr::select(prelimlong1b, ResponseId, Init, Title, exclu
   replace_na(list(newcase = TRUE)) %>%
   # move new case to after assess_date
   dplyr::select(assess_date, newcase, doublerev, ResponseId:ncol(.))
-# change NAs to blanks so not annoying in Excel
-possibleexclude_df[is.na(possibleexclude_df)] <- ""
+
 # write out
-#write_csv(possibleexclude_df, "round2_metareview/clean_qa_data/needs_classreview/excludenotes_review.csv")
+#write_csv(possibleexclude_df, "round2_metareview/clean_qa_data/needs_classreview/excludenotes_review.csv", na = "") # save NAs as blanks
 
 
 
@@ -2671,7 +2670,7 @@ for(rid in kept_ResponseId){
 
 # clean enviro after for loop done
 rm(i, rid, temp_q12, temp_q12_clean, temp_q12drivers, temp_q12responses, tempother_df, temp_ESdriver_list,
-   temp_othercheck, temp_unique_ESresponse, temp_otheradded_rows, temp_otherdriver_grp, tempanswer)
+   temp_unique_ESresponse, temp_otheradded_rows, temp_otherdriver_grp, tempanswer)
 
 # check for any drivers or responses that didn't have clean_answer_finer assigned -- typically happens when ES in driver LUT not present
 missingbin <- subset(master_clean_q12, is.na(clean_answer_finer) & !is.na(clean_answer) & grepl("Driver|Response", abbr))
@@ -3119,6 +3118,11 @@ check_ESPtype <- subset(prelimlong1f, qnum %in% c("Q14", "Q13") | grepl("Driver|
 # assign no ESP in NA answers so it's clear .. but do confirm no ESP indicated in those papers
 
 
+# clean up environment before start on cleaning double reviews
+rm(addKT1, addKT2, check_ESPtype, effort, ESshort, has_commstr, has_env, has_ESPdriver, removeKT2,
+   add_KTenv, KT2answer, KT3answer, remove_KTenv, temprow)
+
+
 
 
 # -- CONDENSE DOUBLE REVIEWED ----
@@ -3169,8 +3173,6 @@ ES_check <- subset(doubleprelim, qnum == "Q12" & abbr == "Response") %>%
   arrange(Title)
 summary(ES_check$sameanswer) # pretty amazing all ES's by double reviewers agree. good!
 
-# clean up
-rm(doubleprelim, ES_check)
 
 # go by question and condense into master df OR append to df for reviewers to re-review
 # refer to rev 1 answer as primary answer..
@@ -3198,6 +3200,8 @@ keptdoubles <- left_join(keptdoubles, KCGpapers) %>%
   # drop Init col
   dplyr::select(-Init)
 
+# clean up
+rm(doubleprelim, ES_check, KCGpapers)
 
 
 # 1. Collapse inconsisent exclusions reviewed by LD -----
@@ -3263,10 +3267,11 @@ Q3doubles<- Q3doubles %>%
          Init = paste(rev1init, rev2init, sep = "/"),
          version = "final") %>%
   ungroup() %>%
-  mutate_at(vars(datecols), function(x) x <- NA) %>%
+  mutate_at(vars(all_of(datecols)), function(x) x <- NA) %>%
   dplyr::select(StartDate:qa_note)
 
-
+# clean up
+rm(q3rows, temprows)
 
 
 # 2. Collapse all else: notes fields -----
@@ -3408,7 +3413,7 @@ for(i in unique(doublemulti_notsame_metheco$Title)){
   }
 }
 #clean up
-rm(tempdat, tempdat2,i,a, doublemulti_notsame_metheco)
+rm(tempdat, tempdat2, tempanswer, i,a, doublemulti_notsame_metheco)
 # drop whatever was cleand up from doublemulti_inconsistent
 doublemulti_inconsistent <- anti_join(doublemulti_inconsistent, doublemulti_dissolved[c("ResponseId", "abbr")])
 # clean up dissolved
@@ -3442,7 +3447,7 @@ newscale_double <- subset(newscale_tidy, Title %in% keptdoubles$Title) %>%
          ResponseId = new_rid)
 
 # collapse double reviewed answers that agree
-doublemulti_consistent2 <- subset(doublemulti_base, sameanswer) %>%
+doublemulti_consistent <- subset(doublemulti_base, sameanswer) %>%
   data.frame() %>%
   # append inits to clean_answer and qa_note (if present)
   # then assigned collapsed clean_answer to "answer" and final (no inits) to clean_answer
@@ -3562,7 +3567,8 @@ doublemulti_NAconflict <- subset(doublemulti_base, sameanswer) %>%
   # these should also be written out and reviewed
   arrange(Title, survey_order, revorder) %>%
   # format columns like dbl inconsistent, then manually append to final ctw correction file
-  mutate(sameanswer = FALSE, final_answer = NA, review_notes = NA)
+  mutate(sameanswer = FALSE, final_answer = NA, review_notes = NA) %>%
+  select(names(double_inconsistent_all))
 
 write_csv(doublemulti_NAconflict, "round2_metareview/clean_qa_data/needs_classreview/doublerev_inconsistent/augcheck/doublerev_inconsistent_ESPtype.csv", na = "")
 
@@ -3573,11 +3579,12 @@ doublemulti_consistent <- anti_join(doublemulti_consistent, select(doublemulti_N
 
 # -- APPLY CORRECTIONS TO DOUBLE REVIEWED -----
 # 1) Check double rev corrections file for completeness ----
-# do all questions per title have at least 1 row that is keep == 1?
+# do all questions per title have at least 1 row that is keep == 1? (some answers were discarded tho..)
 keepcheck <- group_by(dblcor_all, Title, survey_order) %>%
   summarise(keeprows = length(keep[keep == 1]),
             tossrows = length(keep[keep == 0])) %>%
   distinct() %>% ungroup()
+summary(keepcheck)
 
 # view the records that have 0 to keep
 left_join(dblcor_all, subset(keepcheck, keeprows == 0)) %>%
@@ -3592,9 +3599,6 @@ left_join(dblcor_all, subset(keepcheck, tossrows == 0)) %>%
 subset(dblcor_all, final_answer != clean_answer) %>% View()
 # if it's not grepl("Response|Driver", abbr) can proceed with using answers in final answer as new answer
 subset(dblcor_all, final_answer != clean_answer & !grepl("Response|Driver", abbr)) %>% View()
-# separate adjusted final_answer that are Responses and Drivers from all else
-dblcor_newDriveResp <- subset(dblcor_all, final_answer != clean_answer & grepl("Response|Driver", abbr))
-dblcor_else <- subset(dblcor_all, !rownames(dblcor_all) %in% rownames(dblcor_newDriveResp))
 
 
 # > id papers LD, GV, AK and SDJ reviewed -- noted in spreadsheet answers that JL reviewed
