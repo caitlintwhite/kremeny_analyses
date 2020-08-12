@@ -3297,12 +3297,14 @@ doublenotes <- subset(prelimlong1f, abbr %in% notesfields & Title %in% doubletit
   ungroup() %>%
   arrange(Title, survey_order, initorder) %>%
   group_by(Title, survey_order) %>%
-  mutate(clean_answer2 = ifelse(any(is.na(clean_answer) & !is.na(answer)), unique(clean_answer), str_flatten(unique(answer[!is.na(answer)]), collapse = "; ")),
+  # pasted reviewer clean answers in "answer" will be the same as pasted answers in clean_answer col bc no corrections made.. text is text, and optional. be sure to attribtue note if present
+  mutate(clean_answer2 = ifelse(!all(is.na(clean_answer)), str_flatten(unique(answer[!is.na(answer)]), collapse = "; "), unique(clean_answer)),
          qa_note2 = str_flatten(unique(qa_note2[!is.na(qa_note2)]), collapse = "; ")) %>%
   ungroup() %>%
   mutate(Init = paste(rev1init, rev2init, sep = "/"),
          ResponseId = new_rid,
-         answer = clean_answer,
+         answer = clean_answer2,
+         clean_answer = clean_answer2,
          version = "final",
          qa_note = qa_note2) %>%
   mutate_at(vars(datecols), function(x) x <- NA) %>%
@@ -3677,10 +3679,10 @@ for(t in unique(dblcor_all$Title)){
                  clean_answer2 = ifelse(is.na(clean_answer), paste0(Init, ": (no answer or NA)"), paste(Init, clean_answer, sep = ": ")),
                  qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, "review only: ", qa_note), qa_note)) %>%
           group_by(Title) %>%
-          mutate(clean_answer = ifelse(!is.na(unique(clean_answer)), str_flatten(clean_answer2, collapse = "; "), unique(clean_answer)),
-                 qa_note = ifelse(!is.na(unique(qa_note)), str_flatten(qa_note[!is.na(qa_note)], collapse = "; "),unique(qa_note)),
+          mutate(clean_answer = ifelse(!all(is.na(unique(clean_answer))), str_flatten(clean_answer2, collapse = "; "), unique(clean_answer)),
+                 qa_note = ifelse(!all(is.na(unique(qa_note))), str_flatten(unique(qa_note[!is.na(qa_note)]), collapse = "; "),unique(qa_note)),
                  ctw_notes = str_flatten(unique(ctw_notes[!is.na(ctw_notes)]), collapse = "; "),
-                 qa_note = ifelse(!is.na(unique(qa_note)), paste(qa_note, ctw_notes, sep = "; "), ctw_notes),
+                 qa_note = ifelse(!all(is.na(unique(qa_note))), paste(unique(qa_note[!is.na(qa_note)]), unique(ctw_notes[!is.na(ctw_notes)]), sep = "; "), unique(ctw_notes)),
                  Init = paste(rev1init, rev2init, sep = "/")) %>%
           ungroup() %>%
           subset(keep == 1) %>%
@@ -3698,9 +3700,9 @@ for(t in unique(dblcor_all$Title)){
                  qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, "review only: ", qa_note), qa_note)) %>%
           group_by(Title) %>%
           mutate(clean_answer = str_flatten(unique(clean_answer2[!is.na(clean_answer2)]), collapse = "; "),
-                 qa_note = ifelse(!is.na(unique(qa_note)), str_flatten(qa_note[!is.na(qa_note)], collapse = "; "),unique(qa_note)),
+                 qa_note = ifelse(!all(is.na(unique(qa_note))), str_flatten(qa_note[!is.na(qa_note)], collapse = "; "),unique(qa_note)),
                  ctw_notes = str_flatten(unique(ctw_notes[!is.na(ctw_notes)]), collapse = "; "),
-                 qa_note = ifelse(!is.na(unique(qa_note)), paste(qa_note, ctw_notes, sep = "; "), ctw_notes),
+                 qa_note = ifelse(!all(is.na(unique(qa_note))), paste(qa_note, ctw_notes, sep = "; "), ctw_notes),
                  Init = paste(rev1init, rev2init, sep = "/")) %>%
           ungroup() %>%
           subset(keep == 1) %>%
@@ -3723,10 +3725,10 @@ for(t in unique(dblcor_all$Title)){
                  clean_answer2 = ifelse(is.na(clean_answer), paste0(Init, ": (no answer or NA)"), paste(Init, clean_answer, sep = ": ")),
                  qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, "review only: ", qa_note), qa_note)) %>%
           group_by(Title) %>%
-          mutate(clean_answer = ifelse(!is.na(unique(clean_answer)), str_flatten(clean_answer2, collapse = "; "), unique(clean_answer)),
-                 qa_note = ifelse(!is.na(unique(qa_note)), str_flatten(qa_note[!is.na(qa_note)], collapse = "; "),unique(qa_note)),
+          mutate(clean_answer = ifelse(!all(is.na(unique(clean_answer))), str_flatten(unique(clean_answer2[!is.na(clean_answer2)]), collapse = "; "), unique(clean_answer)),
+                 qa_note = ifelse(!all(is.na(unique(qa_note))), str_flatten(unique(qa_note[!is.na(qa_note)]), collapse = "; "),unique(qa_note)),
                  ctw_notes = str_flatten(unique(ctw_notes[!is.na(ctw_notes)]), collapse = "; "),
-                 qa_note = ifelse(!is.na(unique(qa_note)), paste(qa_note, ctw_notes, sep = "; "), ctw_notes),
+                 qa_note = ifelse(!all(is.na(unique(qa_note))), paste(unique(qa_note), unique(ctw_notes), sep = "; "), unique(ctw_notes)),
                  Init = paste(rev1init, rev2init, sep = "/")) %>%
           ungroup() %>%
           subset(keep == 1) %>%
@@ -3753,9 +3755,9 @@ for(t in unique(dblcor_all$Title)){
           # collapse answers from each reviewer and any qa notes
           group_by(Title) %>%
           mutate(clean_answer = str_flatten(unique(clean_answer2), collapse = "; "),
-                 qa_note = ifelse(any(!is.na(unique(qa_note))), str_flatten(unique(qa_note[!is.na(qa_note)]), collapse = "; "),unique(qa_note)),
+                 qa_note = ifelse(!all(is.na(unique(qa_note))), str_flatten(unique(qa_note[!is.na(qa_note)]), collapse = "; "),unique(qa_note)),
                  ctw_notes = str_flatten(unique(ctw_notes[!is.na(ctw_notes)]), collapse = "; "),
-                 qa_note = ifelse(!is.na(unique(qa_note)), paste(qa_note, ctw_notes, sep = "; "), ctw_notes),
+                 qa_note = ifelse(!all(is.na(unique(qa_note))), paste(unique(qa_note[!is.na(qa_note)]), unique(ctw_notes[!is.na(ctw_notes)]), sep = "; "), unique(ctw_notes)),
                  Init = paste(rev1init, rev2init, sep = "/")) %>%
           ungroup() %>%
           subset(keep == 1) %>%
@@ -3769,17 +3771,27 @@ for(t in unique(dblcor_all$Title)){
 }
 
 # review loop executed as expected
+# > if final answer is NA, was correction NA? (or did something get dropped in code?)
 NAcheck <- subset(dblcor_clean, is.na(final_answer) & grepl("no answer or NA", clean_answer)) %>%
   left_join(subset(dblcor_all, keep == 1, c(Title, id, survey_order, fullquestion, clean_answer, final_answer, ctw_notes, Init)), by = c("Title", "id", "fullquestion", "survey_order"))
-summary(is.na(NAcheck$Init.y))
+summary(is.na(NAcheck$Init.y)) # all correction rows paired
 View(NAcheck)
-# looks okay. all NAs supposed to be NA [i.e. joined Init col has value]
-str(dblcor_clean)
+# looks good. all NAs supposed to be NA [i.e. joined Init col has value]
 
+# > check structure. as expected? (e.g. no weird list objects within df)
+str(dblcor_clean)
+glimpse(dblcor_clean)
+# > look at unique values to be sure nothing wonky
+sapply(dblcor_clean[c("Init", "Title", "id", "ESnum", "ES", "survey_order")], function(x) sort(unique(x)))
+# look at qa notes
+sort(unique(dblcor_clean$qa_note))
+sort(unique(dblcor_clean$final_answer))
 # check that anything NA in answer and clean_answer was like that in correction file
-NAcheck2 <- subset(dblcor_clean, is.na(clean_answer))
-# join corrections (rows should expand by x2)
-NAcheck2 <- left_join(NAcheck2, dblcor_all, by = c("Title", "id"))
+NAcheck2 <- subset(dblcor_clean, is.na(clean_answer)) # nothing is missing clean answer (will become answer col), good
+# does everything that have a group also have a group in clean_group?
+NAcheck3 <- subset(dblcor_clean, !is.na(final_answer) & !is.na(Group))
+with(NAcheck3, sapply(split(clean_group, abbr), function(x) is.na(x))) # .. drivers have clean groups assigned, but effect direct may not.. didn't think about that (would apply to whole final dataset)
+NAcheck3 <- subset(NAcheck3, Group!= clean_group | is.na(clean_group)) # none of these drivers were reassigned coarse grousp (i.e. Group can be clean_group for direction of effect)
 
 # check that qualtrics id, fullquestion, survey_order (except for other driver) all paired correctly
 idcheck <- select(headerLUT, -order) %>%
@@ -3792,6 +3804,13 @@ dblidcheck <- select(dblcor_clean, c(Init, Title, names(idcheck[names(idcheck) !
   left_join(idcheck)
 summary(dblidcheck$check) # good, everything matches as it should with lookup columns
 
+# clean up environment
+rm(NAcheck, NAcheck2, NAcheck3, dblidcheck, who, temporig,
+   SDJpapers, LDpapers, GVpapers, AKpapers, t, i, tempdat, tempanswers)
+
+
+
+# 3) Recompile all double review answers -----
 # finishing
 # clean up notes, append new response id and datecols
 # > add datecols, doublerev and version; rename answer cols
@@ -3819,7 +3838,7 @@ dblrev_cleananswers <- mutate(dblcor_clean2, source = "corrected") %>%
 View(subset(dblrev_cleananswers, dupcheck > 1))
 
 
-# 3) Recompile all double review answers -----
+
 # need to add in Q12 row/questions that neither person answered         
 # build out empty dataframe with all questions and NAs, then take out whatever is in stacked answers, stack with corrected answers and arrange
 dblempty <- subset(prelimlong1f, doublerev) %>%
