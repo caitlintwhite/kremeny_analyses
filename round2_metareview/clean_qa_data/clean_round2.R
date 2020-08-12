@@ -3677,7 +3677,7 @@ for(t in unique(dblcor_all$Title)){
           mutate(Init = ifelse(keep == 1, "New answer", Init),
                  final_answer = ifelse(is.na(final_answer) & keep == 1, clean_answer, final_answer),
                  clean_answer2 = ifelse(is.na(clean_answer), paste0(Init, ": (no answer or NA)"), paste(Init, clean_answer, sep = ": ")),
-                 qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, "review only: ", qa_note), qa_note)) %>%
+                 qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, " review only: ", qa_note), qa_note)) %>%
           group_by(Title) %>%
           mutate(clean_answer = ifelse(!all(is.na(unique(clean_answer))), str_flatten(clean_answer2, collapse = "; "), unique(clean_answer)),
                  qa_note = ifelse(!all(is.na(unique(qa_note))), str_flatten(unique(qa_note[!is.na(qa_note)]), collapse = "; "),unique(qa_note)),
@@ -3697,7 +3697,7 @@ for(t in unique(dblcor_all$Title)){
                  final_answer = ifelse(keep == 1 & is.na(final_answer), answer, final_answer),
                  clean_answer2 = ifelse(keep == 0, paste(Init, answer, sep = ": "), paste(Init, final_answer, sep = ": ")),
                  final_answer = clean_answer,
-                 qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, "review only: ", qa_note), qa_note)) %>%
+                 qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, " review only: ", qa_note), qa_note)) %>%
           group_by(Title) %>%
           mutate(clean_answer = str_flatten(unique(clean_answer2[!is.na(clean_answer2)]), collapse = "; "),
                  qa_note = ifelse(!all(is.na(unique(qa_note))), str_flatten(qa_note[!is.na(qa_note)], collapse = "; "),unique(qa_note)),
@@ -3723,7 +3723,7 @@ for(t in unique(dblcor_all$Title)){
         tempanswers <- tempanswers %>%
           mutate(final_answer = ifelse(is.na(final_answer) & keep == 1, clean_answer, final_answer),
                  clean_answer2 = ifelse(is.na(clean_answer), paste0(Init, ": (no answer or NA)"), paste(Init, clean_answer, sep = ": ")),
-                 qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, "review only: ", qa_note), qa_note)) %>%
+                 qa_note = ifelse(!is.na(qa_note), paste0("For ", Init, " review only: ", qa_note), qa_note)) %>%
           group_by(Title) %>%
           mutate(clean_answer = ifelse(!all(is.na(unique(clean_answer))), str_flatten(unique(clean_answer2[!is.na(clean_answer2)]), collapse = "; "), unique(clean_answer)),
                  qa_note = ifelse(!all(is.na(unique(qa_note))), str_flatten(unique(qa_note[!is.na(qa_note)]), collapse = "; "),unique(qa_note)),
@@ -3806,7 +3806,7 @@ summary(dblidcheck$check) # good, everything matches as it should with lookup co
 
 # clean up environment
 rm(NAcheck, NAcheck2, NAcheck3, dblidcheck, who, temporig,
-   SDJpapers, LDpapers, GVpapers, AKpapers, t, i, tempdat, tempanswers)
+   SDJpapers, LDpapers, GVpapers, AKpapers, t, tempdat, tempanswers)
 
 
 
@@ -3814,7 +3814,7 @@ rm(NAcheck, NAcheck2, NAcheck3, dblidcheck, who, temporig,
 # finishing
 # clean up notes, append new response id and datecols
 # > add datecols, doublerev and version; rename answer cols
-dblcor_clean2 <- dblcor_clean %>%
+dblcor_clean <- dblcor_clean %>%
   # join final RID
   left_join(keptdoubles[c("Title", "new_rid")]) %>%
   rename(answer = clean_answer,
@@ -3825,52 +3825,66 @@ dblcor_clean2 <- dblcor_clean %>%
          version = "final") %>%
   dplyr::select(StartDate:RecordedDate, ResponseId, Init, doublerev, version, Title:ncol(.))
 
-
-# need to add in Q12 row/questions that neither person answered         
-# build out empty dataframe with all questions and NAs, then take out whatever is in stacked answers, stack with corrected answers and arrange
-
-dblrev_cleananswers <- mutate(dblcor_clean2, source = "corrected") %>%
+# stack with dbl rev consistent answers 
+dblrev_cleananswers <- mutate(dblcor_clean, source = "corrected") %>%
   rbind(mutate(doublemulti_consistent, source = "consistent")) %>%
   arrange(Title, survey_order, varnum) %>%
   group_by(Title, survey_order, varnum) %>%
   mutate(dupcheck = length(clean_answer)) %>%
-  ungroup()
+  ungroup() %>%
+  #add rowid to contrast with empty dbl df
+  mutate(rowid = paste(ResponseId, survey_order, sep = "_"))
 View(subset(dblrev_cleananswers, dupcheck > 1))
-
+# only duplicates are other drivers that have the same varnum. that's okay bc will reassign varnum before writing out final dataset
 
 
 # need to add in Q12 row/questions that neither person answered         
 # build out empty dataframe with all questions and NAs, then take out whatever is in stacked answers, stack with corrected answers and arrange
 dblempty <- subset(prelimlong1f, doublerev) %>%
-  mutate_at(vars(datecols, answer, clean_answer, varnum, qa_note), function(x) x <- NA) %>%
+  mutate_at(vars(datecols, answer, clean_answer, clean_answer_finer, clean_group, varnum, qa_note), function(x) x <- NA) %>%
   left_join(keptdoubles) %>%
   mutate(Init = paste(rev1init, rev2init, sep = "/"),
          ResponseId = new_rid,
          version = "final") %>%
-  select(-c(varnum, ESnum, clean_answer_finer, clean_group, ordercol, rev1init:new_rid)) %>% # rejoin clean_answer_finer and clean_group
+  select(-c(ordercol, rev1init:new_rid)) %>% # rejoin clean_answer_finer and clean_group
   distinct() %>%
-  mutate(rowid = paste(ResponseId, survey_order, sep = "_")) %>%
+  arrange(Title, survey_order) %>%
+  mutate(source = "prelim1f",
+         rowid = paste(ResponseId, survey_order, sep = "_")) %>%
   group_by(Title, survey_order) %>%
   mutate(tracker = 1:length(answer)) %>%
   ungroup()
+# check only 1 row per survey order
+summary(dblempty$tracker) # good
 
-# stack q12 and non-q12 dbl corrected
-correcteddbl_stacked <- rbind(test_noq12, test_q12) %>%
-  # finish with qa notes for any note field that is empty
-  mutate(qa_note = ifelse(Title %in% LDpapers & is.na(qa_note), "LD reviewed inconsistent answers", 
-                          ifelse(Title %in% GVpapers & is.na(qa_note), "GV reviewed inconsistent answers",
-                                 ifelse(Title %in% AKpapers & is.na(qa_note), "AK reviewed inconsistent answers",
-                                        ifelse(Title %in% SDJpapers & is.na(qa_note), "SDJ reviewed inconsistent answers",
-                                               ifelse(is.na(qa_note), "CTW reviewed inconsistent answers", qa_note)))))) %>%
-  mutate(rowid = paste(ResponseId, survey_order, sep ="_"))
+# pull out other driver and make empty
+dblempty_otherdriver <- subset(dblempty, abbr == "OtherDriver") %>%
+  # just rejoin headerLUT to make things easy
+  select(StartDate:Title, answer:clean_answer_finer, abbr, source, tracker) %>%
+  left_join(subset(headerLUT, abbr == "OtherDriver")) %>%
+  distinct() %>%
+  mutate(clean_group = NA, qa_note = NA,
+         rowid = paste(ResponseId, survey_order, sep = "_")) %>%
+  select(names(dblempty))
+# each paper should have length 3
+with(dblempty_otherdriver, sapply(split(abbr, ResponseId), length))
 
-# check that no corrected answers are in consistent
-consistenttest <- doublemulti_consistent %>%
-  mutate(rowid = paste(ResponseId, survey_order, sep ="_"))
-summary(correcteddbl_stacked$rowid %in% consistenttest$rowid)
-summary(consistenttest$rowid %in% correcteddbl_stacked$rowid)
+# pull other driver from dblempty and add cleaned other driver back in
+dblempty <- subset(dblempty, abbr != "OtherDriver") %>%
+  rbind(dblempty_otherdriver) %>%
+  arrange(Title, survey_order) %>%
+  # drop tracker
+  select(-tracker)
+  
+# check that all possible questions accounted for in all Titles
+# > newscale question won't be in headerLUT
+with(subset(dblempty, !(qnum %in%  c("Q8","Q9"))), sapply(split(survey_order, ResponseId), function(x) all(x %in% unique(headerLUT$survey_order))))
+# do all titles have same length of survey_order?
+with(dblempty, sapply(split(survey_order, ResponseId), length))
+View(subset(headerLUT, !survey_order %in% unique(dblempty$survey_order))) # looks good to me.. none of these questions are tidy-stacked in the final dataset
 
-test_stack <- rbind(correcteddbl_stacked, consistenttest[names(correcteddbl_stacked)]) %>%
+
+complete_dbl_clean <- rbind(correcteddbl_stacked, consistenttest[names(correcteddbl_stacked)]) %>%
   # preserve order
   group_by(ResponseId, survey_order) %>%
   mutate(tracker = 1:length(clean_answer)) %>%
