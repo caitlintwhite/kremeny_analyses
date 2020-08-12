@@ -3281,23 +3281,32 @@ rm(q3rows, temprows)
 doublenotes <- subset(prelimlong1f, abbr %in% notesfields & Title %in% doubletitles) %>%
   # take out Q3doubles dealt with above
   filter(!Title %in% unique(Q3doubles$Title)) %>%
-  #first, both answer and clean_answer need reviewer init appended in front
-  # qa_notes present scale notes (which are the same for all, because that was the only subquestion kept from the original q9) and sometimes Q6
-  mutate(answer = ifelse(!is.na(answer), paste(Init, answer, sep = ": "), answer),
-         qa_note = ifelse(!is.na(qa_note) & qnum != "Q9", paste(Init, "review only:", qa_note, sep = " "), qa_note)) %>%
   left_join(keptdoubles) %>%
   mutate(initorder = ifelse(rev1init == Init, 1, 2)) %>%
+  # check qa_note to see if the same or different
+  group_by(Title, survey_order) %>%
+  mutate(notecheck = ifelse(!all(is.na(qa_note)), length(unique(qa_note)), NA)) %>%
+  ungroup() %>%
+  group_by(rownames(.)) %>%
+  #first, both answer and clean_answer need reviewer init appended in front
+  # qa_notes present scale notes (which are the same for all, because that was the only subquestion kept from the original q9) and sometimes Q6
+  mutate(answer = ifelse(!is.na(clean_answer), paste(Init, clean_answer, sep = ": "), clean_answer),
+         # append inits to qa_note dependent on whether same correction made for both reviewers or only 1
+         qa_note2 = ifelse(notecheck == 1, paste("For both", rev1init, "and", rev2init, "reviews:", qa_note),
+                           ifelse(notecheck == 2 & !is.na(qa_note), paste("For", Init, "review only:", qa_note), qa_note))) %>%
+  ungroup() %>%
   arrange(Title, survey_order, initorder) %>%
-  group_by(Title, abbr) %>%
-  mutate(clean_answer = str_flatten(answer[!is.na(answer)], collapse = "; "),
-         qa_note = str_flatten(qa_note[!is.na(qa_note)], collapse = "; ")) %>%
+  group_by(Title, survey_order) %>%
+  mutate(clean_answer2 = ifelse(any(is.na(clean_answer) & !is.na(answer)), unique(clean_answer), str_flatten(unique(answer[!is.na(answer)]), collapse = "; ")),
+         qa_note2 = str_flatten(unique(qa_note2[!is.na(qa_note2)]), collapse = "; ")) %>%
   ungroup() %>%
   mutate(Init = paste(rev1init, rev2init, sep = "/"),
          ResponseId = new_rid,
          answer = clean_answer,
-         version = "final") %>%
+         version = "final",
+         qa_note = qa_note2) %>%
   mutate_at(vars(datecols), function(x) x <- NA) %>%
-  dplyr::select(StartDate:ordercol) %>%
+  dplyr::select(StartDate:qa_note) %>%
   distinct() %>%
   mutate_at(vars("answer", "clean_answer", "qa_note"), function(x) ifelse(x == "", NA, x))
 
@@ -3457,23 +3466,27 @@ doublemulti_consistent <- subset(doublemulti_base, sameanswer) %>%
   # select final clean clean answer
   mutate(clean_answer2 = ifelse(length(clean_answer[!is.na(clean_answer)])==0, unique(clean_answer),unique(clean_answer[!is.na(clean_answer)])),
          # assess whether paper-question has same qa_note (same correction) or not
-         notecheck = ifelse(!is.na(unique(qa_note)), length(unique(qa_note)), NA)) %>%
+         notecheck = ifelse(any(!is.na(qa_note)), length(unique(qa_note)), NA)) %>%
   ungroup() %>%
+  group_by(rownames(.)) %>%
   # append inits to individual reviewer's clean answer if at least one clean answer is not NA
   mutate(clean_answer = ifelse(is.na(clean_answer2), clean_answer, 
                                # if one reviewer didn't answer question, note that
                                ifelse(!is.na(clean_answer), paste(Init, clean_answer, sep = ": "), paste0(Init, ": (no answer or NA)"))),
          # append inits to qa_note dependent on whether same correction made for both reviewers or only 1
-         qa_note = ifelse(notecheck == 1, paste("For both", rev1init, "and", rev2init, "reviews:", qa_note),
-                          ifelse(notecheck == 2, paste("For", Init, "review only:", qa_note), qa_note)),
+         qa_note2 = ifelse(notecheck == 1, paste("For both", rev1init, "and", rev2init, "reviews:", qa_note),
+                           ifelse(notecheck == 2 & !is.na(qa_note), paste("For", Init, "review only:", qa_note), qa_note)),
          Init = paste(rev1init, rev2init, sep = "/"),
          ResponseId = new_rid) %>%
+  ungroup() %>%
   # NA date cols (will assign sys date later down in code)
   mutate_at(vars(datecols), function(x) x <- NA) %>%
-  group_by(Title, abbr) %>%
+  arrange(Title, survey_order, revorder) %>%
+  group_by(new_rid, survey_order) %>%
   # "answer" col will get init-appended clean answer, "clean answer" will get the standardized answer
-  mutate(answer = ifelse(!is.na(clean_answer2), str_flatten(clean_answer, collapse = "; "), clean_answer),
-         qa_note = ifelse(is.na(unique(qa_note)), NA, str_flatten(qa_note[!is.na(qa_note)], collapse = "; "))) %>%
+  mutate(answer = ifelse(!is.na(unique(clean_answer2)), str_flatten(clean_answer, collapse = "; "), unique(clean_answer)),
+         # collapse notes
+         qa_note = ifelse(!all(is.na(qa_note2)), str_flatten(unique(qa_note2[!is.na(qa_note2)]), collapse = "; "), unique(qa_note2))) %>%
   ungroup() %>%
   mutate(clean_answer = clean_answer2,
          version = "final") %>%
@@ -3492,7 +3505,8 @@ doublemulti_consistent <- subset(doublemulti_base, sameanswer) %>%
   rbind(newscale_double[names(.)]) %>%
   arrange(Title, survey_order)
 
-
+# check for duplicates
+summary(duplicated(select(doublemulti_consistent, ResponseId:clean_answer))) # none. huzzah!
 
 
 # 3.3 Write out Q12, inconsistent answers that need review still -----
@@ -3638,6 +3652,8 @@ for(t in unique(dblcor_all$Title)){
     }
     # process new answers differently than retained answers
     if(any(!is.na(tempanswers$new))){
+      # set temporig to NA to start so correction runs properly
+      temporig <- NA
       # > note! there is at least 1 new record where both reviewers agreed in no response, but new answer has response
       # > therefore, need to note no original answer from both reviewers to append to version = final "answer" col (showing both orig and final new answer)
       if(sum(tempanswers$Init[tempanswers$keep == 0] %in% unique(tempdat$Init)) != 2){
@@ -3759,6 +3775,12 @@ summary(is.na(NAcheck$Init.y))
 View(NAcheck)
 # looks okay. all NAs supposed to be NA [i.e. joined Init col has value]
 str(dblcor_clean)
+
+# check that anything NA in answer and clean_answer was like that in correction file
+NAcheck2 <- subset(dblcor_clean, is.na(clean_answer))
+# join corrections (rows should expand by x2)
+NAcheck2 <- left_join(NAcheck2, dblcor_all, by = c("Title", "id"))
+
 # check that qualtrics id, fullquestion, survey_order (except for other driver) all paired correctly
 idcheck <- select(headerLUT, -order) %>%
   rbind(distinct(prelimlong1f[prelimlong1f$abbr == "OtherDriver", names(.)])) %>%
