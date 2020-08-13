@@ -3929,18 +3929,14 @@ with(subset(complete_dbl_clean, abbr == "OtherDriver"), sapply(split(Group, Resp
 
 complete_dbl_clean2 <- complete_dbl_clean
 complete_dbl_clean2$StartDate <- with(complete_dbl_clean2, ifelse(survey_order %in% unique(newscale_tidy$survey_order), as.POSIXct("2020-08-10 18:00:00", "UTC"), Sys.time()))  
-complete_dbl_clean2 <- mutate(complete_dbl_clean2, EndDate = ifelse(survey_order %in% newscale_tidy$survey_order, as.POSIXct("2020-08-10 18:00:00", "UTC"), EndDate))
+complete_dbl_clean2 <- complete_dbl_clean %>%
 mutate_at(datecols, function(x) x <- ifelse(complete_dbl_clean$survey_order %in% unique(newscale_tidy$survey_order), as.POSIXct(newscale_tidy$StartDate[1]), Sys.time())) %>%
-  mutate_at(datecols, POSIXct)
-class(newscale_tidy$StartDate[1])
-class(Sys.time())
+  mutate_at(datecols, function(x) as.POSIXct(x, origin = "1960-01-01", tz = "UTC"))
+
 # clean up environment
 rm(checkdf, otherEScheck, othersurveycheck, hasotherdriver)
 
-as.POSIXct("2020-08-10 18:00:00", "UTC")
-newscaletime <- newscale_tidy$StartDate[1]
-class(newscaletime)
-newscaletime
+
 
 # 4) Incorporate corrections in final dataset ----
 
@@ -3956,14 +3952,14 @@ newscaletime
 # stack final, clean single reviews and original doubles, and cleaned up doubles
 # remove Q8 from double review original answers because will be in final
 
-clean_master <- subset(prelimlong1f, !(doublerev & qnum == "Q8")) %>%
+clean_master <- subset(prelimlong1f, !doublerev) %>%
   # drop ordercol
   dplyr::select(-ordercol) %>%
   # infill ResponseId for single review JL/GV scale answers
   fill(ResponseId) %>%
   #rbind(Q3doubles[names(prelimlong1f)]) %>%
-  # add consistent double reviewed papers
-  rbind(doublemulti_consistent[names(.)]) %>%
+  # add clean double review
+  rbind(complete_dbl_clean2[names(.)]) %>%
   # arrange by Title, then survey_order then RecordedDate?
   arrange(Title, survey_order, RecordedDate) %>%
   # double check single ResponseId per title (except for original double revs)
