@@ -180,7 +180,7 @@ needs_match$clean_title[grep("Effects", needs_match$Q1)] <- needs_match$Q1[grep(
 
 prelim <- prelim %>%
   # make true date time column
-  mutate_at(.vars = c("StartDate", "EndDate", "RecordedDate"), function(x) ymd_hms(x)) %>%
+  mutate_at(.vars = c("StartDate", "EndDate", "RecordedDate"), function(x) ymd_hms(x, tz = Sys.timezone(location = TRUE))) %>%
   #sort by most recent date first
   arrange(desc(RecordedDate)) %>%
   # add clean title
@@ -3833,7 +3833,9 @@ dblrev_cleananswers <- mutate(dblcor_clean, source = "corrected") %>%
   mutate(dupcheck = length(clean_answer)) %>%
   ungroup() %>%
   #add rowid to contrast with empty dbl df
-  mutate(rowid = paste(ResponseId, survey_order, sep = "_"))
+  mutate(rowid = paste(ResponseId, id, sep = "_")) %>%
+  # NA all datecols to stack with empty, then reassign dates for scale and all other questions
+  mutate_at(datecols, function(x) x <- NA)
 View(subset(dblrev_cleananswers, dupcheck > 1))
 # only duplicates are other drivers that have the same varnum. that's okay bc will reassign varnum before writing out final dataset
 
@@ -3850,7 +3852,7 @@ dblempty <- subset(prelimlong1f, doublerev) %>%
   distinct() %>%
   arrange(Title, survey_order) %>%
   mutate(source = "prelim1f",
-         rowid = paste(ResponseId, survey_order, sep = "_")) %>%
+         rowid = paste(ResponseId, id, sep = "_")) %>%
   group_by(Title, survey_order) %>%
   mutate(tracker = 1:length(answer)) %>%
   ungroup()
@@ -3864,7 +3866,7 @@ dblempty_otherdriver <- subset(dblempty, abbr == "OtherDriver") %>%
   left_join(subset(headerLUT, abbr == "OtherDriver")) %>%
   distinct() %>%
   mutate(clean_group = NA, qa_note = NA,
-         rowid = paste(ResponseId, survey_order, sep = "_")) %>%
+         rowid = paste(ResponseId, id, sep = "_")) %>%
   select(names(dblempty))
 # each paper should have length 3
 with(dblempty_otherdriver, sapply(split(abbr, ResponseId), length))
@@ -3882,22 +3884,63 @@ with(subset(dblempty, !(qnum %in%  c("Q8","Q9"))), sapply(split(survey_order, Re
 # do all titles have same length of survey_order?
 with(dblempty, sapply(split(survey_order, ResponseId), length))
 View(subset(headerLUT, !survey_order %in% unique(dblempty$survey_order))) # looks good to me.. none of these questions are tidy-stacked in the final dataset
+# check structure of empty df to be sure 
+str(dblempty)
 
+# which rowids are in cleaned up answers?
+summary(paste(dblempty$ResponseId, dblempty$survey_order) %in% paste(dblrev_cleananswers$ResponseId, dblrev_cleananswers$survey_order))
+summary(dblempty$rowid %in% dblrev_cleananswers$rowid) # using qualtrics id in rowid captures more of the duplicates
+complete_dbl_clean <- rbind(dblrev_cleananswers[,names(dblempty)], dblempty[!(dblempty$rowid %in% dblrev_cleananswers$rowid),]) %>%
+  # set source as factor for sorting
+  mutate(source = factor(source, levels = c("corrected", "consistent", "prelim1f"))) %>%
+  arrange(Title, survey_order, source) %>%
+  #group by question to ID duplicates to drop
+  group_by(ResponseId, id) %>%
+  mutate(dupcheck = duplicated(survey_order)) %>%
+  ungroup()
 
-complete_dbl_clean <- rbind(correcteddbl_stacked, consistenttest[names(correcteddbl_stacked)]) %>%
-  # preserve order
-  group_by(ResponseId, survey_order) %>%
-  mutate(tracker = 1:length(clean_answer)) %>%
-  ungroup() %>%
-  arrange(ResponseId, survey_order, tracker) %>%
-  select(-clean_group)
+# check out what's duplicated
+View(subset(complete_dbl_clean, rowid %in% rowid[dupcheck])) # these are fine, just multiple variables in Response, Driver or Other Driver
 
-combo_stack <- subset(dblempty, !rowid %in% test_stack$rowid) %>%
-  rbind(test_stack) %>%
-  mutate(paperorder = parse_number(ResponseId)) %>%
-  arrange(paperorder, survey_order, tracker) %>%
-  mutate_at(datecols, function(x) x <- Sys.time())
+# check that all papers have same # qualtrics ids and abbr
+with(complete_dbl_clean, sapply(split(id, ResponseId), function(x) length(unique(x)))) # looks good
+with(complete_dbl_clean, sapply(split(abbr, ResponseId), function(x) length(unique(x))))
+with(complete_dbl_clean, sapply(split(fullquestion, ResponseId), function(x) length(unique(x)))) # i think it's all good!
+# expect survey order to be different bc survey order differentiated for other driver by ES when variables present
+othersurveycheck <- with(complete_dbl_clean, sapply(split(survey_order, ResponseId), function(x) length(unique(x)))) 
+othersurveycheck
+# >note as much variation as expected.. look at ResponseIds that have non-NA other drivers
+hasotherdriver <- with(complete_dbl_clean, unique(ResponseId[abbr == "OtherDriver" & !is.na(clean_answer)]))
+hasotherdriver #hm.. 
+View(subset(complete_dbl_clean, ResponseId %in% hasotherdriver & abbr == "OtherDriver"))
+# must vary based on how many ES's other driver applied to
+otherEScheck <- with(subset(complete_dbl_clean, abbr == "OtherDriver" & !is.na(clean_answer)), sapply(split(ES, ResponseId), function(x) length(unique(x)))) 
+otherEScheck
+checkdf <- rownames_to_column(data.frame(othersurveycheck)) %>%
+  left_join(rownames_to_column(data.frame(otherEScheck)))
 
+# as long as all titles have survey_order outside of otherdriver that they should, and otherdriver has all 3 categories it's fine
+with(subset(complete_dbl_clean, abbr != "OtherDriver"), sapply(split(survey_order, ResponseId), function(x) length(unique(x)))) # all same
+# length of group should be 3
+with(subset(complete_dbl_clean, abbr == "OtherDriver"), sapply(split(Group, ResponseId), function(x) length(unique(x)))) # great
+
+# lastly, need to assign posixct timestamp to dblrev clean
+# > newscale gets date julie and grant completed, all else gets current time
+
+complete_dbl_clean2 <- complete_dbl_clean
+complete_dbl_clean2$StartDate <- with(complete_dbl_clean2, ifelse(survey_order %in% unique(newscale_tidy$survey_order), as.POSIXct("2020-08-10 18:00:00", "UTC"), Sys.time()))  
+complete_dbl_clean2 <- mutate(complete_dbl_clean2, EndDate = ifelse(survey_order %in% newscale_tidy$survey_order, as.POSIXct("2020-08-10 18:00:00", "UTC"), EndDate))
+mutate_at(datecols, function(x) x <- ifelse(complete_dbl_clean$survey_order %in% unique(newscale_tidy$survey_order), as.POSIXct(newscale_tidy$StartDate[1]), Sys.time())) %>%
+  mutate_at(datecols, POSIXct)
+class(newscale_tidy$StartDate[1])
+class(Sys.time())
+# clean up environment
+rm(checkdf, otherEScheck, othersurveycheck, hasotherdriver)
+
+as.POSIXct("2020-08-10 18:00:00", "UTC")
+newscaletime <- newscale_tidy$StartDate[1]
+class(newscaletime)
+newscaletime
 
 # 4) Incorporate corrections in final dataset ----
 
