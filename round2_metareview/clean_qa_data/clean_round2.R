@@ -193,6 +193,7 @@ prelim <- prelim %>%
   # move clean title to behind Q1
   dplyr::select(names(.)[1]:Q1, clean_title, Q2:ncol(.)) %>%
   data.frame()
+glimpse(prelim)
 # screen double entries
 doubles <- subset(prelim, clean_title %in% clean_title[doubleentry]) %>%
   arrange(clean_title, Q27, desc(RecordedDate))
@@ -2391,7 +2392,7 @@ clean_responses_corrections <- response_summary %>%
 
 # write file for LD and AK to finish assigning
 responses_forLDAK <- clean_responses_corrections
-write_csv(responses_forLDAK, "round2_metareview/clean_qa_data/needs_classreview/partially_binned_ESresponse_review.csv", na = "")
+#write_csv(responses_forLDAK, "round2_metareview/clean_qa_data/needs_classreview/partially_binned_ESresponse_review.csv", na = "")
 # clean up
 rm(test_responses, responses_forLDAK)
 
@@ -2714,7 +2715,7 @@ rm(missingbin, addcols, all_driver_summary2, all_responses2, alldrivers, anthdri
    abund_terms, biodiv_terms, allowmethods, allmissing, char_humanpop, development_terms, human_disturbance_terms, fxnlbiodiv_terms,
    structurewords, tempmethod, temprows, topo_keywords, trigger_otherinfill, grprow, place_terms,
    drivers_comma2semicol, drivers_removedblcommas, drivers_removesinglecommas, q12df_clean,
-   structurecheck, othercheck, otherdrivers, otherdrivers_errors, noResponseDriver, temp_unique_ES)
+   structurecheck, othercheck, otherdrivers, otherdrivers_errors, temp_unique_ES)
 
 
 
@@ -2752,12 +2753,17 @@ newscale_tidy <- dplyr::select(newscale, -'aquatic.') %>%
   dplyr::select(names(prelimlong1d)) %>%
   # clean up: GV says NAs in extent_answer can be "Undefined" (no scale-- they are meaningful NAs)
   mutate(clean_answer = ifelse(abbr == "extent_answer" & is.na(answer), "Undefined/no scale", answer),
+         # infill NAs with "NA" so people know they are meaningful NA
+         answer = ifelse(abbr == "extent_answer" & is.na(answer), "NA",answer),
          # standardize macro-scale
          clean_answer = gsub("macro-sacle", "Macro-scale", clean_answer),
          # fill in the rest
-         doublerev = Title %in% doubletitles)
-# set date as 6/3/2020 (when GV pushed dataset)
-newscale_tidy[grep("Date", names(newscale_tidy))] <- as.POSIXct("2020-06-03")
+         doublerev = Title %in% doubletitles) %>%
+  # set date as 6/3/2020 (when GV pushed dataset)
+  mutate_at(grep("Date", names(.)), function(x) x <- as.character(file.mtime(rawdat[grepl("scale", rawdat)])[1])) %>%
+  # need to 2-step conversion to datetime format bc will create numeric value if not
+  mutate_at(grep("Date", names(.)), function(x) x <- ymd_hms(x, tz = Sys.timezone(location = TRUE)))
+
 
 #convert col classes to match prelimlong1d col classes
 for(i in names(newscale_tidy)){
@@ -2812,8 +2818,8 @@ prelimlong1e <- filter(prelimlong1e, !abbr %in% c("MultiScale", "Plots", "Sites"
   # drop certain cols that aren't needed anymore
   dplyr::select(-'order') # only applied to sites/plots question
 
-# write out for the homeez
-write_csv(prelimlong1e, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+# write out for the GV and AK (temporary until get final dataset)
+# write_csv(prelimlong1e, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
 
@@ -3083,8 +3089,8 @@ rm(temp_note, i, scalecheck)
 # clean up env driver answer so that comma split function doesn't split answer
 prelimlong1f$clean_answer <- gsub("drivers, not including human drivers))", "drivers not including human drivers)", prelimlong1f$clean_answer)
 
-# write out working csv
-write_csv(prelimlong1f, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+# write out working csv (temporary placeholder)
+# write_csv(prelimlong1f, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
 
@@ -3336,11 +3342,12 @@ q3no_doubles <- subset(doublemulti, qnum == "Q3") %>%
          answer = ifelse(!is.na(answer), paste(Init, answer, sep = ": "), paste0(Init, ": (no answer, question not yet created)"))) %>%
   arrange(Title, survey_order, revorder) %>%
   group_by(Title, abbr) %>%
-  mutate(clean_answer2 = ifelse(length(unique(clean_answer[!is.na(clean_answer)]))>0, unique(clean_answer[!is.na(clean_answer)]), NA),
-         answer = ifelse(is.na(clean_answer2), unique(clean_answer2), str_flatten(answer[!is.na(answer)], collapse = "; "))) %>%
+  mutate(qa_note = ifelse(any(is.na(clean_answer)), "Defer to reviewer who answered question",qa_note),
+         clean_answer2 = ifelse(length(unique(clean_answer[!is.na(clean_answer)]))>0, unique(clean_answer[!is.na(clean_answer)]), NA),
+         answer = str_flatten(answer[!is.na(answer)], collapse = "; ")) %>%
   ungroup() %>%
   # add qa note if infilling double NA with no
-  mutate(qa_note = ifelse(is.na(clean_answer2), "For both reviewers: Infilled 'No'; question not yet created in survey when reviewers completed but nothing in answers to indicate paper should be excluded", qa_note),
+  mutate(qa_note = ifelse(is.na(clean_answer2), "For both reviewers: Infilled 'No'; question not yet created in survey when reviewers completed but nothing in answers to indicate paper should be excluded",qa_note),
          # assign new inits, rids, times
          Init = paste(rev1init, rev2init, sep = "/"),
          ResponseId = new_rid,
@@ -3455,7 +3462,9 @@ doublemulti_dissolved <- doublemulti_dissolved %>%
 newscale_double <- subset(newscale_tidy, Title %in% keptdoubles$Title) %>%
   left_join(keptdoubles) %>%
   mutate(version = "final",
-         ResponseId = new_rid)
+         ResponseId = new_rid,
+         # append reviewer init to answer to clear where answer came from
+         answer = ifelse(!is.na(answer), paste(Init, answer, sep = ": "), answer))
 
 # collapse double reviewed answers that agree
 doublemulti_consistent <- subset(doublemulti_base, sameanswer) %>%
@@ -3787,7 +3796,8 @@ sapply(dblcor_clean[c("Init", "Title", "id", "ESnum", "ES", "survey_order")], fu
 sort(unique(dblcor_clean$qa_note))
 sort(unique(dblcor_clean$final_answer))
 # check that anything NA in answer and clean_answer was like that in correction file
-NAcheck2 <- subset(dblcor_clean, is.na(clean_answer)) # nothing is missing clean answer (will become answer col), good
+NAcheck2 <- subset(dblcor_clean, is.na(clean_answer)) 
+nrow(NAcheck2) # nothing is missing clean answer (will become answer col), good
 # does everything that have a group also have a group in clean_group?
 NAcheck3 <- subset(dblcor_clean, !is.na(final_answer) & !is.na(Group))
 with(NAcheck3, sapply(split(clean_group, abbr), function(x) is.na(x))) # .. drivers have clean groups assigned, but effect direct may not.. didn't think about that (would apply to whole final dataset)
@@ -3877,7 +3887,7 @@ dblempty <- subset(dblempty, abbr != "OtherDriver") %>%
   arrange(Title, survey_order) %>%
   # drop tracker
   select(-tracker)
-  
+
 # check that all possible questions accounted for in all Titles
 # > newscale question won't be in headerLUT
 with(subset(dblempty, !(qnum %in%  c("Q8","Q9"))), sapply(split(survey_order, ResponseId), function(x) all(x %in% unique(headerLUT$survey_order))))
@@ -3896,11 +3906,12 @@ complete_dbl_clean <- rbind(dblrev_cleananswers[,names(dblempty)], dblempty[!(db
   arrange(Title, survey_order, source) %>%
   #group by question to ID duplicates to drop
   group_by(ResponseId, id) %>%
-  mutate(dupcheck = duplicated(survey_order)) %>%
+  mutate(dupcheck = duplicated(survey_order),
+         sourcecheck = length(unique(source))) %>%
   ungroup()
 
 # check out what's duplicated
-View(subset(complete_dbl_clean, rowid %in% rowid[dupcheck])) # these are fine, just multiple variables in Response, Driver or Other Driver
+View(subset(complete_dbl_clean, rowid %in% rowid[dupcheck])) # these are fine, just multiple variables in Response, Driver or Other Driver (i.e. same sourcefile)
 
 # check that all papers have same # qualtrics ids and abbr
 with(complete_dbl_clean, sapply(split(id, ResponseId), function(x) length(unique(x)))) # looks good
@@ -3926,12 +3937,16 @@ with(subset(complete_dbl_clean, abbr == "OtherDriver"), sapply(split(Group, Resp
 
 # lastly, need to assign posixct timestamp to dblrev clean
 # > newscale gets date julie and grant completed, all else gets current time
+# > to keep things easy for date assignment, take out newscale then add back in 
+complete_dbl_clean <- dplyr::select(complete_dbl_clean, StartDate:qa_note) %>% 
+  subset(!abbr %in% unique(newscale_double$abbr)) %>%
+  mutate_at(datecols, function(x) x <- as.character(Sys.time())) %>%
+  # 2-step conversion to posixct bc R is dumb (creates numeric if not..)
+  mutate_at(datecols, function(x) x <- ymd_hms(x, tz = Sys.timezone(location = TRUE))) %>%
+  # add newscale back in and sort by title and survey order
+  rbind(newscale_double[names(.)]) %>%
+  arrange(Title, survey_order)
 
-complete_dbl_clean2 <- complete_dbl_clean
-complete_dbl_clean2$StartDate <- with(complete_dbl_clean2, ifelse(survey_order %in% unique(newscale_tidy$survey_order), as.POSIXct("2020-08-10 18:00:00", "UTC"), Sys.time()))  
-complete_dbl_clean2 <- complete_dbl_clean %>%
-mutate_at(datecols, function(x) x <- ifelse(complete_dbl_clean$survey_order %in% unique(newscale_tidy$survey_order), as.POSIXct(newscale_tidy$StartDate[1]), Sys.time())) %>%
-  mutate_at(datecols, function(x) as.POSIXct(x, origin = "1960-01-01", tz = "UTC"))
 
 # clean up environment
 rm(checkdf, otherEScheck, othersurveycheck, hasotherdriver)
@@ -3939,44 +3954,127 @@ rm(checkdf, otherEScheck, othersurveycheck, hasotherdriver)
 
 
 # 4) Incorporate corrections in final dataset ----
-
-
-
-
-
-# -- WRITE OUT CLEANED L1 DATASET FOR POST-PROCESSING AND ANALYSIS -----
-# write out data as it's ready for others to work on.. (e.g. Q12 matrix will probably come later)
-# temp add scale in double revs not yet cleaned for grant
-
-
 # stack final, clean single reviews and original doubles, and cleaned up doubles
 # remove Q8 from double review original answers because will be in final
-
-clean_master <- subset(prelimlong1f, !doublerev) %>%
+clean_master <- subset(prelimlong1f, !(doublerev & qnum == "Q8")) %>%
   # drop ordercol
   dplyr::select(-ordercol) %>%
   # infill ResponseId for single review JL/GV scale answers
   fill(ResponseId) %>%
-  #rbind(Q3doubles[names(prelimlong1f)]) %>%
   # add clean double review
-  rbind(complete_dbl_clean2[names(.)]) %>%
-  # arrange by Title, then survey_order then RecordedDate?
-  arrange(Title, survey_order, RecordedDate) %>%
-  # double check single ResponseId per title (except for original double revs)
-  group_by(Title) %>%
-  mutate(ridcheck = length(unique(ResponseId))) %>%
+  rbind(complete_dbl_clean[names(.)]) %>%
+  arrange(Title, survey_order, varnum) %>%
+  ## CLEAN UP
+  # > NA response coarse bins
+  # > renumber varnum
+  # > rename clean_answer_finer to coarse/bin
+  mutate(clean_answer_finer = ifelse(abbr == "Response", NA, clean_answer_finer),
+         # create temp grouping cols for renumbering varnum
+         tempabbr = ifelse(grepl("Driver", abbr), "Driver", abbr)) %>%
+  group_by(ResponseId, tempabbr, ES) %>%
+  mutate(varnum = ifelse(tempabbr %in% c("Response", "Driver") & !clean_answer %in% c(NA, "Other"), 1:length(clean_answer[!is.na(clean_answer) & clean_answer != "Other"]), NA)) %>%
   ungroup() %>%
-  data.frame()
+  rename(clean_answer_binned = clean_answer_finer) %>%
+  # make rowid for tracking
+  mutate(rowid = rownames(.))
 
+# need to also assign clean group to effect direct based on driver's clean group
+switchgroup <- unique(with(clean_master, ResponseId[clean_group!= Group])) %>% na.exclude()
+# > fortunately not too many cases
+## rules: 
+## 1) if lone driver, change effect direct clean_group
+## 2) if other drivers in group initially marked, keep original Group AND assign effect_direct answer for that Group to new group as well IFF answer not already present
+## 2b) > if answer already present for new group's effect direct, do nothing
+# note! need to handle by ES
+# .. also I think will put effect direct answer in clean_answer binned so ppl can analyze that way.. based on clean group? (clean group was assigned based on clean binned driver anyway)
+# Mixed overrides any other response, if new answer agrees with old, keep, if it doesn't it's mixed
+
+clean_master2 <- clean_master %>%
+  # to start, assign all effect directs as they are to clean_answer_binned since only 28 cases to deal with
+  mutate(clean_answer_binned = ifelse(abbr == "EffectDirect", clean_answer, clean_answer_binned),
+         # remove "Other" from clean_answer_binned.. for now
+         clean_answer_binned = ifelse(clean_answer == "Other", NA, clean_answer_binned)) 
+# specify note for modifying effect direction
+targeteffectnote <- "Infilled driver effect direction in clean_answer_binned from clean_group if previous effect direction NA or not quantified; if clean_group effect direction 'Mixed' or previous effect direction conflicted with clean_group direction, assigned 'Mixed'"
+# specify note for NAing effect direction in old group if no drivers remain in group after clean up
+origeffectnote <- "Effect direction removed from clean_answer_binned; no drivers belong to this group for this ES based on new_group"
+# create note for missingeffect direct (just so data users know it's not an oversight)
+nonote <- "Driver assigned to this group and based on new_group but no answer in driver effect direction to assign to clean_answer_binned"
+# iterate through and clean up
+for(i in switchgroup){
+  tempdat <- subset(clean_master2, ResponseId == i & grepl("Driver|EffectDirect", tempabbr)) %>%
+    subset(ES %in% ES[!is.na(clean_answer)]) %>%
+    subset(Group %in% c(unique(clean_group[clean_group != Group]), unique(Group[Group!=clean_group])))
+  tempES <- unique(tempdat$ES)
+  # iterate by ES
+  for(e in tempES){
+    # subset to ES
+    tempdat2 <- subset(tempdat, ES == e)
+    # may also need to iterate by group if more than one group needs update yay..
+    # > write more code if so
+    newgroup <- unique(with(tempdat2, clean_group[clean_group != Group & !is.na(clean_group)]))
+    oldgroup <- unique(with(tempdat2, Group[clean_group != Group & !is.na(clean_group)]))
+    stopifnot(length(newgroup) == 1 & length(oldgroup) == 1) # if this bonks, need to write more code
+    # pull effectdirect
+    origeffect <- unique(with(tempdat2, clean_answer_binned[abbr == "EffectDirect" & Group == oldgroup & !is.na(clean_answer_binned)]))
+    targeteffect <- unique(with(tempdat2, clean_answer_binned[abbr == "EffectDirect" & Group == newgroup & !is.na(clean_answer_binned)]))
+    # id pertinent rowids
+    origrowid <- with(tempdat2, rowid[Group == oldgroup & abbr == "EffectDirect"])
+    targetrowid <- with(tempdat2, rowid[Group == newgroup & abbr == "EffectDirect"])
+    # assign direction to clean_answer_binned, dependent on what's already there, and add actions to qa note
+    #> should new target be replaced?
+    # if no answer provided to effect direct, move on -- nothing to be done
+    # > could provide QA note I guess?
+    if(length(origeffect)==0){
+      currentnote <- clean_master2$qa_note[clean_master2$rowid == targetrowid]
+      clean_master2$qa_note[clean_master2$rowid == targetrowid] <- ifelse(is.na(currentnote), nonote, paste(currentnote, nonote, sep = "; "))
+      next
+    }
+    replacenew <- (length(origeffect) > 0 & length(targeteffect) == 0)
+    if(!replacenew){
+      # if above test false, do the answers disagree?
+      replacenew <- (origeffect == targeteffect)
+    }
+    # > if true, treat new target first
+    if(replacenew){
+      # specify replacement value -- if Didn't quantify, can be orig, otherwise should be mixed (if answers didn't agree)
+      tempreplace <- ifelse(length(targeteffect) == 0, origeffect,
+                            ifelse(grepl("Didn't quant", targeteffect), origeffect, "Mixed"))
+      clean_master2$clean_answer_binned[clean_master2$rowid == targetrowid] <- tempreplace
+      currentnote <- clean_master2$qa_note[clean_master2$rowid == targetrowid]
+      clean_master2$qa_note[clean_master2$rowid == targetrowid] <- ifelse(is.na(currentnote), targeteffectnote, paste(currentnote, targeteffectnote, sep = "; "))
+    }
+    # also need to check if driver was lone driver in old group--if so, NA effect direction in clean_binned
+    nods <- with(subset(tempdat2, Group == oldgroup & tempabbr == "Driver"), length(clean_answer_binned[!is.na(clean_answer_binned)]))
+    # if only 1 driver, NA effect direction in binned old group and add QA note 
+    if(nods == 1){
+      clean_master2$clean_answer_binned[clean_master2$rowid == origrowid] <- NA
+      currentnote <- clean_master2$qa_note[clean_master2$rowid == origrowid]
+      clean_master2$qa_note[clean_master2$rowid == origrowid] <- ifelse(is.na(currentnote),origeffectnote, paste(currentnote, origeffectnote, sep = "; "))
+    }
+  }
+}
+
+
+# finally, change groups to Human, Biotic, and Environmental to match original survey question
+
+
+
+# -- WRITE OUT CLEANED L1 DATASET FOR POST-PROCESSING AND ANALYSIS -----
+# finishing
+# order dataset by order of answers received
+paperorder <- subset(clean_master, qnum == "Q3")  %>% distinct(ResponseId, RecordedDate) %>%
+  arrange(RecordedDate) %>%
+  mutate(order = 1:nrow(.))
+
+# final checks for completeness
 sapply(split(clean_master$ridcheck, clean_master$doublerev), unique) # 2 for double reviews that aren't processed yet, and 3 for ones that are..
 # check stucture
 str(clean_master) # can drop ordercol and ridcheck, as well as order (obsolete-- only applied to old scale question)
 
-# drop rid check and other cols not needed
-head(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck", "varnum", "ESnum")])
 
-# write out
-write_csv(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck", "varnum", "ESnum")], "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+# write out (# drop rid check and other cols not needed)
+write_csv(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck", "tempabbr", "ESnum")], "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
 
