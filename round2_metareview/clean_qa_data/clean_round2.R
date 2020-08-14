@@ -2744,6 +2744,8 @@ newscale <- subset(newscale, !Title %in% newscale_multi$Title) %>%
 rm(newscale_multi)
 
 newscale_tidy <- dplyr::select(newscale, -'aquatic.') %>%
+  # be sure no excluded papers in newscale dataset
+  subset(!Title %in% r2excluded_final$Title) %>%
   rename(Init = Reviewed_by) %>%
   gather(abbr, answer, extent_answer:ncol(.)) %>%
   # add cols in main set that don't exist
@@ -3972,11 +3974,24 @@ clean_master <- subset(prelimlong1f, !(doublerev & qnum == "Q8")) %>%
          # create temp grouping cols for renumbering varnum
          tempabbr = ifelse(grepl("Driver", abbr), "Driver", abbr)) %>%
   group_by(ResponseId, tempabbr, ES) %>%
-  mutate(varnum = ifelse(tempabbr %in% c("Response", "Driver") & !clean_answer %in% c(NA, "Other"), 1:length(clean_answer[!is.na(clean_answer) & clean_answer != "Other"]), NA)) %>%
+  mutate(needsnumber = (tempabbr %in% c("Response", "Driver") & !is.na(clean_answer) & clean_answer !="Other")) %>%
   ungroup() %>%
   rename(clean_answer_binned = clean_answer_finer) %>%
   # make rowid for tracking
-  mutate(rowid = rownames(.))
+  mutate(rowid = as.numeric(rownames(.)))
+
+# assigning new varnum tricky for some reason.. so will need to do this another way
+cleanvariables <- subset(clean_master, needsnumber) %>%
+  arrange(ResponseId, tempabbr, ES, rowid) %>%
+  group_by(ResponseId, tempabbr, ES) %>%
+  mutate(varnum2 = 1:length(rowid)) # this works
+
+clean_master <-  clean_master %>%
+  # join clean varnum in
+  left_join(cleanvariables[c("ResponseId", "rowid", "tempabbr", "varnum2")]) %>%
+  # clean up
+  mutate(varnum = varnum2) %>%
+  dplyr::select(-c(needsnumber, varnum2))
 
 # need to also assign clean group to effect direct based on driver's clean group
 switchgroup <- unique(with(clean_master, ResponseId[clean_group!= Group])) %>% na.exclude()
@@ -4067,7 +4082,7 @@ paperorder <- subset(clean_master, qnum == "Q3")  %>% distinct(ResponseId, Recor
 # reassign "Other" to clean_answer_binned 
 # make ESnum a number
 # finally, change groups to Human, Biotic, and Environmental to match original survey question
-clean_master2 <- clean_master %>%
+clean_master <- clean_master %>%
   mutate(clean_group = ifelse(abbr == "EffectDirect" & !is.na(clean_answer_binned), Group, clean_group),
          clean_answer_binned = ifelse(abbr == "Driver" & clean_answer == "Other", "Other", clean_answer_binned),
          ESnum = as.numeric(ESnum)) %>%
@@ -4089,14 +4104,15 @@ nobcheck <- group_by(clean_master2, ResponseId, Title, doublerev, version) %>%
   ungroup() 
 View(nobcheck) # it's fine for doublerev == original to have 4 fewer questions than final version because 4 newscale questions only present in final
 # > are all double reviewed papers there?
-
+length(unique(nobcheck$Title[nobcheck$version == "final"])) == length(original$Title[!original$Title %in% r2excluded_final$Title]) # w00t!
+with(subset(clean_master2, doublerev), sapply(split(Title, version), function(x) length(unique(x)))) # all double rev papers there
 # check stucture and expected simple answers
-sapply(dplyr::select(clean_master2, Init, doublerev, version, abbr, Group, clean_group, ESnum, ES), function(x) sort(unique(x)))
-str(clean_master2) # looks okay
+sapply(dplyr::select(clean_master2, Init, doublerev, version, abbr, Group, clean_group, ESnum, ES, varnum), function(x) sort(unique(x)))
+str(clean_master) # looks okay
 
 
 # write out
-write_csv(clean_master2, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+write_csv(clean_master, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
 
