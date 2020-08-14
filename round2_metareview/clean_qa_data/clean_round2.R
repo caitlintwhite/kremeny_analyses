@@ -4111,8 +4111,8 @@ sapply(dplyr::select(clean_master2, Init, doublerev, version, abbr, Group, clean
 str(clean_master) # looks okay
 
 
-# write out
-write_csv(clean_master, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+# write out (no ESnum)
+write_csv(clean_master[,names(clean_master) != "ESnum"], "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
 
