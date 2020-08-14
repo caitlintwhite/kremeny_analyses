@@ -3989,23 +3989,24 @@ switchgroup <- unique(with(clean_master, ResponseId[clean_group!= Group])) %>% n
 # .. also I think will put effect direct answer in clean_answer binned so ppl can analyze that way.. based on clean group? (clean group was assigned based on clean binned driver anyway)
 # Mixed overrides any other response, if new answer agrees with old, keep, if it doesn't it's mixed
 
-clean_master2 <- clean_master %>%
+clean_master <- clean_master %>%
   # to start, assign all effect directs as they are to clean_answer_binned since only 28 cases to deal with
   mutate(clean_answer_binned = ifelse(abbr == "EffectDirect", clean_answer, clean_answer_binned),
          # remove "Other" from clean_answer_binned.. for now
          clean_answer_binned = ifelse(clean_answer == "Other", NA, clean_answer_binned)) 
 # specify note for modifying effect direction
-targeteffectnote <- "Infilled driver effect direction in clean_answer_binned from clean_group if previous effect direction NA or not quantified; if clean_group effect direction 'Mixed' or previous effect direction conflicted with clean_group direction, assigned 'Mixed'"
+targeteffectnote <- "Infilled driver effect direction in clean_answer_binned from clean_group if previous effect direction NA or not quantified; if clean_group effect direction 'Mixed' or previous effect direction in this group conflicted with clean_group direction, assigned 'Mixed'"
 # specify note for NAing effect direction in old group if no drivers remain in group after clean up
 origeffectnote <- "Effect direction removed from clean_answer_binned; no drivers belong to this group for this ES based on new_group"
 # create note for missingeffect direct (just so data users know it's not an oversight)
-nonote <- "Driver assigned to this group and based on new_group but no answer in driver effect direction to assign to clean_answer_binned"
+nonote <- "Driver assigned to this group and based on new_group but no answer in driver's old group effect direction to assign to clean_answer_binned"
 # iterate through and clean up
 for(i in switchgroup){
-  tempdat <- subset(clean_master2, ResponseId == i & grepl("Driver|EffectDirect", tempabbr)) %>%
+  tempdat <- subset(clean_master, ResponseId == i & grepl("Driver|EffectDirect", tempabbr)) %>%
     subset(ES %in% ES[!is.na(clean_answer)]) %>%
     subset(Group %in% c(unique(clean_group[clean_group != Group]), unique(Group[Group!=clean_group])))
-  tempES <- unique(tempdat$ES)
+  # id ES's that need an update
+  tempES <- unique(with(tempdat, ES[(Group != clean_group) & !is.na(clean_group)]))
   # iterate by ES
   for(e in tempES){
     # subset to ES
@@ -4026,8 +4027,8 @@ for(i in switchgroup){
     # if no answer provided to effect direct, move on -- nothing to be done
     # > could provide QA note I guess?
     if(length(origeffect)==0){
-      currentnote <- clean_master2$qa_note[clean_master2$rowid == targetrowid]
-      clean_master2$qa_note[clean_master2$rowid == targetrowid] <- ifelse(is.na(currentnote), nonote, paste(currentnote, nonote, sep = "; "))
+      currentnote <- clean_master$qa_note[clean_master$rowid == targetrowid]
+      clean_master$qa_note[clean_master$rowid == targetrowid] <- ifelse(is.na(currentnote), nonote, paste(currentnote, nonote, sep = "; "))
       next
     }
     replacenew <- (length(origeffect) > 0 & length(targeteffect) == 0)
@@ -4040,41 +4041,62 @@ for(i in switchgroup){
       # specify replacement value -- if Didn't quantify, can be orig, otherwise should be mixed (if answers didn't agree)
       tempreplace <- ifelse(length(targeteffect) == 0, origeffect,
                             ifelse(grepl("Didn't quant", targeteffect), origeffect, "Mixed"))
-      clean_master2$clean_answer_binned[clean_master2$rowid == targetrowid] <- tempreplace
-      currentnote <- clean_master2$qa_note[clean_master2$rowid == targetrowid]
-      clean_master2$qa_note[clean_master2$rowid == targetrowid] <- ifelse(is.na(currentnote), targeteffectnote, paste(currentnote, targeteffectnote, sep = "; "))
+      clean_master$clean_answer_binned[clean_master$rowid == targetrowid] <- tempreplace
+      currentnote <- clean_master$qa_note[clean_master$rowid == targetrowid]
+      clean_master$qa_note[clean_master$rowid == targetrowid] <- ifelse(is.na(currentnote), targeteffectnote, paste(currentnote, targeteffectnote, sep = "; "))
     }
     # also need to check if driver was lone driver in old group--if so, NA effect direction in clean_binned
     nods <- with(subset(tempdat2, Group == oldgroup & tempabbr == "Driver"), length(clean_answer_binned[!is.na(clean_answer_binned)]))
     # if only 1 driver, NA effect direction in binned old group and add QA note 
     if(nods == 1){
-      clean_master2$clean_answer_binned[clean_master2$rowid == origrowid] <- NA
-      currentnote <- clean_master2$qa_note[clean_master2$rowid == origrowid]
-      clean_master2$qa_note[clean_master2$rowid == origrowid] <- ifelse(is.na(currentnote),origeffectnote, paste(currentnote, origeffectnote, sep = "; "))
+      clean_master$clean_answer_binned[clean_master$rowid == origrowid] <- NA
+      currentnote <- clean_master$qa_note[clean_master$rowid == origrowid]
+      clean_master$qa_note[clean_master$rowid == origrowid] <- ifelse(is.na(currentnote),origeffectnote, paste(currentnote, origeffectnote, sep = "; "))
     }
   }
 }
 
 
-# finally, change groups to Human, Biotic, and Environmental to match original survey question
-
-
-
-# -- WRITE OUT CLEANED L1 DATASET FOR POST-PROCESSING AND ANALYSIS -----
 # finishing
 # order dataset by order of answers received
 paperorder <- subset(clean_master, qnum == "Q3")  %>% distinct(ResponseId, RecordedDate) %>%
   arrange(RecordedDate) %>%
-  mutate(order = 1:nrow(.))
+  mutate(titleorder = 1:nrow(.))
 
+# clean up clean_group for effect direct (if clean_answer_binned present, gets group)
+# reassign "Other" to clean_answer_binned 
+# make ESnum a number
+# finally, change groups to Human, Biotic, and Environmental to match original survey question
+clean_master2 <- clean_master %>%
+  mutate(clean_group = ifelse(abbr == "EffectDirect" & !is.na(clean_answer_binned), Group, clean_group),
+         clean_answer_binned = ifelse(abbr == "Driver" & clean_answer == "Other", "Other", clean_answer_binned),
+         ESnum = as.numeric(ESnum)) %>%
+  mutate_at(c("Group", "clean_group"), function(x) recode(x, "Env" = "Environmental", "Bio" = "Biotic", "Anthro" = "Human")) %>%
+  # sort dataset by order answers came in, then by survey order and varnum
+  left_join(paperorder) %>%
+  arrange(titleorder, survey_order, varnum) %>%
+  select(StartDate:qa_note)
+  
+  
+
+
+
+# -- WRITE OUT CLEANED L1 DATASET FOR POST-PROCESSING AND ANALYSIS -----
 # final checks for completeness
-sapply(split(clean_master$ridcheck, clean_master$doublerev), unique) # 2 for double reviews that aren't processed yet, and 3 for ones that are..
-# check stucture
-str(clean_master) # can drop ordercol and ridcheck, as well as order (obsolete-- only applied to old scale question)
+# > do all ResponseIds have same # qualtics ids? (should)
+nobcheck <- group_by(clean_master2, ResponseId, Title, doublerev, version) %>%
+  summarise(nobs= length(unique(id))) %>%
+  ungroup() 
+View(nobcheck) # it's fine for doublerev == original to have 4 fewer questions than final version because 4 newscale questions only present in final
+# > are all double reviewed papers there?
+
+# check stucture and expected simple answers
+sapply(dplyr::select(clean_master2, Init, doublerev, version, abbr, Group, clean_group, ESnum, ES), function(x) sort(unique(x)))
+str(clean_master2) # looks okay
 
 
-# write out (# drop rid check and other cols not needed)
-write_csv(clean_master[,!names(clean_master) %in% c("ordercol", "ridcheck", "tempabbr", "ESnum")], "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+# write out
+write_csv(clean_master2, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
 
 
