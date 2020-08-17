@@ -1441,7 +1441,7 @@ actualreviewers <- distinct(prelimlong1b, Title, Init) %>%
   mutate(role = ifelse(grepl("rev1", role), 1, 2),
          role = ifelse(!doublerev, 0, role),
          final_init = ifelse(role == 0 & !is.na(final_init), final_init,
-                              ifelse(role == 0 & KCG == 1, "KCG", final_init)),
+                             ifelse(role == 0 & KCG == 1, "KCG", final_init)),
          final_init = ifelse(doublerev & is.na(final_init) & KCG == 1, "KCG", final_init)) %>%
   distinct() %>%
   dplyr::select(-KCG) %>%
@@ -1449,7 +1449,7 @@ actualreviewers <- distinct(prelimlong1b, Title, Init) %>%
   mutate(role = ifelse(role < 2, "rev1init", "rev2init")) %>%
   spread(role, final_init) %>%
   arrange(doublerev, Title)
-  
+
 LDexcludeclean <- dplyr::select(excludecorrections, CTW_added_manually:NBD_Notes, exclude_LD, Reason_LD, ResponseId, Title, Init, exclude_notes, SurveyNotes) %>%
   subset(exclude_LD) %>%
   # double check ResponseID good and Init good
@@ -1464,6 +1464,8 @@ LDexcludeclean <- dplyr::select(excludecorrections, CTW_added_manually:NBD_Notes
          NBD_Notes = gsub(" BD ", " biodiversity ", NBD_Notes),
          NBD_Notes = trimws(NBD_Notes),
          Reason_LD = gsub("noprocess", "no process", Reason_LD),
+         # need to infill missing reason_LD with grant's reason for exclusion
+         Reason_LD = ifelse(grepl("Environmental context and magnitude of disturbance", Title), with(prelimlong1b, abbr[qnum == "Q3" & answer == "Yes" & ResponseId == "R_3GqYGrqNpeFHjdK" & !is.na(answer)]), Reason_LD),
          outsidereviewer_notes = ifelse(outsidereviewer == "NBD", paste("NBD", NBD_Notes, sep = ": "),
                                         #ifelse(!is.na(exclude_notes), paste(outsidereviewer, exclude_notes, sep = ": "), NA)),
                                         ifelse(outsidereviewer == "CTW", paste("CTW", exclude_notes, sep = ": "), 
@@ -1478,10 +1480,14 @@ LDexcludeclean <- dplyr::select(excludecorrections, CTW_added_manually:NBD_Notes
          # recode LD's reasons to match abbreviated reasons
          exclusion_reason = ifelse(grepl("Q3|framework", Reason_LD, ignore.case = T), "ReviewOnly",
                                    ifelse(grepl("^Q2|value|social|perception", Reason_LD, ignore.case = T), "SocialOnly",
-                                          ifelse(grepl("Q1", Reason_LD), "BiodivOnly", Reason_LD)))) %>%
+                                          ifelse(grepl("Q1|BiodivOnly", Reason_LD), "BiodivOnly", Reason_LD)))) %>%
   #clean up data frame
-  select(Title, exclude_LD, Init, SurveyNotes, exclusion_reason, outsidereviewer, outsidereviewer_notes)
+  select(Title, exclude_LD, Init, SurveyNotes, exclusion_reason, outsidereviewer, outsidereviewer_notes) %>%
+  rename(reviewer_surveynotes = SurveyNotes) %>%
+  # change LD review notes for GV paper to her style notes
+  mutate(outsidereviewer_notes = gsub("LD: BiodivOnly", "LD: Q1", outsidereviewer_notes))
   
+
 
 
 excludedv2 <- subset(prelimlong1b, Title %in% unique(with(prelimlong1b, Title[ResponseId %in% c(exclude_qualtrics, excludeLD)]))) %>%
@@ -1503,24 +1509,36 @@ excludedv2 <- subset(prelimlong1b, Title %in% unique(with(prelimlong1b, Title[Re
   left_join(actualreviewers) %>%
   mutate(revorder = ifelse(Init == rev1init, 1, 2),
          exclude = recode(exclude, Exclude = "Excluded", Maybe = "Maybe exclude;", Keep = "Keep paper"),
-         reviewer_exclusion_notes = ifelse(is.na(exclude_notes), exclude, paste(exclude, exclude_notes))) %>%
+         reviewer_exclusion_status = ifelse(is.na(exclude_notes), exclude, paste(exclude, exclude_notes))) %>%
   # lastly, add reason flagged
   group_by(Title) %>%
-  mutate(reason_flagged = ifelse(flagged4review & length(unique(reviewer_exclusion_notes)) != 1, "Inconsistent reviewer answers to Q3", NA),
+  mutate(reason_flagged = ifelse(flagged4review & length(unique(reviewer_exclusion_status)) != 1, "Inconsistent reviewer answers to Q3", NA),
          reason_flagged = ifelse(is.na(reason_flagged) & grepl("Maybe", exclude), "Reviewer notes trigger outside review for exclusion", reason_flagged)) %>%
   ungroup() %>%
-  # select final cols
-  dplyr::select(StartDate:Title, doublerev, version, id, answer, clean_answer, fullquestion, survey_order, reviewer_exclusion_notes, flagged4review, reason_flagged, rev1init:ncol(.)) %>%
+  # join LD exclude
+  left_join(LDexcludeclean) %>%
+  # select final cols (same cols [mostly] as ES final dataset)
+  dplyr::select(StartDate:RecordedDate, ResponseId, Init, doublerev, version, Title, id, answer, clean_answer, fullquestion, abbr, qnum, survey_order, reviewer_surveynotes, reviewer_exclusion_status, flagged4review, reason_flagged, outsidereviewer, outsidereviewer_notes, exclusion_reason, rev1init:revorder) %>%
   arrange(Title, survey_order, revorder)
-  
+
 # collapse double review for final excluded version
-dbl_exclude <- subset(excludedv2, doublerev) %>%
+dbl_exclude_clean <- subset(excludedv2, doublerev) %>%
   # NA date columns and ResponseID to update at end
   mutate_at(c("StartDate", "EndDate", "RecordedDate", "ResponseId"), function(x) x <- NA) %>%
   mutate(version = "final",
          # append inits
-         answer = paste(Init, clean_answer, sep = ": "))
-
+         answer = paste(Init, clean_answer, sep = ": "),
+         Init = paste(rev1init, rev2init, sep = "/"),
+         clean_answer2 = ifelse(abbr == exclusion_reason, "Yes", NA),
+         clean_answer2 = ifelse(!flagged4review, clean_answer, clean_answer2)) %>%
+  # standardize outside reviewer notes and rationale (LD inconsistent in putting nick et al. methods vs. q3 - methods in correction csv)
+  group_by(Title, id) %>%
+  # take care of NAs first
+  fill(outsidereviewer, outsidereviewer_notes, exclusion_reason, clean_answer2) %>%
+  # change reviewer to NBD and notes to NBD's if he looked at paper
+  mutate(outsidereviewer = ifelse(any(outsidereviewer == "NBD"), "NBD", outsidereviewer),
+         outsidereviewer_notes = ifelse(any(grepl("NBD: ", outsidereviewer_notes)), unique(outsidereviewer_notes[outsidereviewer == "NBD"]), outsidereviewer_notes)) %>%
+  ungroup()
 
 
 
@@ -4203,8 +4221,8 @@ clean_master <- clean_master %>%
   left_join(paperorder) %>%
   arrange(titleorder, survey_order, varnum) %>%
   select(StartDate:qa_note)
-  
-  
+
+
 
 
 
