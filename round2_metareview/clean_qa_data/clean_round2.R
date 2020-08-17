@@ -1409,9 +1409,64 @@ r2excluded_final <- rbind(exclude_r2, exclude_r2LD[names(exclude_r2)]) %>%
   mutate(count_reasons = length(exclusion_reason)) %>%
   ungroup()
 
+
 # write out excluded papers
 write_csv(r2excluded_final, "round2_metareview/data/intermediate/round2_excluded.csv") #, na = ""
 
+# > 8/15/2020: create r2 excluded dataset more akin in structure to final (kept papers) ES dataset:
+# > want to retain original reviewer answers and note which papers 3rd party (LD, NBD or CTW) reviewed, along with reason paper flagged (if flagged)
+
+# >> need to identify which papers KCG ended up reviewing (we switched it around partway through review so everyone reviewed 26 papers)
+KCGpapers <- subset(prelimlong1b, Init == "KCG") %>%
+  dplyr::select(Title, Init) %>%
+  distinct() %>%
+  mutate(KCG = 1)
+actualreviewers <- distinct(prelimlong1b, Title, Init) %>%
+  left_join(original[c("Title", "Round2_reviewer1", "Round2_reviewer2")]) %>%
+  left_join(data.frame(assigned_rev1init = initials, Round2_reviewer1 = names(initials))) %>%
+  left_join(data.frame(assigned_rev2init = initials, Round2_reviewer2 = names(initials))) %>%
+  mutate(actual_r2rev1 = ifelse(assigned_rev1init == Init, Init, NA),
+         actual_r2rev2 = ifelse(assigned_rev2init == Init, Init, NA)) %>%
+  select(Title, actual_r2rev1, actual_r2rev2) %>%
+  gather(role, Init, actual_r2rev1, actual_r2rev2) %>%
+  left_join(KCGpapers[c("Title", "KCG")]) %>%
+  subset(!(is.na(Init)& is.na(KCG))) %>%
+  arrange(Title, role) %>%
+  group_by(Title, role) %>%
+  mutate(final_init = ifelse(any(!is.na(unique(Init))), Init[!is.na(Init)], NA),
+         doublerev = Title %in% doubletitles) %>%
+  ungroup() %>%
+  dplyr::select(-Init) %>%
+  distinct() %>%
+  mutate(role = ifelse(grepl("rev1", role), 1, 2),
+         role = ifelse(!doublerev, 0, role),
+         final_init = ifelse(role == 0 & !is.na(final_init), final_init,
+                              ifelse(role == 0 & KCG == 1, "KCG", final_init)),
+         final_init = ifelse(doublerev & is.na(final_init) & KCG == 1, "KCG", final_init)) %>%
+  distinct() %>%
+  dplyr::select(-KCG) %>%
+  # change role back to 1 for single review and make wideform
+  mutate(role = ifelse(role < 2, "rev1init", "rev2init")) %>%
+  spread(role, final_init) %>%
+  arrange(doublerev, Title)
+  
+
+excludedv2 <- subset(prelimlong1b, Title %in% unique(with(prelimlong1b, Title[ResponseId %in% c(exclude_qualtrics, excludeLD)]))) %>%
+  # distill to Q3 (exclusion question) .. unless maybe want the survey notes?? (can pull separately)
+  subset(qnum == "Q3") %>%
+  mutate(doublerev = Title %in% doubletitles,
+         flagged4review = Title %in% excludecorrections$Title,
+         # fix typo in exclude_notes
+         exclude_notes = gsub("uncertainy", "uncertainty", exclude_notes)) %>%
+  # infill NA answers..
+  # > if all other answers "No", question not yet created
+  # > if any answer "Yes", NA, paper already excluded
+  group_by(ResponseId) %>%
+  mutate(answer2 = ifelse(any(unique(answer) == "Yes") & is.na(answer), "NA (paper already excluded)", answer),
+         answer2 = ifelse(all(unique(answer[!is.na(answer)]) == "No") & is.na(answer), "No answer (question not yet created)", answer2),
+         answer2 = ifelse(doublerev, paste(Init, answer2, sep = ": "), answer2)) %>%
+  ungroup()
+  
 
 # retain kept papers in prelimlong_1c
 prelimlong1c <- filter(prelimlong1b, !Title %in% unique(r2excluded_final$Title)) %>%
@@ -4114,6 +4169,8 @@ str(clean_master) # looks okay
 # write out (no ESnum)
 write_csv(clean_master[,names(clean_master) != "ESnum"], "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 
+
+# create final excluded papers dataset
 
 
 # -- PRELIM SUMMARY FIGURE ----
