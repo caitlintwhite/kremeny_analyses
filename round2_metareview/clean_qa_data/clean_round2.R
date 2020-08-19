@@ -1361,7 +1361,14 @@ excludecorrections <- excludecorrections %>%
   group_by(Title) %>%
   fill(Reason_LD) %>%
   ungroup() %>%
-  arrange(Title)
+  arrange(Title) %>%
+  # subset out paper reviewed by LD and then re-reviewed by CTW
+  group_by(Title) %>%
+  mutate(nobs = length(unique(assess_date)),
+         mindate = min(assess_date)) %>%
+  ungroup() %>%
+  # subset out old date
+  subset(!(nobs == 2 & assess_date == mindate))
 
 
 # pull out any to exclude based on LD and ND review by their responseID and Title
@@ -1468,25 +1475,38 @@ LDexcludeclean <- dplyr::select(excludecorrections, CTW_added_manually:NBD_Notes
          Reason_LD = ifelse(grepl("Environmental context and magnitude of disturbance", Title), with(prelimlong1b, abbr[qnum == "Q3" & answer == "Yes" & ResponseId == "R_3GqYGrqNpeFHjdK" & !is.na(answer)]), Reason_LD),
          outsidereviewer_notes = ifelse(outsidereviewer == "NBD", paste("NBD", NBD_Notes, sep = ": "),
                                         #ifelse(!is.na(exclude_notes), paste(outsidereviewer, exclude_notes, sep = ": "), NA)),
-                                        ifelse(outsidereviewer == "CTW", paste("CTW", exclude_notes, sep = ": "), 
-                                               ifelse(!is.na(Reason_LD), paste("LD", Reason_LD, sep = ": "), NA))),
-         
+                                        ifelse(outsidereviewer == "CTW" & !grepl("How good are tropical forest", Title), paste("CTW", exclude_notes, sep = ": "),
+                                               # specific note for 1 paper CTW reviewed
+                                               ifelse(outsidereviewer == "CTW" & grepl("How good are tropical forest", Title), paste("CTW", Reason_LD, sep = ": "),
+                                                      # all other papers reviewed by LD
+                                                      ifelse(!is.na(Reason_LD), paste("LD", Reason_LD, sep = ": "), NA)))),
          SurveyNotes = ifelse(!is.na(SurveyNotes), paste(Init, SurveyNotes, sep = ": "), SurveyNotes),
          # clean up a few exclusion reasons (e.g. should be valuation or no EF/ES measures [should have been excluded in R1]
-         Reason_LD = ifelse(grepl("no process", Reason_LD) | grepl("nothing to do with ES", NBD_Notes), "No EF/ES measured (should have been excluded in round 1)", Reason_LD),
-         Reason_LD = ifelse(Init.x == "JL" & grepl("ecosystem service valuation", SurveyNotes), "Q2", Reason_LD),
+         Reason_LD = ifelse(grepl("no process|no EF/ES", Reason_LD, ignore.case = T) | grepl("nothing to do with ES|not directly model an EF or ES", NBD_Notes), "No EF/ES measured (should have been excluded in round 1)", Reason_LD),
          Reason_LD = ifelse(grepl("methods", NBD_Notes), "Q3 - Nick et al. review", Reason_LD),
          # clean up ReasonLD
          # recode LD's reasons to match abbreviated reasons
          exclusion_reason = ifelse(grepl("Q3|framework", Reason_LD, ignore.case = T), "ReviewOnly",
                                    ifelse(grepl("^Q2|value|social|perception", Reason_LD, ignore.case = T), "SocialOnly",
-                                          ifelse(grepl("Q1|BiodivOnly", Reason_LD), "BiodivOnly", Reason_LD)))) %>%
+                                          ifelse(grepl("Q1|BiodivOnly", Reason_LD), "BiodivOnly", 
+                                                 ifelse(grepl("no process|No EF/ES", Reason_LD), "No EF/ES measured directly (paper should have been excluded in Round 1)", Reason_LD))))) %>%
   #clean up data frame
   select(Title, exclude_LD, Init, SurveyNotes, exclusion_reason, outsidereviewer, outsidereviewer_notes) %>%
   rename(reviewer_surveynotes = SurveyNotes) %>%
   # change LD review notes for GV paper to her style notes
-  mutate(outsidereviewer_notes = gsub("LD: BiodivOnly", "LD: Q1", outsidereviewer_notes))
-  
+  mutate(outsidereviewer_notes = gsub("LD: BiodivOnly", "LD: Q1", outsidereviewer_notes)) %>%
+  # check only 1 reviewer and reason per paper
+  group_by(Title) %>%
+  mutate(nobsrev = length(unique(outsidereviewer)),
+         nobsreason = length(unique(exclusion_reason)),
+         # if Nick reviewed any, infilled his inits, notes and reason over LD's (altho reason agrees (nobsreason == 1)),
+         outsidereviewer = ifelse(any(unique(outsidereviewer) == "NBD") & nobsrev == 2, "NBD", outsidereviewer),
+         outsidereviewer_notes = ifelse(unique(outsidereviewer) == "NBD" & nobsrev == 2, unique(outsidereviewer_notes[grepl("NBD", outsidereviewer_notes)]), outsidereviewer_notes)) %>%
+  ungroup() %>%
+  #drop check cols
+  dplyr::select(-c(nobsrev, nobsreason))
+
+
 
 
 
@@ -1508,8 +1528,10 @@ excludedv2 <- subset(prelimlong1b, Title %in% unique(with(prelimlong1b, Title[Re
   # append reviewer order
   left_join(actualreviewers) %>%
   mutate(revorder = ifelse(Init == rev1init, 1, 2),
-         exclude = recode(exclude, Exclude = "Excluded", Maybe = "Maybe exclude;", Keep = "Keep paper"),
-         reviewer_exclusion_status = ifelse(is.na(exclude_notes), exclude, paste(exclude, exclude_notes))) %>%
+         exclude = recode(exclude, Exclude = "Excluded", Maybe = "Maybe exclude", Keep = "Keep paper"),
+         reviewer_exclusion_status = ifelse(is.na(exclude_notes), exclude, paste(exclude, exclude_notes)),
+         # add parentheses to uncertainty in survey notes
+         reviewer_exclusion_status = gsub("uncertainty in survey notes", "(uncertainty in survey notes)", reviewer_exclusion_status)) %>%
   # lastly, add reason flagged
   group_by(Title) %>%
   mutate(reason_flagged = ifelse(flagged4review & length(unique(reviewer_exclusion_status)) != 1, "Inconsistent reviewer answers to Q3", NA),
@@ -1519,7 +1541,21 @@ excludedv2 <- subset(prelimlong1b, Title %in% unique(with(prelimlong1b, Title[Re
   left_join(LDexcludeclean) %>%
   # select final cols (same cols [mostly] as ES final dataset)
   dplyr::select(StartDate:RecordedDate, ResponseId, Init, doublerev, version, Title, id, answer, clean_answer, fullquestion, abbr, qnum, survey_order, reviewer_surveynotes, reviewer_exclusion_status, flagged4review, reason_flagged, outsidereviewer, outsidereviewer_notes, exclusion_reason, rev1init:revorder) %>%
-  arrange(Title, survey_order, revorder)
+  arrange(Title, survey_order, revorder) %>%
+  # infill reason excluded if empty (papers not outside reviewed)
+  group_by(Title) %>%
+  # infill missing paired values for papers reviewed by LD/NBD/CTW (really only applied to 1 paper by AK/GV)
+  fill(outsidereviewer, outsidereviewer_notes, exclusion_reason, .direction = "downup") %>%
+  mutate(exclusion_reason = ifelse(is.na(exclusion_reason) & !flagged4review, str_flatten(unique(abbr[clean_answer=="Yes"])), exclusion_reason),
+         # id survey order for exclusion reason
+         reasonorder = ifelse(!grepl("EF/ES", exclusion_reason), str_flatten(unique(survey_order[which(abbr == exclusion_reason)])), NA),
+         # also infill missing reason flagged
+         reason_flagged = ifelse(is.na(reason_flagged) & flagged4review & grepl("reviewers disagree", outsidereviewer_notes), "Inconsistent reviewer answers to Q3", reason_flagged),
+         # all else were papers pulled during secondary reviews -- these are more or less manual corrections
+         reason_flagged = ifelse(is.na(reason_flagged) & flagged4review & outsidereviewer == "CTW", "Flagged by CTW while reviewing missing driver/responses",
+                                 ifelse(is.na(reason_flagged) & flagged4review & outsidereviewer == "NBD", "Flagged by NBD during methods review",
+                                        ifelse(is.na(reason_flagged) & flagged4review, "Flagged by JL/GV during new scale question review", reason_flagged)))) %>%
+  ungroup()
 
 # collapse double review for final excluded version
 dbl_exclude_clean <- subset(excludedv2, doublerev) %>%
@@ -1528,18 +1564,36 @@ dbl_exclude_clean <- subset(excludedv2, doublerev) %>%
   mutate(version = "final",
          # append inits
          answer = paste(Init, clean_answer, sep = ": "),
-         Init = paste(rev1init, rev2init, sep = "/"),
+         #Init = paste(rev1init, rev2init, sep = "/"),
          clean_answer2 = ifelse(abbr == exclusion_reason, "Yes", NA),
-         clean_answer2 = ifelse(!flagged4review, clean_answer, clean_answer2)) %>%
+         clean_answer2 = ifelse(survey_order < reasonorder, "No",
+                                ifelse(survey_order > reasonorder, "NA (paper already excluded)", clean_answer2)),
+         # update clean answer for papers that should have been excluded in Round 1
+         clean_answer2 = ifelse(is.na(reasonorder), "NA (should have been excluded Round 1)", clean_answer2)) %>%
   # standardize outside reviewer notes and rationale (LD inconsistent in putting nick et al. methods vs. q3 - methods in correction csv)
   group_by(Title, id) %>%
   # take care of NAs first
-  fill(outsidereviewer, outsidereviewer_notes, exclusion_reason, clean_answer2) %>%
-  # change reviewer to NBD and notes to NBD's if he looked at paper
-  mutate(outsidereviewer = ifelse(any(outsidereviewer == "NBD"), "NBD", outsidereviewer),
-         outsidereviewer_notes = ifelse(any(grepl("NBD: ", outsidereviewer_notes)), unique(outsidereviewer_notes[outsidereviewer == "NBD"]), outsidereviewer_notes)) %>%
+  #fill(outsidereviewer, outsidereviewer_notes, exclusion_reason, clean_answer2) %>%
+  #collapse answer and notes
+  mutate(answer = str_flatten(unique(answer), collapse = "; "),
+         reviewer_surveynotes = ifelse(all(is.na(unique(reviewer_surveynotes))), NA, 
+                                       ifelse(length(unique(reviewer_surveynotes[!is.na(reviewer_surveynotes)]))== 1, 
+                                              unique(reviewer_surveynotes[!is.na(reviewer_surveynotes)]), str_flatten(unique(reviewer_surveynotes), collapse = "; "))),
+         # collapse reviewer exclusion status -- if both same, note that
+         reviewer_exclusion_status = ifelse(length(unique(reviewer_exclusion_status))==1, paste0("Both ", rev1init, " and ", rev2init, ": ", reviewer_exclusion_status),
+                                            # if exclusion status different, append inits and flatten string
+                                            str_flatten(paste(Init, reviewer_exclusion_status, sep = ": "), collapse = "; ")),
+         # update clean_answer
+         clean_answer = clean_answer2,
+         Init = paste(rev1init, rev2init, sep = "/")) %>%
+  ungroup() %>%
+  dplyr::select(-c(rev1init:revorder)) %>%
+  distinct() %>%
+  group_by(Title) %>%
+  mutate(idcheck = length(id)) %>%
   ungroup()
-
+# check all papers only have 3 ids
+summary(dbl_exclude_clean$idcheck) #yes
 
 
 
