@@ -26,7 +26,7 @@ length(unique(r1exclude$Title))/length(unique(round1$Title))
 # abstracts kept after round1
 r1kept <- read.csv("round1_exclusion/output/review_assignments_round2.csv")
 # percent kept
-nrow(r1kept)/nrow(round1)
+length(unique(r1kept$Title))/nrow(round1)
 # of abstracts kept, papers assigned for round 2 (half of round 1 kept with the intent for each paper to have 2 reviewers)
 r2assigned <- read.csv("round1_exclusion/output/review_assignments_round2_grpdsubset.csv")
 
