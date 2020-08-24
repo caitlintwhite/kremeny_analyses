@@ -45,7 +45,7 @@ ext_methods = methods_title_seprow %>%
 ggplot() +
   geom_col(data = extent_props %>% mutate(Extent = factor(Extent, levels = c('Local','Macro-scale','Global','Undefined/no scale'))),
            aes(x = fct_rev(Extent), y = ext_proportion), 
-           fill = 'gray') +
+           fill = 'lightgray') +
   geom_col(data = ext_methods, 
            aes(x = Extent, y = methods_ext_prop, group = Methods, fill = Methods), 
            position = 'dodge') +
