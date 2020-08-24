@@ -1595,6 +1595,37 @@ dbl_exclude_clean <- subset(excludedv2, doublerev) %>%
 # check all papers only have 3 ids
 summary(dbl_exclude_clean$idcheck) #yes
 
+# finally, assigned sys time and new response IDs.. response IDs should start with # after kept double rev
+startexclude <- length(unique(with(prelimlong1b,Title[(Title %in% doubletitles) & !(Title %in% excludedv2$Title)]))) +1
+dbl_exclude_clean <- dbl_exclude_clean %>%
+  mutate_at(c("StartDate", "EndDate", "RecordedDate"), function(x) x <- as.character(Sys.time())) %>%
+  # 2-step conversion to posixct bc R is dumb (creates numeric if not..)
+  mutate_at(c("StartDate", "EndDate", "RecordedDate"), function(x) x <- ymd_hms(x, tz = Sys.timezone(location = TRUE))) %>%
+  left_join(data.frame(Title = sort(unique(dbl_exclude_clean$Title)), num = startexclude:length(doubletitles))) %>%
+  mutate(ResponseId = paste0("R", num, "unified")) %>%
+  select(StartDate:exclusion_reason)
+  
+# clean up original dblrev and final single rev
+excludedr2_clean <- excludedv2 %>%
+  # answer needs to be cleaned up answer (e.g. NA (because already excluded, or question not created))
+  # clean_answer needs to be the actual clean answer (e.g. NA (should have been excluded in R1))
+  mutate(answer = clean_answer,
+         clean_answer2 = ifelse(abbr == exclusion_reason, "Yes", NA),
+         clean_answer2 = ifelse(survey_order < reasonorder, "No",
+                                ifelse(survey_order > reasonorder, "NA (paper already excluded)", clean_answer2)),
+         # update clean answer for papers that should have been excluded in Round 1
+         clean_answer2 = ifelse(is.na(reasonorder), "NA (should have been excluded Round 1)", clean_answer2)) %>%
+  arrange(Title, revorder, survey_order) %>%
+  select(names(dbl_exclude_clean)) %>%
+  # append collapsed up dbl rev excluded
+  rbind(dbl_exclude_clean)
+  
+# check all looks good, then write out
+summary(excludedr2_clean)
+summary(is.na(excludedr2_clean))
+summary(is.na(excludedr2_clean[excludedr2_clean$flagged4review,])) # looks okay
+
+write_csv(excludedr2_clean, "round2_metareview/data/cleaned/ESqualtrics_r2exclude_cleaned.csv")
 
 
 # retain kept papers in prelimlong_1c
