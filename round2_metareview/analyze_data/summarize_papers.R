@@ -24,7 +24,7 @@ r1exclude <- read.csv("round1_exclusion/output/exclude_round1.csv")
 length(unique(r1exclude$Title))/length(unique(round1$Title))
 
 # abstracts kept after round1
-r1kept <- read.csv("round1_exclusion/output/review_assignments_round2.csv")
+r1kept <- read.csv("round1_exclusion/output/keep_round1.csv")
 # percent kept
 length(unique(r1kept$Title))/nrow(round1)
 # of abstracts kept, papers assigned for round 2 (half of round 1 kept with the intent for each paper to have 2 reviewers)
@@ -58,5 +58,17 @@ mutate(allexclude, grp_reason = ifelse(grepl("revi|meta|tool", exclusion_reason,
   summarise(nobs = length(title),
             grand_pct = (nobs/nrow(.))*100) %>%
   arrange(-nobs)
+
+
+qdat <- read.csv("round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv") 
+# stack and write out all varnames for all datasets for metadata
+varnames <- rbind(data.frame(source = "allexcluded", varnames = names(allexclude), type = sapply(allexclude, class)),
+                  data.frame(source = "r1exclude", varnames = names(r1exclude), type = sapply(r1exclude, class))) %>%
+  rbind(data.frame(source = "r2exclude", varnames = names(r2exclude),  type = sapply(r2exclude, class))) %>%
+  rbind(data.frame(source = "r1keep", varnames = names(r1kept),  type = sapply(r1kept, class))) %>%
+  rbind(data.frame(source = "r2keep", varnames = names(qdat),  type = sapply(qdat, class))) %>%
+  rbind(data.frame(source = "r2_assigned", varnames = names(r2assigned),  type = sapply(r2assigned, class))) %>%
+  rbind(data.frame(source = "r1_assigned", varnames = names(round1),  type = sapply(round1, class)))
+write.csv(varnames, "round2_metareview/data/intermediate/varnames4metadata.csv", row.names = F)
 
 
