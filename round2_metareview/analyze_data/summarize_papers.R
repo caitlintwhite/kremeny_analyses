@@ -3,10 +3,11 @@
 # > feel free to add on as needed (e.g. more summary stats, figs, whatever needed)
 library(dplyr)
 options(stringsAsFactors = F)
+na_vals <- c("NA", "NaN", ".", "", " ", NA, NaN)
 
 
 # initial starting pool of ES abstracts
-round1 <- read.csv("round1_exclusion/EcosystemServicesPapersNov2019.csv")
+round1 <- read.csv("round1_exclusion/EcosystemServicesPapersNov2019.csv", na.strings = na_vals)
 # note 1 abstract title appears twice
 summary(duplicated(round1$Title)); length(unique(round1$Title)) # actually 1932 abstracts, not 1933
 # was the duplicated title assigned to same person?
@@ -19,20 +20,20 @@ with(subset(round1, !duplicated(Title)), sapply(split(Title, EBIOReviewer), leng
 
 
 # abstracts excluded in round 1
-r1exclude <- read.csv("round1_exclusion/output/exclude_round1.csv")
+r1exclude <- read.csv("round1_exclusion/output/exclude_round1.csv", na.strings = na_vals)
 # percent excluded?
 length(unique(r1exclude$Title))/length(unique(round1$Title))
 
 # abstracts kept after round1
-r1kept <- read.csv("round1_exclusion/output/keep_round1.csv")
+r1kept <- read.csv("round1_exclusion/output/keep_round1.csv", na.strings = na_vals)
 # percent kept
 length(unique(r1kept$Title))/nrow(round1)
 # of abstracts kept, papers assigned for round 2 (half of round 1 kept with the intent for each paper to have 2 reviewers)
-r2assigned <- read.csv("round1_exclusion/output/review_assignments_round2_grpdsubset.csv")
+r2assigned <- read.csv("round1_exclusion/output/review_assignments_round2_grpdsubset.csv", na.strings = na_vals)
 
 # papers excluded in round 2
 # note: this has multiple rows per paper for double reviewed papers (use version = "final" if only want 1 record)
-r2exclude <- read.csv("round2_metareview/data/cleaned/ESqualtrics_r2exclude_cleaned.csv") 
+r2exclude <- read.csv("round2_metareview/data/cleaned/ESqualtrics_r2exclude_cleaned.csv", na.strings = na_vals) 
 # percent excluded
 length(unique(r2exclude$Title))/length(unique(r2assigned$Title))
 
@@ -60,7 +61,7 @@ mutate(allexclude, grp_reason = ifelse(grepl("revi|meta|tool", exclusion_reason,
   arrange(-nobs)
 
 
-qdat <- read.csv("round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv") 
+qdat <- read.csv("round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv", na.strings = na_vals) 
 # stack and write out all varnames for all datasets for metadata
 varnames <- rbind(data.frame(source = "allexcluded", varnames = names(allexclude), type = sapply(allexclude, class)),
                   data.frame(source = "r1exclude", varnames = names(r1exclude), type = sapply(r1exclude, class))) %>%
