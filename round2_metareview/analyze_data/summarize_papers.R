@@ -288,3 +288,9 @@ dplyr::select(dblother, Title, qnum, abbr, survey_order, score) %>%
   ggplot(aes(as.factor(score))) +
   geom_bar() +
   facet_wrap(~survey_order + abbr)
+
+dplyr::select(dblother, Title, qnum, abbr, survey_order, score) %>%
+  distinct() %>%
+  group_by(survey_order, abbr, score) %>%
+  summarise(pct = round(length(score)/length(unique(dblq12$Title)),2)) %>%
+  data.frame()
