@@ -15,7 +15,8 @@ dat %>%
   mutate(clean_answer = as.character(clean_answer)) %>%
   mutate(clean_answer = ifelse(is.na(clean_answer), 'Time not considered', clean_answer)) %>%
   mutate(proportion = count / num_papers) %>%
-  mutate(clean_answer = factor(clean_answer, levels = c('Time not considered', '1 year or less','2–5 years','6–10 years', '10+ years'))) %>%
+  mutate(clean_answer = gsub('–', '-', clean_answer)) %>%
+  mutate(clean_answer = factor(clean_answer, levels = c('Time not considered', '1 year or less','2-5 years','6-10 years', '10+ years'))) %>%
   ggplot(aes(x = fct_rev(clean_answer), y = proportion)) +
   geom_col() +
   xlab('Number of years') +
