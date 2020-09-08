@@ -22,7 +22,7 @@ drivers_binned = dat %>%
 drivers_binned %>%
   filter(Group == 'Biotic') %>%
   mutate(proportion = count / sum(count)) %>%
-  filter(proportion > 0.03) %>% 
+  filter(proportion > 0.06) %>% 
   ggplot(aes(x = fct_reorder(clean_answer_binned, proportion), y = proportion)) +
   geom_col() +
   xlab('') +
@@ -30,13 +30,13 @@ drivers_binned %>%
   ggtitle('Biotic drivers') +
   coord_flip() +
   theme_bw()
-ggsave('round2_metareview/analyze_data/Drivers_nonsankey/fig_files/biotic_binned.pdf', width = 5, height = 5, dpi = 'retina')
+ggsave('round2_metareview/analyze_data/Drivers_nonsankey/fig_files/biotic_binned.pdf', width = 5, height = 3, dpi = 'retina')
 
 # human
 drivers_binned %>%
   filter(Group == 'Human') %>%
   mutate(proportion = count / sum(count)) %>%
-  filter(proportion > 0.03) %>% 
+  filter(proportion > 0.05) %>% 
   ggplot(aes(x = fct_reorder(clean_answer_binned, proportion), y = proportion)) +
   geom_col() +
   xlab('') +
@@ -44,14 +44,14 @@ drivers_binned %>%
   ggtitle('Human drivers') +
   coord_flip() +
   theme_bw()
-ggsave('round2_metareview/analyze_data/Drivers_nonsankey/fig_files/human_binned.pdf', width = 5, height = 5, dpi = 'retina')
+ggsave('round2_metareview/analyze_data/Drivers_nonsankey/fig_files/human_binned.pdf', width = 5, height = 3, dpi = 'retina')
 
 
 # environmental
 drivers_binned %>%
   filter(Group == 'Environmental') %>%
   mutate(proportion = count / sum(count)) %>%
-  filter(proportion > 0.03) %>% 
+  filter(proportion > 0.08) %>% 
   ggplot(aes(x = fct_reorder(clean_answer_binned, proportion), y = proportion)) +
   geom_col() +
   xlab('') +
@@ -59,6 +59,6 @@ drivers_binned %>%
   ggtitle('Environmental drivers') +
   coord_flip() +
   theme_bw()
-ggsave('round2_metareview/analyze_data/Drivers_nonsankey/fig_files/environmental_binned.pdf', width = 5, height = 5, dpi = 'retina')
+ggsave('round2_metareview/analyze_data/Drivers_nonsankey/fig_files/environmental_binned.pdf', width = 5, height = 3, dpi = 'retina')
 
 
