@@ -20,7 +20,7 @@ dat %>%
   ggplot(aes(x = fct_rev(clean_answer), y = proportion)) +
   geom_col() +
   xlab('Number of years') +
-  ylab('Proportion of papers') +
+  ylab('Proportion of studies') +
   coord_flip() +
   theme_bw()
 
