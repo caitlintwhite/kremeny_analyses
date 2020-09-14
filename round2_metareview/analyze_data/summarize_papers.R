@@ -85,7 +85,9 @@ varnames <- rbind(data.frame(source = "allexcluded", varnames = names(allexclude
 # > because we're not really analyzing variables to specifics, gauge q12 based on 1) ES row filled in, and types of coarse drivers (Human, Biotic, or Env)
 dbltidy <- subset(qdat, doublerev) %>%
   # want to look at clean answer in version == "orig" (qa'd independent answer)
-  subset(version == "original")
+  subset(version == "original") %>%
+  # also want to drop 3 papers where paper kept but reviewers didn't agree on exclusion (because all answers to those will conflict)
+  subset(!Title %in% with(qdat, Title[doublerev & version == "final" & grepl("keep paper", qa_note, ignore.case = T)]))
 
 dblq12 <- subset(dbltidy, qnum == "Q12") %>%
   # need to note which cols are response 2
@@ -114,7 +116,7 @@ dblq12 <- subset(dbltidy, qnum == "Q12") %>%
   subset(!(grepl("Driver", abbr) & is.na(clean_group)))
   
 
-summary(as.factor(dblq12$sumcheck)) #yikes.. only 1/3rd of answers agree in q12 matrix
+summary(as.factor(dblq12$sumcheck)) #yikes.. only a little more than 1/3rd of answers agree in q12 matrix
 # we want to know where they are differing. is it on ES? on driver type?
 # look separately by ES, response and driver?
 dplyr::select(dblq12, Title, ES, sumcheck) %>%
@@ -129,6 +131,20 @@ dplyr::select(dblq12, Title, ES, sumcheck) %>%
   distinct() %>%
   ggplot(aes(as.factor(score))) +
   geom_bar() # note.. the ES barchart IS the same as congruence in response cateogry (if ES filled out, response is filled out)
+
+ESagreement <- dblq12 %>%
+  subset(abbr == "Response") %>%
+  group_by(Title) %>%
+  mutate(score = ifelse(all(sumcheck == 1), 0, ifelse(length(unique(sumcheck)) > 1, 0.5, 1))) %>%
+  ungroup() %>%
+  dplyr::select(Title, score) %>%
+  distinct() %>%
+  group_by(score) %>%
+  summarize(pct = round((length(score)/34)*100, 2)) %>%
+  ungroup() %>%
+  mutate(q = "ES agreement") %>%
+  spread(score, pct)
+
 
 # look at driver congruence--do double reviewers choose the same driver types? (i guess looking with ES's where they agree? or maybe just outright drivers in any ES)
 # method 1: just look at congruence where reviewers agree on the same ES
@@ -160,6 +176,40 @@ driversimilarity %>%
   geom_bar() +
   facet_wrap(~abbr)
 
+# pct agreement for drivers vs other driver answered (not considering ES)
+driversim <- subset(dbltidy, qnum == "Q12") %>%
+  subset(grepl("Driver", abbr)) %>%
+  # drop ES -- we're just comparing drivers answered
+  select(-c(ES, survey_order, id, qa_note, answer, varnum)) %>%
+  # drop "Other" in abbr == Driver bc other driver is there
+  subset(!(abbr == "Driver" & grepl("Other", clean_answer)) & !is.na(clean_answer)) %>%
+  distinct() %>%
+  group_by(Title, clean_answer, abbr, clean_group) %>%
+  # can check if ppl wrote same answer for drivers (since standardized drivers..)
+  mutate(count_inits = length(unique(Init))) %>%
+  ungroup() %>%
+  # if other driver has any answer count (don't compare answers verbatim)
+  group_by(Title, abbr, clean_group) %>%
+  mutate(count_inits = ifelse(abbr == "OtherDriver", length(unique(Init)), count_inits)) %>%
+  ungroup()
+
+# .. maybe check congruency within driver category since also assess general congruency across drivers
+driversim2 <- select(driversim, Title, clean_group, abbr, count_inits) %>%
+  group_by(Title, clean_group) %>%
+  mutate(score = ifelse(all(count_inits == 2), 1, ifelse(all(count_inits == 1), 0, 0.5))) %>%
+  ungroup() %>%
+  select(Title, clean_group, score) %>%
+  distinct() %>%
+  # if no clean_group present, it means reviewers agreed that category does not have a driver
+  spread(clean_group, score, fill = 1) %>%
+  gather(clean_group, score, Biotic:Human) %>%
+  group_by(clean_group, score) %>%
+  summarize(pct = round(100*(length(Title)/34),2)) %>%
+  ungroup() %>%
+  mutate(q = "drivers") %>%
+  spread(score, pct)
+
+  
 # do they agree on driver category? ignoring standardized driver answer vs. "other driver"
 dblq12_catsimilarity <- subset(dbltidy, qnum == "Q12") %>%
   # need to note which cols are response 2
@@ -220,14 +270,16 @@ dblq12_catsimilarity %>%
   ggplot(aes(as.factor(score))) +
   geom_bar()
 
-dblq12_catsimilarity %>%
+drivercats <- dblq12_catsimilarity %>%
   subset(sumcheck >0) %>%
   group_by(Title, abbr) %>%
   mutate(score = str_flatten(sort(unique(sumcheck_simple))),
          score = ifelse(score == "12", 0.5, ifelse(score == "1", 0, 1))) %>%
   ungroup() %>%
   group_by(score) %>%
-  summarise(length(score)/nrow(.))
+  summarise(pct = (length(score)/nrow(.))*100) %>%
+  mutate(q = "driver category") %>%
+  spread(score, pct)
 
 
 # assess fixed responses in questions other than q12, no exclusion question [if it's in this dataset, it made it through], and no notes fields (only standardized answers [multi-choice options])
@@ -293,4 +345,102 @@ dplyr::select(dblother, Title, qnum, abbr, survey_order, score) %>%
   distinct() %>%
   group_by(survey_order, abbr, score) %>%
   summarise(pct = round(length(score)/length(unique(dblq12$Title)),2)) %>%
-  data.frame()
+  data.frame() %>%
+  mutate(pct = round(100*pct)) %>%
+  spread(score, pct, fill = "-")
+
+# re-crunch dropping q's ppl forgot to answer and ones that shouldn't be considered 
+otherqs <- dplyr::select(dblother, Title, qnum, abbr, survey_order, score) %>%
+  distinct() %>%
+  group_by(survey_order, abbr, score) %>%
+  summarise(nobs = length(score)) %>%
+  data.frame() %>%
+  subset(score <= 1) %>%
+  group_by(abbr) %>%
+  mutate(totsum = sum(nobs)) %>%
+  ungroup() %>%
+  mutate(pct = round((nobs/totsum)*100,2)) %>%
+  select(survey_order, abbr, score, pct) %>%
+  spread(score, pct, fill = 0)
+  
+# compile all pcts and write out for reference
+congruence <- rename(otherqs, q = abbr) %>%
+  select(-survey_order) %>%
+  rbind(ESagreement) %>%
+  rbind(drivercats) %>%
+  rbind(unite(driversim2, q, q, clean_group, sep =" "))
+
+# what is the average congruence score across all questions assessed?
+# take average by question, and then average those composite scores
+congruence2 <- congruence %>%
+  mutate(rowid = 1:nrow(.)) %>%
+  gather(score, pct, "0":"1") %>%
+  mutate(score2 = as.numeric(score) * pct) %>%
+  group_by(rowid, q) %>%
+  summarise(score = (sum(score2)/100)) %>%
+  ungroup() %>%
+  arrange(rowid)
+
+mean(congruence2$score)
+
+
+  
+# check congruency in excluded papers (or kept but one person excluded). how many had reviewers agree (or one checked "yes" and another expressed doubt in comments), vs. ones where reviewers disagreed and LD/NBD reviewed
+unique(with(r2exclude, Title[doublerev & flagged4review])) #15 titles checked by LD
+unique(with(r2exclude, reviewer_exclusion_status[doublerev & flagged4review & version == "final"]))
+# i'm saying 8 don't agree (1 reviewer says keep, the other exclude or doubts in survey notes)
+# 6 have partial agreement:
+## 2 papers agree on exclusion, but for different reasons
+## 2 papers both have reviewers expressing doubts in notes (but neither excluded)
+## 2 papers have 1 reviewer excluded by Q3, and other expressed doubts in survey notes (but still filled out survey)
+# 15 agreed on reason for exclusion
+# additionally, if look at kept qualtrics dataset, there are 3 double-reviewed papers that were kept ultimately, but initially reviewers disagreed on exclusion (LD reviewed the papers for final opinion)
+
+
+# -- SUMMARIZE JOURNALS ----
+# how many journals considered, what potential bias is there?
+original <- read.csv("round1_exclusion/EcosystemServicesPapersNov2019.csv") %>%
+  # drop title that's duplicated (only 1 record)
+  subset(!duplicated(Title))
+length(unique(original$SourcePublication)) #128 journals for round 1
+length(unique(original$SourcePublication[original$Number %in% r1kept$Number])) #98 journals made it through
+length(unique(r2assigned$SourcePublication)) # 80 journals selected for round 2 review
+length(unique(original$SourcePublication[original$Title %in% unique(qdat$Title)]))
+
+# group titles by journal
+r1jsum <- group_by(original, SourcePublication) %>%
+  summarise(papers = length(Title),
+            pct = papers/nrow(original),
+            pct = 100*pct) %>%
+  ungroup() %>%
+  arrange(-pct) %>%
+  mutate(rank = 1:nrow(.)) %>%
+  rename_if(!grepl("^Source", names(.)), function(x) paste0(x,"_r1"))
+
+r2jsum <- subset(r2assigned, !duplicated(Title)) %>%
+  group_by(SourcePublication) %>%
+  summarise(papers = length(Title),
+            pct = papers/length((r2assigned$Title[!duplicated(r2assigned$Title)])),
+            pct = 100*pct) %>%
+  ungroup() %>%
+  arrange(-pct) %>%
+  mutate(rank = 1:nrow(.)) %>%
+  rename_if(!grepl("^Source", names(.)), function(x) paste0(x,"_r2"))
+
+finaljsum <- select(qdat, Title) %>%
+  distinct() %>%
+  left_join(select(original, Title, SourcePublication)) %>%
+  group_by(SourcePublication) %>%
+  summarise(papers = length(Title),
+            pct = papers/length((r2assigned$Title[!duplicated(r2assigned$Title)])),
+            pct = 100*pct) %>%
+  ungroup() %>%
+  arrange(-pct) %>%
+  mutate(rank = 1:nrow(.)) %>%
+  rename_if(!grepl("^Source", names(.)), function(x) paste0(x,"_final"))
+
+jsum <- left_join(r1jsum, r2jsum) %>%
+  left_join(finaljsum) %>%
+  subset(rank_r1 %in% 1:10 | rank_r2 %in% 1:10 | rank_final %in% 1:10)
+
+
