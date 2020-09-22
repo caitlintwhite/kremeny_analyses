@@ -444,3 +444,7 @@ jsum <- left_join(r1jsum, r2jsum) %>%
   subset(rank_r1 %in% 1:10 | rank_r2 %in% 1:10 | rank_final %in% 1:10)
 
 
+# -- THIRD PARTY REVIEW ----
+third <- read.csv("round2_metareview/data/reviewer_revisions/excludenotes_review-COMPLETE.csv")
+with(third, sapply(split(Title, exclude_LD), function(x) length(unique(x))))
+length(unique(third$Title))
