@@ -4,6 +4,7 @@ library(chorddiag)
 library(htmlwidgets)
 library(webshot)
 webshot::install_phantomjs()
+library(VennDiagram)
 
 dat = read.csv('round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv') %>%
   filter(version=='final')
@@ -159,6 +160,90 @@ withr::with_dir('round2_metareview/analyze_data/ES_type_panel/fig_files/', saveW
 
 # Make a webshot in pdf : high quality but can not choose printed zone
 webshot("round2_metareview/analyze_data/ES_type_panel/fig_files/chord_diag_static.html" , "round2_metareview/analyze_data/ES_type_panel/fig_files/chord_diag_static.pdf", delay = 0.2)
+
+
+
+
+# Looking for highly represented triples (in addition to the doubles)
+choose(16,3) #560 potential combinations of services
+
+# the plan: make a dataframe of all possible 3-ES combos, fill in a column with the number of times they are all three studied inthe same paper (from site_by_es), order the column and examine the table
+
+es_types = colnames(site_by_es)
+
+es_3_combs = t(combn(es_types, 3)) # all combos of 3 es_types
+
+trip_df = data.frame('ES1' = es_3_combs[,1], 'ES2' = es_3_combs[,2], 'ES3' = es_3_combs[,3], 'NumPapers' = NA)
+
+for (i in 1:nrow(trip_df)){
+  es1 = as.character(trip_df$ES1[i])
+  es2 = as.character(trip_df$ES2[i])
+  es3 = as.character(trip_df$ES3[i])
+  
+  npap = site_by_es %>%
+    as.data.frame() %>%
+    filter(!!as.symbol(es1)==TRUE & !!as.symbol(es2)==TRUE & !!as.symbol(es3)==TRUE) %>%
+    nrow()
+  trip_df$NumPapers[i] = npap
+}
+
+trip_df %>%
+  arrange(-NumPapers) %>%
+  View()
+
+
+
+# Looking for highly represented quadruples (in addition to the doubles)
+choose(16,4) #1820 potential combinations of services
+
+# the plan: make a dataframe of all possible 3-ES combos, fill in a column with the number of times they are all three studied inthe same paper (from site_by_es), order the column and examine the table
+
+es_types = colnames(site_by_es)
+
+es_4_combs = t(combn(es_types, 4)) # all combos of 3 es_types
+
+quad_df = data.frame('ES1' = es_4_combs[,1], 'ES2' = es_4_combs[,2], 'ES3' = es_4_combs[,3], 'ES4' = es_4_combs[,4], 'NumPapers' = NA)
+
+for (i in 1:nrow(trip_df)){
+  es1 = as.character(quad_df$ES1[i])
+  es2 = as.character(quad_df$ES2[i])
+  es3 = as.character(quad_df$ES3[i])
+  es4 = as.character(quad_df$ES4[i])
+  
+  npap = site_by_es %>%
+    as.data.frame() %>%
+    filter(!!as.symbol(es1)==TRUE & !!as.symbol(es2)==TRUE & !!as.symbol(es3)==TRUE & !!as.symbol(es4)==TRUE) %>%
+    nrow()
+  quad_df$NumPapers[i] = npap
+}
+
+quad_df %>%
+  arrange(-NumPapers) %>%
+  View()
+
+
+
+# Make a fancy venn diagram for each ES with all of its associated ES types (trial run)
+# Not sure these will ever look good, leaving here for now
+# uses the VennDiagram package
+
+i = 1
+curr_col = colnames(site_by_es)[i]
+
+# translate to list format for VennDiagram
+curr_col_list = site_by_es %>%
+  as.data.frame() %>%
+  filter(!!as.symbol(curr_col)==TRUE) %>%
+  dplyr::select(-!!as.symbol(curr_col)) %>%
+  as.list() %>%
+  lapply(which) 
+  
+
+
+  lengths(curr_col_list)[order(lengths(curr_col_list), decreasing = TRUE)[1:3]] %>% # this takes the top 5, order returns the indices
+    names() %>%
+    curr_col_list[.]  %>% # grab just the list elements that are the top 5 in length
+    venn.diagram(filename='round2_metareview/analyze_data/ES_type_panel/fig_files/pollination_multifun.tiff')
 
 
 
