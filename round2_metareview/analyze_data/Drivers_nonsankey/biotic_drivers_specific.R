@@ -1,7 +1,6 @@
 ## Script for binning and examining specific types of biotic drivers.
 
 library(tidyverse)
-library(ggVennDiagram) #devtools::install_github("gaospecial/ggVennDiagram")
 
 dat = read.csv('round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv') %>%
   filter(version=='final')
