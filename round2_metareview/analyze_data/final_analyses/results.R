@@ -180,6 +180,35 @@ dat %>%
 
 ggsave('round2_metareview/analyze_data/final_analyses/fig_files/methods_used.pdf', width = 5, height = 5, dpi = 'retina')
 
+# methods venn
+methods_tf = dat %>% 
+  filter(abbr == 'Methods') %>%
+  mutate(clean_answer = gsub(" \\(.*\\)", '', clean_answer)) %>%
+  dplyr::select(Title, clean_answer) %>%
+  separate_rows(clean_answer, sep=',') %>%
+  mutate(pres_holder = TRUE) %>%
+  pivot_wider(id_cols = Title, names_from = 'clean_answer', values_from = pres_holder) %>%
+  replace(is.na(.), FALSE) %>% 
+  dplyr::select(-Title) %>%
+  as.matrix()
+
+# methods_list = list(
+#   modsim = methods_tf %>% filter(`Model/Data Simulation`==TRUE) %>% pull(Title) %>% as.character(),
+#   obs = methods_tf %>% filter(`Observational`==TRUE) %>% pull(Title) %>% as.character(),
+#   survey = methods_tf %>% filter(`Social survey/Interview`==TRUE) %>% pull(Title) %>% as.character(),
+#   experiment = methods_tf %>% filter(`Experimental`==TRUE) %>% pull(Title) %>% as.character()
+# )
+
+#ggVennDiagram(methods_list)
+rowSums(methods_tf)
+  # no paper used three methods, so the pairwise matrix will tell the whole story
+sum(rowSums(methods_tf) == 2)/length(rowSums(methods_tf))
+  # 19 % of papers used two methods
+
+methods_adjmat = t(methods_tf) %*% methods_tf
+methods_adjmat
+
+
 
 # ES type
 dat %>%
@@ -283,6 +312,10 @@ dat %>%
 
 ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/biotic_driv_specific.pdf', width=5, height=5, dpi='retina')
 
+# Breakdown by ES type??
+
+
+
 ### In-text values
 # % of studies that considered a biotic driver
 excl_lulc %>%
@@ -295,7 +328,13 @@ excl_lulc %>%
 ##### Abiotic drivers (human & env)
 
 # see above venn diagrams for human and environmental drivers, including those by es type
+excl_lulc %>%
+  filter(Human==TRUE) %>%
+  nrow() / nrow(excl_lulc)
 
+excl_lulc %>%
+  filter(Environmental==TRUE) %>%
+  nrow() / nrow(excl_lulc)
 
 
 ##### Spatiotemporal scale
@@ -490,9 +529,11 @@ ggsave('round2_metareview/analyze_data/final_analyses/fig_files/es_type_multisca
 rm(list=c('services_overall','overall_yes_prop'))
 
 
-### In-text values, intersections with methods, etc.
+### intersections with methods
+# see `extent_and_methods.R`, to be included in SI
 
-
+### space & time intersections
+# Note to make heatmap figure, but to make sure connectivity gets included with multiple spatial scales
 
 
 ##### Multifunctionality
@@ -518,6 +559,20 @@ dat %>%
   coord_flip()
 
 ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/numestype_perpaper.pdf', width=5, height=5, dpi='retina')
+
+# pull titles that had 8+ service types
+dat %>%
+  filter(abbr=='Yclass') %>%
+  filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
+  dplyr::select(Title, ES) %>% 
+  mutate(pres_holder = 1) %>%
+  pivot_wider(id_cols = 'Title', names_from = 'ES', values_from = 'pres_holder') %>% 
+  replace(is.na(.), 0) %>%
+  mutate(num_ES_types = rowSums(.[-1])) %>%
+  filter(num_ES_types > 7) %>%
+  dplyr::select(Title, num_ES_types)
+
+
 
 ### chord diagram
 site_by_es = dat %>%
