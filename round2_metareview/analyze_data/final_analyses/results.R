@@ -61,7 +61,18 @@ excl_lulc = driv_types_title %>%
   filter(!(Biotic=='FALSE' & Human =='FALSE' & Environmental =='FALSE'))
   # 110 studies used an lulc drivers, 26 studies only used lulc drivers
 
-
+# save updated driver types
+dat %>%
+  filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
+  dplyr::select(Title, clean_answer_binned, clean_group) %>%
+  mutate(old_group = clean_group) %>%
+  # reassign clean_answer_binned land cover answers to have Group 'LU LC'
+  mutate(clean_group = ifelse(clean_answer_binned %in% c('Land cover', 'Land use and land cover change'), 'LU_LC',clean_group)) %>%
+  # reassign studies with only land cover biotic drivers (based on Q14) to 'LU LC' Group
+  mutate(clean_group = ifelse(Title %in% biot_lulc_titles & clean_group == 'Biotic', 'LU_LC', clean_group)) %>%
+  # take only unique rows 
+  unique() %>%
+  write.csv(file='round2_metareview/analyze_data/final_analyses/lulc_reclass_bytitle.csv', row.names=F)
 
 ##### General Patterns
 # STILL NEED TO ADD INDIAN OCEAN WITH 0% LABEL ON PLOT
@@ -73,7 +84,8 @@ loc_counts = dat %>%
   separate_rows(clean_answer, sep = ',') %>%
   group_by(clean_answer) %>%
   summarise(count = n()) %>%
-  mutate(proportion = count / num_papers)
+  mutate(proportion = count / num_papers) %>%
+  add_row(clean_answer='Indian Ocean', count=0, proportion=0)
 
 wm <- map_data("world") %>%
   setNames(c("X","Y","PID","POS","region","subregion")) %>% 
@@ -95,7 +107,7 @@ cc$NAME[match(mappings, cc$NAME)] <- names(mappings)
 cc[cc$NAME=='Russia',]$continent <- 'Asia'
 
 # set up labels
-loc_counts = loc_counts %>%
+loc_counts_lab = loc_counts %>%
   mutate(label_coords_lon = case_when(
     clean_answer == 'Africa' ~ 20,
     clean_answer == 'Asia' ~ 90,
@@ -106,7 +118,8 @@ loc_counts = loc_counts %>%
     clean_answer == 'Global Marine' ~ -150,
     clean_answer == 'Global Terrestrial' ~ -120,
     clean_answer == 'Atlantic Ocean' ~ -45,
-    clean_answer == 'Pacific Ocean' ~ -120
+    clean_answer == 'Pacific Ocean' ~ -120,
+    clean_answer == 'Indian Ocean' ~ 70
   ),
   label_coords_lat = case_when(
     clean_answer == 'Africa' ~ 10,
@@ -118,7 +131,8 @@ loc_counts = loc_counts %>%
     clean_answer == 'Global Marine' ~ -80,
     clean_answer == 'Global Terrestrial' ~ -80,
     clean_answer == 'Atlantic Ocean' ~ 25,
-    clean_answer == 'Pacific Ocean' ~ 0
+    clean_answer == 'Pacific Ocean' ~ 0,
+    clean_answer == 'Indian Ocean' ~ -5
   )) 
 
 # join cc to the counts of papers and PLOT
@@ -130,7 +144,7 @@ cc %>%
   geom_vline(xintercept = 180, colour = 'lightblue') +
   geom_vline(xintercept = -180, colour = 'lightblue') +
   geom_polygon(aes(x = long, y = lat, group = group, fill = -proportion), show.legend = F) +
-  geom_label(data = loc_counts %>% filter(!grepl('Global',clean_answer)), 
+  geom_label(data = loc_counts_lab %>% filter(!grepl('Global',clean_answer)), 
              aes(x = label_coords_lon, 
                  y = label_coords_lat, 
                  label = paste0(clean_answer, ':', 100*round(proportion, digits = 2), '%') )) +
