@@ -74,6 +74,36 @@ dat %>%
   unique() %>%
   write.csv(file='round2_metareview/analyze_data/final_analyses/lulc_reclass_bytitle.csv', row.names=F)
 
+# save driver types and es types for sankey
+dat %>%
+  filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
+  dplyr::select(Title, clean_answer_binned, clean_group) %>%
+  mutate(old_group = clean_group) %>%
+  # reassign clean_answer_binned land cover answers to have Group 'LU LC'
+  mutate(clean_group = ifelse(clean_answer_binned %in% c('Land cover', 'Land use and land cover change'), 'LU_LC',clean_group)) %>%
+  # reassign studies with only land cover biotic drivers (based on Q14) to 'LU LC' Group
+  mutate(clean_group = ifelse(Title %in% biot_lulc_titles & clean_group == 'Biotic', 'LU_LC', clean_group)) %>%
+  dplyr::select(-clean_answer_binned, -old_group) %>%
+  # take only unique rows 
+  unique() %>%
+  rename(driv_type = clean_group) %>%
+  # join with ES types
+  full_join(
+    dat %>%
+      filter(abbr=='Response') %>% 
+      filter(!is.na(clean_answer)) %>% 
+      dplyr::select(Title, ES) %>%
+      unique(),
+    by='Title'
+  ) %>%
+  write.csv(file='round2_metareview/analyze_data/final_analyses/lulcreclass_driv_ES_bytitle.csv', row.names=F)
+
+
+
+
+
+
+
 ##### General Patterns
 # STILL NEED TO ADD INDIAN OCEAN WITH 0% LABEL ON PLOT
 
