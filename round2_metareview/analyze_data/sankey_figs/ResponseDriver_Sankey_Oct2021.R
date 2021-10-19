@@ -15,27 +15,27 @@ library(htmlwidgets)
 # Load data, process data -------------------------------------------------------------------
 data <- read.csv("round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
 new.bins <- read.csv("round2_metareview/analyze_data/final_analyses/lulc_reclass_bytitle.csv")
+es.bins <- read.csv("round2_metareview/analyze_data/final_analyses/lulcreclass_driv_ES_bytitle.csv")
+
 
 data <- data[data$version == "final",] # final data
 df <- data[,c(8,15:19)] # pull relevant columns
 df <- df[df$qnum == "Q12",] # subset to only Q12
-
-
+df <- df[,-5]
 
 response.df <- df[df$abbr=="Response",] # pull just response rows
 #response.df <- response.df[!is.na(response.df$clean_answer_finer),] # get rid of NA response bin for now
 response.df <- response.df[!duplicated(response.df),]
 
 
-driver.df <- df[df$abbr=="Driver",] # pull just driver rows
-driver.df <- driver.df[!is.na(driver.df$clean_group),] # get rid of NA values
-driver.df <- driver.df[,-5] # get rid of extra column
-
+driver.df <- es.bins
+driver.df <- driver.df[!is.na(driver.df$driv_type),] # get rid of NA values
+driver.df[driver.df == "LU_LC"] <- "Land Use Land Change"
 
 
 #### SMALL SANKEY: Drive type-ES type ---------------------------------------------------------
 ## Node date frame for sankey
-nodes.driver.bins <- data.frame(name = unique(driver.df$clean_group), NodeType="driver.type")
+nodes.driver.bins <- data.frame(name = unique(driver.df$driv_type), NodeType="driver.type")
 nodes.ES <- data.frame(name = unique(response.df$ES), NodeType = "eco.serv")
 
 nodes <- rbind(nodes.driver.bins, nodes.ES)
@@ -45,31 +45,30 @@ attach(nodes)
 nodes <- nodes[order(NodeType,name),]
 detach(nodes)
 
-nodes <- nodes[c(3,1,2,4:19),]
+nodes <- nodes[c(3,1,2,4,5:20),]
 
-nodes$NodeType <- c("Human","Biotic","Environmental", "Regulating", "Regulating","Regulating",
+nodes$NodeType <- c("Human","Biotic","Environmental","Land Use Land Change", "Regulating", "Regulating","Regulating",
                     "Cultural","Provisioning","Provisioning","Regulating","Supporting",
                     "Regulating","Cultural","Provisioning","Provisioning","Regulating",
                     "Regulating","Supporting","Supporting")
 
 
-nodes$Type <- c(rep("Driver", times = 3), rep("eco.serv", times=16))
+nodes$Type <- c(rep("Driver", times = 4), rep("eco.serv", times=16))
 
 attach(nodes)
 nodes <- nodes[order(Type, NodeType),]
 detach(nodes)
 
-nodes <- nodes[c(1,2,3,10:16,17:19,6:9,4,5),] # reorder for sorting purposes on the actual plot
-
-nodes$FullName <- c("Human", "Biotic", "Environmental",
+nodes$FullName <- c("Biotic", "Environmental", "Human","Land Use Land Change",
+                    "Physical and Psychological exp.","Maintenance of Options",
+                    "Energy","Food and Feed","Materials", "Medical",
                     "Air Quality","Climate Regulation","Coastal Water Quality",
                     "Fresh Water Quality","Hazard Regulation","Regulation of Ocean Acidification",
                     "Regulation of pests/pathogens","Habitat Creation","Pollination",
-                    "Soil Formation/Protection","Energy","Food and Feed","Materials",
-                    "Medical","Physical and Psychological exp.","Maintenance of Options")
+                    "Soil Formation/Protection")
 
 
-nodes <- nodes[c(1,2,3,5,10,6,7,8,4,9,13,11,12,15,16,14,17,18,19),] # reorder based on number of papers...this is just manual at this point
+nodes <- nodes[c(3,4,2,1,12,17,13,14,15,11,16,20,18,19,8,9,7,10,5,6),] # reorder based on number of papers...this is just manual at this point
 
 x <- nrow(nodes) - 1
 nodes$ID <- 0:x
@@ -77,26 +76,26 @@ nodes$ID <- 0:x
 colnames(nodes)[colnames(nodes)=="name"] <- "TargetName"
 
 nodes[1,c(1,2)] <- "Human"
-nodes[2,c(1,2)] <- "Biotic"
+nodes[4,c(1,2)] <- "Biotic"
 nodes[3,c(1,2)] <- "Environmental"
+nodes[2,c(1,2)] <- "Land Use Land Change"
 
-nodes$FullName[1:3] <- ""
+nodes$FullName[1:4] <- ""
 
 ## Link data frame for sankey
 # link VALUES
-values <- driver.df[,c(3,4,6)]
+values <- driver.df[,c(2,3)]
 values$num.papers <- 1 # add column to sum
-values <- aggregate(formula = num.papers ~ ES + clean_group , data = values, FUN = sum)
+values <- aggregate(formula = num.papers ~ ES + driv_type , data = values, FUN = sum)
 col <- c("TargetName","SourceName","value")
 colnames(values) <- col
 
 
-
 # create data frame to merge later
-links <- data.frame(SourceName = rep(c("Human","Biotic","Environmental"), each=nrow(nodes[nodes$Type=="eco.serv",])),
-                    Source = rep(c(0,1,2), each=nrow(nodes[nodes$Type=="eco.serv",])),
-                    TargetName = rep(nodes$TargetName[c(4:19)], times = 3),
-                    Target = rep(nodes$ID[4:nrow(nodes)], times=3)
+links <- data.frame(SourceName = rep(c("Human","Land Use Land Change","Environmental", "Biotic"), each=nrow(nodes[nodes$Type=="eco.serv",])),
+                    Source = rep(c(0,1,2,3), each=nrow(nodes[nodes$Type=="eco.serv",])),
+                    TargetName = rep(nodes$TargetName[c(5:20)], times = 4),
+                    Target = rep(nodes$ID[5:nrow(nodes)], times=4)
 ) 
 
 s.links <- merge(x=links, y=values, by = c("SourceName","TargetName"), all.x = T)
@@ -112,30 +111,41 @@ attach(s.links)
 s.links <- s.links[order(NodeType, value),]
 detach(s.links)
 
-colors <-  'd3.scaleOrdinal() .domain(["Human", "Biotic","Environmental", "Regulating","Supporting","Provisioning","Cultural"]) 
-.range(["#ADD8E6", "#117733","#00008B","#000000","#808080","#D3D3D3","#FFFFFF"])'
+# Add group labels for coloring in sankey plot
+s.links$LinkType <- s.links$SourceName
+nodes$Group <- c("A","B","C","D",rep(c("E","F","G","H"), times=c(7,3,4,2)))
+s.links["LinkType"][s.links["LinkType"] == "Human"] <- "A"
+s.links["LinkType"][s.links["LinkType"] == "Land Use Land Change"] <- "B"
+s.links["LinkType"][s.links["LinkType"] == "Environmental"] <- "C"
+s.links["LinkType"][s.links["LinkType"] == "Biotic"] <- "D"
+
+
+my_colors <-  'd3.scaleOrdinal() .domain(["A","B","C","D","E","F","G","H"]) 
+.range(["#a6cee3", "#00008B","#b2df8a", "#33a02c", "#000000","#808080","#D3D3D3","#FFFFFF"])'
 
 
 
 # BASE SANKEY CODE
 
 
+# build sankey
 sn <- sankeyNetwork(Links = s.links, Nodes = nodes, Source = "Source",
               Target = "Target", Value = "value", NodeID = "FullName",
               units = "papers", fontSize = 17, nodeWidth = 30,
               fontFamily = "Arial",
-              LinkGroup = "SourceName",
-              NodeGroup = "NodeType",
-              colourScale = colors,
+              LinkGroup = "LinkType",
+              NodeGroup = "Group",
+              colourScale = my_colors,
               margin = list(left=300, right=50),
               iterations=0)
 
-
+# ecosystem service labels
 right <- c("Climate Regulation","Regulation of pests/pathogens","Coastal Water Quality",
            "Fresh Water Quality","Hazard Regulation","Air Quality","Regulation of Ocean Acidification",
            "Soil Formation/Protection","Habitat Creation","Pollination","Food and Feed",
            "Materials","Energy","Medical","Physical and Psychological exp.","Maintenance of Options")
-  
+
+# Plot sankey  
 onRender(
   sn,
   paste0('
