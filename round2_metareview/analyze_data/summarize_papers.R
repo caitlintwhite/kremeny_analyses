@@ -5,6 +5,15 @@
 # notes:
 # > feel free to add on as needed (e.g. more summary stats, figs, whatever needed)
 
+# add-ons:
+# jan 2022: +code section to pull references for discussion examples:
+# > papers that mention uncertainty
+# > papers that studied interactions or feedbacks
+# > papers that used multiple methods
+# > suss out consistency in indicators
+
+
+
 # -- SETUP --
 library(tidyverse)
 options(stringsAsFactors = F)
@@ -448,3 +457,127 @@ jsum <- left_join(r1jsum, r2jsum) %>%
 third <- read.csv("round2_metareview/data/reviewer_revisions/excludenotes_review-COMPLETE.csv")
 with(third, sapply(split(Title, exclude_LD), function(x) length(unique(x))))
 length(unique(third$Title))
+
+
+
+# -- PULL REFS FOR IN-TEXT EXAMPLES -----
+# cols to keep
+keepcols <- c("Title","Init", "version", "doublerev", "clean_answer", "fullquestion", "abbr", "qnum", "survey_order", "qa_note")
+# make simple refdat (kept for round 2) for joining
+simpleref <- distinct(dplyr::select(r2assigned, Comments:Title, SourcePublication, PublicationYear)) %>%
+  rename(Round1_Comments = Comments)
+# pull general notes for all
+notes <- subset(qdat, version == "final" & abbr == "SurveyNotes" & !is.na(clean_answer), select = keepcols) %>%
+  unite(abbr, qnum, abbr)
+names(notes)[grep("clean_answer", names(notes))] <- unique(notes$abbr)
+
+# 1. mentioned uncertainty ----
+# Qualtrics Q23: "Note if there is anything interesting this paper does to assess uncertainty"
+
+q23 <- subset(qdat, version== "final" & abbr == "Uncertainty" & !is.na(clean_answer), select = keepcols) %>%
+  # remove those papers that did not discuss uncertainty
+  subset(!grepl("No uncertainty|Did not consider", clean_answer)) %>%
+  unite(abbr, qnum, abbr)
+names(q23)[grep("clean_a", names(q23))] <- unique(q23$abbr)
+q23 <- left_join(q23, notes[c("Title", "Q18_SurveyNotes")]) %>%
+  # join refdat
+  left_join(simpleref) %>%
+  # clean up columns
+  dplyr::select(Title, FirstAuthor:PublicationYear, Init, Q17_Uncertainty, Q18_SurveyNotes, Round1_Comments, qa_note) %>%
+  # arrange by author for easier lookup
+  arrange(FirstAuthor)
+# write out
+write_csv(q23, "round2_metareview/analyze_data/examples/ESuncertainty_examples.csv", na = "")
+data_frame(q23[c("FirstAuthor", "PublicationYear", "Title")])
+
+
+# 2. studied interactions or feedbacks ----
+# Qualtrics Q21: "Does the paper measure feedbacks between levels?" 
+# Q. Q22: "Are there explicit discussions of thresholds required for the provisioning of ES?"
+q21 <- subset(qdat, version== "final" & abbr == "Feedbacks" & !is.na(clean_answer), select = keepcols) %>%
+  # remove those papers that did not discuss uncertainty
+  #subset(!grepl("No", clean_answer)) %>%
+  unite(abbr, qnum, abbr, remove = F)
+names(q21)[grep("clean_a", names(q21))] <- unique(q21$abbr)
+names(q21)[grep("qa_", names(q21))] <- paste(unique(q21$qnum), "qa_note", sep = "_")
+q22 <- subset(qdat, version== "final" & abbr == "Thresholds" & !is.na(clean_answer), select = keepcols) %>%
+  # keep only the papers that considered thresholds
+  #subset(clean_answer == "Yes") %>%
+  unite(abbr, qnum, abbr, remove = F)
+names(q22)[grep("clean_a", names(q22))] <- unique(q22$abbr)
+names(q22)[grep("qa_", names(q22))] <- paste(unique(q22$qnum), "qa_note", sep = "_")
+
+# distill ES study reports addressed
+ES_table <- distinct(subset(qdat, abbr == "Driver" & Group == "Environmental", select = c(fullquestion, ES))) %>%
+  # grab full ES description
+  mutate(fullES = gsub(".*Driver - ", "", fullquestion))
+services <- subset(qdat, version == "final" & abbr %in% c("Response","Driver") & !is.na(clean_answer), select = c(Init:Title, qnum, ES)) %>%
+  distinct() %>%
+  # join ES full descrip
+  left_join(ES_table[c("ES", "fullES")]) %>%
+  # sort alphabetically
+  arrange(Title, ES) %>%
+  # number ES's considered
+  group_by(Title) %>%
+  mutate(ESnum = 1:length(ES)) %>%
+  ungroup() %>%
+  #unite(ES, ESnum, ES,sep = ") ", remove = F) %>%
+  #unite(ES, ES, fullES, sep = ": ") %>%
+  group_by(Title) %>%
+  mutate(ES = str_flatten(ES, collapse = "; "),
+         EScount= max(ESnum)) %>%
+  ungroup() %>%
+  dplyr::select(-c(fullES,ESnum, qnum)) %>%
+  distinct()
+# there are three papers whose Q12 double-reviewer answers didn't combine correctly -- pull those services separately
+badmerge_titles <- unique(qdat$Title[!qdat$Title %in% services$Title])
+badmerge_services <- subset(qdat, version == "original" & Title %in% badmerge_titles & abbr %in% c("Response","Driver") & !is.na(clean_answer), select = c(Init:Title, qnum, ES)) %>%
+  distinct() # these ES's don't all agree.. doesn't look like inconsistent answers got reviewed (looking at reviewer corrections files -- add to-do)
+# for Travis' purposes, keep all
+badmerge_services <- subset(badmerge_services, select = -c(Init:version)) %>%
+  distinct() %>%
+  arrange(Title, ES) %>%
+  group_by(Title) %>%
+  mutate(ESnum = 1:length(ES),
+         ES = str_flatten(ES, collapse = "; "),
+         EScount = max(ESnum)) %>%
+  ungroup() %>%
+  # add init, version as final and doublerev cols back
+  left_join(distinct(subset(qdat, version == "final", select = c(Init, doublerev, version, qnum, Title))))
+# add to services
+services <- rbind(services, badmerge_services[names(services)]) %>%
+  distinct()
+
+# combine all to write out
+interactions <- subset(q21, select = c(Title:Q15_Feedbacks, Q15_qa_note)) %>%
+  full_join(subset(q22, select = c(Title:Q16_Thresholds, Q16_qa_note))) %>%
+  subset(grepl("Ecosystem", Q15_Feedbacks) | grepl("Yes|Mentioned", Q16_Thresholds)) %>%
+  # drop thresholds only mentioned and no feedbacks studied
+  subset(!(grepl("Mentioned", Q16_Thresholds) & grepl("^No", Q15_Feedbacks))) %>%
+  # combine qa_notes
+  mutate(qa_note = ifelse(!is.na(Q15_qa_note) & Q15_qa_note == Q16_qa_note, Q15_qa_note, 
+                          ifelse(is.na(Q15_qa_note), Q16_qa_note, 
+                                 paste(Q15_qa_note, Q16_qa_note, sep = "; ")))) %>%
+  #join ESs measured
+  left_join(services) %>%
+  # join notes
+  left_join(notes[c("Title", "Q18_SurveyNotes")]) %>%
+  # join refdat
+  left_join(simpleref) %>%
+  # clean up df
+  dplyr::select(Title, FirstAuthor:PublicationYear, Init, ES, EScount, Q15_Feedbacks, Q16_Thresholds, Q18_SurveyNotes, Round1_Comments, qa_note) %>%
+  rename(ES_assessed = ES) %>%
+  arrange(FirstAuthor, PublicationYear)
+  
+# write out
+write_csv(interactions, "round2_metareview/analyze_data/examples/ESfeedback_threshold_examples.csv", na = "")
+with(interactions, data_frame(interactions[grepl("-", Q15_Feedbacks) & !is.na(Q18_SurveyNotes), c("FirstAuthor", "PublicationYear", "Title")]))
+
+
+
+# 3. used multiple methods ----
+
+
+
+# 4. consistency in indicators by service type -----
+
