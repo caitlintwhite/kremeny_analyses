@@ -576,8 +576,183 @@ with(interactions, data_frame(interactions[grepl("-", Q15_Feedbacks) & !is.na(Q1
 
 
 # 3. used multiple methods ----
+# subset methods responses to multiple methods only
+q6 <- subset(qdat, version== "final" & abbr == "Methods" & grepl(",[a-z]", clean_answer,ignore.case = T), select = keepcols) %>%
+  # drop redundant Observation.. Observation
+  subset(!grepl("Observation.*,Observation", clean_answer)) %>%
+  # get rid of comma in ", if used directly" to count number methods
+  mutate(clean_answer = gsub(", if used", " if used", clean_answer)) %>%
+  # split methods to alphabetize if writer wants to review paper in each cat
+  separate_rows(clean_answer, sep = ",") %>%
+  arrange(Title, clean_answer) %>%
+  # number and recollapse
+  group_by(Title) %>%
+  mutate(methodcount = length(clean_answer),
+         clean_answer = str_flatten(clean_answer, collapse = "; ")) %>%
+  ungroup() %>%
+  distinct() %>%
+  unite(abbr, qnum, abbr, remove = F)
+names(q6)[grep("clean_a", names(q6))] <- unique(q6$abbr)
+q6 <- q6 %>%
+  # join notes
+  left_join(notes[c("Title", "Q18_SurveyNotes")]) %>%
+  # join refdat
+  left_join(simpleref) %>%
+  # clean up df
+  dplyr::select(Title, FirstAuthor:PublicationYear, Init, Q6_Methods, methodcount, Q18_SurveyNotes, Round1_Comments, qa_note) %>%
+  arrange(FirstAuthor, PublicationYear)
 
+# write out
+write_csv(q6, "round2_metareview/analyze_data/examples/ESmultimethods_examples.csv", na = "")
 
 
 # 4. consistency in indicators by service type -----
+# want list of how all the different ESs are measured (driver or response) "what ES was measured and how it was measured"
+# also give how different ESPs are presented in studies
+# also give confusing examples
+q12dat_drivers <- subset(qdat, version == "final" & qnum == "Q12" & abbr %in% c("Driver", "OtherDriver") & !is.na(clean_answer)) %>%
+  arrange(Title, ES, varnum) %>%
+  # drop "Other" since captured in OtherDriver
+  subset(!clean_answer_binned == "Other") %>%
+  # clean up
+  dplyr::select(Init:id, clean_answer:clean_answer_binned, abbr:ES, qa_note) # might give tehm this tidyy? most flexible to work w even tho a lot
+# how many unique titles?
+length(unique(q12dat_drivers$Title)) # 269
+unique(qdat$Title[!qdat$Title %in% q12dat_drivers$Title]) # three missing are AK+GV bad merges + one of Sierra's papers where she notes they did not discuss drivers (NA okay)
 
+q12dat_drivers_badmerge <- subset(qdat, Title %in% badmerge_titles & qnum == "Q12" & abbr %in% c("Driver", "OtherDriver") & !is.na(clean_answer)) %>%
+  dplyr::select(Init:qa_note) %>%
+  # if combine Init how many distinct rows are there?
+  mutate(Init = "AK/GV", # in manual check, looks okay
+         # make version final
+         version = "final") %>% 
+  distinct() %>%
+  # drop "Other" since captured in OtherDriver
+  subset(!clean_answer_binned == "Other") %>%
+  # clean up
+  dplyr::select(Init:id, clean_answer:clean_answer_binned, abbr:ES, qa_note)
+
+# stack with others
+q12dat_drivers_all <- rbind(q12dat_drivers, q12dat_drivers_badmerge) %>%
+  # join general notes
+  left_join(notes[c("Title", "Q18_SurveyNotes")]) %>%
+  # join refdat
+  left_join(simpleref) %>%
+  # join full ES descript
+  left_join(ES_table[c("ES", "fullES")]) %>%
+  # specify qa_note pertains to drivers
+  rename(Q12drivers_qa_note = qa_note) %>%
+  # clean up df
+  dplyr::select(Title, FirstAuthor:PublicationYear, Init:version, qnum, id, clean_answer:ES, fullES, Q18_SurveyNotes, Round1_Comments, Q12drivers_qa_note) %>%
+  arrange(FirstAuthor, PublicationYear, Title, ES, varnum)
+str(q12dat_drivers_all)  
+
+q12dat_responses <- subset(qdat, version == "final" & qnum == "Q12" & abbr %in% c("Response", "Yclass") & !is.na(clean_answer)) %>%
+  dplyr::select(Init:Title, clean_answer, varnum, abbr, qnum, ES, qa_note)
+q12_yclass <- subset(q12dat_responses, abbr == "Yclass", select = -varnum) %>%
+  unite(abbr, qnum, abbr)
+names(q12_yclass)[names(q12_yclass) == "clean_answer"] <- unique(q12_yclass$abbr)
+names(q12_yclass)[grepl("^qa", names(q12_yclass))] <- paste(unique(q12_yclass$abbr), names(q12_yclass)[grepl("^qa", names(q12_yclass))], sep = "_")
+# join in 
+q12dat_responses <- subset(q12dat_responses, abbr=="Response") %>%
+  unite(abbr, qnum, abbr)
+names(q12dat_responses)[names(q12dat_responses) == "clean_answer"] <- unique(q12dat_responses$abbr)
+names(q12dat_responses)[grepl("^qa", names(q12dat_responses))] <- paste(unique(q12dat_responses$abbr), names(q12dat_responses)[grepl("^qa", names(q12dat_responses))], sep = "_")
+# put all together
+q12dat_responses2 <- subset(q12dat_responses, select = -abbr) %>%
+  left_join(subset(q12_yclass,select = -abbr)) %>%
+  # combine notes
+  mutate(notecheck = Q12_Response_qa_note == Q12_Yclass_qa_note,
+       qa_note = ifelse(is.na(notecheck), NA, ifelse(notecheck, Q12_Response_qa_note,
+                                                     paste0("Response: ", Q12_Response_qa_note, "; Yclass: ", Q12_Yclass_qa_note)))) %>%
+  dplyr::select(Init:varnum, Q12_Yclass, ES, qa_note)
+
+# ak + gv 3 papers that got orphaned in final comp
+q12dat_responses_badmerge <- subset(qdat, Title %in% badmerge_titles & qnum == "Q12" & abbr %in% c("Response", "Yclass") & !is.na(clean_answer)) %>%
+# note: it won't work on this one to combine all -- answers are pretty much the same (manual review), go with Grant's responses
+  subset(Init == "GV") %>%
+  dplyr::select(Init:qa_note) %>%
+  # if combine Init how many distinct rows are there?
+  mutate(Init = "AK/GV", # in manual check, looks okay
+         # make version final
+         version = "final") %>% 
+  dplyr::select(Init:Title, clean_answer, varnum, abbr, qnum, ES, qa_note)
+# split YClass and its qa_notes to merge
+q12_yclass_badmerge <- subset(q12dat_responses_badmerge, abbr == "Yclass", select = -varnum) %>%
+  unite(abbr, qnum, abbr)
+names(q12_yclass_badmerge)[names(q12_yclass_badmerge) == "clean_answer"] <- unique(q12_yclass_badmerge$abbr)
+names(q12_yclass_badmerge)[grepl("^qa", names(q12_yclass_badmerge))] <- paste(unique(q12_yclass_badmerge$abbr), names(q12_yclass_badmerge)[grepl("^qa", names(q12_yclass_badmerge))], sep = "_")
+# join in 
+q12dat_responses_badmerge <- subset(q12dat_responses_badmerge, abbr=="Response") %>%
+  unite(abbr, qnum, abbr)
+names(q12dat_responses_badmerge)[names(q12dat_responses_badmerge) == "clean_answer"] <- unique(q12dat_responses_badmerge$abbr)
+names(q12dat_responses_badmerge)[grepl("^qa", names(q12dat_responses_badmerge))] <- paste(unique(q12dat_responses_badmerge$abbr), names(q12dat_responses_badmerge)[grepl("^qa", names(q12dat_responses_badmerge))], sep = "_")
+# put all together
+q12dat_responses_badmerge2 <- subset(q12dat_responses_badmerge, select = -abbr) %>%
+  left_join(subset(q12_yclass_badmerge,select = -abbr)) %>%
+  # since these are not yet finalized, there won't be a qa_note
+  mutate(qa_note = "ctw needs to finalize answer, placeholder")
+#stack
+q12dat_responses_all <- q12dat_responses2 %>%
+  rbind(q12dat_responses_badmerge2[names(.)]) %>%
+  # join general notes
+  left_join(notes[c("Title", "Q18_SurveyNotes")]) %>%
+  # join refdat
+  left_join(simpleref) %>%
+  # join full ES descript
+  left_join(ES_table[c("ES", "fullES")]) %>%
+  # clean up df
+  dplyr::select(Title, FirstAuthor:PublicationYear, Init, doublerev, version, Q12_Response:ES, fullES, Q18_SurveyNotes, Round1_Comments, qa_note) %>%
+  arrange(FirstAuthor, PublicationYear, Title, ES, varnum) %>%
+ # clarify note is for responses as w drivers dataset
+  rename(Q12responses_qa_note = qa_note)
+str(q12dat_responses_all)
+  
+
+# pull esp dat
+q14 <- subset(qdat, version == "final" & qnum == "Q14", select = keepcols[!grepl("fullq|survey_order", keepcols)]) %>%
+  unite(abbr, qnum, abbr) %>%
+  rename(Q14_qa_note = qa_note) %>%
+  group_by(Title) %>%
+  # collapse qa_note (if it's present should only be there for the answer anyway)
+  mutate(Q14_qa_note = str_flatten(unique(Q14_qa_note[!is.na(Q14_qa_note)]), "; ")) %>%
+  ungroup() %>%
+  spread(abbr, clean_answer) %>%
+  mutate(Q14_qa_note = ifelse(Q14_qa_note %in% c("", " "), NA, Q14_qa_note),
+         #count ESP boxes checked
+         ESPcount = ifelse(is.na(Q14_ESP_type), 0, str_count(Q14_ESP_type, ",(?=[A-Z])")+1))
+# could add col to note if study indicated a biotic driver
+bioticdrivers <- group_by(q12dat_drivers_all, Title)%>%
+  mutate(biotic_driver_present = any(clean_group == "Biotic" & !is.na(clean_answer)),
+         biotic_drivers = ifelse(biotic_driver_present, str_flatten(unique(clean_answer[!is.na(clean_answer) & clean_group == "Biotic"]), collapse = "; "), NA)) %>%
+  ungroup() %>%
+  dplyr::select(Title, Init, biotic_driver_present, biotic_drivers)
+q14 <- left_join(q14, bioticdrivers) %>%
+  # join general notes
+  left_join(notes[c("Title", "Q18_SurveyNotes")]) %>%
+  # join refdat
+  left_join(simpleref) %>%
+  # clean up df
+  dplyr::select(Title, FirstAuthor:PublicationYear, Init, doublerev, version, Q14_ESP_type, ESPcount, Q14_KremenNotes, biotic_driver_present, biotic_drivers, Q18_SurveyNotes, Round1_Comments, Q14_qa_note) %>%
+  arrange(FirstAuthor, PublicationYear) %>%
+  distinct()
+str(q14) # ok
+
+# write out data for consistency reviewers/writers
+write_csv(q12dat_drivers_all, "round2_metareview/analyze_data/examples/ES_drivers_consistency.csv", na = "")
+write_csv(q12dat_responses_all, "round2_metareview/analyze_data/examples/ES_response_consistency.csv", na = "")
+write_csv(q14, "round2_metareview/analyze_data/examples/ES_ESPconsistency.csv", na = "")
+
+
+# 5. generally recommended papers for examples (good or bad)-----
+# search notes fields for recommendations
+goodex <- subset(qdat, version == "final" & qnum == "Q18", select = c(Title, Init, doublerev, version, clean_answer)) %>%
+  subset(grepl("cool |good|example|interesting|flag ", clean_answer, ignore.case = T)) %>%
+  data_frame() %>%
+  left_join(simpleref) %>%
+  arrange(Title, Init) %>%
+  rename(Q18_SurveyNotes = clean_answer) %>%
+  dplyr::select(Title, FirstAuthor:PublicationYear, Init:Round1_Comments)
+goodex$Q18_SurveyNotes # drop fungal abundances paper
+goodex <- subset(goodex, !grepl("fungal abundances but nowhere", Q18_SurveyNotes)) %>%
+  arrange(FirstAuthor)
