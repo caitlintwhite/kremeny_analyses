@@ -756,3 +756,27 @@ goodex <- subset(qdat, version == "final" & qnum == "Q18", select = c(Title, Ini
 goodex$Q18_SurveyNotes # drop fungal abundances paper
 goodex <- subset(goodex, !grepl("fungal abundances but nowhere", Q18_SurveyNotes)) %>%
   arrange(FirstAuthor)
+
+
+# 6. drivers, ESes, and title/citations -----
+# write out for AIS and SDJ
+# > want all drivers, ESes, Titles with lookup citation info (raw data)
+driverdat <- subset(qdat, grepl("Driver", abbr) & !is.na(clean_answer) & !grepl("^Other$", clean_answer_binned) & version == "final",
+                    select = c(Title, clean_answer:clean_group, ES)) %>%
+  #join citation info
+  left_join(r2assigned[c("Title", "FirstAuthor", "SourcePublication", "PublicationYear")]) 
+
+# make ES descrip table
+ESdescrip <- subset(driverdat, abbr == "Driver", select = c(fullquestion, ES)) %>%
+  mutate(ESdescription = str_extract(fullquestion, "(?<=Driver - )[A-Z].*$")) %>%
+  distinct(ES, ESdescription)
+
+# join ES desrip to driver table
+driverdat <- left_join(driverdat, ESdescrip, by = "ES") %>%
+  data.frame() %>%
+  dplyr::select(clean_answer:clean_answer_binned, abbr:ES, ESdescription, Title, FirstAuthor:PublicationYear) %>%
+  # arrange by Title, ES, varnum
+  arrange(FirstAuthor, Title, ES, varnum)
+
+# write out 
+write_csv(driverdat, "round2_metareview/analyze_data/examples/ES_alldrivers_withESes_citations.csv", na = "")
