@@ -1,0 +1,830 @@
+ES,Driver_Group,answer,clean_answer_finer,clean_group
+PestPath,Env,% of semi-natural habitats in a 265 m radius,Land cover,Env
+Food,Bio,1 crop pest,Pathogens/natural enemies,Bio
+,Bio,3 community indicators: proportion of predatory fish (PPF indicator),Pathogens/natural enemies,Bio
+ClimReg,Anthro,"4 ""other"" drivers: Distance(m) to cities with more than 20000 inhabitants",Proximity to development,Anthro
+HabCreate,Anthro,"4 ""other"" drivers: Distance(m) to cities with more than 20000 inhabitants",Proximity to development,Anthro
+SoilProtect,Anthro,"4 ""other"" drivers: Distance(m) to cities with more than 20000 inhabitants",Proximity to development,Anthro
+PestPath,Bio,abundance of carabid beetles,Service provider abundance,Bio
+PestPath,Bio,abundance of cursorial spiders,Service provider abundance,Bio
+PestPath,Bio,abundance of vegetation-dwelling predators,Service provider abundance,Bio
+ClimReg,Anthro,address density,Population growth and density,Anthro
+freshWQReg,Anthro,address density,Population growth and density,Anthro
+HabCreate,Anthro,address density,Population growth and density,Anthro
+ClimReg,Bio,Adjacent forest fragment size and isolation,Habitat,Bio
+coastWQReg,Bio,Adjacent forest fragment size and isolation,Habitat,Bio
+Food,Bio,Adjacent forest fragment size and isolation,Habitat,Bio
+PestPath,Bio,Adjacent forest fragment size and isolation,Habitat,Bio
+SoilProtect,Bio,Adjacent forest fragment size and isolation,Habitat,Bio
+ClimReg,Anthro,age,Management/restoration,Anthro
+CulturePsych,Anthro,age,Management/restoration,Anthro
+Food,Anthro,age,Management/restoration,Anthro
+CulturePsych,Anthro,age began harvesting,Management/restoration,Anthro
+Food,Anthro,age began harvesting,Management/restoration,Anthro
+ClimReg,Anthro,Aggregate 'driver' index incorporating population/investment in water treatment infrastructure/other demographics (separate index from 'pressure'),Index,Anthro
+coastWQReg,Anthro,Aggregate 'driver' index incorporating population/investment in water treatment infrastructure/other demographics (separate index from 'pressure'),Index,Anthro
+CulturePsych,Anthro,Aggregate 'driver' index incorporating population/investment in water treatment infrastructure/other demographics (separate index from 'pressure'),Index,Anthro
+Energy,Anthro,Aggregate 'driver' index incorporating population/investment in water treatment infrastructure/other demographics (separate index from 'pressure'),Index,Anthro
+Food,Anthro,Aggregate 'driver' index incorporating population/investment in water treatment infrastructure/other demographics (separate index from 'pressure'),Index,Anthro
+freshWQReg,Anthro,Aggregate 'driver' index incorporating population/investment in water treatment infrastructure/other demographics (separate index from 'pressure'),Index,Anthro
+Hazards,Anthro,Aggregate 'driver' index incorporating population/investment in water treatment infrastructure/other demographics (separate index from 'pressure'),Index,Anthro
+MaintainOpts,Anthro,Aggregate 'driver' index incorporating population/investment in water treatment infrastructure/other demographics (separate index from 'pressure'),Index,Anthro
+Materials,Anthro,Aggregate 'driver' index incorporating population/investment in water treatment infrastructure/other demographics (separate index from 'pressure'),Index,Anthro
+ClimReg,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods AND human drivers that are marked alongside this 'other' environmental driver (see Q12),Index,Env
+coastWQReg,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods AND human drivers that are marked alongside this 'other' environmental driver (see Q12),Index,Env
+CulturePsych,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods AND human drivers that are marked alongside this 'other' environmental driver (see Q12),Index,Env
+Energy,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods AND human drivers that are marked alongside this 'other' environmental driver (see Q12),Index,Env
+Food,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods AND human drivers that are marked alongside this 'other' environmental driver (see Q12),Index,Env
+freshWQReg,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods AND human drivers that are marked alongside this 'other' environmental driver (see Q12),Index,Env
+HabCreate,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods AND human drivers that are marked alongside this 'other' environmental driver (see Q12),Index,Env
+Hazards,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods AND human drivers that are marked alongside this 'other' environmental driver (see Q12),Index,Env
+MaintainOpts,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods AND human drivers that are marked alongside this 'other' environmental driver (see Q12),Index,Env
+Materials,Env,Aggregate 'pressure' index incorporating precipitation/temp/floods AND human drivers that are marked alongside this 'other' environmental driver (see Q12),Index,Env
+PestPath,Anthro,agrochemical use,Insecticides/fungicides/pesticides/herbicides,Anthro
+SoilProtect,Env,air temperature,Climate,Env
+MaintainOpts,Env,also include temperature and precipitation (water stress) as a natural filter for all plants in the region,Climate,Env
+ClimReg,Env,altitude,Topography and position,Env
+Food,Env,Amount of 'semi natural vegetation',Vegetation cover,Bio
+PestPath,Env,Amount of 'semi natural vegetation',Vegetation cover,Bio
+Food,Env,Amount of ecological focus areas,Land cover,Env
+PestPath,Env,Amount of ecological focus areas,Land cover,Env
+Pollination,Env,Amount of ecological focus areas,Land cover,Env
+CulturePsych,Env,amount of rugged terrain,Land cover,Env
+HabCreate,Env,and 19 hydro regime parameters from DHRAM model (The Dundee Hydrological Regime Assessment Method),Hydrology,Env
+MaintainOpts,Env,and 19 hydro regime parameters from DHRAM model (The Dundee Hydrological Regime Assessment Method),Hydrology,Env
+CulturePsych,Anthro,and city-level [city 1; city 2]),Characteristics of locality,Anthro
+HabCreate,Anthro,and city-level [city 1; city 2]),Characteristics of locality,Anthro
+MaintainOpts,Anthro,and city-level [city 1; city 2]),Characteristics of locality,Anthro
+SoilProtect,Anthro,and city-level [city 1; city 2]),Characteristics of locality,Anthro
+MaintainOpts,Anthro,and structure of the homogenization. the driver in all cases is human preference/selection of vegetation for yards,Characteristics of human population,Anthro
+SoilProtect,Env,Annual Precipitation,Climate,Env
+ClimReg,Env,annual wind speed,Climate,Env
+freshWQReg,Env,annual wind speed,Climate,Env
+Hazards,Env,annual wind speed,Climate,Env
+SoilProtect,Env,annual wind speed,Climate,Env
+,Bio,Ant activity (number observed per timed interval),Service provider density,Bio
+Food,Bio,aphid abundance,Service provider abundance,Bio
+PestPath,Bio,aphid abundance,Service provider abundance,Bio
+SoilProtect,Bio,Aphodius beetles,Service provider identity,Bio
+Food,Bio,Apis mellifera abundance,Service provider abundance,Bio
+CulturePsych,Anthro,area of a corridor of an apartment,Characteristics of locality,Anthro
+Food,Anthro,area of a corridor of an apartment,Characteristics of locality,Anthro
+HabCreate,Anthro,area of a corridor of an apartment,Characteristics of locality,Anthro
+MedGen,Anthro,area of a corridor of an apartment,Characteristics of locality,Anthro
+Pollination,Anthro,area of a corridor of an apartment,Characteristics of locality,Anthro
+Pollination,Bio,Area of flowers,Pollination,Bio
+Pollination,Env,area of nearest potential habitat,Land cover,Env
+ClimReg,Env,aspect,Topography and position,Env
+MaintainOpts,Env,aspect,Topography and position,Env
+Materials,Env,aspect,Topography and position,Env
+SoilProtect,Env,aspect,Topography and position,Env
+ClimReg,Env,Availability of dissolved organic carbon,Soil characteristics,Env
+,Bio,availability of semi-natural habitat (% area within 500m radius),Biotic characteristics of the plot,Bio
+CulturePsych,Env,Availability of water sources,Hydrology,Env
+,Bio,average trophic level of the surveyed community (TLsc indicator),Service provider identity,Bio
+ClimReg,Bio,bark thickness,Biotic characteristics of the plot,Bio
+,Bio,biodiversity of grassland plant community,Service provider diversity/richness,Bio
+Pollination,Bio,Biotic driver= a bat species ESP,Service provider identity,Bio
+coastWQReg,Bio,Biotic driver= ESP identity (which of three invasive species provided greatest ES potential),Service provider identity,Bio
+Energy,Bio,Biotic driver= ESP identity (which of three invasive species provided greatest ES potential),Service provider identity,Bio
+HabCreate,Bio,Biotic driver=different nurse tree ESPs,Service provider identity,Bio
+PestPath,Bio,bird diversity,Service provider diversity/richness,Bio
+PestPath,Bio,bird functional evenness,Service provider diversity/richness,Bio
+Food,Bio,broadleaved cover,Biotic characteristics of the plot,Bio
+ClimReg,Bio,browsing of trees by livestock and deer,Pathogens/natural enemies,Bio
+CulturePsych,Bio,browsing of trees by livestock and deer,Pathogens/natural enemies,Bio
+MedGen,Bio,browsing of trees by livestock and deer,Pathogens/natural enemies,Bio
+SoilProtect,Bio,browsing of trees by livestock and deer,Pathogens/natural enemies,Bio
+ClimReg,Anthro,building density,Population growth and density,Anthro
+CulturePsych,Anthro,building density,Population growth and density,Anthro
+freshWQReg,Anthro,building density,Population growth and density,Anthro
+MaintainOpts,Anthro,building density,Population growth and density,Anthro
+Materials,Env,Burn regime,Extreme events,Env
+MaintainOpts,Env,burn severity,Extreme events,Env
+ClimReg,Bio,canopy cover,Biotic characteristics of the plot,Bio
+PestPath,Anthro,canopy cover,Abiotic characteristics of the landscape: terrestrial,Env
+coastWQReg,Bio,Canopy cover,Biotic characteristics of the plot,Bio
+HabCreate,Bio,Canopy cover,Biotic characteristics of the plot,Bio
+Pollination,Env,Canopy density,Vegetation cover,Bio
+SoilProtect,Env,Canopy openness,Vegetation cover,Bio
+Food,Bio,cereal leaf beetle density,Service provider density,Bio
+coastWQReg,Anthro,channel modifications,Management/restoration,Anthro
+HabCreate,Anthro,channel modifications,Management/restoration,Anthro
+MaintainOpts,Anthro,channel modifications,Management/restoration,Anthro
+coastWQReg,Env,Chemical (NH4,Soil characteristics,Env
+Food,Env,Chemical (NH4,Soil characteristics,Env
+Food,Anthro,chemical pest control); socioeconomics (farmer gender,Characteristics of human population,Anthro
+coastWQReg,Bio,Chlorophyll-a,Productivity,Bio
+Food,Bio,Chlorophyll-a,Productivity,Bio
+AQReg,Env,Climate,Climate,Env
+ClimReg,Env,Climate,Climate,Env
+coastWQReg,Env,Climate,Climate,Env
+CulturePsych,Env,Climate,Climate,Env
+Energy,Env,Climate,Climate,Env
+Food,Env,Climate,Climate,Env
+freshWQReg,Env,Climate,Climate,Env
+HabCreate,Env,Climate,Climate,Env
+Hazards,Env,Climate,Climate,Env
+MaintainOpts,Env,Climate,Climate,Env
+MedGen,Env,Climate,Climate,Env
+OceanReg,Env,Climate,Climate,Env
+PestPath,Env,Climate,Climate,Env
+Pollination,Env,Climate,Climate,Env
+SoilProtect,Env,Climate,Climate,Env
+Food,Env,cloud cover,Climate,Env
+Pollination,Env,cloud cover,Climate,Env
+MaintainOpts,Anthro,composition,Characteristics of human population,Anthro
+HabCreate,Env,conductivity,Aquatic biogeochemistry,Env
+MaintainOpts,Env,conductivity,Aquatic biogeochemistry,Env
+CulturePsych,Anthro,corridor geometry,Proximity to development,Anthro
+Food,Anthro,corridor geometry,Proximity to development,Anthro
+HabCreate,Anthro,corridor geometry,Proximity to development,Anthro
+MedGen,Anthro,corridor geometry,Proximity to development,Anthro
+Pollination,Anthro,corridor geometry,Proximity to development,Anthro
+ClimReg,Env,cosine and sine of aspect,Topography and position,Env
+HabCreate,Env,cosine and sine of aspect,Topography and position,Env
+SoilProtect,Env,cosine and sine of aspect,Topography and position,Env
+Food,Bio,cotton bollworm pest,Pathogens/natural enemies,Bio
+PestPath,Bio,Crop diversity,Service provider diversity/richness,Bio
+Food,Anthro,Crop intensification,Exploitation/harvest,Anthro
+ClimReg,Anthro,cultural background,Characteristics of human population,Anthro
+ClimReg,Env,daytime light,Abiotic characteristics of the landscape: aquatic,Env
+SoilProtect,Bio,Deer density,Service provider density,Bio
+ClimReg,Anthro,deforestation,Land use and land cover change,Anthro
+coastWQReg,Anthro,deforestation,Land use and land cover change,Anthro
+freshWQReg,Anthro,deforestation,Land use and land cover change,Anthro
+MaintainOpts,Anthro,deforestation,Land use and land cover change,Anthro
+Pollination,Anthro,deforestation,Land use and land cover change,Anthro
+ClimReg,Env,DEM,Topography and position,Env
+freshWQReg,Env,DEM,Topography and position,Env
+SoilProtect,Env,DEM,Topography and position,Env
+Food,Bio,Density of honeybee hives,Service provider density,Bio
+Pollination,Bio,Density of honeybee hives,Service provider density,Bio
+HabCreate,Env,different olive grove types could be considered land use or management type (organic; conventional; abandoned; natural areas),Land cover,Env
+coastWQReg,Anthro,direct impacts to natural stream channel,Human disturbance,Anthro
+HabCreate,Anthro,direct impacts to natural stream channel,Human disturbance,Anthro
+MaintainOpts,Anthro,direct impacts to natural stream channel,Human disturbance,Anthro
+coastWQReg,Env,dish area (habitat area),Land cover,Env
+ClimReg,Env,distance from coast,Topography and position,Env
+,Env,Distance from hedgerows,Topography and position,Env
+ClimReg,Env,distance from rivers,Topography and position,Env
+HabCreate,Env,distance from rivers,Topography and position,Env
+SoilProtect,Env,distance from rivers,Topography and position,Env
+coastWQReg,Env,distance to baseline),Topography and position,Env
+Food,Env,distance to baseline),Topography and position,Env
+ClimReg,Env,distance to forest,Topography and position,Env
+coastWQReg,Env,distance to forest,Topography and position,Env
+freshWQReg,Env,distance to forest,Topography and position,Env
+MaintainOpts,Env,distance to forest,Topography and position,Env
+Pollination,Env,distance to forest,Topography and position,Env
+ClimReg,Anthro,distance to primary paved roads,Proximity to development,Anthro
+HabCreate,Anthro,distance to primary paved roads,Proximity to development,Anthro
+SoilProtect,Anthro,distance to primary paved roads,Proximity to development,Anthro
+coastWQReg,Anthro,distance to road and settlements,Proximity to development,Anthro
+HabCreate,Anthro,distance to road and settlements,Proximity to development,Anthro
+MaintainOpts,Anthro,distance to road and settlements,Proximity to development,Anthro
+ClimReg,Anthro,distance to secondary roads,Proximity to development,Anthro
+HabCreate,Anthro,distance to secondary roads,Proximity to development,Anthro
+SoilProtect,Anthro,distance to secondary roads,Proximity to development,Anthro
+ClimReg,Anthro,distance to villages and towns with less than 20000 in habitants,Proximity to development,Anthro
+HabCreate,Anthro,distance to villages and towns with less than 20000 in habitants,Proximity to development,Anthro
+SoilProtect,Anthro,distance to villages and towns with less than 20000 in habitants,Proximity to development,Anthro
+ClimReg,Env,distance to water,Topography and position,Env
+coastWQReg,Env,distance to water,Topography and position,Env
+freshWQReg,Env,distance to water,Topography and position,Env
+MaintainOpts,Env,distance to water,Topography and position,Env
+Pollination,Env,distance to water,Topography and position,Env
+HabCreate,Anthro,ditching,Human disturbance,Anthro
+MaintainOpts,Anthro,ditching,Human disturbance,Anthro
+ClimReg,Env,drought (SPEI),Climate,Env
+freshWQReg,Env,drought (SPEI),Climate,Env
+Hazards,Env,drought (SPEI),Climate,Env
+SoilProtect,Env,drought (SPEI),Climate,Env
+SoilProtect,Bio,earthworms,Service provider abundance,Bio
+Food,Bio,Eclosion time of pest,Pathogens/natural enemies,Bio
+ClimReg,Anthro,ecological rehabilitation,Management/restoration,Anthro
+freshWQReg,Anthro,ecological rehabilitation,Management/restoration,Anthro
+,Env,Ecosystem (22 different marine systems),Abiotic characteristics of the landscape: aquatic,Env
+ClimReg,Env,Ecosystem service types,Index,Env
+CulturePsych,Env,Ecosystem service types,Index,Env
+Food,Env,Ecosystem service types,Index,Env
+freshWQReg,Env,Ecosystem service types,Index,Env
+SoilProtect,Env,Ecosystem service types,Index,Env
+SoilProtect,Env,edge and flat),Land cover,Env
+coastWQReg,Anthro,education,Characteristics of human population,Anthro
+CulturePsych,Anthro,education,Characteristics of human population,Anthro
+Food,Anthro,education,Characteristics of human population,Anthro
+Materials,Anthro,education,Characteristics of human population,Anthro
+Pollination,Anthro,education,Characteristics of human population,Anthro
+SoilProtect,Anthro,education,Characteristics of human population,Anthro
+ClimReg,Env,elevation,Topography and position,Env
+CulturePsych,Env,elevation,Topography and position,Env
+Food,Env,elevation,Topography and position,Env
+HabCreate,Env,elevation,Topography and position,Env
+MaintainOpts,Env,elevation,Topography and position,Env
+Materials,Env,elevation,Topography and position,Env
+Pollination,Env,elevation,Topography and position,Env
+SoilProtect,Env,elevation,Topography and position,Env
+MaintainOpts,Env,evapotranspiration,Climate,Env
+coastWQReg,Anthro,experimental manipulation of salt content in water and water level,Management/restoration,Anthro
+Energy,Anthro,experimental manipulation of salt content in water and water level,Management/restoration,Anthro
+Food,Anthro,experimental manipulation of salt content in water and water level,Management/restoration,Anthro
+Food,Anthro,experimental polytunnel manipulation type,Management/restoration,Anthro
+Pollination,Anthro,experimental polytunnel manipulation type,Management/restoration,Anthro
+CulturePsych,Anthro,Exploitation (hunting; fishing),Exploitation/harvest,Anthro
+Food,Anthro,Exploitation (hunting; fishing),Exploitation/harvest,Anthro
+HabCreate,Anthro,Exploitation (hunting; fishing),Exploitation/harvest,Anthro
+Materials,Anthro,Exploitation (hunting; fishing),Exploitation/harvest,Anthro
+OceanReg,Anthro,Exploitation (hunting; fishing),Exploitation/harvest,Anthro
+Pollination,Anthro,Exploitation (hunting; fishing),Exploitation/harvest,Anthro
+coastWQReg,Env,exposure),Abiotic characteristics of the landscape: terrestrial,Env
+Food,Env,exposure),Abiotic characteristics of the landscape: terrestrial,Env
+ClimReg,Env,Extreme Events,Extreme events,Env
+CulturePsych,Env,Extreme Events,Extreme events,Env
+Energy,Env,Extreme Events,Extreme events,Env
+Food,Env,Extreme Events,Extreme events,Env
+freshWQReg,Env,Extreme Events,Extreme events,Env
+Hazards,Env,Extreme Events,Extreme events,Env
+MaintainOpts,Env,Extreme Events,Extreme events,Env
+Materials,Env,Extreme Events,Extreme events,Env
+SoilProtect,Env,Extreme Events,Extreme events,Env
+HabCreate,Anthro,farmland conservation planning (prioritization),Exploitation/harvest,Anthro
+coastWQReg,Bio,Feeding,"Service provider reproduction, growth, and population maintenance",Bio
+Food,Anthro,fertilization practices,Fertilization,Anthro
+Food,Anthro,fertilizer,Fertilization,Anthro
+PestPath,Anthro,fertilizer,Fertilization,Anthro
+PestPath,Anthro,Fertilizer strategy,Fertilization,Anthro
+,Env,field age,Abiotic characteristics of the landscape: terrestrial,Env
+Food,Bio,field margins left unmowed,Management,Anthro
+Pollination,Bio,field margins left unmowed,Management,Anthro
+Materials,Env,fire,Extreme events,Env
+ClimReg,Env,fire occurrence,Extreme events,Env
+ClimReg,Env,fire regimes across savannah and into secondary forest,Extreme events,Env
+Food,Env,floodplain area,Land cover,Env
+coastWQReg,Env,floodplain vs. river,Land cover,Env
+Pollination,Bio,Floral plant species richness,Service provider diversity/richness,Bio
+Food,Bio,flower density,Service provider density,Bio
+Food,Bio,flower species richness,Service provider diversity/richness,Bio
+SoilProtect,Bio,foliar cover,Biotic characteristics of the plot,Bio
+Food,Env,Forest stand age,Vegetation cover,Bio
+ClimReg,Bio,Forest type,Biotic characteristics of the plot,Bio
+,Bio,Forest type (dense; mixed; seasonal),Biotic characteristics of the plot,Bio
+SoilProtect,Env,four microhabitats (bottom,Land cover,Env
+coastWQReg,Bio,freshwater mussels,Service provider abundance,Bio
+MaintainOpts,Bio,freshwater mussels,Service provider abundance,Bio
+Food,Anthro,fungicide spraying,Insecticides/fungicides/pesticides/herbicides,Anthro
+Pollination,Anthro,fungicide spraying,Insecticides/fungicides/pesticides/herbicides,Anthro
+CulturePsych,Anthro,gender,Characteristics of human population,Anthro
+Food,Anthro,gender,Characteristics of human population,Anthro
+PestPath,Bio,Genetic diversity,Service provider diversity/richness,Bio
+coastWQReg,Env,Geographic (latitude,Topography and position,Env
+Food,Env,Geographic (latitude,Topography and position,Env
+,Env,glacier area,Land cover,Env
+Pollination,Anthro,golf course disturbance caused fewer flower visits,Human disturbance,Anthro
+ClimReg,Anthro,grazing,Exploitation/harvest,Anthro
+freshWQReg,Anthro,grazing,Exploitation/harvest,Anthro
+SoilProtect,Anthro,grazing,Exploitation/harvest,Anthro
+,Bio,green infrastructure,Biotic characteristics of the plot,Bio
+PestPath,Anthro,green roofs,Characteristics of locality,Anthro
+PestPath,Env,growing season week,Timing/seasonality,Env
+coastWQReg,Bio,Growth,"Service provider reproduction, growth, and population maintenance",Bio
+,Env,habitat provision,Land cover,Env
+Food,Env,Habitat type (type of coral environment),Land cover,Env
+HabCreate,Env,Habitat type (type of coral environment),Land cover,Env
+PestPath,Env,habtitat heterogeneity,Land cover,Env
+CulturePsych,Anthro,harvesting experience,Exploitation/harvest,Anthro
+Food,Anthro,harvesting experience,Exploitation/harvest,Anthro
+HabCreate,Env,HDO saturation,Abiotic characteristics of the landscape: aquatic,Env
+MaintainOpts,Env,HDO saturation,Abiotic characteristics of the landscape: aquatic,Env
+,Bio,"Hedge quality (""good"" or ""poor"")",Biotic characteristics of the plot,Bio
+MaintainOpts,Bio,herbaceous cover diversity,Service provider diversity/richness,Bio
+Food,Anthro,herbicide spraying,Insecticides/fungicides/pesticides/herbicides,Anthro
+Pollination,Anthro,herbicide spraying,Insecticides/fungicides/pesticides/herbicides,Anthro
+Energy,Anthro,homeowner stability,Characteristics of human population,Anthro
+Food,Bio,honeybees near farm,Pollination,Bio
+Pollination,Bio,honeybees near farm,Pollination,Bio
+ClimReg,Anthro,Household income,Characteristics of human population,Anthro
+CulturePsych,Anthro,Household income,Characteristics of human population,Anthro
+freshWQReg,Anthro,Household income,Characteristics of human population,Anthro
+MaintainOpts,Anthro,Household income,Characteristics of human population,Anthro
+ClimReg,Anthro,household size,Characteristics of human population,Anthro
+ClimReg,Anthro,housing density,Population growth and density,Anthro
+freshWQReg,Anthro,housing density,Population growth and density,Anthro
+HabCreate,Anthro,housing density,Population growth and density,Anthro
+PestPath,Anthro,human population density,Population growth and density,Anthro
+Food,Anthro,human population size,Population growth and density,Anthro
+Food,Env,humidity,Climate,Env
+Pollination,Env,humidity,Climate,Env
+coastWQReg,Env,Hydrological (temperature,Hydrology,Env
+Food,Env,Hydrological (temperature,Hydrology,Env
+SoilProtect,Env,Hypothetical stressors (abstract and vague),Index,Env
+Food,Anthro,Implementation of greening measures,Management/restoration,Anthro
+PestPath,Anthro,Implementation of greening measures,Management/restoration,Anthro
+Pollination,Anthro,Implementation of greening measures,Management/restoration,Anthro
+ClimReg,Anthro,income,Characteristics of human population,Anthro
+coastWQReg,Anthro,Income,Characteristics of human population,Anthro
+CulturePsych,Anthro,Income,Characteristics of human population,Anthro
+Food,Anthro,Income,Characteristics of human population,Anthro
+Materials,Anthro,Income,Characteristics of human population,Anthro
+Pollination,Anthro,Income,Characteristics of human population,Anthro
+SoilProtect,Anthro,Income,Characteristics of human population,Anthro
+Pollination,Env,initial Canopy density,Vegetation cover,Bio
+Food,Anthro,insecticide,Insecticides/fungicides/pesticides/herbicides,Anthro
+PestPath,Anthro,insecticide,Insecticides/fungicides/pesticides/herbicides,Anthro
+Food,Anthro,Insecticide spraying,Insecticides/fungicides/pesticides/herbicides,Anthro
+Pollination,Anthro,Insecticide spraying,Insecticides/fungicides/pesticides/herbicides,Anthro
+PestPath,Anthro,intercrop characteristics,Exploitation/harvest,Anthro
+Food,Anthro,intercropping,Exploitation/harvest,Anthro
+ClimReg,Env,inundation,Abiotic characteristics of the landscape: terrestrial,Env
+SoilProtect,Env,inundation,Abiotic characteristics of the landscape: terrestrial,Env
+PestPath,Bio,invasive species,Invasive species,Bio
+SoilProtect,Bio,invasive species,Invasive species,Bio
+,Env,lake area,Land cover,Env
+CulturePsych,Env,lake clarity (could be interpreted as a human driver but never explicitly stated as a direct reflection of water management),Management,Anthro
+CulturePsych,Env,lake size,Land cover,Env
+coastWQReg,Bio,Land cover,Habitat,Bio
+CulturePsych,Bio,Land cover,Habitat,Bio
+Food,Bio,Land cover,Habitat,Bio
+Materials,Bio,Land cover,Habitat,Bio
+Pollination,Bio,Land cover,Habitat,Bio
+SoilProtect,Bio,Land cover,Habitat,Bio
+MaintainOpts,Env,land cover type,Land cover,Env
+Materials,Env,land cover type,Land cover,Env
+,Env,Land cover type,Land cover,Env
+Food,Anthro,land ownership),Land use and land cover change,Anthro
+AQReg,Anthro,Land use change,Land use and land cover change,Anthro
+ClimReg,Anthro,Land use change,Land use and land cover change,Anthro
+coastWQReg,Anthro,Land use change,Land use and land cover change,Anthro
+CulturePsych,Anthro,Land use change,Land use and land cover change,Anthro
+Energy,Anthro,Land use change,Land use and land cover change,Anthro
+Food,Anthro,Land use change,Land use and land cover change,Anthro
+freshWQReg,Anthro,Land use change,Land use and land cover change,Anthro
+HabCreate,Anthro,Land use change,Land use and land cover change,Anthro
+Hazards,Anthro,Land use change,Land use and land cover change,Anthro
+MaintainOpts,Anthro,Land use change,Land use and land cover change,Anthro
+Materials,Anthro,Land use change,Land use and land cover change,Anthro
+MedGen,Anthro,Land use change,Land use and land cover change,Anthro
+OceanReg,Anthro,Land use change,Land use and land cover change,Anthro
+PestPath,Anthro,Land use change,Land use and land cover change,Anthro
+Pollination,Anthro,Land use change,Land use and land cover change,Anthro
+SoilProtect,Anthro,Land use change,Land use and land cover change,Anthro
+HabCreate,Anthro,Land use change=% Developed land,Land use and land cover change,Anthro
+PestPath,Anthro,Land use change=Landscape homogeneity,Land use and land cover change,Anthro
+Pollination,Anthro,Land use change=Landscape homogeneity,Land use and land cover change,Anthro
+Food,Anthro,Land use change=landscape simplification,Land use and land cover change,Anthro
+PestPath,Anthro,Land use change=landscape simplification,Land use and land cover change,Anthro
+ClimReg,Anthro,Land use change=Urban land cover type (mulch/lawn/gravel/undeveloped field reference),Land use and land cover change,Anthro
+CulturePsych,Anthro,Land use change=Urban land cover type (mulch/lawn/gravel/undeveloped field reference),Land use and land cover change,Anthro
+SoilProtect,Anthro,Land use change=Urban land cover type (mulch/lawn/gravel/undeveloped field reference),Land use and land cover change,Anthro
+SoilProtect,Anthro,Land use intensity,Land use and land cover change,Anthro
+coastWQReg,Anthro,land use on both sides of the corridor,Land use and land cover change,Anthro
+HabCreate,Anthro,land use on both sides of the corridor,Land use and land cover change,Anthro
+MaintainOpts,Anthro,land use on both sides of the corridor,Land use and land cover change,Anthro
+Food,Anthro,landscape context,Land use and land cover change,Anthro
+Food,Env,Landscape types (Homogeneous; Heterogeneous),Land cover,Env
+Pollination,Env,Landscape types (Homogeneous; Heterogeneous),Land cover,Env
+Food,Env,latitude,Topography and position,Env
+Food,Env,Latitude,Topography and position,Env
+SoilProtect,Env,leaflitter,Vegetation cover,Bio
+SoilProtect,Bio,litter cover,Biotic characteristics of the plot,Bio
+Energy,Bio,livestock grazing legacy,Management,Anthro
+ClimReg,Anthro,livestock reduction,Management/restoration,Anthro
+freshWQReg,Anthro,livestock reduction,Management/restoration,Anthro
+Energy,Env,Location (fore reef or lagoon),Land cover,Env
+CulturePsych,Anthro,Location (neighborhood-level [8 neighborhoods],Characteristics of locality,Anthro
+HabCreate,Anthro,Location (neighborhood-level [8 neighborhoods],Characteristics of locality,Anthro
+MaintainOpts,Anthro,Location (neighborhood-level [8 neighborhoods],Characteristics of locality,Anthro
+SoilProtect,Anthro,Location (neighborhood-level [8 neighborhoods],Characteristics of locality,Anthro
+Food,Env,Location of reef (distance from fishing home/shore),Topography and position,Env
+ClimReg,Env,Longitudinal position,Topography and position,Env
+CulturePsych,Env,Longitudinal position,Topography and position,Env
+Food,Env,Longitudinal position,Topography and position,Env
+HabCreate,Env,Longitudinal position,Topography and position,Env
+coastWQReg,Env,longitudinal river length,Topography and position,Env
+Pollination,Bio,loss of seed source species,Service provider diversity/richness,Bio
+MaintainOpts,Bio,macroinvertebrate and fish population,Service provider abundance,Bio
+coastWQReg,Bio,Maintenance,"Service provider reproduction, growth, and population maintenance",Bio
+CulturePsych,Anthro,management practice was burning. service would be recreational hunting,Management/restoration,Anthro
+HabCreate,Anthro,management practice was burning. service would be recreational hunting,Management/restoration,Anthro
+Food,Anthro,Management practice=fertilizer,Management/restoration,Anthro
+PestPath,Anthro,Management practice=fertilizer,Management/restoration,Anthro
+Food,Anthro,Management practice=insecticide (indirectly via effects on aphids),Management/restoration,Anthro
+PestPath,Anthro,Management practice=insecticide (indirectly via effects on aphids),Management/restoration,Anthro
+HabCreate,Anthro,Management practice=Shoreline condition (bulkhead;riprap;natural),Management/restoration,Anthro
+HabCreate,Anthro,Management practice=Soil surface treatment,Management/restoration,Anthro
+PestPath,Anthro,Management practice=Soil surface treatment,Management/restoration,Anthro
+AQReg,Anthro,Management Practices,Management/restoration,Anthro
+ClimReg,Anthro,Management Practices,Management/restoration,Anthro
+coastWQReg,Anthro,Management Practices,Management/restoration,Anthro
+CulturePsych,Anthro,Management Practices,Management/restoration,Anthro
+Energy,Anthro,Management Practices,Management/restoration,Anthro
+Food,Anthro,Management Practices,Management/restoration,Anthro
+freshWQReg,Anthro,Management Practices,Management/restoration,Anthro
+HabCreate,Anthro,Management Practices,Management/restoration,Anthro
+Hazards,Anthro,Management Practices,Management/restoration,Anthro
+MaintainOpts,Anthro,Management Practices,Management/restoration,Anthro
+Materials,Anthro,Management Practices,Management/restoration,Anthro
+MedGen,Anthro,Management Practices,Management/restoration,Anthro
+PestPath,Anthro,Management Practices,Management/restoration,Anthro
+Pollination,Anthro,Management Practices,Management/restoration,Anthro
+SoilProtect,Anthro,Management Practices,Management/restoration,Anthro
+Pollination,Anthro,Management Practices=near or away from non-fenced/narrow-fenced/wide-fenced riparian buffer strips,Management/restoration,Anthro
+PestPath,Anthro,Management practices=organic vs conventional farming,Management/restoration,Anthro
+Pollination,Anthro,Management practices=organic vs conventional farming,Management/restoration,Anthro
+Food,Anthro,management strategies (field size,Management/restoration,Anthro
+Food,Anthro,management type,Management/restoration,Anthro
+Pollination,Anthro,management type,Management/restoration,Anthro
+Food,Anthro,market orientation,Characteristics of human population,Anthro
+ClimReg,Anthro,mean dwelling density,Population growth and density,Anthro
+ClimReg,Anthro,mean edge/area ratio,Characteristics of locality,Anthro
+,Bio,mean lifespan (mLS indicator),"Service provider reproduction, growth, and population maintenance",Bio
+ClimReg,Anthro,mean lot size,Characteristics of locality,Anthro
+ClimReg,Anthro,mean patch size,Characteristics of locality,Anthro
+,Bio,Mean species richness (by plot and by site),Service provider diversity/richness,Bio
+no ES selected,Bio,measured 82 different ecosystem function variables,Index,Bio
+Food,Env,mid-channel nodes,Topography and position,Env
+Food,Bio,modeled influences of 3 organisms: 2 beneficial insects,Service provider abundance,Bio
+Food,Anthro,Municipality (this mixes a bit with geographic location),Characteristics of locality,Anthro
+Food,Anthro,N inputs,Fertilization,Anthro
+Food,Bio,native bee  diversity (Shannon index),Service provider diversity/richness,Bio
+Food,Bio,native bee abundance,Service provider abundance,Bio
+Food,Bio,native bee richness,Service provider diversity/richness,Bio
+Food,Bio,Natural enemy presences,Pathogens/natural enemies,Bio
+ClimReg,Env,NDVI,Productivity,Bio
+coastWQReg,Env,NDVI,Productivity,Bio
+freshWQReg,Env,NDVI,Productivity,Bio
+MaintainOpts,Env,NDVI,Productivity,Bio
+Pollination,Env,NDVI,Productivity,Bio
+SoilProtect,Env,NDVI,Productivity,Bio
+MaintainOpts,Env,NDWI,Abiotic characteristics of the landscape: terrestrial,Env
+Materials,Env,NDWI,Abiotic characteristics of the landscape: terrestrial,Env
+Energy,Anthro,Neighborhood educational attainment,Characteristics of human population,Anthro
+Energy,Anthro,neighborhood income,Characteristics of human population,Anthro
+HabCreate,Env,NH4,Soil characteristics,Env
+MaintainOpts,Env,NH4,Soil characteristics,Env
+Pollination,Env,Nitrogen availability,Soil characteristics,Env
+coastWQReg,Env,nitrogen deposition,Soil characteristics,Env
+HabCreate,Env,NO2 + NO3,Soil characteristics,Env
+MaintainOpts,Env,NO2 + NO3,Soil characteristics,Env
+freshWQReg,Anthro,not just land use change but land use intensification. management scenarios for stormwater and riparian development,Management/restoration,Anthro
+HabCreate,Anthro,Note: human exploitation driver is oil exploitation,Exploitation/harvest,Anthro
+Food,Bio,number of bumblebee colonies used per year,Pollination,Bio
+Pollination,Bio,number of bumblebee colonies used per year,Pollination,Bio
+,Env,number of mid-channel nodes,Topography and position,Env
+,Env,number of tributary nodes per drainage line,Topography and position,Env
+Pollination,Anthro,nutrient addition,Fertilization,Anthro
+ClimReg,Anthro,Nutrient enrichment,Fertilization,Anthro
+coastWQReg,Anthro,Nutrient enrichment,Fertilization,Anthro
+Food,Anthro,Nutrient enrichment,Fertilization,Anthro
+HabCreate,Anthro,Nutrient enrichment,Fertilization,Anthro
+MaintainOpts,Env,nutrient-supplying capacity of the soil,Soil physiochemical characteristics,Env
+Materials,Env,nutrient-supplying capacity of the soil,Soil physiochemical characteristics,Env
+coastWQReg,Env,Oceanographical (area volume,Land cover,Env
+Food,Env,Oceanographical (area volume,Land cover,Env
+Food,Env,organic carbon),Soil characteristics,Env
+Food,Anthro,organic fertilizer,Fertilization,Anthro
+PestPath,Env,organic matter,Soil characteristics,Env
+AQReg,Bio,Other,Other,Bio
+AQReg,Env,Other,Other,Env
+ClimReg,Anthro,Other,Other,Anthro
+ClimReg,Bio,Other,Other,Bio
+ClimReg,Env,Other,Other,Env
+coastWQReg,Anthro,Other,Other,Anthro
+coastWQReg,Bio,Other,Other,Bio
+coastWQReg,Env,Other,Other,Env
+CulturePsych,Anthro,Other,Other,Anthro
+CulturePsych,Bio,Other,Other,Bio
+CulturePsych,Env,Other,Other,Env
+Energy,Anthro,Other,Other,Anthro
+Energy,Bio,Other,Other,Bio
+Energy,Env,Other,Other,Env
+Food,Anthro,Other,Other,Anthro
+Food,Bio,Other,Other,Bio
+Food,Env,Other,Other,Env
+freshWQReg,Anthro,Other,Other,Anthro
+freshWQReg,Bio,Other,Other,Bio
+freshWQReg,Env,Other,Other,Env
+HabCreate,Anthro,Other,Other,Anthro
+HabCreate,Bio,Other,Other,Bio
+HabCreate,Env,Other,Other,Env
+Hazards,Anthro,Other,Other,Anthro
+Hazards,Env,Other,Other,Env
+MaintainOpts,Anthro,Other,Other,Anthro
+MaintainOpts,Bio,Other,Other,Bio
+MaintainOpts,Env,Other,Other,Env
+Materials,Anthro,Other,Other,Anthro
+Materials,Bio,Other,Other,Bio
+Materials,Env,Other,Other,Env
+MedGen,Anthro,Other,Other,Anthro
+MedGen,Bio,Other,Other,Bio
+MedGen,Env,Other,Other,Env
+PestPath,Anthro,Other,Other,Anthro
+PestPath,Bio,Other,Other,Bio
+PestPath,Env,Other,Other,Env
+Pollination,Anthro,Other,Other,Anthro
+Pollination,Bio,Other,Other,Bio
+Pollination,Env,Other,Other,Env
+SoilProtect,Anthro,Other,Other,Anthro
+SoilProtect,Bio,Other,Other,Bio
+SoilProtect,Env,Other,Other,Env
+SoilProtect,Env,Other(soils)=elevation,Topography and position,Env
+SoilProtect,Env,Other(soils)=rainfall erosivity,Soil physiochemical characteristics,Env
+SoilProtect,Env,Other(soils)=slope,Topography and position,Env
+freshWQReg,Bio,Other(water)=estimated root depth of vegetation type,Biotic characteristics of the plot,Bio
+PestPath,Bio,Other= biocontrol index,Index,Bio
+CulturePsych,Env,Other=Diverse landscape (perceived by users),Land cover,Env
+Food,Env,Other=soil organic carbon,Soil physiochemical characteristics,Env
+PestPath,Env,Other=soil organic carbon,Soil physiochemical characteristics,Env
+freshWQReg,Env,Other=soil variables(salts;Fe;Mn;pH),Soil physiochemical characteristics,Env
+Food,Anthro,P inputs,Fertilization,Anthro
+ClimReg,Anthro,parkland proportion,Land use and land cover change,Anthro
+ClimReg,Bio,pathogen attack,Pathogens/natural enemies,Bio
+CulturePsych,Bio,pathogen attack,Pathogens/natural enemies,Bio
+MedGen,Bio,pathogen attack,Pathogens/natural enemies,Bio
+SoilProtect,Bio,pathogen attack,Pathogens/natural enemies,Bio
+SoilProtect,Env,percent clay,Soil characteristics,Env
+SoilProtect,Env,percent clay in soil,Soil physiochemical characteristics,Env
+SoilProtect,Env,Percent soil mineralized N,Soil physiochemical characteristics,Env
+coastWQReg,Bio,Perennial vegetation,Biotic characteristics of the plot,Bio
+Pollination,Bio,Perennial vegetation,Biotic characteristics of the plot,Bio
+SoilProtect,Bio,Perennial vegetation,Biotic characteristics of the plot,Bio
+Food,Anthro,Pesticide use intensity,Insecticides/fungicides/pesticides/herbicides,Anthro
+Pollination,Anthro,Pesticide use intensity,Insecticides/fungicides/pesticides/herbicides,Anthro
+HabCreate,Env,ph,Aquatic biogeochemistry,Env
+MaintainOpts,Env,ph,Aquatic biogeochemistry,Env
+AQReg,Env,pH,Aquatic biogeochemistry,Env
+coastWQReg,Env,pH,Aquatic biogeochemistry,Env
+Food,Env,pH,Aquatic biogeochemistry,Env
+PestPath,Env,pH,Aquatic biogeochemistry,Env
+Food,Env,Ph,Aquatic biogeochemistry,Env
+HabCreate,Env,physical site variables = slope,Topography and position,Env
+MaintainOpts,Env,physical site variables = slope,Topography and position,Env
+ClimReg,Bio,plant productivity,Productivity,Bio
+,Bio,Plant species richness,Service provider diversity/richness,Bio
+ClimReg,Bio,plant-soil feedbacks,Plant soil feedbacks,Bio
+HabCreate,Bio,plant-soil feedbacks,Plant soil feedbacks,Bio
+SoilProtect,Bio,plant-soil feedbacks,Plant soil feedbacks,Bio
+HabCreate,Env,PO4,Soil characteristics,Env
+MaintainOpts,Env,PO4,Soil characteristics,Env
+ClimReg,Anthro,policy change (‘Grain for Green Program'),Characteristics of human population,Anthro
+Food,Anthro,policy change (‘Grain for Green Program'),Characteristics of human population,Anthro
+freshWQReg,Anthro,policy change (‘Grain for Green Program'),Characteristics of human population,Anthro
+Hazards,Anthro,policy change (‘Grain for Green Program'),Characteristics of human population,Anthro
+SoilProtect,Anthro,policy change (‘Grain for Green Program'),Characteristics of human population,Anthro
+Food,Bio,Pollination dependence,Pollination,Bio
+Pollination,Bio,pollinator richness,Service provider diversity/richness,Bio
+coastWQReg,Anthro,pollution,Pollution/water quality,Anthro
+Materials,Anthro,population density,Population growth and density,Anthro
+ClimReg,Anthro,Population growth,Population growth and density,Anthro
+coastWQReg,Anthro,Population growth,Population growth and density,Anthro
+CulturePsych,Anthro,Population growth,Population growth and density,Anthro
+Food,Anthro,Population growth,Population growth and density,Anthro
+freshWQReg,Anthro,Population growth,Population growth and density,Anthro
+HabCreate,Anthro,Population growth,Population growth and density,Anthro
+Hazards,Anthro,Population growth,Population growth and density,Anthro
+MaintainOpts,Anthro,Population growth,Population growth and density,Anthro
+Materials,Anthro,Population growth,Population growth and density,Anthro
+PestPath,Anthro,Population growth,Population growth and density,Anthro
+Pollination,Anthro,Population growth,Population growth and density,Anthro
+SoilProtect,Anthro,Population growth,Population growth and density,Anthro
+ClimReg,Env,potential insolation,Land cover,Env
+HabCreate,Env,potential insolation,Land cover,Env
+SoilProtect,Env,potential insolation,Land cover,Env
+ClimReg,Env,precipitation,Climate,Env
+freshWQReg,Env,precipitation,Climate,Env
+MaintainOpts,Env,precipitation,Climate,Env
+Materials,Env,precipitation,Climate,Env
+SoilProtect,Env,precipitation,Climate,Env
+PestPath,Bio,Predator dispersal distance,Pathogens/natural enemies,Bio
+Food,Bio,Predator of prey (yield item),Pathogens/natural enemies,Bio
+Pollination,Env,Productivity,Productivity,Bio
+PestPath,Bio,proportion of natural habitat surrounding farms,Biotic characteristics of the plot,Bio
+ClimReg,Anthro,proportion treed,Land use and land cover change,Anthro
+CulturePsych,Anthro,Proximity to roads,Proximity to development,Anthro
+Pollination,Env,radiation index,Index,Env
+Food,Env,rain,Climate,Env
+Pollination,Env,rain,Climate,Env
+ClimReg,Env,rainfall,Climate,Env
+Energy,Env,rainfall,Climate,Env
+freshWQReg,Env,rainfall,Climate,Env
+SoilProtect,Env,rainfall,Climate,Env
+Food,Env,Rainfall,Climate,Env
+SoilProtect,Env,Reforestation age,Management,Anthro
+Pollination,Anthro,Rehabilitation Gradient,Management/restoration,Anthro
+coastWQReg,Bio,Reproduction,"Service provider reproduction, growth, and population maintenance",Bio
+coastWQReg,Anthro,Restoration,Management/restoration,Anthro
+HabCreate,Anthro,Restoration,Management/restoration,Anthro
+Pollination,Env,rewiring,Network property,Bio
+freshWQReg,Bio,riparian canopy,Biotic characteristics of the plot,Bio
+PestPath,Anthro,road edge effects,Proximity to development,Anthro
+Food,Anthro,roads within 1 km,Proximity to development,Anthro
+Pollination,Anthro,roads within 1 km,Proximity to development,Anthro
+SoilProtect,Env,rock fragment cover,Land cover,Env
+PestPath,Bio,Rotation,Management,Anthro
+coastWQReg,Env,salinity),Aquatic biogeochemistry,Env
+Food,Env,salinity),Aquatic biogeochemistry,Env
+,Env,Seasonality (time of of season; e.g. early; mid; late),Timing/seasonality,Env
+ClimReg,Env,sediment type,Soil characteristics,Env
+SoilProtect,Env,sediment type,Soil characteristics,Env
+MaintainOpts,Anthro,separately assess diversity,Characteristics of human population,Anthro
+AQReg,Bio,Service Provider (Q17),Service provider identity,Bio
+ClimReg,Bio,Service Provider (Q17),Service provider identity,Bio
+coastWQReg,Bio,Service Provider (Q17),Service provider identity,Bio
+CulturePsych,Bio,Service Provider (Q17),Service provider identity,Bio
+Energy,Bio,Service Provider (Q17),Service provider identity,Bio
+Food,Bio,Service Provider (Q17),Service provider identity,Bio
+freshWQReg,Bio,Service Provider (Q17),Service provider identity,Bio
+HabCreate,Bio,Service Provider (Q17),Service provider identity,Bio
+Hazards,Bio,Service Provider (Q17),Service provider identity,Bio
+MaintainOpts,Bio,Service Provider (Q17),Service provider identity,Bio
+Materials,Bio,Service Provider (Q17),Service provider identity,Bio
+OceanReg,Bio,Service Provider (Q17),Service provider identity,Bio
+PestPath,Bio,Service Provider (Q17),Service provider identity,Bio
+Pollination,Bio,Service Provider (Q17),Service provider identity,Bio
+SoilProtect,Bio,Service Provider (Q17),Service provider identity,Bio
+PestPath,Bio,Service provider(aphid)=rove beetles;wolf spiders;vegetation-dwelling predators,Service provider identity,Bio
+PestPath,Bio,Service provider(yield)=aphid growth,"Service provider reproduction, growth, and population maintenance",Bio
+SoilProtect,Bio,Service provider=Shrub (as compared to grass),Service provider identity,Bio
+PestPath,Anthro,shade,Abiotic characteristics of the landscape: terrestrial,Env
+coastWQReg,Env,shade effect of riparian ecosystem,Abiotic characteristics of the landscape: terrestrial,Env
+HabCreate,Env,shade effect of riparian ecosystem,Abiotic characteristics of the landscape: terrestrial,Env
+MaintainOpts,Env,shade effect of riparian ecosystem,Abiotic characteristics of the landscape: terrestrial,Env
+MaintainOpts,Env,silt proportion in topsoil,Soil physiochemical characteristics,Env
+Materials,Env,silt proportion in topsoil,Soil physiochemical characteristics,Env
+ClimReg,Anthro,silviculture practices (as the type of management),Management/restoration,Anthro
+freshWQReg,Anthro,silviculture practices (as the type of management),Management/restoration,Anthro
+SoilProtect,Anthro,silviculture practices (as the type of management),Management/restoration,Anthro
+HabCreate,Bio,Single species polychaete (worm) that lives in sediment and eats seeds (not described as an service provider in the paper so didn't record it as one),Pathogens/natural enemies,Bio
+ClimReg,Env,Site slope (inclination),Topography and position,Env
+ClimReg,Env,slope,Topography and position,Env
+coastWQReg,Env,slope,Topography and position,Env
+CulturePsych,Env,slope,Topography and position,Env
+Food,Env,slope,Topography and position,Env
+freshWQReg,Env,slope,Topography and position,Env
+HabCreate,Env,slope,Topography and position,Env
+MaintainOpts,Env,slope,Topography and position,Env
+Materials,Env,slope,Topography and position,Env
+Pollination,Env,slope,Topography and position,Env
+SoilProtect,Env,slope,Topography and position,Env
+coastWQReg,Env,Slope,Topography and position,Env
+CulturePsych,Env,Slope,Topography and position,Env
+Food,Env,Slope,Topography and position,Env
+Materials,Env,Slope,Topography and position,Env
+Pollination,Env,Slope,Topography and position,Env
+SoilProtect,Env,Slope,Topography and position,Env
+SoilProtect,Env,slope steepness,Topography and position,Env
+MaintainOpts,Env,snow water equivalent,Hydrology,Env
+Food,Anthro,social sensitivity (index),Index,Anthro
+MedGen,Anthro,socioeconomic drivers of traditional ecological knowledge,Characteristics of human population,Anthro
+ClimReg,Anthro,socioeconomic wealth,Characteristics of human population,Anthro
+coastWQReg,Anthro,socioeconomic wealth,Characteristics of human population,Anthro
+freshWQReg,Anthro,socioeconomic wealth,Characteristics of human population,Anthro
+Food,Env,Soil,Soil physiochemical characteristics,Env
+SoilProtect,Env,Soil Hardness,Soil physiochemical characteristics,Env
+ClimReg,Env,soil organic carbon,Soil physiochemical characteristics,Env
+Food,Env,soil organic carbon,Soil physiochemical characteristics,Env
+PestPath,Env,soil organic carbon,Soil physiochemical characteristics,Env
+Food,Env,Soil Organic Matter,Soil physiochemical characteristics,Env
+PestPath,Env,Soil P,Soil physiochemical characteristics,Env
+ClimReg,Env,soil properties,Soil physiochemical characteristics,Env
+freshWQReg,Env,soil properties,Soil physiochemical characteristics,Env
+SoilProtect,Env,soil properties,Soil physiochemical characteristics,Env
+Food,Env,soil properties (CEC,Soil physiochemical characteristics,Env
+ClimReg,Env,soil submersion,Soil physiochemical characteristics,Env
+Food,Env,Soil texture,Soil physiochemical characteristics,Env
+ClimReg,Env,soil type,Soil physiochemical characteristics,Env
+freshWQReg,Env,solar radiation,Climate,Env
+ClimReg,Anthro,spatial aggregation,Characteristics of locality,Anthro
+PestPath,Env,Spatial arrangement of landscape,Land cover,Env
+ClimReg,Bio,species composition,Service provider diversity/richness,Bio
+Materials,Bio,species composition,Service provider diversity/richness,Bio
+Food,Bio,species richness,Service provider diversity/richness,Bio
+HabCreate,Bio,Species richness (ecosystem function not ESP),Service provider diversity/richness,Bio
+HabCreate,Anthro,stand age,Land use and land cover change,Anthro
+MaintainOpts,Anthro,stand age,Land use and land cover change,Anthro
+Pollination,Env,Stems per m2,Vegetation cover,Bio
+HabCreate,Env,stream flow; chemical variables = alkalinity,Hydrology,Env
+MaintainOpts,Env,stream flow; chemical variables = alkalinity,Hydrology,Env
+HabCreate,Env,stream width,Hydrology,Env
+MaintainOpts,Env,stream width,Hydrology,Env
+ClimReg,Anthro,street density,Characteristics of locality,Anthro
+ClimReg,Env,summer max temp,Climate,Env
+Food,Env,surface area of inland waters,Land cover,Env
+PestPath,Bio,Syrphid diversity,Service provider diversity/richness,Bio
+Food,Env,temp,Climate,Env
+MaintainOpts,Env,temp,Climate,Env
+Materials,Env,temp,Climate,Env
+Pollination,Env,temp,Climate,Env
+HabCreate,Env,Temp,Climate,Env
+MaintainOpts,Env,Temp,Climate,Env
+ClimReg,Env,temperature,Climate,Env
+freshWQReg,Env,temperature,Climate,Env
+SoilProtect,Env,temperature,Climate,Env
+coastWQReg,Env,Temperature,Climate,Env
+Food,Env,Temperature,Climate,Env
+ClimReg,Env,Terrain slope,Topography and position,Env
+CulturePsych,Env,this one was creating habitat for grouse and the management practice was burning,Extreme events,Env
+HabCreate,Env,this one was creating habitat for grouse and the management practice was burning,Extreme events,Env
+ClimReg,Env,tides,Abiotic characteristics of the landscape: aquatic,Env
+PestPath,Anthro,Tillage and plow practices,Management/restoration,Anthro
+SoilProtect,Anthro,Tillage system,Management/restoration,Anthro
+MaintainOpts,Env,time postfire,Extreme events,Env
+ClimReg,Anthro,Time since restoration,Management/restoration,Anthro
+HabCreate,Env,TN,Soil characteristics,Env
+MaintainOpts,Env,TN,Soil characteristics,Env
+HabCreate,Env,TOC,Soil characteristics,Env
+MaintainOpts,Env,TOC,Soil characteristics,Env
+ClimReg,Env,topographic position,Topography and position,Env
+HabCreate,Env,topographic position,Topography and position,Env
+SoilProtect,Env,topographic position,Topography and position,Env
+ClimReg,Env,topographic wetness index,Index,Env
+HabCreate,Env,topographic wetness index,Index,Env
+SoilProtect,Env,topographic wetness index,Index,Env
+ClimReg,Env,topography,Topography and position,Env
+coastWQReg,Env,topography,Topography and position,Env
+freshWQReg,Env,topography,Topography and position,Env
+MaintainOpts,Env,topography,Topography and position,Env
+Pollination,Env,topography,Topography and position,Env
+ClimReg,Env,topology,Topography and position,Env
+freshWQReg,Env,topology,Topography and position,Env
+Hazards,Env,topology,Topography and position,Env
+SoilProtect,Env,topology,Topography and position,Env
+coastWQReg,Env,total N,Soil characteristics,Env
+Food,Env,total N,Soil characteristics,Env
+PestPath,Env,total N,Soil characteristics,Env
+ClimReg,Env,total nitrogen and phosphorous content,Soil characteristics,Env
+coastWQReg,Env,total P),Soil characteristics,Env
+Food,Env,total P),Soil characteristics,Env
+SoilProtect,Bio,total vegetation ground cover,Biotic characteristics of the plot,Bio
+HabCreate,Env,TP,Soil characteristics,Env
+MaintainOpts,Env,TP,Soil characteristics,Env
+SoilProtect,Bio,Tree cover,Biotic characteristics of the plot,Bio
+ClimReg,Bio,tree height,Biotic characteristics of the plot,Bio
+SoilProtect,Bio,tree size,Biotic characteristics of the plot,Bio
+HabCreate,Anthro,tree volume,Land use and land cover change,Anthro
+MaintainOpts,Anthro,tree volume,Land use and land cover change,Anthro
+Food,Env,tributary nodes/drainline,Topography and position,Env
+coastWQReg,Env,turnover time,Abiotic characteristics of the landscape: aquatic,Env
+Food,Env,turnover time,Abiotic characteristics of the landscape: aquatic,Env
+ClimReg,Env,Type of vegetation (grassland vs. shrubland),Vegetation cover,Bio
+SoilProtect,Env,Understory cover,Vegetation cover,Bio
+Food,Anthro,urban area within 1km,Proximity to development,Anthro
+Pollination,Anthro,urban area within 1km,Proximity to development,Anthro
+,Anthro,Urban development,Land use and land cover change,Anthro
+ClimReg,Anthro,urban form: population density,Population growth and density,Anthro
+freshWQReg,Anthro,urban form: population density,Population growth and density,Anthro
+HabCreate,Anthro,urban form: population density,Population growth and density,Anthro
+CulturePsych,Anthro,Urban to rural gradient of land use.,Land use and land cover change,Anthro
+HabCreate,Anthro,urbanization,Land use and land cover change,Anthro
+PestPath,Env,various trout and fish species including invasive,Service provider diversity/richness,Bio
+SoilProtect,Bio,vegetation basal gap,Biotic characteristics of the plot,Bio
+SoilProtect,Bio,vegetation canopy gap,Biotic characteristics of the plot,Bio
+ClimReg,Bio,vegetation cover,Biotic characteristics of the plot,Bio
+Food,Bio,vegetation cover,Biotic characteristics of the plot,Bio
+freshWQReg,Bio,vegetation cover,Biotic characteristics of the plot,Bio
+Hazards,Bio,vegetation cover,Biotic characteristics of the plot,Bio
+SoilProtect,Bio,vegetation cover,Biotic characteristics of the plot,Bio
+SoilProtect,Env,vegetation cover,Vegetation cover,Bio
+SoilProtect,Env,Vegetation cover,Vegetation cover,Bio
+ClimReg,Bio,vegetation type,Biotic characteristics of the plot,Bio
+,Bio,Vine stock or trunk density,Service provider density,Bio
+coastWQReg,Anthro,visible human impacts around the channel,Human disturbance,Anthro
+HabCreate,Anthro,visible human impacts around the channel,Human disturbance,Anthro
+MaintainOpts,Anthro,visible human impacts around the channel,Human disturbance,Anthro
+HabCreate,Anthro,Volume of water deviation between current flow regime natural regime,Management/restoration,Anthro
+MaintainOpts,Anthro,Volume of water deviation between current flow regime natural regime,Management/restoration,Anthro
+HabCreate,Anthro,Volume of water regulated,Management/restoration,Anthro
+MaintainOpts,Anthro,Volume of water regulated,Management/restoration,Anthro
+coastWQReg,Anthro,Wastewater,Pollution/water quality,Anthro
+ClimReg,Env,water capacity,Hydrology,Env
+HabCreate,Env,water depth,Abiotic characteristics of the landscape: aquatic,Env
+MaintainOpts,Env,water depth,Abiotic characteristics of the landscape: aquatic,Env
+Food,Env,Water level (current and previous years min max mean),Abiotic characteristics of the landscape: aquatic,Env
+coastWQReg,Anthro,water quality,Pollution/water quality,Anthro
+HabCreate,Anthro,Water stored,Management/restoration,Anthro
+MaintainOpts,Anthro,Water stored,Management/restoration,Anthro
+Food,Env,watershed area,Land cover,Env
+HabCreate,Env,Wave exposure (site property),Abiotic characteristics of the landscape: aquatic,Env
+ClimReg,Env,wave fetch,Abiotic characteristics of the landscape: aquatic,Env
+ClimReg,Env,waves,Abiotic characteristics of the landscape: aquatic,Env
+coastWQReg,Anthro,wealth,Characteristics of human population,Anthro
+CulturePsych,Anthro,wealth,Characteristics of human population,Anthro
+Food,Anthro,wealth,Characteristics of human population,Anthro
+Materials,Anthro,wealth,Characteristics of human population,Anthro
+Pollination,Anthro,wealth,Characteristics of human population,Anthro
+SoilProtect,Anthro,wealth,Characteristics of human population,Anthro
+SoilProtect,Env,wetting trend,Climate,Env
+Food,Bio,wild flower strips planted,Biotic characteristics of the plot,Bio
+Pollination,Bio,wild flower strips planted,Biotic characteristics of the plot,Bio
+Food,Bio,wildflower strip width (m),Biotic characteristics of the plot,Bio
+Food,Anthro,wildflower strips,Management/restoration,Anthro
+HabCreate,Anthro,wildflower strips,Management/restoration,Anthro
+PestPath,Anthro,wildflower strips,Management/restoration,Anthro
+Food,Env,wind,Climate,Env
+Pollination,Env,wind,Climate,Env
+ClimReg,Env,windthrow event,Extreme events,Env
+CulturePsych,Env,windthrow event,Extreme events,Env
+MedGen,Env,windthrow event,Extreme events,Env
+SoilProtect,Env,windthrow event,Extreme events,Env
+Food,Env,woodland and scrub within 1km,Land cover,Env
+Pollination,Env,woodland and scrub within 1km,Land cover,Env
