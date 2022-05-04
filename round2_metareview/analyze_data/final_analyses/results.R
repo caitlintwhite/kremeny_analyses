@@ -7,9 +7,12 @@ library(chorddiag) # used for multifunctionality
   #devtools::install_github("mattflor/chorddiag") #github install required for R 4.0.5 on 11 Oct 2021
 library(htmlwidgets) # used to make interactive chord diagram
 library(webshot) # used to save html chord diagram as pdf
+library(cowplot) # used for all panel figures
+library(ungeviz) # used for time, connectivity, multiscale plots
+library(grid) # used for spatiotemporal panel
 
 
-###### Read and prep data
+##### Read and prep data #####
 dat = read.csv('round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv') %>%
   filter(version=='final')
 
@@ -104,8 +107,8 @@ dat %>%
 
 
 
-##### General Patterns
-# STILL NEED TO ADD INDIAN OCEAN WITH 0% LABEL ON PLOT
+##### General Patterns #####
+
 
 ### geographic location
 loc_counts = dat %>% 
@@ -125,15 +128,13 @@ wm <- map_data("world") %>%
 # country continents dataframe
 cc <- raster::ccodes()
 
-# rename country codes RENAME 
-# some country names don't match between the two databases, I only corrected
-# those that were visible on the map
+# rename country codes 
 wm$region %>% unique %>% setdiff(cc$NAME)
   
 mappings <- c("UK"="United Kingdom", "USA"="United States", "Ivory Coast" = "Côte d'Ivoire") # You add the others here
 cc$NAME[match(mappings, cc$NAME)] <- names(mappings)
 
-# change Russia to Asia, not Europe (looks weird with all of it considered Europe)
+# change Russia to Asia, not Europe
 cc[cc$NAME=='Russia',]$continent <- 'Asia'
 
 # set up labels
@@ -166,7 +167,7 @@ loc_counts_lab = loc_counts %>%
   )) 
 
 # join cc to the counts of papers and PLOT
-cc %>%
+map_plot = cc %>%
   dplyr::select(NAME, continent) %>%
   left_join(loc_counts, by = c('continent' = 'clean_answer')) %>%
   left_join(wm, by = c('NAME' = 'region')) %>%
@@ -177,17 +178,17 @@ cc %>%
   geom_label(data = loc_counts_lab %>% filter(!grepl('Global',clean_answer)), 
              aes(x = label_coords_lon, 
                  y = label_coords_lat, 
-                 label = paste0(clean_answer, ':', 100*round(proportion, digits = 2), '%') )) +
+                 label = paste0(clean_answer, ':', 100*round(proportion, digits = 2), '%') ),
+             size=3) +
   #geom_tile(aes(x = 0, y = 0, width = 360, height = 360), colour = 'lightblue') +
   #geom_abline(slope = Inf, intercept = 180) +
   coord_map("mollweide") + # to change projections
   theme_void()
 
-ggsave('round2_metareview/analyze_data/final_analyses/fig_files/map_study_locations.pdf', width = 10, height = 5)
+#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/map_study_locations.pdf', width = 10, height = 5)
 
 # study system
-# STILL NEED TO WRITE SI METHODS FOR THIS FIGURE, SOME CATEGORIES EXCLUDED BECAUSE THEY ARE SUBSETS
-dat %>% 
+system_plot = dat %>% 
   filter(abbr == 'Ecosystem') %>%
   dplyr::select(Title, clean_answer) %>% 
   separate_rows(clean_answer, sep = ',') %>%
@@ -197,17 +198,17 @@ dat %>%
   mutate(proportion = count / num_papers) %>%
   ggplot(aes(x = fct_reorder(clean_answer, proportion), y = proportion, label = round(proportion, digits = 2))) +
   geom_col() +
-  xlab('Study system') +
+  ggtitle('Study system') +
+  xlab('') +
   ylab('Proportion of studies') +
   coord_flip() +
   theme_bw() 
 
-ggsave('round2_metareview/analyze_data/final_analyses/fig_files/study_system_simple.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/study_system_simple.pdf', width = 5, height = 5, dpi = 'retina')
 
 
 # methods
-# STILL might need to do something to show that several studies used multiple methods
-dat %>% 
+mthds_plot = dat %>% 
   filter(abbr == 'Methods') %>%
   mutate(clean_answer = gsub(" \\(.*\\)", '', clean_answer)) %>%
   dplyr::select(Title, clean_answer) %>%
@@ -217,12 +218,13 @@ dat %>%
   mutate(proportion = count / num_papers) %>%
   ggplot(aes(x = fct_reorder(clean_answer, proportion), y = proportion)) +
   geom_col() +
-  xlab('Methods used') +
+  ggtitle('Methods used') +
+  xlab('') +
   ylab('Proportion of studies') +
   coord_flip() +
   theme_bw()
 
-ggsave('round2_metareview/analyze_data/final_analyses/fig_files/methods_used.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/methods_used.pdf', width = 5, height = 5, dpi = 'retina')
 
 # methods venn
 methods_tf = dat %>% 
@@ -255,7 +257,7 @@ methods_adjmat
 
 
 # ES type
-dat %>%
+estype_plot = dat %>%
   filter(abbr=='Yclass') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
   dplyr::select(ES) %>%
@@ -265,15 +267,33 @@ dat %>%
   ggplot(aes(x = fct_reorder(ES, proportion), y = proportion, label = round(proportion, digits = 2))) +
   geom_col() +
   #geom_label(hjust = 1) +
-  xlab('Ecosystem service type') +
-  ylab('Proportion of studies that studied this service type') +
+  ggtitle('Ecosystem service type') +
+  xlab('') +
+  ylab('Proportion of studies') +
   coord_flip() +
   theme_bw()
 
-ggsave('round2_metareview/analyze_data/final_analyses/fig_files/which_services.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/which_services.pdf', width = 5, height = 5, dpi = 'retina')
 
 
-##### Biotic drivers
+# Make general patterns panel
+
+ggdraw() +
+  draw_plot(map_plot, x = 0, y = 0.5, width = 0.6, height = 0.5) +
+  draw_plot(system_plot, x = 0.6, y = 0.5, width = .4, height = 0.5) +
+  draw_plot(estype_plot, x = 0, y = 0, width = 0.5, height = 0.5) +
+  draw_plot(mthds_plot, x = 0.5, y = 0, width = 0.5, height = 0.5) +
+  draw_plot_label(label = c("A", "B", "C", "D"), size = 15,
+                  x = c(0, 0.6, 0, 0.5), y = c(1, 1, 0.5, 0.5))
+
+ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/panel_gen_patterns.pdf', width=7.5, height=5, dpi='retina')
+
+
+
+
+
+
+##### Biotic drivers #####
 
 # make overall venn diagram
 venn_list = list(
@@ -282,12 +302,34 @@ venn_list = list(
   environmental = excl_lulc %>% filter(Environmental == TRUE) %>% pull(Title) %>% as.character()
 )
 
-ggVennDiagram(venn_list, category.names = c('Biotic drivers','Human drivers','Environmental drivers'), label = 'percent', color = 'darkgray', show.legend = FALSE) +
+venn_dat = process_data(Venn(venn_list))
+region_label <- venn_dat@region %>%
+  dplyr::filter(.data$component == "region") %>%
+  dplyr::mutate(percent = paste(round(.data$count*100/sum(.data$count),
+                                      digits = 0),"%", sep="")) %>%
+  dplyr::mutate(both = paste(.data$count,paste0("(",.data$percent,")"),sep = "\n"))
+
+
+venn_plot = ggplot() +
+  geom_sf(aes(fill=count), data = venn_region(venn_dat)) +
+  geom_sf(data = venn_setedge(venn_dat), show.legend = F) +
+  geom_sf_text(aes(label = c('Biotic drivers','Human drivers','Environmental drivers')), 
+               data = venn_setlabel(venn_dat),
+               nudge_y = 0.1) +
+  geom_sf_label(aes(label=percent),
+               data = region_label,
+               alpha=0.5,
+               color = 'black',
+               size = NA,
+               lineheight = 0.85) +
+  theme_void() +
   scale_fill_distiller(direction = 1) + #change fill colour palette
   scale_color_manual(values = c('black','black','black')) + #outlines of circles
-  theme(legend.position = 'None', plot.title = element_text(hjust =-0.1, face='bold')) + #remove legend
-  coord_sf(clip="off")  #don't cutoff labels 
+  theme(legend.position = 'None') + #remove legend
+  coord_sf(clip="off") + #don't cutoff labels 
+  scale_x_continuous(expand = expansion(mult = .3)) 
   # excludes 26 studies that only used land use or land cover drivers
+
 
 
 # venn diagrams by service
@@ -323,7 +365,7 @@ for (i in 1:length(es_types)){
 
 
 # Ecological scale of biotic drivers
-dat %>% 
+ecolscalebiotic_plot = dat %>% 
   filter(qnum=='Q14', abbr=='ESP_type') %>%
   dplyr::select(Title, clean_answer) %>%
   # clean up and separate answers
@@ -348,15 +390,25 @@ dat %>%
   filter(!is.na(binned)) %>%
   ggplot() +
   geom_col(aes(x=fct_rev(binned), y=perc)) +
-  xlab('Type of biotic driver') +
+  ggtitle('Levels of biotic drivers') +
+  xlab('') +
   ylab('Proportion of papers') +
   coord_flip() +
   theme_bw()
   # checked that the same number of papers in multiple ESP species and community level was just a coincidence - it was
 
-ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/biotic_driv_specific.pdf', width=5, height=5, dpi='retina')
+#ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/biotic_driv_specific.pdf', width=5, height=5, dpi='retina')
 
-# Breakdown by ES type??
+# Biotic drivers panel
+ggdraw()+
+  draw_plot(venn_plot, x=0, y=0, height=1, width=0.5) +
+  draw_plot(ecolscalebiotic_plot, x=0.5, y=0, height=1, width=0.5) +
+  draw_plot_label(label = c("A", "B"), size = 15,
+                  x = c(0, 0.5), y = c(1, 1))
+
+ggsave(filename = 'round2_metareview/analyze_data/final_analyses/fig_files/panel_bioticdrivers.pdf', width=7.5, height=4, dpi='retina')
+
+
 
 
 
@@ -369,7 +421,7 @@ excl_lulc %>%
 
 
 
-##### Abiotic drivers (human & env)
+##### Abiotic drivers (human & env) #####
 
 # see above venn diagrams for human and environmental drivers, including those by es type
 excl_lulc %>%
@@ -381,10 +433,10 @@ excl_lulc %>%
   nrow() / nrow(excl_lulc)
 
 
-##### Spatiotemporal scale
+##### Spatiotemporal scales #####
 
 ### num years
-dat %>%
+numyears_plot = dat %>%
   filter(abbr=='YrsData') %>%
   group_by(clean_answer) %>%
   summarise(count = n()) %>%
@@ -395,16 +447,17 @@ dat %>%
   mutate(clean_answer = factor(clean_answer, levels = c('Time not considered', '1 year or less','2-5 years','6-10 years', '10+ years'))) %>%
   ggplot(aes(x = fct_rev(clean_answer), y = proportion)) +
   geom_col() +
-  xlab('Number of years') +
+  ggtitle('Temporal duration') +
+  xlab('') +
   ylab('Proportion of studies') +
   coord_flip() +
   theme_bw()
 
-ggsave('round2_metareview/analyze_data/final_analyses/fig_files/num_years.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/num_years.pdf', width = 5, height = 5, dpi = 'retina')
 
 
 ### spatial extent
-dat %>% 
+spatextent_plot = dat %>% 
   filter(abbr=='Extent') %>%
   group_by(clean_answer) %>%
   summarise(count = n()) %>% 
@@ -412,15 +465,17 @@ dat %>%
   mutate(clean_answer = factor(clean_answer, levels = c('Local', 'Macro-scale','Global','Undefined/no scale'))) %>%
   ggplot(aes(x = fct_rev(clean_answer), y = proportion)) +
   geom_col() +
-  xlab('Spatial extent') +
+  ggtitle('Spatial extent') +
+  xlab('') +
   ylab('Proportion of studies') +
   coord_flip() +
   theme_bw()
 
-ggsave('round2_metareview/analyze_data/final_analyses/fig_files/spatial_extent.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/spatial_extent.pdf', width = 5, height = 5, dpi = 'retina')
 
 
 ### duration
+# overall props
 services_overall = dat %>%
   filter(abbr=='Yclass') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
@@ -429,12 +484,14 @@ services_overall = dat %>%
   summarise(count = n()) %>%
   mutate(proportion = count/num_papers)
 
+# duration props
 timetrends_df = dat %>%
   filter(abbr=='TimeTrends') %>%
   dplyr::select(Title, TimeTrends = clean_answer) %>%
   mutate(TimeTrends = gsub(" \\(.*\\)", '', TimeTrends)) %>% # get rid of the 'e.g' text
   mutate(TimeTrends = ifelse(TimeTrends=='Space for time', 'Yes', TimeTrends)) # make all space for time 'yes'
 
+# expected props
 overall_yes_prop = dat %>%
   filter(abbr=='TimeTrends') %>%
   dplyr::select(Title, TimeTrends = clean_answer) %>%
@@ -448,7 +505,7 @@ overall_yes_prop = dat %>%
   pull(proportion)
 
 
-dat %>%
+timeestype_plot = dat %>%
   filter(abbr=='Yclass') %>%
   filter(!is.na(clean_answer)) %>%
   dplyr::select(Title, ES) %>%
@@ -463,18 +520,20 @@ dat %>%
   ggplot(aes(x = fct_reorder(ES, prop_overall))) +
   geom_col(aes(y = prop_overall), fill = 'gray') +
   geom_col(aes(y = prop_yes), fill = 'black') +
-  geom_point(aes(y = prop_expected_yes), colour = 'yellow', shape = '|', size = 6) +
+  geom_hpline(aes(y = prop_expected_yes), colour = 'yellow', width=0.9, size=0.8) +
   xlab('Ecosystem service type') +
-  ylab('Proportion of studies that looked at temporal trends \n (with overall proportion in light gray)') +
+  ylab('Proportion of studies') +
   ggtitle('Considered time?') +
   coord_flip() +
   theme_bw()
 
-ggsave('round2_metareview/analyze_data/final_analyses/fig_files/es_type_temporal.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/es_type_temporal.pdf', width = 5, height = 5, dpi = 'retina')
 rm(list=c('services_overall','overall_yes_prop'))
 
 
 ### connectivity
+
+# overall props
 services_overall = dat %>%
   filter(abbr=='Yclass') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
@@ -483,10 +542,12 @@ services_overall = dat %>%
   summarise(count = n()) %>%
   mutate(proportion = count/num_papers)
 
+# specific props
 connect_df = dat %>%
   filter(abbr=='Connect') %>%
   dplyr::select(Title, Connectivity = clean_answer)
 
+# expected props
 overall_yes_prop = dat %>%
   filter(abbr=='Connect') %>%
   dplyr::select(Title, Connectivity = clean_answer) %>%
@@ -498,7 +559,7 @@ overall_yes_prop = dat %>%
   pull(proportion)
 
 
-dat %>%
+spatconn_plot = dat %>%
   filter(abbr=='Yclass') %>%
   filter(!is.na(clean_answer)) %>%
   dplyr::select(Title, ES) %>%
@@ -513,17 +574,19 @@ dat %>%
   ggplot(aes(x = fct_reorder(ES, prop_overall))) +
   geom_col(aes(y = prop_overall), fill = 'gray') +
   geom_col(aes(y = prop_yes), fill = 'black') +
-  geom_point(aes(y = prop_expected_yes), colour = 'yellow', shape = '|', size = 6) +
+  geom_hpline(aes(y = prop_expected_yes), colour = 'yellow', width=0.9, size=0.8) +
   xlab('Ecosystem service type') +
-  ylab('Proportion of studies that looked at connectivity \n (with overall proportion in light gray)') +
+  ylab('Proportion of studies') +
   ggtitle("Spatial connectivity?") +
   coord_flip() +
   theme_bw()
 
-ggsave('round2_metareview/analyze_data/final_analyses/fig_files/es_type_connectivity.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/es_type_connectivity.pdf', width = 5, height = 5, dpi = 'retina')
 rm(list=c('services_overall','overall_yes_prop'))
 
 ### multiple spatial scales
+
+# overall props
 services_overall = dat %>%
   filter(abbr=='Yclass') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
@@ -532,10 +595,12 @@ services_overall = dat %>%
   summarise(count = n()) %>%
   mutate(proportion = count/num_papers)
 
+# specific props
 nested_df = dat %>%
   filter(abbr=='Nested') %>%
   dplyr::select(Title, Nested = clean_answer)
 
+# expected props
 overall_yes_prop = dat %>%
   filter(abbr=='Nested') %>%
   dplyr::select(Title, Nested = clean_answer) %>%
@@ -547,7 +612,7 @@ overall_yes_prop = dat %>%
   pull(proportion)
 
 
-dat %>%
+multispat_plot = dat %>%
   filter(abbr=='Yclass') %>%
   filter(!is.na(clean_answer)) %>%
   dplyr::select(Title, ES) %>%
@@ -562,15 +627,54 @@ dat %>%
   ggplot(aes(x = fct_reorder(ES, prop_overall))) +
   geom_col(aes(y = prop_overall), fill = 'gray') +
   geom_col(aes(y = prop_yes), fill = 'black') +
-  geom_point(aes(y = prop_expected_yes), colour = 'yellow', shape = '|', size = 6) +
+  geom_hpline(aes(y = prop_expected_yes), colour = 'yellow', width=0.9, size=0.8) +
   xlab('Ecosystem service type') +
-  ylab('Proportion of studies that looked at multiple spatial scales \n (with overall proportion in light gray)') +
+  ylab('Proportion of studies') +
   ggtitle('Multiple spatial scales?') +
   coord_flip() +
   theme_bw()
 
-ggsave('round2_metareview/analyze_data/final_analyses/fig_files/es_type_multiscale.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/es_type_multiscale.pdf', width = 5, height = 5, dpi = 'retina')
 rm(list=c('services_overall','overall_yes_prop'))
+
+
+
+# Make spatiotemporal panel
+
+# without description of C,D,E
+ggdraw() +
+  draw_plot(numyears_plot, x=0, y=0.5, width=0.5, height=0.5) +
+  draw_plot(spatextent_plot, x=0.5, y=0.5, width=0.5, height=0.5) +
+  draw_plot(timeestype_plot, x=0, y=0, width=0.333, height=0.5) +
+  draw_plot(spatconn_plot, x=0.333, y=0, width=0.333, height=0.5) +
+  draw_plot(multispat_plot, x=0.666, y=0, width=0.333, height=0.5) +
+  draw_plot_label(label = c("A", "B", "C", "D", "E"), size = 15,
+                  x = c(0, 0.5, 0, 0.333, 0.666), y = c(1, 1, 0.5, 0.5, 0.5)) 
+  
+ggsave(filename = 'round2_metareview/analyze_data/final_analyses/fig_files/panel_spatiotemp_simp.pdf', width=9, height=6, dpi='retina')
+
+# with description of C,D,E
+ggdraw() +
+  draw_plot(numyears_plot, x=0, y=0.5, width=0.333, height=0.5) +
+  draw_plot(spatextent_plot, x=0.333, y=0.5, width=0.333, height=0.5) +
+  draw_plot(timeestype_plot, x=0, y=0, width=0.333, height=0.5) +
+  draw_plot(spatconn_plot, x=0.333, y=0, width=0.333, height=0.5) +
+  draw_plot(multispat_plot, x=0.666, y=0, width=0.333, height=0.5) +
+  draw_plot_label(label = c("A", "B", "C*", "D*", "E*"), size = 15,
+                  x = c(0, 0.333, 0, 0.333, 0.666), y = c(1, 1, 0.5, 0.5, 0.5)) +
+  draw_grob(grob = rectGrob(width=0.3, height=0.37), 
+            x =  .34, 
+            y =  .23, hjust=0, vjust=0) +
+  draw_text('*C, D, E:', x=0.7, y=0.89, size=14, hjust=0, fontface='bold') +
+  draw_text(text=str_wrap('Black bars: proportion that considered time (C), spatial connectivity (D), and multiple spatial scales (E)', width=42),
+            x=0.7, y=0.85, size=10, hjust=0, vjust=1) +
+  draw_text(text=str_wrap('Gray bars: overall proportion of studies by ecosystem service type', width=42),
+            x=0.7, y=0.73, size=10, hjust=0, vjust=1) +
+  draw_text(text=str_wrap('Yellow lines: expected proportion by ecosystem service type based on overall average', width=42),
+            x=0.7, y=0.65, size=10, hjust=0, vjust=1) 
+  
+ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/panel_spatiotemp.pdf', width=9, height=6, dpi='retina')
+
 
 
 ### intersections with methods
@@ -580,7 +684,9 @@ rm(list=c('services_overall','overall_yes_prop'))
 # Note to make heatmap figure, but to make sure connectivity gets included with multiple spatial scales
 
 
-##### Multifunctionality
+
+
+##### Multifunctionality #####
 
 ### number of ES types per paper
 dat %>%
@@ -602,7 +708,21 @@ dat %>%
   theme_bw() +
   coord_flip()
 
-ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/numestype_perpaper.pdf', width=5, height=5, dpi='retina')
+# view the table
+dat %>%
+  filter(abbr=='Yclass') %>%
+  filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
+  dplyr::select(Title, ES) %>% 
+  mutate(pres_holder = 1) %>%
+  pivot_wider(id_cols = 'Title', names_from = 'ES', values_from = 'pres_holder') %>% 
+  replace(is.na(.), 0) %>%
+  mutate(num_ES_types = rowSums(.[-1])) %>%
+  dplyr::select(Title, num_ES_types) %>% 
+  group_by(num_ES_types) %>%
+  summarise(count = n()) %>%
+  mutate(proportion = count/ sum(count))
+
+#ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/numestype_perpaper.pdf', width=5, height=5, dpi='retina')
 
 # pull titles that had 8+ service types
 dat %>%
@@ -618,7 +738,7 @@ dat %>%
 
 
 
-### chord diagram
+### chord diagram of multifunctionality (two service types)
 site_by_es = dat %>%
   filter(abbr=='Yclass') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
@@ -658,8 +778,92 @@ withr::with_dir('round2_metareview/analyze_data/final_analyses/fig_files/', save
 webshot("round2_metareview/analyze_data/final_analyses/fig_files/chord_diag_static.html" , "round2_metareview/analyze_data/final_analyses/fig_files/chord_diag_static.pdf", delay = 0.2)
 
 
+### Multifunctionality and time scales
 
-##### 'Analytical approaches' (new name eventually)
+# proportions within each single ES type
+dat %>%
+  filter(abbr=='Yclass') %>%
+  filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
+  dplyr::select(Title, ES) %>%
+  left_join(
+    dat %>%
+      filter(abbr=='YrsData') %>%
+      mutate(clean_answer = ifelse(is.na(clean_answer), 'Time not considered', clean_answer)) %>%
+      dplyr::select(Title, clean_answer),
+    by='Title'
+  ) %>% 
+  group_by(ES, clean_answer) %>%
+  summarise(count=n()) %>%
+  mutate(proportion_within_es = count / sum(count)) %>%
+  mutate(clean_answer = gsub('–', '-', clean_answer)) %>%
+  mutate(clean_answer = factor(clean_answer, levels = c('Time not considered', '1 year or less','2-5 years','6-10 years', '10+ years'))) %>%
+  ggplot(aes(x = fct_rev(clean_answer), y = proportion_within_es)) +
+  geom_col() +
+  facet_wrap(.~ES) +
+  ylab('Proportion of studies \n(within ecosystem service type)') +
+  xlab('') +
+  ggtitle('Study duration by ecosystem service type') +
+  coord_flip() +
+  theme_bw()
+
+# counts instead, within each single ES type
+dat %>%
+  filter(abbr=='Yclass') %>%
+  filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
+  dplyr::select(Title, ES) %>%
+  left_join(
+    dat %>%
+      filter(abbr=='YrsData') %>%
+      mutate(clean_answer = ifelse(is.na(clean_answer), 'Time not considered', clean_answer)) %>%
+      dplyr::select(Title, clean_answer),
+    by='Title'
+  ) %>% 
+  group_by(ES, clean_answer) %>%
+  summarise(count=n()) %>%
+  mutate(proportion_within_es = count / sum(count)) %>%
+  mutate(clean_answer = gsub('–', '-', clean_answer)) %>%
+  mutate(clean_answer = factor(clean_answer, levels = c('Time not considered', '1 year or less','2-5 years','6-10 years', '10+ years'))) %>%
+  ggplot(aes(x = fct_rev(clean_answer), y = count)) +
+  geom_col() +
+  facet_wrap(.~ES) +
+  ylab('Number of studies') +
+  xlab('') +
+  ggtitle('Study duration by ecosystem service type') +
+  coord_flip() +
+  theme_bw()
+
+
+dat %>%
+  filter(abbr=='Yclass') %>%
+  filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
+  dplyr::select(Title, ES) %>%
+  left_join(
+    dat %>%
+      filter(abbr=='YrsData') %>%
+      mutate(clean_answer = ifelse(is.na(clean_answer), 'Time not considered', clean_answer)) %>%
+      dplyr::select(Title, clean_answer),
+    by='Title'
+  ) %>% 
+  ungroup() %>%
+  group_by(Title) %>%
+  summarise(num_ES = length(unique(ES)), duration = clean_answer) %>%
+  unique() %>%
+  group_by(num_ES, duration) %>%
+  summarise(count=n()) %>% 
+  mutate(proportion_within_esnum = count / sum(count)) %>%
+  mutate(duration = gsub('–', '-', duration)) %>%
+  mutate(duration = factor(duration, levels = c('Time not considered', '1 year or less','2-5 years','6-10 years', '10+ years'))) %>%
+  ggplot(aes(x=duration, y=count)) +
+  geom_col() +
+  facet_wrap(.~num_ES) +
+  coord_flip() +
+  theme_bw()
+
+    # Not sure what we want from this...will need to ask what Laura had in mind
+
+
+
+##### Dynamics, non-linearities, uncertainty, and thresholds #####
 
 
 
@@ -714,6 +918,16 @@ dat %>%
 ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/feedbacks.pdf', width=5, height=5, dpi='retina')
 
 
+# pulling list of titles that considered feedbacks
+dat %>% 
+  filter(qnum=='Q15') %>%
+  dplyr::select(Title, clean_answer) %>% 
+  # one conflicting answer, set as no feedbacks measured
+  mutate(clean_answer = ifelse(clean_answer=='Ecosystem function -> service providers,No feedbacks measured directly', 'No feedbacks measured directly', clean_answer)) %>%
+  mutate(clean_answer = ifelse(clean_answer=='No feedbacks measured directly',clean_answer,'Feedbacks measured')) %>%
+  filter(clean_answer != 'No feedbacks measured directly')
+  
+
 ### Thresholds
 dat %>%
   filter(qnum=='Q16') %>%
@@ -747,7 +961,9 @@ ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/thresho
 # through in more detail).
 dat %>%
   filter(qnum=='Q17') %>%
-  dplyr::select(Title, clean_answer)
+  dplyr::select(Title, clean_answer) %>%
+  filter(!is.na(clean_answer)) %>%
+  View()
 
 
 
