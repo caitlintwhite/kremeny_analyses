@@ -10,7 +10,7 @@ library(webshot) # used to save html chord diagram as pdf
 library(cowplot) # used for all panel figures
 library(ungeviz) # used for time, connectivity, multiscale plots
 library(grid) # used for spatiotemporal panel
-
+library(magick) # used for images in panel figure (temp dyn, thresholds, feedbacks)
 
 ##### Read and prep data #####
 dat = read.csv('round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv') %>%
@@ -474,7 +474,7 @@ spatextent_plot = dat %>%
 #ggsave('round2_metareview/analyze_data/final_analyses/fig_files/spatial_extent.pdf', width = 5, height = 5, dpi = 'retina')
 
 
-### duration
+### time trends yes/no
 # overall props
 services_overall = dat %>%
   filter(abbr=='Yclass') %>%
@@ -484,7 +484,7 @@ services_overall = dat %>%
   summarise(count = n()) %>%
   mutate(proportion = count/num_papers)
 
-# duration props
+# timetrends props
 timetrends_df = dat %>%
   filter(abbr=='TimeTrends') %>%
   dplyr::select(Title, TimeTrends = clean_answer) %>%
@@ -679,10 +679,81 @@ ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/panel_s
 
 ### intersections with methods
 # see `extent_and_methods.R`, to be included in SI
+extent_title = dat %>% 
+  filter(abbr=='Extent') %>% 
+  dplyr::select(Title, Extent = clean_answer)
+
+extent_props = extent_title %>%
+  group_by(Extent) %>%
+  summarise(count = n()) %>%
+  mutate(ext_proportion = count / num_papers) %>%
+  rename(ext_count = count)
+
+
+
+methods_title_seprow = dat %>% 
+  filter(abbr == 'Methods') %>%
+  mutate(clean_answer = gsub(" \\(.*\\)", '', clean_answer)) %>%
+  dplyr::select(Title, Methods = clean_answer) %>%
+  separate_rows(Methods, sep = ',') 
+
+
+ext_methods = methods_title_seprow %>%
+  left_join(extent_title, by = 'Title') %>%
+  group_by(Extent, Methods) %>%
+  summarise(count = n()) %>%
+  ungroup() %>% 
+  mutate(Extent = as.character(Extent)) %>%
+  complete(Extent, Methods, fill = list(count = 0)) %>%
+  mutate(methods_ext_prop = count / num_papers) %>%
+  left_join(extent_props, by = 'Extent') %>%
+  group_by(Extent) %>%
+  mutate(methods_ext_prop_within = count / ext_count) 
+
+
+ggplot() +
+  geom_col(data = extent_props %>% mutate(Extent = factor(Extent, levels = c('Local','Macro-scale','Global','Undefined/no scale'))),
+           aes(x = fct_rev(Extent), y = ext_proportion), 
+           fill = 'lightgray') +
+  geom_col(data = ext_methods, 
+           aes(x = Extent, y = methods_ext_prop, group = Methods, fill = Methods), 
+           position = 'dodge') +
+  geom_hline(yintercept = 0) +
+  xlab('Spatial extent') +
+  ylab('Proportion of studies') +
+  coord_flip() +
+  theme_bw() 
+
+
+ext_methods
 
 ### space & time intersections
-# Note to make heatmap figure, but to make sure connectivity gets included with multiple spatial scales
 
+# take nested
+dat %>%
+  filter(abbr=='Nested') %>%
+  dplyr::select(Title, Nested = clean_answer) %>%
+  # join with connectivity
+  left_join(
+    dat %>%
+      filter(abbr=='Connect') %>%
+      dplyr::select(Title, Connectivity = clean_answer),
+    by='Title'
+  ) %>%
+  # new col for yes/no space if connectivity or Nested is true
+  mutate(Space_yesno = ifelse(Connectivity=='Yes' | Nested =='Yes', 'Yes', 'No')) %>%
+  dplyr::select(Title, Space_yesno) %>%
+  # join with time trends yes/no
+  left_join(
+    dat %>%
+      filter(abbr=='TimeTrends') %>%
+      dplyr::select(Title, TimeTrends = clean_answer) %>%
+      mutate(TimeTrends = gsub(" \\(.*\\)", '', TimeTrends)) %>% # get rid of the 'e.g' text
+      mutate(TimeTrends = ifelse(TimeTrends=='Space for time', 'Yes', TimeTrends)),
+    by='Title'
+  ) %>%
+  group_by(Space_yesno, TimeTrends) %>%
+  summarise(count = n(), proportion = count/nrow(.))
 
 
 
@@ -899,23 +970,32 @@ dat %>%
 
 
 # feedbacks plot
-dat %>% 
+fdbck_plot = dat %>% 
   filter(qnum=='Q15') %>%
   dplyr::select(Title, clean_answer) %>% 
   # one conflicting answer, set as no feedbacks measured
   mutate(clean_answer = ifelse(clean_answer=='Ecosystem function -> service providers,No feedbacks measured directly', 'No feedbacks measured directly', clean_answer)) %>%
   mutate(clean_answer = ifelse(clean_answer=='No feedbacks measured directly',clean_answer,'Feedbacks measured')) %>% 
+  mutate(clean_answer = case_when(
+    clean_answer=='No feedbacks measured directly' ~ 'No',
+    clean_answer=='Feedbacks measured' ~ 'Yes'
+  )) %>%
   group_by(clean_answer) %>%
   summarise(count = n()) %>%
   mutate(proportion = count/sum(count)) %>%
+  mutate(clean_answer = factor(clean_answer, levels=c('Yes','No'))) %>%
   ggplot() +
   geom_col(aes(x=clean_answer, y=proportion)) +
+  ggtitle('Feedbacks measured?') +
   xlab('') +
   ylab('Proportion of studies') +
   ylim(c(0,1)) +
-  theme_bw()
+  theme_bw() +
+  theme(axis.text.x = element_text(angle=45, hjust=1, size=7), 
+        title = element_text(size=7),
+        axis.text.y=element_text(size=5))
 
-ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/feedbacks.pdf', width=5, height=5, dpi='retina')
+#ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/feedbacks.pdf', width=5, height=5, dpi='retina')
 
 
 # pulling list of titles that considered feedbacks
@@ -938,21 +1018,40 @@ dat %>%
 
 
 # thresholds plot
-dat %>%
+thresh_plot = dat %>%
   filter(qnum=='Q16') %>%
   dplyr::select(Title, clean_answer) %>% 
   group_by(clean_answer) %>%
   summarise(count = n()) %>%
   mutate(proportion = count/sum(count)) %>%
-  mutate(clean_answer = factor(clean_answer, levels = c('Yes','Mentioned or discussed but not measured','No'))) %>%
+  mutate(clean_answer = gsub('Mentioned or discussed but not measured', 'Mentioned', clean_answer)) %>%
+  mutate(clean_answer = factor(clean_answer, levels = c('Yes','Mentioned','No'))) %>%
   ggplot() +
   geom_col(aes(x=clean_answer, y=proportion)) +
-  xlab('Thresholds considered?') +
+  ggtitle('Thresholds considered?') +
+  xlab('') +
   ylab('Proportion of studies') +
   ylim(c(0,1)) +
-  theme_bw()
+  theme_bw() +
+  theme(axis.text.x = element_text(angle=45, hjust=1, size=7), 
+        title = element_text(size=7),
+        axis.text.y=element_text(size=5))
 
-ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/thresholds.pdf', width=5, height=5, dpi='retina')
+#ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/thresholds.pdf', width=5, height=5, dpi='retina')
+
+
+# Add feedbacks and thresholds to conceptual figure
+# conceptual figure: round2_metareview/analyze_data/final_analyses/fig_files/draft_tempdyn_feedbacks_thresholds.pdf
+
+ggdraw() +
+  draw_image(magick::image_read("round2_metareview/analyze_data/final_analyses/fig_files/draft_tempdyn_feedbacks_thresh_fig.pdf", density = 600),
+             x=0, y=0, height=1, width=0.8) +
+  # draw_image(magick::image_read("round2_metareview/analyze_data/final_analyses/fig_files/draft_tempdyn_feedbacks_thresh_fig.pdf", density = 100),
+  #            x=0, y=0, height=1, width=0.8) + # low res for tweaking
+  draw_plot(fdbck_plot, x=0.58, y=0.5, height=0.35, width=0.2) +
+  draw_plot(thresh_plot, x=0.58, y=0.1, height=0.4, width=0.2)
+
+ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/panel_dynfdbckthresh.pdf', width=8.5, height=5, dpi='retina')
 
 
 ### Uncertainty
