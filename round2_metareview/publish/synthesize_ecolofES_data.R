@@ -60,8 +60,8 @@ library(rstudioapi) # used to set path directory for reading in data
 ##### Read and prep data #####
 
 # specify current path
-home <- rstudioapi::getSourceEditorContext()$path #path to current script
-home <- gsub("synthesize.*R$", "", home) # up one level (downloaded folder where data live)
+home <- rstudioapi::getSourceEditorContext()$path # path to current script
+home <- gsub("synthesize.*R$", "", home) # up one level (download folder where data live)
 
 # read in full text extracted data
 dat <- read.csv(paste0(home, "ecolofES_extracted_data.csv")) %>%
@@ -895,10 +895,10 @@ p_static = chorddiag(adj_mat_stat,
                      groupnamePadding = 5 # distance of names from outside of circles
 )
 # save static
-withr::with_dir('round2_metareview/analyze_data/final_analyses/fig_files/', saveWidget(p_static, file="chord_diag_static.html"))
+#withr::with_dir('round2_metareview/analyze_data/final_analyses/fig_files/', saveWidget(p_static, file="chord_diag_static.html"))
 
 # webshot to pdf
-webshot("round2_metareview/analyze_data/final_analyses/fig_files/chord_diag_static.html" , "round2_metareview/analyze_data/final_analyses/fig_files/chord_diag_static.pdf", delay = 0.2)
+#webshot("round2_metareview/analyze_data/final_analyses/fig_files/chord_diag_static.html" , "round2_metareview/analyze_data/final_analyses/fig_files/chord_diag_static.pdf", delay = 0.2)
 
 
 ### Multifunctionality and time scales
@@ -1103,7 +1103,7 @@ ggdraw() +
   draw_plot(fdbck_plot, x=0.58, y=0.5, height=0.35, width=0.2) +
   draw_plot(thresh_plot, x=0.58, y=0.1, height=0.4, width=0.2)
 
-ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/panel_dynfdbckthresh.pdf', width=8.5, height=5, dpi='retina')
+#ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/panel_dynfdbckthresh.pdf', width=8.5, height=5, dpi='retina')
 
 
 ### Uncertainty
@@ -1120,11 +1120,45 @@ dat %>%
 
 
 #### Sankey Alluvial ES drivers diagram ####
-# sankey code authorship: Aislyn Keyes
-# questions?: aislyn.keyes@colorado.edu
 
-data <- data[data$version == "final",] # final data
-df <- data[,c(8,15:19)] # pull relevant columns
+## prep data
+# isolate updated driver types
+new.bins <- dat %>%
+  filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
+  dplyr::select(Title, clean_answer_binned, clean_group) %>%
+  mutate(old_group = clean_group) %>%
+  # reassign clean_answer_binned land cover answers to have Group 'LU LC'
+  mutate(clean_group = ifelse(clean_answer_binned %in% c('Land cover', 'Land use and land cover change'), 'LU_LC',clean_group)) %>%
+  # reassign studies with only land cover biotic drivers (based on Q14) to 'LU LC' Group
+  mutate(clean_group = ifelse(Title %in% biot_lulc_titles & clean_group == 'Biotic', 'LU_LC', clean_group)) %>%
+  # take only unique rows 
+  unique()
+
+# isolate driver types and es types for sankey
+es.bins <- dat %>%
+  filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
+  dplyr::select(Title, clean_answer_binned, clean_group) %>%
+  mutate(old_group = clean_group) %>%
+  # reassign clean_answer_binned land cover answers to have Group 'LU LC'
+  mutate(clean_group = ifelse(clean_answer_binned %in% c('Land cover', 'Land use and land cover change'), 'LU_LC',clean_group)) %>%
+  # reassign studies with only land cover biotic drivers (based on Q14) to 'LU LC' Group
+  mutate(clean_group = ifelse(Title %in% biot_lulc_titles & clean_group == 'Biotic', 'LU_LC', clean_group)) %>%
+  dplyr::select(-clean_answer_binned, -old_group) %>%
+  # take only unique rows 
+  unique() %>%
+  rename(driv_type = clean_group) %>%
+  # join with ES types
+  full_join(
+    dat %>%
+      filter(abbr=='Response') %>% 
+      filter(!is.na(clean_answer)) %>% 
+      dplyr::select(Title, ES) %>%
+      unique(),
+    by='Title'
+    )
+
+# subset extracted data
+df <- dat[,c(8,15:19)] # pull relevant columns for sankey
 df <- df[df$qnum == "Q12",] # subset to only Q12
 df <- df[,-5]
 
@@ -1230,7 +1264,7 @@ my_colors <-  'd3.scaleOrdinal() .domain(["A","B","C","D","E","F","G","H"])
 
 
 
-# BASE SANKEY CODE
+##### Base Sankey Code #####
 
 
 # build sankey
