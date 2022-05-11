@@ -1,25 +1,34 @@
 clean_answer,clean_answer_binned,Group,clean_group,question_abbr
+Amount of 'semi natural vegetation',Biotic characteristics of the plot,Environmental,Biotic,OtherDriver
 availability of semi-natural habitat (% area within 500m radius),Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 bark thickness,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 broadleaved cover,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 Canopy cover,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 Canopy cover,Biotic characteristics of the plot,Human,Biotic,OtherDriver
+Canopy density,Biotic characteristics of the plot,Environmental,Biotic,OtherDriver
+Canopy openness,Biotic characteristics of the plot,Environmental,Biotic,OtherDriver
 foliar cover,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
+Forest stand age,Biotic characteristics of the plot,Environmental,Biotic,OtherDriver
 Forest type,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 Forest type (dense; mixed; seasonal),Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 green infrastructure,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 "Hedge quality (""good"" or ""poor"")",Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
+initial Canopy density,Biotic characteristics of the plot,Environmental,Biotic,OtherDriver
 litter cover,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 Other(water)=estimated root depth of vegetation type,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 Perennial vegetation,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 proportion of natural habitat surrounding farms,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 riparian canopy,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
+Stems per m2,Biotic characteristics of the plot,Environmental,Biotic,OtherDriver
 total vegetation ground cover,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 Tree cover,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 tree height,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 tree size,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
+Type of vegetation (grassland vs. shrubland),Biotic characteristics of the plot,Environmental,Biotic,OtherDriver
+Understory cover,Biotic characteristics of the plot,Environmental,Biotic,OtherDriver
 vegetation basal gap,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 vegetation canopy gap,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
+Vegetation cover,Biotic characteristics of the plot,Environmental,Biotic,OtherDriver
 Vegetation cover,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 vegetation type,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 wild flower strips planted,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
@@ -87,15 +96,6 @@ Growth,"Service provider reproduction, growth, and population maintenance",Bioti
 Maintenance,"Service provider reproduction, growth, and population maintenance",Biotic,Biotic,OtherDriver
 mean lifespan (mLS indicator),"Service provider reproduction, growth, and population maintenance",Biotic,Biotic,OtherDriver
 Reproduction,"Service provider reproduction, growth, and population maintenance",Biotic,Biotic,OtherDriver
-Amount of 'semi natural vegetation',Vegetation cover,Environmental,Biotic,OtherDriver
-Canopy density,Vegetation cover,Environmental,Biotic,OtherDriver
-Canopy openness,Vegetation cover,Environmental,Biotic,OtherDriver
-Forest stand age,Vegetation cover,Environmental,Biotic,OtherDriver
-initial Canopy density,Vegetation cover,Environmental,Biotic,OtherDriver
-Stems per m2,Vegetation cover,Environmental,Biotic,OtherDriver
-Type of vegetation (grassland vs. shrubland),Vegetation cover,Environmental,Biotic,OtherDriver
-Understory cover,Vegetation cover,Environmental,Biotic,OtherDriver
-Vegetation cover,Vegetation cover,Environmental,Biotic,OtherDriver
 daytime light,Abiotic characteristics of the landscape: aquatic,Environmental,Environmental,OtherDriver
 Ecosystem (22 different marine systems),Abiotic characteristics of the landscape: aquatic,Environmental,Environmental,OtherDriver
 HDO saturation,Abiotic characteristics of the landscape: aquatic,Environmental,Environmental,OtherDriver
@@ -109,6 +109,7 @@ wave fetch,Abiotic characteristics of the landscape: aquatic,Environmental,Envir
 waves,Abiotic characteristics of the landscape: aquatic,Environmental,Environmental,OtherDriver
 field age,Abiotic characteristics of the landscape: terrestrial,Environmental,Environmental,OtherDriver
 inundation,Abiotic characteristics of the landscape: terrestrial,Environmental,Environmental,OtherDriver
+rock fragment cover,Abiotic characteristics of the landscape: terrestrial,Environmental,Environmental,OtherDriver
 shade,Abiotic characteristics of the landscape: terrestrial,Human,Environmental,OtherDriver
 shade effect of riparian ecosystem,Abiotic characteristics of the landscape: terrestrial,Environmental,Environmental,OtherDriver
 conductivity,Aquatic biogeochemistry,Environmental,Environmental,OtherDriver
@@ -162,11 +163,9 @@ Land cover,Land cover,Biotic,Environmental,OtherDriver
 Land cover class,Land cover,Environmental,Environmental,OtherDriver
 Land cover type,Land cover,Environmental,Environmental,OtherDriver
 Landscape types (Homogeneous; Heterogeneous),Land cover,Environmental,Environmental,OtherDriver
-Location (fore reef or lagoon),Land cover,Environmental,Environmental,OtherDriver
 Other=Diverse landscape (perceived by users),Land cover,Environmental,Environmental,OtherDriver
 Percent oyster habitat,Land cover,Environmental,Environmental,OtherDriver
 potential insolation,Land cover,Environmental,Environmental,OtherDriver
-rock fragment cover,Land cover,Environmental,Environmental,OtherDriver
 Spatial arrangement of landscape,Land cover,Environmental,Environmental,OtherDriver
 surface area of inland waters,Land cover,Environmental,Environmental,OtherDriver
 watershed area,Land cover,Environmental,Environmental,OtherDriver
@@ -216,6 +215,7 @@ distance to water,Topography and position,Environmental,Environmental,OtherDrive
 elevation,Topography and position,Environmental,Environmental,OtherDriver
 Freshwater influence (coastal position),Topography and position,Environmental,Environmental,OtherDriver
 Latitude,Topography and position,Environmental,Environmental,OtherDriver
+Location (fore reef or lagoon),Topography and position,Environmental,Environmental,OtherDriver
 Location of reef (distance from fishing home/shore),Topography and position,Environmental,Environmental,OtherDriver
 Longitudinal position,Topography and position,Environmental,Environmental,OtherDriver
 longitudinal river length,Topography and position,Environmental,Environmental,OtherDriver

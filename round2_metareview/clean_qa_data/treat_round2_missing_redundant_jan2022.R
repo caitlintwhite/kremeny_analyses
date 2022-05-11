@@ -400,7 +400,7 @@ reclass_canopycov <- with(reclass_drivers, rowid[grepl("canopy cov", clean_answe
 qdat_revised$clean_answer_binned[qdat_revised$rowid %in% reclass_canopycov] <- cleanbins$clean_answer_binned[grepl("canopy cover", cleanbins$clean_answer) & grepl("Biotic", cleanbins$clean_answer_binned)]
 qdat_revised$clean_group[qdat_revised$rowid %in% reclass_canopycov] <- "Biotic"
 qdat_revised$qa_note[qdat_revised$rowid %in% reclass_canopycov] <- paste(qdat_revised$qa_note[qdat_revised$rowid %in% reclass_canopycov], "CTW reclassed group and binned answer to standardize canopy cover variables", sep = "; ")
-# 3. olive grove types becomes human and maangement
+# 3. olive grove types becomes human and management
 reclass_olive <- with(reclass_drivers, rowid[grepl("olive", clean_answer)])
 qdat_revised$clean_answer[qdat_revised$rowid %in% reclass_olive]
 qdat_revised$clean_answer_binned[qdat_revised$rowid %in% reclass_olive] <- "Management/restoration"
@@ -644,6 +644,59 @@ summary(qdat_revised)
 with(qdat_revised, summary(!is.na(clean_answer[grepl("Driver|Effect", abbr)]) & is.na(clean_group[grepl("Driver|Effect", abbr)]))) # all okay
 
 
+# 6. standardize and QA clean_answer bins -----
+# while preparing data for publication noticed "vegetation cover" binned variables overlap with "biotic characteristics of the plot
+# > make all biotic characteristics to standardize
+vegcanopy <- with(qdat_revised, grep("Vegetation cov|Biotic char", clean_answer_binned))
+View(arrange(qdat_revised[vegcanopy,], clean_answer_binned))
+# ok to make these all biotic char, all clean groups and survey orders fine (already Biotic)
+biolabel <- unique(qdat_revised$clean_answer_binned[grepl("Biotic char", qdat_revised$clean_answer_binned)])
+qdat_revised$clean_answer_binned[vegcanopy] <- biolabel
+
+# because land use land cover change gets treated as their own driver type, review to be sure all individual vars appropriate for land use/land cover
+lulcvars <- subset(qdat_revised, grepl("Land", clean_answer_binned) & abbr == "OtherDriver")
+sort(unique(lulcvars$clean_answer))
+
+# rock fragment cover, stage age, tree volume, Location (fore reef or lagoon) stick out as ones to check
+checklulcbin <- subset(lulcvars, grepl("rock frag|stand age|tree vol|Location [(]fo", clean_answer)) %>%
+  left_join(r2assigned[c("Title", "FirstAuthor", "SourcePublication")])
+
+# rock fragment (Hernandez et al. 2013):
+# > %rock cover taken from point intercept surveys in plots along with other veg monitoring cover
+# > more appropriate to list as abiotic char of plot and environmental var than human (need to switch survey internal # and effect direct to env)
+# need to adjust in final answer and individual answer
+rockrowids <- with(checklulcbin, rowid[grepl("rock", clean_answer)])
+# be sure these are rows to adjust (there aren't duplicate rowids)
+View(qdat_revised[qdat_revised$rowid %in% rockrowids,]) # yes
+qdat_revised$clean_answer_binned[qdat_revised$rowid %in% rockrowids] <- unique(with(qdat_revised, clean_answer_binned[grepl("Abiotic char.* terres", clean_answer_binned)]))
+qdat_revised$clean_group[qdat_revised$rowid %in% rockrowids] # don't need to change group, no qa note needed
+
+
+# stand age and tree volume (Truchy et al. 2019):
+# from methods:
+# Catchment land use information (comprising percent agricultural land and coniferous forest, spatial location of clear-cuts) were obtained using the Swedish Landcover Map (2004) along with the Swedish Forestry Agency’s clear-cut records since 2001. 
+# Stand age and tree volume information were also retrieved from the SLU Forest Map (Department of Forest Resource Management, Swedish University of Agricultural Sciences)
+# from website: each raster is 12.5x12.5x metres (taken with Sentinel 2)
+# intent is to characterize catchment land use, so keep as land use var (but can add QA note to show checked)
+
+truchyrowid <-  with(checklulcbin, rowid[grepl("Truchy", FirstAuthor)])
+# be sure these are rows to add note to (there aren't duplicate rowids)
+View(qdat_revised[qdat_revised$rowid %in% truchyrowid,]) # yes
+newnote <- qdat_revised$qa_note[qdat_revised$rowid %in% truchyrowid] 
+newnote <- paste(newnote, "CTW confirmed driver variable used more like land use [silviculture inventory from raster data] than biotic characteristic of plot", sep = "; ")
+qdat_revised$qa_note[qdat_revised$rowid %in% truchyrowid] <- newnote
+
+
+# Location (fore reef or lagoon) Dubois et al. 2019
+# > they use inside-outside lagoon more like habitat type (type of reef species community present, but consider mobiles species than can swim between the two)
+# > use is about relative distance from reef. reclass to topography & position (Env type so don't need to change group or survey order)
+lagoonrowid <- with(checklulcbin, rowid[grepl("lagoon", clean_answer)])
+# be sure these are rows to adjust (there aren't duplicate rowids)
+View(qdat_revised[qdat_revised$rowid %in% lagoonrowid,]) # yes
+qdat_revised$clean_answer_binned[qdat_revised$rowid %in% lagoonrowid] <- unique(with(qdat_revised, clean_answer_binned[grepl("position", clean_answer_binned)]))
+qdat_revised$clean_group[qdat_revised$rowid %in% lagoonrowid] # don't need to change group, no qa note needed
+
+
 
 # -- RULE-CHECK KREMEN TOPICS ----
 # > from original cleaning code:
@@ -801,7 +854,7 @@ driverbins <- subset(qdat_revised, abbr == "OtherDriver" & !is.na(clean_answer),
   distinct() %>%
   arrange(clean_group, clean_answer_binned, clean_answer)
 # notice that "Management" and "Mangement/restoration" exists as bins for Human drivers. Standardize.
-# also notice time-related variables aren't all binned at Timing/seasonlity. Standardize.
+# also notice time-related variables aren't all binned at Timing/seasonality. Standardize.
 driverbins[grepl("time|season|^age| age ", driverbins$clean_answer, ignore.case = T) | grepl("Timing", driverbins$clean_answer_binned), ]
 # "Time since restoration", "time postfire", and age-related huamn drivers should fall in Timing/seasonality
 # find the rows that have a time-variable that need new bin
@@ -973,7 +1026,8 @@ qdat_revised_out <- rbind(qdat_revised, notevar_dat[names(qdat_revised)]) %>%
   # clean up
   dplyr::select(-rowid) %>%
   mutate_at(.vars = c("StartDate", "EndDate", "RecordedDate"), function(x) as.POSIXct(x, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")) %>% 
-  data.frame()
+  data.frame() %>%
+  distinct()
 
 summary(qdat_revised_out)
 
