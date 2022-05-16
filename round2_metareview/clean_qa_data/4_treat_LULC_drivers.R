@@ -1,16 +1,11 @@
-# internal use R script to prep data and EML metadata for publication
+# recode land use/land cover drivers in to their own LU_LC driver type
 # author(s): CTW
-# questions?: caitlin.t.white@colorado.eduy
+# questions?: caitlin.t.white@colorado.edu
 # date init: 2022-05-07
 
 # script purpose:
-# we should publish 2 datasets:
-# 1. all abstracts and full text excluded with reasons and citation info
-# 2. full text studies retained, with qualtrics data used for analyses, and citation info
-# > #2 is our "map database" (anyone interested in particular aspects our our survey could filter studies based on coding responses)
-
-# use GV's Land cover Land Use change code to recode drivers and exclude LULC only
-# > add those LULC-excluded studies to the exclusion dataset
+# 1) use GV's Land cover Land Use change code to recode drivers and exclude LULC only
+# > write LULC-excluded studies to round 2 data folder as their own exclusion dataset
 # > be sure changed LULC drivers have QA note added
 
 # specific mods for LULC:
@@ -21,15 +16,21 @@
 # [3] After LU_LC reassignment, if only driver in study is LU_LC exclude.
 # > CTW to-do: Add these excluded papers (GV found 26) to the excluded papers dataset with reason (Only driver in study is land use or land cover as a proxy).
 
-# once datasets prepped with citation info and unecessary columns removed (e.g., anything internal use not critical to publish), write metadata with EML package
-# write out all to main level of "publish" subfolder
+# 2) screen for logical consistencies
+# because may want to use original 3 driver types sometimes (?) keep those and put LULC-updated drivers in another column
+# GV and AK can switch between which drivers they want to use as needed
+
+# 3) write out 3 datasets:
+# 3.1) dataset for analysis with same name (archive old just in case)
+# 3.2) ES-driver table for Sankey figure (as GV made for AK)
+# 3.3) excluded LULC papers (with full data available -- will deal with that in the make excluded papers script)
+
 
 
 #### SETUP -----
 rm(list = ls()) # start w clean environment (ctw does not care this is not best practice code)
 # load needed libraries
 library(tidyverse)
-library(EML)
 options(stringsAsFactors = F)
 na_vals = c(NA, "NA", " ", "", ".")
 
@@ -37,14 +38,11 @@ na_vals = c(NA, "NA", " ", "", ".")
 datpath <- "round2_metareview/data/cleaned/"
 # cleaned round 2 data (still need to convert LULC)
 r2keep <- read.csv(paste0(datpath, "ESqualtrics_r2keep_cleaned.csv"), na.strings = na_vals)
-# excluded papers with reasons
-excluded <- read.csv(paste0(datpath, "ESreview_allexcluded_allrounds.csv"), na.strings = na_vals)
 # citation info for all papers
 citations <- read.csv("round1_exclusion/EcosystemServicesPapersNov2019.csv", na.strings = na_vals)
 
 # how did all read in?
 str(r2keep)
-str(excluded)
 str(citations) #ok
 
 
@@ -92,7 +90,7 @@ lulc_otherdriver <- left_join(grouplut, abbrlut[abbrlut$abbr == "OtherDriver",])
 lulc_Q12order_all <- rbind(lulc_Q12order, lulc_otherdriver) %>%
   left_join(distinct(subset(abbrcodes, qnum == "Q12", select = -id))) %>%
   left_join(distinct(subset(abbrcodes, qnum == "Q12"))) %>%
-# ESes that never got selected for Other answer do not have a survey order or qualtrics id
+  # ESes that never got selected for Other answer do not have a survey order or qualtrics id
   mutate(survey_order_simple = trunc(survey_order),
          ES_order = ifelse(is.na(ES), 0, ES_order)) %>%
   arrange(abbr_globalorder, survey_order, group_order, ES_order) %>%
@@ -156,8 +154,8 @@ if(min(new_abbrcodes$new_order) != 1){
 
 # 1. assess what individual answers and driver types got binned as land cover or land use related
 drivervars <- subset(r2keep, qnum == "Q12" & grepl("Driv", abbr) & clean_answer_binned != "Other",
-  # can ignore variables repeated across ESes
-    select = c(Title, clean_answer, clean_answer_binned, abbr:clean_group)) %>%
+                     # can ignore variables repeated across ESes
+                     select = c(Title, clean_answer, clean_answer_binned, abbr:clean_group)) %>%
   distinct()
 
 # what are the bins?
@@ -233,7 +231,7 @@ unique(onlylulcesp$Methods)
 # this paper was double reviewed, one reviewer excluded (for stopping at abundance and not linking to EF/ES) and the other kept
 # looking at paper, they did survey plot-level characteristics but as response variable. Driver was land cover derived from sat imagery. Plot canopy got entered as a driver (that's why paper wasn't flagged), but shouldn't have.
 # > EXCLUDE
-  
+
 # Marcilio et al. 2018
 # more of a scenario/simulation paper. only using forest cover type as driver.
 # > EXCLUDE
@@ -344,6 +342,111 @@ dat2 <- r2keep %>%
 # how many papers affected?
 length(unique(dat2$Title[dat2$conflict])) #15 papers -- Sankey should definitely be remade
 
+
+# clean up environment before moving on
+rm(dat2, excl_lulc, driv_types_title, biot_lulc_titles,
+   needs_order, start_order, newQ12_surveyorder, grouplut, drivervars, ESlut, abbrlut, abbrcodes)
+
+
+
+##### 3. Re-classify land use and land cover drivers and effects -----
+# steps:
+# 1. recode driver bins -- assign to new_group column for now so GV can stick with 3 main driver types if there is reason for that
+# 2. reassign clean group for EffectDirect
+# 3. add QA notes
+# note: this will apply to individual reviews (for double reviewed papers) and final (single review or converged double review answers)
+
+# preserve r2keep as is
+r2keep_lulc <- r2keep %>%
+  # since lulc-adjusted drivers will be in their own column, easiest thing might be to join that column
+  left_join(reviewlulc)
+
+# figure out which papers need "Other" driver added bc of LULC switch (keep clean_group bc of existing other driver in that group + add LULC other), vs "Other" should be recoded too
+# same for effect direct
+
+# rules:
+# "Other" row (abbr == "Driver):
+# If only one other driver for a given group and it got recoded to LULC, "Other" can be recoded to LULC
+# If more than one other driver for a given group and one got recoded to LULC, add another "Other" row for LULC
+
+# Effect Direct:
+# If only one driver for a given group and that group got switched to LULC, effect direct gets switched to LULC
+# If more than one driver for a given group and only one got reclassed to LULC, add another effect direct row and copy effect direct value
+
+cleanup_other_lulc <- subset(r2keep, qnum == "Q12" & !is.na(clean_answer) & (clean_answer_binned == "Other" | abbr == "OtherDriver")) %>% # only keep rows that have an answer
+  # make new driver group as above with LU_LC
+  mutate(new_group = ifelse(grepl("^Land ", clean_answer_binned), "LU_LC", clean_group)) %>%
+  group_by(Title, ResponseId) %>%
+  mutate(has_lulc = any(new_group == "LU_LC")) %>%
+  ungroup()
+# pull out papers that don't need any driver adjustment
+no_driverchange_papers <- subset(cleanup_other_lulc, !has_lulc)
+# proceed with only papers that need driver adjustment
+cleanup_other_lulc <- subset(cleanup_other_lulc, has_lulc) %>%
+  data.frame() %>%
+  group_by(ResponseId, abbr, clean_group) %>%
+  # count the number of other driver new groups for the driver type that got changed to lu_lc
+  # > if 1 only, can change "Other" new_group to LU_LC
+  # > if 2, need to add a new "Other" row
+  mutate(numtypes_other_lulc = length(unique(new_group[any(new_group == "LU_LC")]))) %>%
+  ungroup() %>%
+  group_by(ResponseId, clean_group) %>%
+  mutate(add_other = ifelse(any(numtypes_other_lulc==2), "add",
+                            ifelse(any(numtypes_other_lulc == 1), "change", "ignore")))
+
+# initiate new data frame for storing amended Other Driver answers
+newother <- data.frame()
+# iterate by ResponseId to evaluate
+for(i in unique(cleanup_other_lulc$ResponseId)){
+  tempdat <- subset(cleanup_other_lulc, ResponseId == i & add_other != "ignore")
+  # iterate through whatever clean groups are present (e.g., could have lulc reclassed in env and/or human and/or biotic other drivers)
+  for(c in unique(tempdat$clean_group)){
+    # if it's "add" other row, copy the existing Other row and:
+    # 1. assign new_group == "LU_LC"
+    # 2. increment rowid by 0.5 (so will order correctly)
+    # 3. add QA note (should be fine to overwrite whatever QA note was there since it's added)
+    instruction <- unique(tempdat$add_other[tempdat$clean_group ==c])
+    stopifnot(length(instruction)==1) # make sure only one instruction present per group
+    if(instruction == "add"){
+      # copy "Other" row and edit
+      newrow <- subset(tempdat, clean_group == c & clean_answer == "Other")
+      newrow$new_group <- "LU_LC"
+      newrow$rowid <- newrow$rowid+0.5
+      newrow$qa_note <- paste("One of multiple", c, "other drivers entered recoded to 'Land Use Land Cover' driver type. Added 'Other' driver in LULC group for consistency.")
+      # add newrow to tempdat
+      tempdat <- rbind(tempdat, newrow)
+    }else{ 
+      # change Other to LULC because only other driver in the group is LULC
+      temprow <- with(tempdat, which(clean_answer == "Other" & clean_group == c))
+      stopifnot(length(temprow) != 1)
+      tempdat$new_group[temprow] <- "LU_LC"
+      # add QA note
+      addnote <- paste("Other driver(s) entered in", c, "driver type recoded to Land Use Land Cover type. Updated 'Other' driver to LULC group for consistency.")
+      if(is.na(tempdat$qa_note[temprow])){
+        # if blank, assign new note
+        tempdat$qa_note[temprow] <- addnote
+      }else
+        # else append
+        tempdat$qa_note[temprow] <- paste(tempdat$qa_note[temprow], addnote, sep = "; ")
+    }
+  }
+  # once cycle through all possible groups to adjust for a given survey, rbind to newother df
+  newother <- rbind(newother, tempdat)
+}
+
+
+
+
+## remove effect direction from binned answers (shouldn't be in there -- thought removed before)
+# mutate(clean_answer_binned = ifelse(abbr == "EffectDirect", NA, clean_answer_binned),
+
+
+#### LOGIC CHECK KREMEN TOPIC AND ESP TYPE -----
+# screen for logical consistency after LULC recode
+
+
+#### MAKE ES DAT FOR SANKEY -----
+
 # save driver types and es types for sankey
 dat3 <- r2keep %>%
   filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
@@ -368,29 +471,12 @@ dat3 <- r2keep %>%
   )
 
 
-##### 3. Re-classify land use and land cover drivers and effects -----
-# steps:
-# 1. recode driver bins -- assign to new_group column for now so GV can stick with 3 main driver types if there is reason for that
-# 2. reassign clean group for EffectDirect
-# 3. add QA notes
-# note: this will apply to individual reviews (for double reviewed papers) and final (single review or converged double review answers)
+#### FINISHING -----
+# write out ES-driver table for Sankey
+
+# write out lulc-adjusted analysis clean full text dataset
 
 
-##### 4. Logic check Kremen Topics and ESP type after LULC recode -----
+# write out lulc-excluded dataset
 
 
-##### 5. Make full text dat for GV and AK w LULC recode -----
-
-
-
-#### MAKE EXCLUDED PAPERS OUT ----
-
-
-
-#### MAKE FULL TEXT DATA OUT ----
-
-
-
-
-
-#### MAKE EML METADATA -----
