@@ -1101,9 +1101,138 @@ fix_duplicates <- subset(fix_duplicates, !(check_dup & removedup)) %>%
 
 # add back in to main dataset  
 qdat_revised_out <- rbind(qdat_revised_out, fix_duplicates[names(qdat_revised_out)]) %>%
-  arrange(RecordedDate, Title, desc(version), Init, survey_order, varnum) %>%
-  # clean up
-  dplyr::select(StartDate:qa_note)
+  arrange(RecordedDate, Title, desc(version), Init, survey_order, varnum) #%>%
+# clean up
+#dplyr::select(StartDate:qa_note)
+
+
+# clean up "Other" clean_group when OtherDriver reclassed to standardize -----
+# > found this May 2022 when prepping dataset for publication
+
+# screen for other drivers where "Other" clean group is not the same as the OtherDriver clean group, by Response, by Group, and by ES
+check_Othergroup <- subset(qdat_revised_out, grepl("Driver", abbr)) %>% #& !is.na(clean_answer)
+  # subset to Other or OtherDrivers only
+  #subset((clean_answer == "Other" & abbr == "Driver") | abbr == "OtherDriver") %>%
+  group_by(ResponseId, ES) %>% #Group, 
+  # subset to only those ESes with Other Driver present
+  mutate(has_other = any(abbr == "OtherDriver" & !is.na(clean_answer))) %>%
+  filter(has_other) %>%
+  #group_by(ResponseId, ES) %>%
+  # continue with clean_group comparison
+  mutate(ES_otherdriver_cleangrp = str_flatten(sort(unique(clean_group[abbr == "OtherDriver" & !is.na(clean_answer)])), collapse = ", "),
+         ES_maindriver_cleangrp = str_flatten(sort(unique(clean_group[abbr == "Driver" & !is.na(clean_answer)])), collapse = ", "),
+         # clean groups just for clean_answer == "Other"
+         ES_other_cleangroup = str_flatten(sort(unique(clean_group[clean_answer == "Other" & !is.na(clean_answer)])), collapse = ", "),
+         mismatch = ES_otherdriver_cleangrp != ES_other_cleangroup) %>%
+  ungroup() %>%
+  # subset to records needing correction
+  filter(mismatch) %>%
+  # list unique other driver clean_groups per original Group for triage
+  group_by(ResponseId, Group, ES) %>%
+  mutate(Group_otherdriver_cleangrps = str_flatten(sort(unique(clean_group[abbr == "OtherDriver" & !is.na(clean_answer)])), collapse = ", ")) %>%
+  ungroup()
+
+# how many reviews-ESes is this?
+nrow(distinct(check_Othergroup[c("ResponseId", "ES")])) #15, not too bad
+# how many unique reviews (did this tend to happen for same review)?
+length(unique(check_Othergroup$ResponseId)) #5.. so yes
+
+
+addotherdriver_note <- "Added 'Other' based on clean_group assigned to Other Driver"
+switchotherdriver_note <- "clean_group reassigned based on Other Driver clean_group"
+
+# iterate through each reviewer response and ES, find the missing Others needed, infill and add qa_note
+# > when only one clean_group per ES, just make correction in original Other row
+# > when multiple clean_groups exist within a given Group, infill 'Other' in appropriate clean_group
+
+# initiate master df for storing replacements
+replace_other <- data.frame()
+for(r in unique(check_Othergroup$ResponseId)){
+  tempdat <- subset(check_Othergroup, ResponseId == r & (abbr == "Driver" | (Group != clean_group & abbr == "OtherDriver")))
+    # see if 'Other' is present already in each Group
+    # and then iterate through each ES
+    for(e in unique(tempdat$ES)){
+      tempes <- subset(tempdat, ES == e)
+      # deal with one clean_group at a time
+      triagegroups <- with(tempes, unique(clean_group[abbr == "OtherDriver"]))
+      for(g in triagegroups){
+        # pull original group
+        tempGroup <- with(tempes, unique(Group[tempes$clean_group == g & abbr == "OtherDriver"]))
+        stopifnot(length(tempGroup) ==1) # there should only be 1 original Group
+        tempgroups <- subset(tempes, Group == g | clean_group == g | (clean_answer == "Other" & Group == tempGroup))
+        # if only 1 clean_group present for other driver within a given Group, reassign clean_group for 'Other'
+        switch <- all(tempgroups$Group_otherdriver_cleangrps[tempgroups$abbr == "OtherDriver"] == g)
+        if(switch){
+          temprow <- subset(tempgroups, clean_answer_binned == "Other" & Group == tempGroup)
+          # make sure only 1 row pulled
+          stopifnot(nrow(temprow) == 1)
+          # assign correct clean_group
+          temprow$clean_group <- g
+          # add QA note
+          # add QA note
+          temprow$qa_note <- ifelse(is.na(temprow$qa_note), switchotherdriver_note,
+                                                          # if not empty, append switch note
+                                                          paste(temprow$qa_note, switchotherdriver_note, sep = "; "))
+          #cleanup note
+          temprow$qa_note <- gsub("[.];", ";", temprow$qa_note)
+          # add to master
+          replace_other <- rbind(replace_other, temprow)
+          
+          # temprowid <- with(tempgroups, rowid[clean_answer_binned == "Other" & Group == tempGroup])
+          # # make sure something pulled
+          # stopifnot(length(temprowid) == 1)
+          # copy$clean_group[copy$rowid == temprowid] <- g
+          # # add QA note
+          # copy$qa_note[copy$rowid == temprowid] <- ifelse(is.na(copy$qa_note[copy$rowid == temprowid]), switchotherdriver_note,
+          #                                                 # if not empty, append switch note
+          #                                                 paste(copy$qa_note[copy$rowid == temprowid], switchotherdriver_note, sep = "; "))
+          # # clean up note
+          # copy$qa_note[copy$rowid == temprowid] <- gsub("[.];", ";", copy$qa_note[copy$rowid == temprowid])
+          # # add to master
+          # replace_other <- rbind(replace_other, copy[copy$rowid == temprowid,])
+          next 
+        }
+        # if it's add Other, check if Other already present for the clean_group needed first
+        if(g %in% tempgroups$clean_group[tempgroups$clean_answer == "Other"]){
+          # already present so can move on
+          next
+        }
+        # otherwise add 'Other' to abbr Driver Group == clean_group
+        temprow <- subset(tempgroups, Group == g & abbr == "Driver") %>%
+          # further subset to max rowid for adding to dataset
+          subset(rowid == max(rowid)) %>%
+          # be sure clean_group infilled
+          mutate(clean_group = Group)
+        temprow[c("clean_answer", "clean_answer_binned")] <- "Other"
+        # add QA note
+        temprow$qa_note <- ifelse(is.na(temprow$qa_note), addotherdriver_note,
+                                                        # if not empty, append switch note
+                                                        paste(temprow$qa_note, addotherdriver_note, sep = "; "))
+        # if a raw answer was present increment rowid by 0.5 otherwise leave as is
+        if(!is.na(temprow$answer)){
+          temprow$rowid <- temprow$rowid + 0.5
+        }
+        # rbind to master replacement df
+        replace_other <- rbind(replace_other, temprow)
+        
+        # cycle to next clean_group to treat within ES
+      }
+      # cycle to next ES to treat within review
+    }
+  # cycle to next review
+}
+
+# review master then swap in to main dataset
+# > add back in other drivers prompting adjustment
+replace_other <- rbind(replace_other, subset(check_Othergroup, abbr == "OtherDriver" & Group != clean_group)) %>%
+  arrange(rowid) #looks good (manual review)
+
+# remove rowids corrected from main dataset and sub in corrections
+qdat_revised_out <- subset(qdat_revised_out, !rowid %in% replace_other$rowid) %>%
+  rbind(replace_other[names(.)]) %>%
+  arrange(rowid) %>%
+  data.frame()
+
 
 # remake driverbins
 driverbins <- subset(qdat_revised_out, grepl("Driver", abbr) & !is.na(clean_answer), select = c(clean_answer, clean_answer_binned, Group, clean_group, abbr)) %>%
@@ -1112,6 +1241,7 @@ driverbins <- subset(qdat_revised_out, grepl("Driver", abbr) & !is.na(clean_answ
   subset(clean_answer != "Other") %>%
   arrange(clean_group, clean_answer_binned, abbr, clean_answer) %>%
   rename(question_abbr = abbr)
+
 
 
 # -- WRITE OUT ----
@@ -1128,6 +1258,7 @@ qdat_revised_out <- ungroup(qdat_revised_out) %>%
   left_join(paperorder) %>%
   arrange(titleorder, survey_order, varnum) %>%
   select(StartDate:qa_note)
+
 
 # write out main datasaet
 write_csv(qdat_revised_out, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
