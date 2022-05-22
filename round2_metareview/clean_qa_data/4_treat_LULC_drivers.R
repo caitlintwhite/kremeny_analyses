@@ -433,7 +433,11 @@ rm(tempdrivers, tempeffect, tempES, e, g, i, tempnote, temprow, noeffectdirect, 
 # start new data frame with reclassed land cover binned vars to LULC
 r2keep_lulc <- r2keep %>%
   # make new driver group as above with LU_LC
-  mutate(new_group = ifelse(grepl("^Land ", clean_answer_binned), "LU_LC", clean_group))
+  # make qa_note column for lulc adjustments to keep what is done for that separate from other comments
+  mutate(lulc_note = NA,
+         # make note col character and not logical
+         lulc_note = as.character(lulc_note),
+         new_group = ifelse(grepl("^Land ", clean_answer_binned), "LU_LC", clean_group))
 
 # pull out just other driver responses (abbr == Driver & clean_answer == Other, or abbr == "OtherDriver)
 cleanup_other_lulc <- subset(r2keep_lulc, qnum == "Q12" & !is.na(clean_answer) & (clean_answer_binned == "Other" | abbr == "OtherDriver")) %>% # only keep rows that have an answer
@@ -473,7 +477,7 @@ for(i in unique(cleanup_other_lulc$ResponseId)){
       newrow <- subset(tempdat, clean_group == c & clean_answer == "Other")
       newrow$new_group <- "LU_LC"
       newrow$rowid <- newrow$rowid+0.5
-      newrow$qa_note <- paste("One of multiple", c, "other drivers entered recoded to 'Land Use Land Cover' driver type. Added 'Other' driver in LULC group for consistency.")
+      newrow$lulc_note <- paste("One of multiple", c, "other drivers entered recoded to 'Land Use Land Cover' driver type. Added 'Other' driver in LULC group for consistency.")
       # add newrow to tempdat
       tempdat <- rbind(tempdat, newrow)
     }else{ 
@@ -485,10 +489,10 @@ for(i in unique(cleanup_other_lulc$ResponseId)){
       # add QA note based on group changed from
       addnote <- paste("Other driver(s) entered in", c, "driver type recoded to Land Use Land Cover type. Updated 'Other' driver to LULC group for consistency.")
       # append (to one or more rows) and clean up
-      tempdat$qa_note[temprow] <- ifelse(is.na(tempdat$qa_note[temprow]), addnote,
-                                         paste(tempdat$qa_note[temprow], addnote, sep = "; "))
+      tempdat$lulc_note[temprow] <- ifelse(is.na(tempdat$lulc_note[temprow]), addnote,
+                                         paste(tempdat$lulc_note[temprow], addnote, sep = "; "))
       # clear any NAs or weird punctuation in pasting (".;)
-      tempdat$qa_note[temprow] <- gsub("[.];", ";", tempdat$qa_note[temprow])
+      tempdat$lulc_note[temprow] <- gsub("[.];", ";", tempdat$lulc_note[temprow])
     }
   }
   # once cycle through all possible groups to adjust for a given survey, rbind to newother df
@@ -536,10 +540,10 @@ otherbiotic_qanote <- "Reviewer noted ESP type is land cover or habitat proxy. R
 # assign LULC to service providers
 r2keep_lulc$new_group[r2keep_lulc$rowid %in% c(serviceprov_lulc_rowids, otherbiotic_lulc_rowids)] <- "LU_LC"
 # add qa note to rows..
-r2keep_lulc$qa_note[r2keep_lulc$rowid %in% serviceprov_lulc_rowids] <- paste(r2keep_lulc$qa_note[r2keep_lulc$rowid %in% serviceprov_lulc_rowids], serviceprov_qanote, sep ="; ")
-r2keep_lulc$qa_note[r2keep_lulc$rowid %in% otherbiotic_lulc_rowids] <- paste(r2keep_lulc$qa_note[r2keep_lulc$rowid %in% otherbiotic_lulc_rowids], otherbiotic_qanote, sep = "; ")
+r2keep_lulc$lulc_note[r2keep_lulc$rowid %in% serviceprov_lulc_rowids] <- paste(r2keep_lulc$lulc_note[r2keep_lulc$rowid %in% serviceprov_lulc_rowids], serviceprov_qanote, sep ="; ")
+r2keep_lulc$lulc_note[r2keep_lulc$rowid %in% otherbiotic_lulc_rowids] <- paste(r2keep_lulc$lulc_note[r2keep_lulc$rowid %in% otherbiotic_lulc_rowids], otherbiotic_qanote, sep = "; ")
 # clean up qa note
-r2keep_lulc$qa_note[r2keep_lulc$rowid %in% c(serviceprov_lulc_rowids, otherbiotic_lulc_rowids)] <- gsub("NA; ", "", r2keep_lulc$qa_note[r2keep_lulc$rowid %in% c(serviceprov_lulc_rowids, otherbiotic_lulc_rowids)])
+r2keep_lulc$lulc_note[r2keep_lulc$rowid %in% c(serviceprov_lulc_rowids, otherbiotic_lulc_rowids)] <- gsub("NA; ", "", r2keep_lulc$lulc_note[r2keep_lulc$rowid %in% c(serviceprov_lulc_rowids, otherbiotic_lulc_rowids)])
 
 
 # need to circle back and reassign "Other" or add "Other" row based on esp lulc recoding to other drivers
@@ -575,9 +579,9 @@ new_esp_otherdrivers <- subset(esplulc_otherdriver_check, rowid %in% espother_ro
   # change new_group to LULC
   mutate(new_group = "LU_LC",
          # add QA note
-         qa_note = ifelse(is.na(qa_note), otherbiotic_qanote, paste(qa_note, otherbiotic_qanote, sep = "; ")),
+         lulc_note = ifelse(is.na(lulc_note), otherbiotic_qanote, paste(lulc_note, otherbiotic_qanote, sep = "; ")),
          # clean up punctuation
-         qa_note = gsub("[.];", ";", qa_note))
+         lulc_note = gsub("[.];", ";", lulc_note))
 
 # sub out and add back in
 r2keep_lulc <- subset(r2keep_lulc, !rowid %in% new_esp_otherdrivers$rowid) %>%
@@ -692,16 +696,16 @@ for(i in unique(cleanup_effects_lulc$loop_order)){
     temprow$rowid <- temprow$rowid + 0.5
   }
   # add whatever the tempnote is
-  temprow$qa_note <- ifelse(is.na(temprow$qa_note), tempnote ,paste(temprow$qa_note, tempnote, sep = "; "))
+  temprow$lulc_note <- ifelse(is.na(temprow$lulc_note), tempnote ,paste(temprow$lulc_note, tempnote, sep = "; "))
   # clean up any errant punctuation
-  temprow$qa_note <- gsub("[.];", ";", temprow$qa_note)
+  temprow$lulc_note <- gsub("[.];", ";", temprow$lulc_note)
   # append to master
   neweffectdirect <- rbind(neweffectdirect, temprow)
   
 }
 
 # take adjusted rowids out of main dataset and add back in
-r2keep_lulc_alladjusted <- subset(r2keep_lulc, !rowid %in% neweffectdirect$rowid, select = c(StartDate:new_group)) %>%
+r2keep_lulc <- subset(r2keep_lulc, !rowid %in% neweffectdirect$rowid, select = c(StartDate:new_group)) %>%
   rbind(neweffectdirect[names(.)]) %>%
   arrange(rowid) %>%
   data.frame() %>%
@@ -709,7 +713,7 @@ r2keep_lulc_alladjusted <- subset(r2keep_lulc, !rowid %in% neweffectdirect$rowid
   distinct()
 
 # check what's added
-View(subset(r2keep_lulc_alladjusted, !rowid %in% r2keep$rowid)) # only driver or effect direct rows added because clean_groups drivers still retained (good)
+View(subset(r2keep_lulc, !rowid %in% r2keep$rowid)) # only driver or effect direct rows added because clean_groups drivers still retained (good)
 # check for duplicate rowids
 nrow(subset(r2keep_lulc, rowid %in% duplicated(r2keep_lulc$rowid))) # nada. good
 
@@ -717,15 +721,15 @@ nrow(subset(r2keep_lulc, rowid %in% duplicated(r2keep_lulc$rowid))) # nada. good
 
 #### ADDITIONAL CLEAN UP -----
 # 1. remove effect direct from clean_answer binned
-r2keep_lulc_alladjusted$clean_answer_binned[r2keep_lulc$abbr == "EffectDirect"] <- NA
+r2keep_lulc$clean_answer_binned[r2keep_lulc$abbr == "EffectDirect"] <- NA
 # 2. remove land cover as proxy from GV paper where another ESP indicated
 # check that it's correct first+
 View(subset(reviewlulc, lulc_ESP & count_ESP > 1))
 correctESP <- with(reviewlulc, rowid[lulc_ESP & count_ESP > 1 & abbr == "ESP_type"])
-r2keep_lulc_alladjusted$clean_answer[r2keep_lulc_alladjusted$rowid == correctESP] # yes
-r2keep_lulc_alladjusted$clean_answer[r2keep_lulc_alladjusted$rowid == correctESP] <- gsub(",Only.*$", "", r2keep_lulc_alladjusted$clean_answer[r2keep_lulc_alladjusted$rowid == correctESP])
-r2keep_lulc_alladjusted$qa_note[r2keep_lulc_alladjusted$rowid == correctESP] # check existing note
-r2keep_lulc_alladjusted$qa_note[r2keep_lulc_alladjusted$rowid == correctESP] <- "CTW reviewed. Only Human, Environmental (one recoded to LU_LC) drivers. Response variable is Single ESP. Remove 'Only land cover as proxy' because no biotic driver indicated and land cover reflected in LU_LC driver. Single ESP is response variable."
+r2keep_lulc$clean_answer[r2keep_lulc$rowid == correctESP] # yes
+r2keep_lulc$clean_answer[r2keep_lulc$rowid == correctESP] <- gsub(",Only.*$", "", r2keep_lulc$clean_answer[r2keep_lulc$rowid == correctESP])
+r2keep_lulc$lulc_note[r2keep_lulc$rowid == correctESP] # check existing note
+r2keep_lulc$lulc_note[r2keep_lulc$rowid == correctESP] <- "CTW reviewed. Only Human, Environmental (one recoded to LU_LC) drivers. Response variable is Single ESP. Remove 'Only land cover as proxy' because no biotic driver indicated and land cover reflected in LU_LC driver. Single ESP is response variable."
 
 
 
@@ -742,11 +746,9 @@ has_env <- subset(r2keep_lulc, abbr %in% c("Driver", "OtherDriver") | qnum %in% 
   # check for "Service Provider" in clean_answer_finer by ResponseId
   group_by(ResponseId) %>%
   # look for any answer that is assigned to an environmental group
-  mutate(env_answer = str_flatten(unique(clean_answer_binned[grepl("Env", new_group) & !is.na(clean_answer_binned)])), # flatten all env driver bin labels that aren't NA
-         # screen for Service provider in all Bio group coarse bins
-         has_env = env_answer != "",
+  mutate(has_env = any(grepl("Env", new_group)),
          KT = clean_answer[abbr == "KremenTopics"],
-         # look for Krement Topic 3 (environmental) in Kremen Topics answer
+         # look for Kremen Topic 3 (environmental) in Kremen Topics answer
          KT_env = grepl("3", KT)) %>%
   # subset to either has an env answer and no KT 3 checked *or* the reverse
   filter((has_env & !KT_env) | (KT_env & !has_env)) %>%
@@ -758,36 +760,42 @@ has_env <- subset(r2keep_lulc, abbr %in% c("Driver", "OtherDriver") | qnum %in% 
   distinct()
 
 # how many papers does it affect (in manual look it's because of env --> land use land cover)
-length(unique(has_env$Title)) #10 papers
+length(unique(has_env$Title)) #10 papers .. but these could be those excluded bc of lulc only
+# check
+summary(unique(has_env$Title) %in% exclude_lulc_only$Title) # only 2..
+# maybe should note for Grant which papers would not have env topic if use lulc driver type coding
+# check to see if these papers have env as the response variable (since some people used kremen topics question to reflect response vars)
+check_env_response <- subset(r2keep_lulc, abbr == "Response" & !is.na(clean_answer) & ResponseId %in% has_env$ResponseId)
+with(check_env_response, sapply(split(clean_answer, ResponseId), unique))
+# several of these, if interpreting that Q generously, can say deals w environmental vars
+# note which ones pass on response var
+keepenv <- with(check_env_response, unique(ResponseId[grepl("carbon|environ", clean_answer)]))
+# make notes about absence of env driver in lulc_note col
+noenvrowids <- with(has_env, rowid[!ResponseId %in% keepenv & grepl("KremenT", abbr)])
+envresponse_rowids <- with(has_env, rowid[ResponseId %in% keepenv & grepl("KremenT", abbr)])
+
+r2keep_lulc$lulc_note[r2keep_lulc$rowid %in% noenvrowids] <- "After recode drivers to LU_LC, does not include environmental drivers (no KT3)."
+r2keep_lulc$lulc_note[r2keep_lulc$rowid %in% envresponse_rowids] <- "After recode drivers to LU_LC, does not include environmental drivers, only has environmental response variables (no KT3)."
 
 
-#### CLEAN UP AND RE CHECK EXCLUSION -----
-r2keep_out <- ungroup(r2keep_lulc) %>%
-  data.frame() %>%
-  group_by(ResponseId) %>%
-  mutate(drivers_present = str_flatten(unique(new_group[!is.na(clean_answer_binned) & grepl("Driver", abbr) & !is.na(new_group)]), collapse = ", "),
-         only_lulc = drivers_present == "LU_LC")
+
+
+#### RE CHECK EXCLUSION AND FORMAT DATASET OUT -----
+# look for papers that only have lulc as driver
+r2keep_lulc <- group_by(r2keep_lulc, ResponseId) %>%
+  mutate(drivers_present = str_flatten(unique(new_group[!is.na(clean_answer_binned) & grepl("Driver", abbr)]), collapse = ", "),
+         only_lulc = drivers_present == "LU_LC") %>%
+  ungroup()
 # how many papers total have lulc driver?
-length(unique(r2keep_out$Title[grepl("LU", r2keep_out$drivers_present)])) #115 (so about 40% of papers read for full text and retained [pre-lulc] by our coding)
+length(unique(r2keep_lulc$Title[grepl("LU", r2keep_lulc$drivers_present)])) #115 (so about 40% of papers read for full text and retained [pre-lulc] by our coding)
 # how many papers excluded? -- looking for 29, but some were esp only and exluded by manual review bc only GIS/RS case studies
-length(unique(r2keep_out$Title[r2keep_out$only_lulc])) # yay
+length(unique(r2keep_lulc$Title[r2keep_lulc$only_lulc])) # yay
 # be sure it's the same titles
-summary(unique(r2keep_out$Title[r2keep_out$only_lulc]) %in% exclude_lulc_only$Title) # woohoo! agrees
+summary(unique(r2keep_lulc$Title[r2keep_lulc$only_lulc]) %in% exclude_lulc_only$Title) # woohoo! agrees
 
 # check all non-NA new_groups have a clean_answer
 checkgroups <- distinct(subset(r2keep_out, grepl("Driver|Effect", abbr) & !is.na(clean_answer), select = c(ResponseId, clean_answer, clean_answer_binned, abbr, Group:clean_group, new_group)))
-View(subset(checkgroups, is.na(new_group)))
-# forgot to assign clean_group as new_group for driver and effect direction responses unaffected by LULC recode
-assigngroup_rowids <- with(r2keep_out, rowid[is.na(new_group) & !is.na(clean_group) & !is.na(clean_answer) & grepl("Effect|Driver", abbr)])
-View(r2keep_out[r2keep_out$rowid %in% assigngroup_rowids,])
-# check all non-NA new_groups that are driver rows have clean_answer_binned and clean_group
-
-# are these in no_driver
-summary(no_driverchange_papers$rowid %in% assigngroup_rowids) # some
-View(subset(no_driverchange_papers, rowid %in% assigngroup_rowids)) # all abbr == Driver, makes sense
-View(subset(no_driverchange_papers, !rowid %in% assigngroup_rowids))
-View(subset(r2keep_out, Title ))
-
+summary(is.na(checkgroups$new_group)) # everything has a new_group assigned that should. huzzah!
 
 
 
@@ -818,6 +826,7 @@ dat3 <- r2keep_lulc %>%
       unique(),
     by='Title'
   )
+
 
 
 #### FINISHING -----
