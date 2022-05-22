@@ -403,8 +403,12 @@ for(i in unique(hasdriver$ResponseId)){
   }
 }
 
-# review what was ammended
+# review what was amended
 View(subset(r2keep, rowid %in% noeffectdirect$rowid)) # looks okay
+
+# > clean up env and proceed with lulc driver type recoding
+rm(tempdrivers, tempeffect, tempES, e, g, i, tempnote, temprow, noeffectdirect, hasdriver)
+
 
 
 ##### 4. Re-classify LULC drivers -----
@@ -436,8 +440,8 @@ cleanup_other_lulc <- subset(r2keep_lulc, qnum == "Q12" & !is.na(clean_answer) &
   group_by(Title, ResponseId) %>%
   mutate(has_lulc = any(new_group == "LU_LC")) %>%
   ungroup()
-# pull out papers that don't need any driver adjustment
-no_driverchange_papers <- subset(cleanup_other_lulc, !has_lulc)
+# pull out papers that don't need any other driver adjustment
+no_otherdriverchange_papers <- subset(cleanup_other_lulc, !has_lulc)
 # proceed with only papers that need driver adjustment
 cleanup_other_lulc <- subset(cleanup_other_lulc, has_lulc) %>%
   data.frame() %>%
@@ -538,49 +542,126 @@ r2keep_lulc$qa_note[r2keep_lulc$rowid %in% otherbiotic_lulc_rowids] <- paste(r2k
 r2keep_lulc$qa_note[r2keep_lulc$rowid %in% c(serviceprov_lulc_rowids, otherbiotic_lulc_rowids)] <- gsub("NA; ", "", r2keep_lulc$qa_note[r2keep_lulc$rowid %in% c(serviceprov_lulc_rowids, otherbiotic_lulc_rowids)])
 
 
+# need to circle back and reassign "Other" or add "Other" row based on esp lulc recoding to other drivers
+# rules:
+# > if only "other drivers" were all recoded to lulc, clean_answer == other -- > lulc
+# > if more than one "other driver" and not all recoded to lulc, then add other row (copy from biotic and increment rowid by 0.5 as above)
+# easiest thing is to subset affected other driver records, tweak, then add back in to main dataset
 
-
-
-
-
-
-
-
-
-
-# update Effect Direct answer to LULC based on presence of only one or more than one drivers per group
-# might need to iterate through ES on this one (Effect Direct may not be entered similarly across all ESes?)
-# use newother in conjuction with fixed driver answers to recode effect direction as needed
-
-
-# proceed with effect direction adjustment for lulc -- these are effect directs adjusted when clean_answer_binned is land cover related (has land cover in binned name)
-cleanup_effects_lulc <- subset(r2keep, qnum == "Q12" & abbr %in% c("Driver", "EffectDirect") & !grepl("^Other$", clean_answer_binned)) %>%
-  # make new driver group as above with LU_LC
-  mutate(new_group = ifelse(grepl("^Land ", clean_answer_binned), "LU_LC", clean_group)) %>%
-  group_by(Title, ResponseId) %>%
-  mutate(has_lulc = any(new_group == "LU_LC")) %>%
+esplulc_otherdriver_check <- subset(r2keep_lulc, grepl("Driver", abbr)) %>%
+  group_by(ResponseId, ES) %>%
+  # for whatever reason, filter subsets correct but 'subset' function does nothing
+  filter(any(rowid %in% otherbiotic_lulc_rowids)) %>% # should be 95 rows
   ungroup() %>%
-  data.frame() %>%
-  # add "Other" driver answers that were adjusted (whether type changed to LULC or added because of multiple drivers)
-  mutate(add_other = NA) %>%
-  rbind(subset(newother, clean_answer_binned == "Other", select = names(.))) %>%
-  group_by(Title, ResponseId, clean_group, ES) %>%
-  mutate(has_lulc2 = any(new_group == "LU_LC")) %>%
+  # only keep other driver or abbr == Driver & clean_answer == "Other"
+  subset(abbr == "OtherDriver" | clean_answer_binned == "Other") %>%
+  group_by(ResponseId, ES, clean_group) %>%
+  # id any biotic ESes where other driver new group == lulc
+  mutate(new_grouplulc = any(new_group == "LU_LC"),
+         # to be sure count number of new_groups per clean group (biotic should just have one)
+         count_newgroup = length(unique(new_group[abbr == "OtherDriver"]))) %>%
+  ungroup() # if subset to new_grouplulc, correctly IDs Others that need lulc reassignment (manual review)
+# how many records is this?
+nrow(distinct(esplulc_otherdriver_check, ResponseId, ES)) # 14 .. of course bc 14 biotic other drivers treated. good
+# how many new groups in biotic other drivers? (should be just 1)
+with(esplulc_otherdriver_check, unique(count_newgroup[new_grouplulc])) # good
+
+# pull other rowids that need lulc update
+espother_rowids <- with(esplulc_otherdriver_check, rowid[new_grouplulc & clean_answer == "Other"])
+# are these the correct rows?
+View(subset(r2keep, rowid %in% espother_rowids)) # looks ok
+
+new_esp_otherdrivers <- subset(esplulc_otherdriver_check, rowid %in% espother_rowids) %>%
+  # change new_group to LULC
+  mutate(new_group = "LU_LC",
+         # add QA note
+         qa_note = ifelse(is.na(qa_note), otherbiotic_qanote, paste(qa_note, otherbiotic_qanote, sep = "; ")),
+         # clean up punctuation
+         qa_note = gsub("[.];", ";", qa_note))
+
+# sub out and add back in
+r2keep_lulc <- subset(r2keep_lulc, !rowid %in% new_esp_otherdrivers$rowid) %>%
+  rbind(new_esp_otherdrivers[names(.)]) %>%
+  arrange(rowid)
+
+# check that all drivers have a new group
+with(r2keep_lulc, summary(!is.na(new_group[grepl("Driver", abbr) & !is.na(clean_answer)]))) # all have a new group
+# review unique clean_answers, clean_answer bins, and grouping for new_group == "LU_LC"
+View(distinct(subset(r2keep_lulc, new_group == "LU_LC" & grepl("Driver", abbr), 
+                     select = c(clean_answer, clean_answer_binned, Group, clean_group, new_group)))) # looks fine
+# review inverse
+View(distinct(subset(r2keep_lulc, new_group != "LU_LC" & grepl("Driver", abbr), 
+                     select = c(clean_answer, clean_answer_binned, Group, clean_group, new_group))))
+# there are some inconsistencies in how variables like "canopy cover" are treated, but based on biotic reclass rules so.. that's what it is.
+# (e.g., if service provider was reclassed when ESP land proxy checked, no need to reclass biotic other drivers too)
+# (e.g., or if reviewer did not signal ESP land proxy, leave other drivers and service providers alone)
+
+# review the rows added -- should be other rows added
+View(subset(r2keep_lulc, !rowid %in% r2keep$rowid)) # yep
+
+# clean up environment and move on
+rm(c, i, espother_rowids, instruction, otherbiotic_lulc_rowids, serviceprov_lulc_rowids,
+   cleanup_other_lulc, esplulc_otherdriver_check, lulc_otherdriver, new_esp_otherdrivers, newother,
+   newrow, onlylulcesp, tempdat, temprow)
+
+
+
+
+##### 5. Re-classify LULC effects -----
+# update Effect Direct new_group to LU_LC based on presence of only one or more than one LU_LC drivers per clean_group
+# > since drivers have been updated, remake logic columns for groups that have lulc
+cleanup_effects_lulc <- subset(r2keep_lulc, qnum == "Q12" & grepl("Driver|Effect", abbr) & !is.na(clean_group), select = c(StartDate:new_group)) %>%
+  # group by Response, ES, and clean_group to see if any new_groups are LULC
+  group_by(ResponseId, ES, clean_group) %>%
+  mutate(has_lulc = any(new_group == "LU_LC"),
+         # count number of new_groups involved in driver rows
+         count_driver_newgroup = length(unique(new_group[grepl("Driver", abbr)]))) %>%
   ungroup() %>%
-  group_by(ResponseId, clean_group, ES) %>%
-  # count the number of other driver new groups for the driver type that got changed to lu_lc
-  # > if 1 only, can change "Other" new_group to LU_LC
-  # > if 2, need to add a new "Other" row
-  mutate(numtypes_other_lulc =length(unique(new_group[any(new_group == "LU_LC") & abbr == "Driver" & !is.na(new_group)])),
-         add_other2= ifelse(any(numtypes_other_lulc==2), "add",
-                            ifelse(any(numtypes_other_lulc == 1), "change", "ignore")),
-         # check if effect direct answer present
-         effect_present = any(!is.na(clean_answer[abbr == "EffectDirect"]))) %>%
+  # count number of clean_groups per lulc per ES (just to know if multiple effect directions apply)
+  group_by(ResponseId, ES, new_group) %>%
+  mutate(count_newgroup_cleangroups = length(unique(clean_group[grepl("Driver", abbr)])),
+         # count number of distinct effect directions just to see if lulc group will have more than one effect direction coming from different clean_groups
+         count_newgroup_effects = length(unique(clean_answer[grepl("Effect", abbr)]))) %>%
   ungroup() %>%
-  # only treat those who have an effect direct answer to update
-  subset(add_other2 != "ignore" & effect_present) %>%
-  # add iteration order for updating
-  mutate(loop_order = paste(ResponseId, clean_group, ES, sep = "_"))
+  data.frame()
+
+# how many records have lulc?
+nrow(distinct(subset(cleanup_effects_lulc, has_lulc, select = c(ResponseId, clean_group, ES)))) # 318
+# how many reviews?
+length(unique(cleanup_effects_lulc$ResponseId[cleanup_effects_lulc$has_lulc])) #135
+
+table(cleanup_effects_lulc[cleanup_effects_lulc$has_lulc, c("count_driver_newgroup", "count_newgroup_cleangroups")]) # 99 ES records where lulc drivers comes from multiple clean groups
+# how many of those from more than 1 clean group have more than one effects direction type?
+table(cleanup_effects_lulc[cleanup_effects_lulc$has_lulc & cleanup_effects_lulc$count_newgroup_cleangroups == 2, c("count_driver_newgroup", "count_newgroup_effects")])
+
+# rule:
+# if count_driver_newgroups == 1, can change effect direct new_group for that clean_group to lulc
+# if count_driver_newgroups == 2, copy the effect direct row, assign lulc to new_group, and increment rowid by 0.5
+# if more than one clean_group in an lulc driver per ES, just copy first clean_group row and note the other effect direct clean_group that applies
+# > iterate by response id and ES
+cleanup_effects_lulc <- subset(cleanup_effects_lulc, has_lulc) %>%
+  mutate(loop_order = paste(ResponseId, ES))
+
+# # add "Other" driver answers that were adjusted (whether type changed to LULC or added because of multiple drivers)
+# mutate(add_other = NA) %>%
+# rbind(subset(newother, clean_answer_binned == "Other", select = names(.))) %>%
+# group_by(Title, ResponseId, clean_group, ES) %>%
+# mutate(has_lulc2 = any(new_group == "LU_LC")) %>%
+# ungroup() %>%
+# group_by(ResponseId, clean_group, ES) %>%
+# # count the number of other driver new groups for the driver type that got changed to lu_lc
+# # > if 1 only, can change "Other" new_group to LU_LC
+# # > if 2, need to add a new "Other" row
+# mutate(numtypes_other_lulc =length(unique(new_group[any(new_group == "LU_LC") & abbr == "Driver" & !is.na(new_group)])),
+#        add_other2= ifelse(any(numtypes_other_lulc==2), "add",
+#                           ifelse(any(numtypes_other_lulc == 1), "change", "ignore")),
+#        # check if effect direct answer present
+#        effect_present = any(!is.na(clean_answer[abbr == "EffectDirect"]))) %>%
+# ungroup() %>%
+# # only treat those who have an effect direct answer to update
+# subset(add_other2 != "ignore" & effect_present) %>%
+# # add iteration order for updating
+# mutate(loop_order = paste(ResponseId, clean_group, ES, sep = "_"))
 
 
 # loop through effect direct updates, subset effect direct only to add back in 
@@ -588,137 +669,63 @@ cleanup_effects_lulc <- subset(r2keep, qnum == "Q12" & abbr %in% c("Driver", "Ef
 neweffectdirect <- data.frame() 
 for(i in unique(cleanup_effects_lulc$loop_order)){
   tempdat <- subset(cleanup_effects_lulc, loop_order == i)
-  # iterate through whatever clean groups are present (e.g., could have lulc reclassed in env and/or human and/or biotic other drivers)
-  # if it's "add" other row, copy the existing Other row and:
-  # 1. assign new_group == "LU_LC"
-  # 2. increment rowid by 0.5 (so will order correctly)
-  # 3. add QA note (should be fine to overwrite whatever QA note was there since it's added)
-  instruction <- unique(tempdat$add_other2)
-  stopifnot(length(instruction)==1) # make sure only one instruction present per group
-  if(instruction == "add"){
-    # copy "Other" row and edit
-    newrow <- subset(tempdat, abbr == "EffectDirect")
-    newrow$new_group <- "LU_LC"
-    newrow$rowid <- newrow$rowid+0.5
-    newrow$qa_note <- paste("One of multiple", unique(tempdat$clean_group), "other drivers entered recoded to 'Land Use Land Cover' driver type. Added", unique(tempdat$clean_group), "driver effect direction in LULC group for consistency.")
-    # add newrow to tempdat
-    tempdat <- rbind(tempdat, newrow)
-  }else{ 
-    # change Other to LULC because only other driver in the group is LULC
-    # > note: may pull "Other" in a given group if entered across multiple ESes
-    temprow <- with(tempdat, which(abbr == "EffectDirect"))
-    # update new_group to LU_LC
-    tempdat$new_group[temprow] <- "LU_LC"
-    # add QA note based on group changed from
-    addnote <- paste("Other driver(s) entered in", unique(tempdat$clean_group), "driver type recoded to Land Use Land Cover type. Updated driver effect direction to LULC group for consistency.")
-    # append (to one or more rows) and clean up
-    tempdat$qa_note[temprow] <- ifelse(is.na(tempdat$qa_note[temprow]), addnote,
-                                       paste(tempdat$qa_note[temprow], addnote, sep = "; "))
-    # clear any NAs or weird punctuation in pasting (".;)
-    tempdat$qa_note[temprow] <- gsub("[.];", ";", tempdat$qa_note[temprow])
+  # see how many clean groups are present (if 1 can proceed with whatever the clean_group is, if 2 use first as they appear in survey [by survey order])
+  # also, can just grab 1st element in char vector (will be in order of appearance if 2, or single clean group if one)
+  temp_cleangroup <- unique(tempdat$clean_group[tempdat$new_group == "LU_LC"])[1]
+  temprow <- subset(tempdat, abbr == "EffectDirect" & clean_group == temp_cleangroup)
+  # if temprow has more than one row bc lulc from more than one original group, keep the row that has an answer provided
+  # OR first row if not
+  if(any(!is.na(temprow$clean_answer))){
+    temprow <- subset(temprow, !is.na(clean_answer))
   }
-  # once cycle through all possible groups to adjust for a given survey, rbind to newother df
-  neweffectdirect <- rbind(neweffectdirect, subset(tempdat, abbr == "EffectDirect"))
+  # either way, take the first row (if more than one Group and two have answers, take first row)
+  temprow <- temprow[1,]
+  stopifnot(nrow(temprow) == 1)
+  # if there is more than one driver new_groups per given clean_group, copy + add row, otherwise switch new_group --> LULC
+  temprow$new_group <- "LU_LC" # either way, new_group gets recoded
+  if(temprow$count_driver_newgroup == 1){
+    # add note
+    tempnote <- paste("Driver(s) entered in", temp_cleangroup, "driver type recoded to Land Use Land Cover type. Updated driver effect direction to LU_LC group for consistency.")
+  }else{
+    # add note and increment rowid by 0.5
+    tempnote <- paste("One of multiple", temp_cleangroup, "other drivers entered recoded to 'Land Use Land Cover' driver type. Added", temp_cleangroup, "driver effect direction in LULC group for consistency.")
+    temprow$rowid <- temprow$rowid + 0.5
+  }
+  # add whatever the tempnote is
+  temprow$qa_note <- ifelse(is.na(temprow$qa_note), tempnote ,paste(temprow$qa_note, tempnote, sep = "; "))
+  # clean up any errant punctuation
+  temprow$qa_note <- gsub("[.];", ";", temprow$qa_note)
+  # append to master
+  neweffectdirect <- rbind(neweffectdirect, temprow)
+  
 }
 
-# add updated other driver and effect direct rows back into main dataset
-# > need to add in: recoded other drivers, recoded effect direct + LULC group
-# take out rowids in updated sets, then add those in, check for all rowids present after
-
-# preserve r2keep as is
-r2keep_lulc <- r2keep %>%
-  # since lulc-adjusted drivers will be in their own column, easiest thing might be to join that column
-  left_join(reviewlulc) %>%
-  # remove rowids to swap
-  subset(!rowid %in% c(neweffectdirect$rowid, newother$rowid), select = c(StartDate:new_group)) %>%
-  rbind(neweffectdirect[names(.)], newother[names(.)]) %>%
-  arrange(rowid)
+# take adjusted rowids out of main dataset and add back in
+r2keep_lulc_alladjusted <- subset(r2keep_lulc, !rowid %in% neweffectdirect$rowid, select = c(StartDate:new_group)) %>%
+  rbind(neweffectdirect[names(.)]) %>%
+  arrange(rowid) %>%
+  data.frame() %>%
+  # to be sure no duplicates
+  distinct()
 
 # check what's added
-View(subset(r2keep_lulc, !rowid %in% r2keep$rowid)) # only driver or effect direct rows added because clean_groups drivers still retained (good)
+View(subset(r2keep_lulc_alladjusted, !rowid %in% r2keep$rowid)) # only driver or effect direct rows added because clean_groups drivers still retained (good)
 # check for duplicate rowids
-View(subset(r2keep_lulc, rowid %in% duplicated(r2keep_lulc$rowid))) # nada. good
-# screen for lulc driver consistency
-r2keep_lulc <- group_by(r2keep_lulc, ResponseId, qnum, clean_group, ES) %>%
-  mutate(has_lulc = any(new_group == "LU_LC")) %>%
-  ungroup() # I think it's okay (manual review)
-
-# make sure missing effect directions have their new_groups assigned when new_group is not lulc
-subset(r2keep_lulc, has_lulc & grepl("no effect direction", qa_note, ignore.case = T) & is.na(new_group), select = c(Group, clean_group, qa_note)) %>%
-  distinct() %>%
-  data.frame() # okay to assign clean_group for these. only one clean_group per Group in these cases
-# id relevant rows
-infillrows <- with(subset(r2keep_lulc, has_lulc & grepl("no effect direction", qa_note, ignore.case = T) & is.na(new_group)), rowid)
-# verify these are correct
-View(r2keep_lulc[r2keep_lulc$rowid %in% infillrows,]) #yup
-r2keep_lulc$new_group[r2keep_lulc$rowid %in% infillrows] <- r2keep_lulc$clean_group[r2keep_lulc$rowid %in% infillrows]
-
-
-
-# these would also potentially need effect directs reclassed from biotic to lulc... :(
-# > or effect direct rows added when additional biotic variables remain
-# rules:
-# > if was only biotic variables/all biotic reclass to lulc, biotic effect direct new_group --> lulc
-# if was one of many biotic variables reclassed, see if effect direct for new group already exists:
-# if so, do nothing (could change to mixed if answers conflict, but that would change answer for other original group [e.g., lulc in environmental])
-# if not, copy biotic effect row, make new_group lulc and increment rowid by 0.5
-
-# > start fresh
-r2keep_lulc <- distinct(subset(r2keep_lulc, select = c(StartDate:new_group)))
-# be sure no duplicate rowids so far (shouldn't be)
-summary(duplicated(r2keep_lulc$rowid)) # no dups
-# note which ESes affected by ESP reclass to lulc
-revieweffects_esplulc <- subset(r2keep_lulc, grepl("Effect|Driver", abbr)) %>%
-  group_by(ResponseId, ES) %>%
-  mutate(has_driver = any(!is.na(clean_answer)),
-         esp_rowid = rowid %in% c(serviceprov_lulc_rowids, otherbiotic_lulc_rowids)) %>%
-  subset(has_driver) %>%
-  ungroup() %>%
-  group_by(ResponseId, ES, Group) %>%
-  mutate(has_esp_rowid = any(esp_rowid)) %>%
-  subset(has_esp_rowid) %>%
-  ungroup()
-# check it's number of records expected
-nrow(distinct(revieweffects_esplulc[c("ResponseId", "ES")])) #34 [records flagged]
-length(c(serviceprov_lulc_rowids, otherbiotic_lulc_rowids)) # 34 [biotic drivers reclassed due to esp; agrees]
-
-#%>%
-  # group_by(ResponseId, Group, ES) %>%
-  # mutate(missing_newgroup = ifelse(grepl("Effect|Driver", abbr) & !is.na(clean_answer), !is.na(clean_group) & is.na(new_group), NA),
-  #   newgroup_drivers = ifelse(!grepl("Effect|Driver", abbr), NA, str_flatten(sort(unique(new_group[grepl("Driver", abbr) & !is.na(new_group)])))),
-  #        newgroup_effects = ifelse(!grepl("Effect|Driver", abbr), NA, str_flatten(sort(unique(new_group[grepl("Effect", abbr)])))),
-  #        has_lulc_drivers = ifelse(!grepl("Effect|Driver", abbr), NA, any(grepl("LU", newgroup_drivers))),
-  #        has_lulc_effects = ifelse(!grepl("Effect|Driver", abbr), NA, any(grepl("LU", newgroup_effects))),
-  #   esp_adjusted = rowid %in% c(serviceprov_lulc_rowids, otherbiotic_lulc_rowids)) %>%
-  # ungroup()
-
-# review consistency
-lulc_effects_review <- subset(r2keep_lulc, has_lulc_drivers & ((newgroup_drivers != newgroup_effects) | missing_newgroup))
-length(unique(lulc_effects_review$ResponseId))
-
-
-
-##### 5. Re-classify LULC effects -----
-
-
-
-##### 6. Assign new_group for unaffected drivers and effect directs -----
-# if driver and effect direct stayed biotic/env/human, assign those to new groups (only affected answers treated above)
-
+nrow(subset(r2keep_lulc, rowid %in% duplicated(r2keep_lulc$rowid))) # nada. good
 
 
 
 #### ADDITIONAL CLEAN UP -----
 # 1. remove effect direct from clean_answer binned
-r2keep_lulc$clean_answer_binned[r2keep_lulc$abbr == "EffectDirect"] <- NA
+r2keep_lulc_alladjusted$clean_answer_binned[r2keep_lulc$abbr == "EffectDirect"] <- NA
 # 2. remove land cover as proxy from GV paper where another ESP indicated
 # check that it's correct first+
 View(subset(reviewlulc, lulc_ESP & count_ESP > 1))
 correctESP <- with(reviewlulc, rowid[lulc_ESP & count_ESP > 1 & abbr == "ESP_type"])
-r2keep_lulc$clean_answer[r2keep_lulc$rowid == correctESP] # yes
-r2keep_lulc$clean_answer[r2keep_lulc$rowid == correctESP] <- gsub(",Only.*$", "", r2keep_lulc$clean_answer[r2keep_lulc$rowid == correctESP])
-r2keep_lulc$qa_note[r2keep_lulc$rowid == correctESP] # check existing note
-r2keep_lulc$qa_note[r2keep_lulc$rowid == correctESP] <- "CTW reviewed. Only Human, Environmental (one recoded to LU_LC) drivers. Response variable is Single ESP. Remove 'Only land cover as proxy' because no biotic driver indicated and land cover reflected in LU_LC driver. Single ESP is response variable."
+r2keep_lulc_alladjusted$clean_answer[r2keep_lulc_alladjusted$rowid == correctESP] # yes
+r2keep_lulc_alladjusted$clean_answer[r2keep_lulc_alladjusted$rowid == correctESP] <- gsub(",Only.*$", "", r2keep_lulc_alladjusted$clean_answer[r2keep_lulc_alladjusted$rowid == correctESP])
+r2keep_lulc_alladjusted$qa_note[r2keep_lulc_alladjusted$rowid == correctESP] # check existing note
+r2keep_lulc_alladjusted$qa_note[r2keep_lulc_alladjusted$rowid == correctESP] <- "CTW reviewed. Only Human, Environmental (one recoded to LU_LC) drivers. Response variable is Single ESP. Remove 'Only land cover as proxy' because no biotic driver indicated and land cover reflected in LU_LC driver. Single ESP is response variable."
 
 
 
