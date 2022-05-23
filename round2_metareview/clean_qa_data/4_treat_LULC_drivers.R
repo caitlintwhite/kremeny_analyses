@@ -349,69 +349,7 @@ rm(dat2, excl_lulc, driv_types_title, biot_lulc_titles,
 
 
 
-##### 3. Treat missing effect directions -----
-# caught an error -- make sure any effectdirect that has a driver entered has a clean_group assigned, even if reviewer didn't provide an answer
-# having all clean_groups infilled that should be infilled (whether reviewer provided answer or not helps keep lulc reassignment cleaner)
-hasdriver <- subset(r2keep, qnum == "Q12" & grepl("Driver|Effect", abbr)) %>%
-  group_by(ResponseId, ES, Group) %>%
-  mutate(has_driver = any(!is.na(clean_answer_binned)),
-         effectmissing = any(is.na(clean_answer[abbr == "EffectDirect"]))) %>%
-  ungroup() %>%
-  # subset to just those papers that have a driver entered but no answer to effect direct
-  subset(has_driver & effectmissing)
-# > not sure what to do where clean_group is different than original Group... 
-# how many reviews is this?
-unique(hasdriver$ResponseId) # 104..
-# decide to assign clean_group just based on original Group:
-# if there is only one clean_group and it's different than the original Group, enter clean_group
-# else enter the original Group (even when another clean_group is present within a given original Group -- because ultimately that answer would have been copied over to the Group row corresponding to clean_group)
-# > ultimately this is just for documenting no answer was provided
-
-noeffectdirect <- subset(hasdriver, select = c(ResponseId, Group, clean_group, ES, rowid, has_driver, effectmissing)) %>%
-  distinct()
-# iterate through to add clean_groups and note to QA column
-for(i in unique(hasdriver$ResponseId)){
-  tempdrivers <- subset(hasdriver, ResponseId ==i & grepl("Driver", abbr)) %>%
-    # subset just to Group, clean_group, and ES
-    distinct(ResponseId, Group, clean_group, ES)
-  tempeffect <- subset(hasdriver, ResponseId == i & abbr == "EffectDirect")
-  # iterate through each ES
-  for(e in unique(tempdrivers$ES)){
-    tempES <- subset(tempdrivers, ES == e)
-    for(g in unique(tempES$Group)){
-      # find relevant rowid in the main dataset
-      temprow <- with(tempeffect, rowid[ES == e & Group == g])
-      # assign clean_group based on clean_group present (if more than one, default to original)
-      if(any(tempES$clean_group == g)){
-        # assign original group
-        r2keep$clean_group[r2keep$rowid == temprow] <- g
-      }else{
-        # if original group not there assign whatever the clean_group is (i.e., when only driver entered was assigned to a different clean group)
-        r2keep$clean_group[r2keep$rowid == temprow] <- unique(tempES$clean_group)
-      }
-      # add QA note
-      tempnote <- paste0("No effect direction provided for driver(s) entered in ", g, ". 'Clean_group' driver types assigned within ", g, " are: ", str_flatten(unique(tempES$clean_group[tempES$Group == g]), collapse = ", "), ".")
-      if(!is.na(r2keep$qa_note[r2keep$rowid == temprow])){
-        # if note present, append
-        r2keep$qa_note[r2keep$rowid == temprow] <- paste0(r2keep$qa_note[r2keep$rowid == temprow], "; ", tempnote)
-      }else{
-        # assign tempnote
-        r2keep$qa_note[r2keep$rowid == temprow] <- tempnote
-      }
-      # cycle to next group
-    }
-  }
-}
-
-# review what was amended
-View(subset(r2keep, rowid %in% noeffectdirect$rowid)) # looks okay
-
-# > clean up env and proceed with lulc driver type recoding
-rm(tempdrivers, tempeffect, tempES, e, g, i, tempnote, temprow, noeffectdirect, hasdriver)
-
-
-
-##### 4. Re-classify LULC drivers -----
+##### 3. Re-classify LULC drivers -----
 # steps:
 # 1. recode driver bins -- assign to new_group column for now so GV can stick with 3 main driver types if there is reason for that
 # 2. reassign clean group for EffectDirect
@@ -611,7 +549,7 @@ rm(c, i, espother_rowids, instruction, otherbiotic_lulc_rowids, serviceprov_lulc
 
 
 
-##### 5. Re-classify LULC effects -----
+##### 4. Re-classify LULC effects -----
 # update Effect Direct new_group to LU_LC based on presence of only one or more than one LU_LC drivers per clean_group
 # > since drivers have been updated, remake logic columns for groups that have lulc
 cleanup_effects_lulc <- subset(r2keep_lulc, qnum == "Q12" & grepl("Driver|Effect", abbr) & !is.na(clean_group), select = c(StartDate:new_group)) %>%
@@ -645,27 +583,6 @@ table(cleanup_effects_lulc[cleanup_effects_lulc$has_lulc & cleanup_effects_lulc$
 # > iterate by response id and ES
 cleanup_effects_lulc <- subset(cleanup_effects_lulc, has_lulc) %>%
   mutate(loop_order = paste(ResponseId, ES))
-
-# # add "Other" driver answers that were adjusted (whether type changed to LULC or added because of multiple drivers)
-# mutate(add_other = NA) %>%
-# rbind(subset(newother, clean_answer_binned == "Other", select = names(.))) %>%
-# group_by(Title, ResponseId, clean_group, ES) %>%
-# mutate(has_lulc2 = any(new_group == "LU_LC")) %>%
-# ungroup() %>%
-# group_by(ResponseId, clean_group, ES) %>%
-# # count the number of other driver new groups for the driver type that got changed to lu_lc
-# # > if 1 only, can change "Other" new_group to LU_LC
-# # > if 2, need to add a new "Other" row
-# mutate(numtypes_other_lulc =length(unique(new_group[any(new_group == "LU_LC") & abbr == "Driver" & !is.na(new_group)])),
-#        add_other2= ifelse(any(numtypes_other_lulc==2), "add",
-#                           ifelse(any(numtypes_other_lulc == 1), "change", "ignore")),
-#        # check if effect direct answer present
-#        effect_present = any(!is.na(clean_answer[abbr == "EffectDirect"]))) %>%
-# ungroup() %>%
-# # only treat those who have an effect direct answer to update
-# subset(add_other2 != "ignore" & effect_present) %>%
-# # add iteration order for updating
-# mutate(loop_order = paste(ResponseId, clean_group, ES, sep = "_"))
 
 
 # loop through effect direct updates, subset effect direct only to add back in 
@@ -794,10 +711,68 @@ length(unique(r2keep_lulc$Title[r2keep_lulc$only_lulc])) # yay
 summary(unique(r2keep_lulc$Title[r2keep_lulc$only_lulc]) %in% exclude_lulc_only$Title) # woohoo! agrees
 
 # check all non-NA new_groups have a clean_answer
-checkgroups <- distinct(subset(r2keep_out, grepl("Driver|Effect", abbr) & !is.na(clean_answer), select = c(ResponseId, clean_answer, clean_answer_binned, abbr, Group:clean_group, new_group)))
+checkgroups <- distinct(subset(r2keep_lulc, grepl("Driver|Effect", abbr) & !is.na(clean_answer), select = c(ResponseId, clean_answer, clean_answer_binned, abbr, Group:clean_group, new_group)))
 summary(is.na(checkgroups$new_group)) # everything has a new_group assigned that should. huzzah!
 
+# check for new_group in QA notes and replace with clean_group
+# > noticed while reviewing answers and notes for lulc
+cleanup_note_rowids <- r2keep_lulc$rowid[(grepl("new_group| new group", r2keep_lulc$qa_note))]
+View(subset(r2keep_lulc, rowid %in% cleanup_note_rowids)) # look at full Q12 responses to these (only several papers)
+View(subset(r2keep_lulc, ResponseId %in% r2keep$ResponseId[grepl("new_group", r2keep$qa_note)] & qnum == "Q12"))
+# ok. note assigned when a driver was assigned to a different clean_group and no effect direction to copy over
+# > clean up note so makes better sense with column names
 
+old_note <- "Driver assigned to this group and based on new_group but no answer in driver's old group effect direction to assign to clean_answer_binned;"
+new_note <- "Driver transferred to this Group because of clean_group associated with driver's clean_answer_binned answer. No effect direction provided in old Group to transfer;"
+r2keep_lulc$qa_note[r2keep_lulc$rowid %in% cleanup_note_rowids] <- gsub(old_note, new_note, r2keep_lulc$qa_note[r2keep_lulc$rowid %in% cleanup_note_rowids])
+
+# check for weird punctuation in notes
+summary(grepl("[.];", r2keep_lulc$qa_note)) # all okay
+
+# check for any other weird answers/formatting issues
+with(subset(r2keep_lulc, !grepl("Notes|GenIn|Uncer", abbr) & ! qnum == "Q12"), sapply(split(clean_answer, abbr), function(x) sort(unique(x))))
+# looks okay
+
+# check for ESes with orphan answers in Q12
+EScheck <- subset(r2keep_lulc, qnum == "Q12" & !is.na(clean_answer)) %>%
+  # only drivers and effect directs have groups, summarise response and yclass first
+  group_by(ResponseId, ES) %>%
+  mutate(has_response = any(!is.na(clean_answer[abbr == "Response"])),
+        has_yclass = any(!is.na(clean_answer[abbr == "Yclass"])), 
+        has_driver_inES = any(!is.na(clean_answer[grepl("Driver", abbr)])),
+        has_effect_inES = any(!is.na(clean_answer[grepl("Effect", abbr)]))) %>%
+  ungroup() %>%
+  # drop NA Groups (Response and Yclass)
+  subset(!is.na(Group)) %>%
+  group_by(ResponseId, ES, Group, has_response, has_yclass, has_driver_inES, has_effect_inES) %>%
+  summarise(has_clean_group = all(!is.na(clean_group[is.na(clean_answer)])),
+            has_lulc_group = all(!is.na(clean_group[!is.na(clean_answer)])),
+            has_driver = any(!is.na(clean_answer[grepl("Driver", abbr)])),
+            has_effect = any(!is.na(clean_answer[grepl("Effect", abbr)])),
+            has_effectnote = any(!is.na(qa_note[grepl("Effect", abbr)]))
+              )
+
+# at minimum, anything with a response should have a driver and vice versa
+table(subset(EScheck, select = c(has_response, has_driver)))
+# 5 cases with drivers have no response, 22 cases with responses have no drivers..
+
+# do all groups have a clean_group and lulc_group?
+table(EScheck[c("Group", "has_clean_group", "has_lulc_group")]) # yes
+
+# look at the records that have drivers but no response
+drivers_noresponse <- subset(EScheck, has_driver & !has_response)
+# how many reviews?
+length(unique(drivers_noresponse$ResponseId)) # only 3.. not bad
+# looked at reviews manually.. these are real (no artifact of coding)
+# in two cases, reviewer entered response vars for one ES and driver/effects vars in a different ES
+# in one case, response vars never entered..
+
+# look at the records that have response but no drivers
+response_nodrivers <- subset(EScheck, has_response & !has_driver)
+length(unique(response_nodrivers$ResponseId)) #13? boo.
+# in manual check, seems like these are from reviewer corrections. person entered missing answer on wrong row?
+# these are typically ES response-driver match up (there is always a driver in the general ES), just entered for incorrect Group..
+# and it's always coming from the effect direct (ED has an answer in a different Group than the Driver answer)
 
 
 

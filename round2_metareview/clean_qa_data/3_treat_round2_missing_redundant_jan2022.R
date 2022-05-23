@@ -698,117 +698,8 @@ qdat_revised$clean_group[qdat_revised$rowid %in% lagoonrowid] # don't need to ch
 
 
 
-# -- RULE-CHECK KREMEN TOPICS ----
-# > from original cleaning code:
-## RULES for KT1: (ESPs)
-# 1) If "Single species" in Q14 and has_ESP, then KT1 should be appended
-# 2) has ESP indicated, no KT1 or KT2 in Q13
 
-## > if ESP check in Biotic drivers, then ESP checked in Kremen topics
-has_ESPdriver <- subset(qdat_revised, abbr %in% c("Driver", "OtherDriver") | qnum %in% c("Q13", "Q14")) %>%
-  # arrange(RecordedDate) %>%
-  # check for "Service Provider" in clean_answer_finer by ResponseId
-  group_by(ResponseId) %>%
-  mutate(Bio_answer = str_flatten(unique(clean_answer_binned[grepl("Bio", clean_group) & !is.na(clean_answer_binned)])), # flatten all biotic driver bin labels that aren't NA
-         # screen for Service provider in all Bio group coarse bins
-         has_ESP = grepl("identity|abundan|densi|reproduc", Bio_answer),
-         has_biodiv = grepl("diver", Bio_answer),
-         # check the Kremen topics indicates ESP
-         KT_ESP = grepl("Kremen Topic 1 : ESP", clean_answer[qnum == "Q13"]),
-         KT = clean_answer[abbr == "KremenTopics"],
-         across_spp = grepl("Across", clean_answer[abbr == "ESP_type"]),
-         singlemulti_ESP = grepl("Single|Multiple", clean_answer[abbr == "ESP_type"]),
-         ESP_type = clean_answer[abbr == "ESP_type"]) %>%
-  # keep only conflicting records -- ESP indicated in driver but not in KT topics, or vv
-  filter((has_ESP & !KT_ESP) | (!has_ESP & KT_ESP)) %>% #(grepl("Single", ESP_type) & !KT_ESP)
-  # can allow KT_ESP IFF singlemulti_ESP == TRUE
-  ungroup() %>%
-  # keep only ResponseId, Title and flagging
-  subset(abbr %in%  c("KremenTopics", "KremenNotes", "ESP_type", "Driver", "OtherDriver") & !is.na(clean_answer)) %>%
-  filter(is.na(clean_group) | clean_group == "Bio") %>%
-  distinct()
-# looking at Kremen 2005.. seems like if the study stopped at ESP as the response, and did not connect/measure ESP effect on function or ES provision, should not count towards Kremen Topics 1
-
-
-addKT1 <- has_ESPdriver %>%
-  group_by(ResponseId) %>%
-  # either has ESP driver indicated and "Single Species" checked in Q14
-  # OR has ESP driver indicated, no Response to Q14 and KT1 or KT2 not indicated
-  filter((has_ESP & grepl("Single", ESP_type)) | (has_ESP & !grepl("1|2", KT))) %>%
-  ungroup() 
-# nothing to update
-
-# RULES FOR KT2: (Community structure influencing function)
-# 1) has_biodiv in driver bin and no KT1
-# 2) across_spp & no KT2 [no cases! anyone who checked across also checked KT 2]
-
-# > no edits involved an ESP so don't need to recheck KT1
-# > only biodiversity variable was in AK/GV paper but was more of an index related to ES bundles, so not applicable to biodiv influencing EF (KT2)
-# > since scale question not revised, KT4 check not applicable
-
-# RULES FOR KT3 ENV: (Environmental factors that influence provision)
-# 1) has env driver (has_env) but Env not checked in KT Topics (!KT_env)
-# 2) does NOT have env driver (!has_env) but Env check in KT Topics (KT_env)
-
-# check KT3 with latest edits
-has_env <- subset(qdat_revised, abbr %in% c("Driver", "OtherDriver", "Response") | qnum %in% c("Q13", "Q14", "Q8")) %>%
-  #arrange(RecordedDate) %>%
-  # check for "Service Provider" in clean_answer_finer by ResponseId
-  group_by(ResponseId) %>%
-  # look for any answer that is assigned to an environmental group
-  mutate(env_answer = str_flatten(unique(clean_answer_binned[grepl("Env", clean_group) & !is.na(clean_answer_binned)])), # flatten all env driver bin labels that aren't NA
-         # screen for Service provider in all Bio group coarse bins
-         has_env = env_answer != "",
-         KT = clean_answer[abbr == "KremenTopics"],
-         # look for Krement Topic 3 (environmental) in Kremen Topics answer
-         KT_env = grepl("3", KT)) %>%
-  # subset to either has an env answer and no KT 3 checked *or* the reverse
-  filter((has_env & !KT_env) | (KT_env & !has_env)) %>%
-  ungroup() %>%
-  # keep only ResponseId, Title and flagging
-  #dplyr::select(ResponseId, doublerev, Title, Bio_answer:ncol(.)) %>%
-  subset(abbr %in%  c("KremenTopics", "KremenNotes", "ESP_type", "Driver", "OtherDriver", "Response", "Nested", "Extent") & !is.na(clean_answer)) %>%
-  #filter(is.na(clean_group)) %>%
-  distinct()
-
-add_KTenv <- subset(has_env, (has_env & !KT_env) & abbr == "KremenTopics", select = c("ResponseId", "rowid", "Init"))
-remove_KTenv <- subset(has_env, !has_env & KT_env & abbr == "KremenTopics", select = c("ResponseId", "rowid", "Init"))
-View(subset(has_env, ResponseId %in% add_KTenv$ResponseId))  # this is SDJ paper with updated drivers
-View(subset(has_env, ResponseId %in% remove_KTenv$ResponseId)) #AK/AIS paper shouldn't have KT3 (isn't in either of their individual responses, and no env present.. not sure how that happened)
-# > mostly lingering KT3 based on Group == Env, not clean_group == Env
-
-# because only 4 cases, treat manually
-KT3answer <- "Kremen Topic 3 : Environmental factors that influence provision (env. drivers not including human drivers)"
-# add KT 3 where needed
-qdat_revised$clean_answer[grepl(add_KTenv$rowid, qdat_revised$rowid)] <- KT3answer # Original answer here is "None" so can overwrite
-qdat_revised$qa_note[grepl(add_KTenv$rowid, qdat_revised$rowid)] <- "Added KT3 based on updated environmental drivers"
-
-
-# remove KT env where needed
-# > via gsub for all, then clean up as needed
-qdat_revised$clean_answer[qdat_revised$rowid %in% remove_KTenv$rowid] <- gsub(",?Kremen Topic 3 : Environmental factors that influence provision [(]env[.] drivers not including human drivers[)],?", "", qdat_revised$clean_answer[qdat_revised$rowid %in% remove_KTenv$rowid])
-# assign "None" to blanks
-qdat_revised$clean_answer[qdat_revised$rowid %in% remove_KTenv$rowid & qdat_revised$clean_answer == ""] <- "None"
-# update qa_notes
-qdat_revised$qa_note[qdat_revised$rowid %in% remove_KTenv$rowid & qdat_revised$clean_answer == "None"] <- "Removed KT3 based on lack of clean_group environmental driver (drivers reassigned from Env Group to a different clean_group)"
-qdat_revised$qa_note[qdat_revised$rowid %in% remove_KTenv$rowid[remove_KTenv$Init == "IS"]] <- NA #ctw added KT3, was never in IS answer, so removal of it is fine
-qdat_revised$qa_note[qdat_revised$rowid %in% remove_KTenv$rowid[remove_KTenv$Init == "AK/AIS"]] # no edit needed
-
-# clean up environment
-rm(has_env, has_ESPdriver, remove_KTenv, addKT1, add_KTenv, has_bin_group, missing_bin_group)
-
-
-
-# -- FIX REDUNDANT -----
-# this is a simple gsub
-# id relevant rows
-redundant_methods <- with(qdat_revised, which(Title %in% unique(redundant$Title) & survey_order == unique(redundant$survey_order)))
-# verify
-qdat_revised[redundant_methods, c("answer", "clean_answer")] # correct
-qdat_revised$clean_answer[redundant_methods] <- unique(redundant$clean_answer) 
-
-
-# -- LAST CHECK -----
+# -- OTHER CONGRUENCE CHECKS -----
 # check unique answers per question
 with(subset(qdat_revised, !grepl("Notes|Response|OtherDri|GenIn", abbr)), sapply(split(clean_answer, abbr), function(x) unique(strsplit(x, ",(?=[A-Z])", perl = T))))
 # seems okay
@@ -840,6 +731,7 @@ qdat_revised$clean_answer_binned[qdat_revised$rowid %in% habitat_rowids & qdat_r
 View(qdat_revised[qdat_revised$rowid %in% habitat_rowids, ]) # ok
 # update Kremen Topics (has scale already)
 habKT <- with(habitat_paper, rowid[abbr == "KremenTopics"])
+KT3answer <- "Kremen Topic 3 : Environmental factors that influence provision (env. drivers not including human drivers)"
 qdat_revised$clean_answer[qdat_revised$rowid %in% habKT] <- paste(KT3answer, with(qdat_revised, clean_answer[rowid %in% habKT]), sep = ",")
 qdat_revised$qa_note[qdat_revised$rowid %in% habKT] <- paste("Added KT3 based on clean_group environmental driver and no KT3 checked", with(qdat_revised, qa_note[rowid %in% habKT]), sep = "; ")
 # lowcase second note to make similar to other QA notes
@@ -1021,7 +913,7 @@ notevar_dat <- ungroup(notevar_dat) %>%
   arrange(survey_order, varnum)
 
 # rbind CK revised answers back into qdat_revised
-qdat_revised_out <- rbind(qdat_revised, notevar_dat[names(qdat_revised)]) %>%
+qdat_revised <- rbind(qdat_revised, notevar_dat[names(qdat_revised)]) %>%
   arrange(Title, desc(version), Init, survey_order, varnum) %>%
   # clean up
   dplyr::select(-rowid) %>%
@@ -1029,10 +921,10 @@ qdat_revised_out <- rbind(qdat_revised, notevar_dat[names(qdat_revised)]) %>%
   data.frame() %>%
   distinct()
 
-summary(qdat_revised_out)
+summary(qdat_revised)
 
 # remake driverbins
-driverbins <- subset(qdat_revised_out, grepl("Driver", abbr) & !is.na(clean_answer), select = c(clean_answer, clean_answer_binned, Group, clean_group, abbr)) %>%
+driverbins <- subset(qdat_revised, grepl("Driver", abbr) & !is.na(clean_answer), select = c(clean_answer, clean_answer_binned, Group, clean_group, abbr)) %>%
   distinct() %>%
   # remove other
   subset(clean_answer != "Other") %>%
@@ -1042,22 +934,22 @@ driverbins <- subset(qdat_revised_out, grepl("Driver", abbr) & !is.na(clean_answ
 # in review.. 
 # NDWI shoulds be abiotic char aquatic not terrestrial (normalized difference water index, not NDVI)
 # can standardize spelling of drivers (e.g. pH, ph, PH; temp, Temp, Temperature, latitude, Latitude; rain, Rainfall, rainfall; slope, Slope; vegetation cover)
-standardize_drivers <- grep("^temp|^latitude|^rain|^slope|^vegetation cov|^canopy cov|^Land cov|^Topo",qdat_revised_out$clean_answer, ignore.case = T)
-sort(qdat_revised_out$clean_answer[standardize_drivers]) # correct
-qdat_revised_out$clean_answer[standardize_drivers] <- with(qdat_revised_out[standardize_drivers,], paste0(casefold(substr(clean_answer, 1,1), upper = T), substr(clean_answer, 2, nchar(clean_answer))))
-qdat_revised_out$clean_answer[grep("^Rain$", qdat_revised_out$clean_answer)] <- "Rainfall"
-qdat_revised_out$clean_answer[grep("^Temp$", qdat_revised_out$clean_answer)] <- "Temperature"
+standardize_drivers <- grep("^temp|^latitude|^rain|^slope|^vegetation cov|^canopy cov|^Land cov|^Topo",qdat_revised$clean_answer, ignore.case = T)
+sort(qdat_revised$clean_answer[standardize_drivers]) # correct
+qdat_revised$clean_answer[standardize_drivers] <- with(qdat_revised[standardize_drivers,], paste0(casefold(substr(clean_answer, 1,1), upper = T), substr(clean_answer, 2, nchar(clean_answer))))
+qdat_revised$clean_answer[grep("^Rain$", qdat_revised$clean_answer)] <- "Rainfall"
+qdat_revised$clean_answer[grep("^Temp$", qdat_revised$clean_answer)] <- "Temperature"
 # fix pH
-qdat_revised_out$clean_answer[grep("^pH$", qdat_revised_out$clean_answer, ignore.case = T)] <- "pH"
+qdat_revised$clean_answer[grep("^pH$", qdat_revised$clean_answer, ignore.case = T)] <- "pH"
 # to be sure
-qdat_revised_out[standardize_drivers, c("answer", "clean_answer")] # LD has precip and rainfall as other drivers in same paper.. looked at paper.. too much going in paper on so defer to LD
+qdat_revised[standardize_drivers, c("answer", "clean_answer")] # LD has precip and rainfall as other drivers in same paper.. looked at paper.. too much going in paper on so defer to LD
 # fix NDWI (change to abiotic char of aquatic)
-qdat_revised_out$clean_answer_binned[grep("^NDWI", qdat_revised_out$clean_answer)] <- gsub("terrestrial", "aquatic", qdat_revised_out$clean_answer_binned[grep("^NDWI", qdat_revised_out$clean_answer)])
+qdat_revised$clean_answer_binned[grep("^NDWI", qdat_revised$clean_answer)] <- gsub("terrestrial", "aquatic", qdat_revised$clean_answer_binned[grep("^NDWI", qdat_revised$clean_answer)])
 # trim whitespace from all clean_answer
-qdat_revised_out$clean_answer <- trimws(qdat_revised_out$clean_answer)
+qdat_revised$clean_answer <- trimws(qdat_revised$clean_answer)
 
 # remake driverbins
-driverbins <- subset(qdat_revised_out, grepl("Driver", abbr) & !is.na(clean_answer), select = c(clean_answer, clean_answer_binned, Group, clean_group, abbr)) %>%
+driverbins <- subset(qdat_revised, grepl("Driver", abbr) & !is.na(clean_answer), select = c(clean_answer, clean_answer_binned, Group, clean_group, abbr)) %>%
   distinct() %>%
   # remove other
   subset(clean_answer != "Other") %>%
@@ -1065,19 +957,19 @@ driverbins <- subset(qdat_revised_out, grepl("Driver", abbr) & !is.na(clean_answ
   rename(question_abbr = abbr)
 
 # check for duplicates
-qdat_revised_out <- group_by(qdat_revised_out, ResponseId, clean_answer, ES, survey_order) %>%
+qdat_revised <- group_by(qdat_revised, ResponseId, clean_answer, ES, survey_order) %>%
   mutate(check_dup = any(duplicated(id)))
 # not a cleaning error! these are drivers that are entered twice by the reviewer
 # since ordered by varnum, can remove the row that is flagged as a duplicate
-qdat_revised_out <- mutate(qdat_revised_out, removedup = duplicated(id))
-qdat_revised_out[qdat_revised_out$removedup, c("answer", "clean_answer", "varnum")] # for last paper, slope is not the final variable.. may need to renumber varnum
-qdat_revised_out$qa_note[qdat_revised_out$check_dup & !qdat_revised_out$removedup]
+qdat_revised <- mutate(qdat_revised, removedup = duplicated(id))
+qdat_revised[qdat_revised$removedup, c("answer", "clean_answer", "varnum")] # for last paper, slope is not the final variable.. may need to renumber varnum
+qdat_revised$qa_note[qdat_revised$check_dup & !qdat_revised$removedup]
 # assign rowid again to make edits easy
-qdat_revised_out$rowid <- as.numeric(rownames(qdat_revised_out))
+qdat_revised$rowid <- as.numeric(rownames(qdat_revised))
 
 # remove duplicates
 # > grab ES where duplicate lives to renumber varnum then add back in
-fix_duplicates <- ungroup(qdat_revised_out) %>%
+fix_duplicates <- ungroup(qdat_revised) %>%
   group_by(ResponseId, qnum, ES) %>%
   mutate(dupES = any(check_dup)) %>%
   # pare to impacted ES and response or driver since that's all that's affected
@@ -1085,7 +977,7 @@ fix_duplicates <- ungroup(qdat_revised_out) %>%
   ungroup()
 
 # remove these rowids from main dataset
-qdat_revised_out <- qdat_revised_out[!qdat_revised_out$rowid %in% fix_duplicates$rowid,]
+qdat_revised <- qdat_revised[!qdat_revised$rowid %in% fix_duplicates$rowid,]
 # remove dups, annotate fix duplicates, and renumber varnum
 fix_duplicates <- subset(fix_duplicates, !(check_dup & removedup)) %>%
   # only rows to annotate remain of duplicates
@@ -1100,7 +992,7 @@ fix_duplicates <- subset(fix_duplicates, !(check_dup & removedup)) %>%
   mutate(varnum = ifelse(is.na(abbr2), NA, varnum))
 
 # add back in to main dataset  
-qdat_revised_out <- rbind(qdat_revised_out, fix_duplicates[names(qdat_revised_out)]) %>%
+qdat_revised <- rbind(qdat_revised, fix_duplicates[names(qdat_revised)]) %>%
   arrange(RecordedDate, Title, desc(version), Init, survey_order, varnum) #%>%
 # clean up
 #dplyr::select(StartDate:qa_note)
@@ -1110,7 +1002,7 @@ qdat_revised_out <- rbind(qdat_revised_out, fix_duplicates[names(qdat_revised_ou
 # > found this May 2022 when prepping dataset for publication
 
 # screen for other drivers where "Other" clean group is not the same as the OtherDriver clean group, by Response, by Group, and by ES
-check_Othergroup <- subset(qdat_revised_out, grepl("Driver", abbr)) %>% #& !is.na(clean_answer)
+check_Othergroup <- subset(qdat_revised, grepl("Driver", abbr)) %>% #& !is.na(clean_answer)
   # subset to Other or OtherDrivers only
   #subset((clean_answer == "Other" & abbr == "Driver") | abbr == "OtherDriver") %>%
   group_by(ResponseId, ES) %>% #Group, 
@@ -1228,19 +1120,305 @@ replace_other <- rbind(replace_other, subset(check_Othergroup, abbr == "OtherDri
   arrange(rowid) #looks good (manual review)
 
 # remove rowids corrected from main dataset and sub in corrections
-qdat_revised_out <- subset(qdat_revised_out, !rowid %in% replace_other$rowid) %>%
+qdat_revised <- subset(qdat_revised, !rowid %in% replace_other$rowid) %>%
   rbind(replace_other[names(.)]) %>%
   arrange(rowid) %>%
   data.frame()
 
 
-# remake driverbins
-driverbins <- subset(qdat_revised_out, grepl("Driver", abbr) & !is.na(clean_answer), select = c(clean_answer, clean_answer_binned, Group, clean_group, abbr)) %>%
-  distinct() %>%
-  # remove other
-  subset(clean_answer != "Other") %>%
-  arrange(clean_group, clean_answer_binned, abbr, clean_answer) %>%
-  rename(question_abbr = abbr)
+
+
+
+# screen ES response, drivers for congruence -----
+# caught two errors in the process of coding for lulc (script 4):
+# 1. some response vars are missing (drivers entered, but no corresponding responses)
+# 2. effect directions that are missing aren't noted (matters for lulc coding)
+# > move clean up here since this script addresses missing answers and clean up
+# > let script 4 be for recoding lulc only
+
+ES_check <- subset(qdat_revised, qnum == "Q12" & !is.na(clean_answer)) %>%
+  # only drivers and effect directs have groups, summarise response and yclass first
+  group_by(ResponseId, ES) %>%
+  mutate(has_response = any(!is.na(clean_answer[abbr == "Response"])),
+         has_yclass = any(!is.na(clean_answer[abbr == "Yclass"])), 
+         has_driver_inES = any(!is.na(clean_answer[grepl("Driver", abbr)])),
+         has_effect_inES = any(!is.na(clean_answer[grepl("Effect", abbr)]))) %>%
+  ungroup() %>%
+  # drop NA Groups (Response and Yclass)
+  subset(!is.na(Group)) %>%
+  group_by(ResponseId, ES, Group, has_response, has_yclass, has_driver_inES, has_effect_inES) %>%
+  summarise(has_clean_group = all(!is.na(clean_group[is.na(clean_answer)])),
+            #has_lulc_group = all(!is.na(clean_group[!is.na(clean_answer)])),
+            has_driver = any(!is.na(clean_answer[grepl("Driver", abbr)])),
+            has_effect = any(!is.na(clean_answer[grepl("Effect", abbr)])),
+            has_effectnote = any(!is.na(qa_note[grepl("Effect", abbr)]))
+  )
+
+
+
+# at minimum, anything with a response should have a driver and vice versa
+table(subset(ES_check, select = c(has_response, has_driver)))
+# 5 cases with drivers have no response, 22 cases with responses have no drivers..
+
+
+# look at the records that have drivers but no response
+drivers_noresponse <- subset(ES_check, has_driver & !has_response)
+# how many reviews?
+length(unique(drivers_noresponse$ResponseId)) # only 3.. not bad
+review_nonresponse <- subset(qdat_revised, qnum == "Q12" & ResponseId %in% drivers_noresponse$ResponseId) %>%
+  # flag which records have error
+  left_join(drivers_noresponse[c("ResponseId", "ES", "Group")], by = c("ResponseId", "ES")) %>%
+  # keep either rows that have an answer or is the ES missing response
+  subset(!is.na(clean_answer) | !is.na(Group.y)) %>%
+  left_join(r2assigned[c("Title","FirstAuthor", "PublicationYear", "SourcePublication")])
+# looked at reviews manually.. these are real (no artifact of coding)
+# in two cases (R_eRwdF7L0jVVOQ, Init == KCG; R_20NmT4LIN9C6gR7, Init == SDJ), reviewer entered response vars for one ES and driver/effects vars in a different ES
+# in one case (R_Rr7vEkLFgKen, Init == LD), response vars never entered..
+
+# either way review papers
+distinct(review_nonresponse[,grep("Init|ES|Title|Author|Public", names(review_nonresponse))])
+
+# Genung et al. 2017
+# here all responses and yclass answers entered in pollination services, but all driver and effects entered under habitat creation
+# hab create was in row above pollination in the survey, so seems like data entry error
+# looking at papers (and pollination services in title), is about crop production so go with pollination services
+# > easiest thing is to grab rows from qdat_revised, tweak that then sub back in
+update_genung <- subset(qdat_revised, ResponseId == unique(review_nonresponse$ResponseId[review_nonresponse$Init == "SDJ"]) & qnum == "Q12" & grepl("Hab|Pol", ES))
+# assign biotic driver in hab create to pollination then NA
+genung_habdriver_rowid <- with(update_genung, rowid[abbr == "Driver" & ES == "HabCreate" & Group == "Biotic"])
+genung_poldriver_rowid <- with(update_genung, rowid[abbr == "Driver" & ES == "Pollination" & Group == "Biotic"])
+genung_habeffect_rowid <- with(update_genung, rowid[abbr == "EffectDirect" & ES == "HabCreate" & Group == "Biotic"])
+genung_poleffect_rowid <- with(update_genung, rowid[abbr == "EffectDirect" & ES == "Pollination" & Group == "Biotic"])
+# update driver
+update_genung[update_genung$rowid == genung_poldriver_rowid, c("clean_answer", "varnum", "clean_answer_binned", "clean_group")] <- update_genung[update_genung$rowid == genung_habdriver_rowid, c("clean_answer", "varnum", "clean_answer_binned", "clean_group")]
+# update effect
+update_genung[update_genung$rowid == genung_poleffect_rowid, c("clean_answer", "varnum", "clean_answer_binned", "clean_group")] <- update_genung[update_genung$rowid == genung_habeffect_rowid, c("clean_answer", "varnum", "clean_answer_binned", "clean_group")]
+# NA hab ES clean answers
+update_genung[update_genung$rowid %in% c(genung_habeffect_rowid, genung_habdriver_rowid), c("clean_answer", "varnum", "clean_answer_binned", "clean_group")] <- NA
+# add qa note to all
+genung_note <- "Driver and effect direction entered in habitat creation ES but Response and yclass entered in pollination ES (adjacent row in survey). CTW reviewed, moved driver and effect to pollination ES."
+update_genung$qa_note[update_genung$rowid %in% c(genung_habeffect_rowid, genung_habdriver_rowid, genung_poldriver_rowid, genung_poleffect_rowid)] <- genung_note
+View(update_genung) # looks okay
+
+# sub in
+qdat_revised <- subset(qdat_revised, !rowid %in% update_genung$rowid) %>%
+  rbind(update_genung) %>%
+  arrange(rowid)
+
+# Garratt et al. 2017
+# > here, sometimes answers entered in "AQReg" row and othertimes "Pollination"
+# > missing "Other" drivers were recorded in AQreg, so when CTW looked up to infill, assigned missing drivers to AQReg
+# > this paper is clearly about pollination services (benefits of hedgerows for pollinators and natural enemies) and not air quality
+# > air quality appeared under pollination in the survey, so likely accidental survey entry
+# > resolution: move all clean_answers and notes in AQReg to Pollination ES, add note that answers entered in incorrect survey row
+update_garratt <- subset(qdat_revised, ResponseId == unique(review_nonresponse$ResponseId[review_nonresponse$Init == "KCG"]) & qnum == "Q12" & grepl("AQR|Pol", ES))
+
+update_garratt[update_garratt, c("clean_answer", "varnum", "clean_answer_binned")]
+
+# Chaplin-Kramer et al. 2013 (response missing)
+# > studied impact of habitat and natural enemy (syrphid fly larvae) on crop pest (aphid density)
+# only 1 response var to add
+LD_rowid <- min(with(review_nonresponse, rowid[Init == "LD" & abbr == "Response"])) # there are two rows available for response, so just choose min value
+View(subset(qdat_revised, rowid == LD_rowid)) # correct row, no qa note present so can paste directly
+qdat_revised$clean_answer[qdat_revised$rowid == LD_rowid] <- "Aphid density"
+qdat_revised$qa_note[qdat_revised$rowid == LD_rowid] <- "Response variable missing. Reviewed by CTW and corrected."
+# what are the Kremen Topics and ESP answers?
+subset(qdat_revised, ResponseId == unique(review_nonresponse$ResponseId[review_nonresponse$Init == "LD"]) & grepl("KremenTo|ESP", abbr), select = c("ResponseId", "Init", "clean_answer"))
+# okay
+
+ 
+
+
+# look at the records that have response but no drivers
+response_nodrivers <- subset(ES_check, has_response & !has_driver)
+length(unique(response_nodrivers$ResponseId)) #13? boo.
+# in manual check, seems like these are from reviewer corrections. person entered missing answer on wrong row?
+# these are typically ES response-driver match up (there is always a driver in the general ES), just entered for incorrect Group..
+# and it's always coming from the effect direct (ED has an answer in a different Group than the Driver answer)
+
+# pull ResponseIds and ESes for those in response_nodrivers; keep either !has_driver & has_effect | has_driver & !has_effect
+triage_response_nodrivers <- left_join(response_nodrivers[c("ResponseId", "ES")], ES_check) #%>%
+# drop anything that has a driver in the correct group
+subset(!(has_response & has_driver & has_effect))
+
+
+
+
+
+
+# treat missing effect directions -----
+# make sure any effectdirect that has a driver entered has a clean_group assigned, even if reviewer didn't provide an answer
+# having all clean_groups infilled that should be infilled (whether reviewer provided answer or not helps keep lulc reassignment cleaner)
+hasdriver <- subset(qdat_revised, qnum == "Q12" & grepl("Driver|Effect", abbr)) %>%
+  group_by(ResponseId, ES, Group) %>%
+  mutate(has_driver = any(!is.na(clean_answer_binned)),
+         effectmissing = any(is.na(clean_answer[abbr == "EffectDirect"]))) %>%
+  ungroup() %>%
+  # subset to just those papers that have a driver entered but no answer to effect direct
+  subset(has_driver & effectmissing)
+# > not sure what to do where clean_group is different than original Group... 
+# how many reviews is this?
+unique(hasdriver$ResponseId) # 104..
+# decide to assign clean_group just based on original Group:
+# if there is only one clean_group and it's different than the original Group, enter clean_group
+# else enter the original Group (even when another clean_group is present within a given original Group -- because ultimately that answer would have been copied over to the Group row corresponding to clean_group)
+# > ultimately this is just for documenting no answer was provided
+
+noeffectdirect <- subset(hasdriver, select = c(ResponseId, Group, clean_group, ES, rowid, has_driver, effectmissing)) %>%
+  distinct()
+# iterate through to add clean_groups and note to QA column
+for(i in unique(hasdriver$ResponseId)){
+  tempdrivers <- subset(hasdriver, ResponseId ==i & grepl("Driver", abbr)) %>%
+    # subset just to Group, clean_group, and ES
+    distinct(ResponseId, Group, clean_group, ES)
+  tempeffect <- subset(hasdriver, ResponseId == i & abbr == "EffectDirect")
+  # iterate through each ES
+  for(e in unique(tempdrivers$ES)){
+    tempES <- subset(tempdrivers, ES == e)
+    for(g in unique(tempES$Group)){
+      # find relevant rowid in the main dataset
+      temprow <- with(tempeffect, rowid[ES == e & Group == g])
+      # assign clean_group based on clean_group present (if more than one, default to original)
+      if(any(tempES$clean_group == g)){
+        # assign original group
+        qdat_revised$clean_group[qdat_revised$rowid == temprow] <- g
+      }else{
+        # if original group not there assign whatever the clean_group is (i.e., when only driver entered was assigned to a different clean group)
+        qdat_revised$clean_group[qdat_revised$rowid == temprow] <- unique(tempES$clean_group)
+      }
+      # add QA note
+      tempnote <- paste0("No effect direction provided for driver(s) entered in ", g, ". 'Clean_group' driver types assigned within ", g, " are: ", str_flatten(unique(tempES$clean_group[tempES$Group == g]), collapse = ", "), ".")
+      if(!is.na(qdat_revised$qa_note[qdat_revised$rowid == temprow])){
+        # if note present, append
+        qdat_revised$qa_note[qdat_revised$rowid == temprow] <- paste0(qdat_revised$qa_note[qdat_revised$rowid == temprow], "; ", tempnote)
+      }else{
+        # assign tempnote
+        qdat_revised$qa_note[qdat_revised$rowid == temprow] <- tempnote
+      }
+      # cycle to next group
+    }
+  }
+}
+
+# review what was amended
+View(subset(qdat_revised, rowid %in% noeffectdirect$rowid)) # looks okay
+
+# > clean up env and proceed with lulc driver type recoding
+rm(tempdrivers, tempeffect, tempES, e, g, i, tempnote, temprow, noeffectdirect, hasdriver)
+
+
+
+# -- RULE-CHECK KREMEN TOPICS ----
+# > from original cleaning code:
+## RULES for KT1: (ESPs)
+# 1) If "Single species" in Q14 and has_ESP, then KT1 should be appended
+# 2) has ESP indicated, no KT1 or KT2 in Q13
+
+## > if ESP check in Biotic drivers, then ESP checked in Kremen topics
+has_ESPdriver <- subset(qdat_revised, abbr %in% c("Driver", "OtherDriver") | qnum %in% c("Q13", "Q14")) %>%
+  # arrange(RecordedDate) %>%
+  # check for "Service Provider" in clean_answer_finer by ResponseId
+  group_by(ResponseId) %>%
+  mutate(Bio_answer = str_flatten(unique(clean_answer_binned[grepl("Bio", clean_group) & !is.na(clean_answer_binned)])), # flatten all biotic driver bin labels that aren't NA
+         # screen for Service provider in all Bio group coarse bins
+         has_ESP = grepl("identity|abundan|densi|reproduc", Bio_answer),
+         has_biodiv = grepl("diver", Bio_answer),
+         # check the Kremen topics indicates ESP
+         KT_ESP = grepl("Kremen Topic 1 : ESP", clean_answer[qnum == "Q13"]),
+         KT = clean_answer[abbr == "KremenTopics"],
+         across_spp = grepl("Across", clean_answer[abbr == "ESP_type"]),
+         singlemulti_ESP = grepl("Single|Multiple", clean_answer[abbr == "ESP_type"]),
+         ESP_type = clean_answer[abbr == "ESP_type"]) %>%
+  # keep only conflicting records -- ESP indicated in driver but not in KT topics, or vv
+  filter((has_ESP & !KT_ESP) | (!has_ESP & KT_ESP)) %>% #(grepl("Single", ESP_type) & !KT_ESP)
+  # can allow KT_ESP IFF singlemulti_ESP == TRUE
+  ungroup() %>%
+  # keep only ResponseId, Title and flagging
+  subset(abbr %in%  c("KremenTopics", "KremenNotes", "ESP_type", "Driver", "OtherDriver") & !is.na(clean_answer)) %>%
+  filter(is.na(clean_group) | clean_group == "Bio") %>%
+  distinct()
+# looking at Kremen 2005.. seems like if the study stopped at ESP as the response, and did not connect/measure ESP effect on function or ES provision, should not count towards Kremen Topics 1
+
+
+addKT1 <- has_ESPdriver %>%
+  group_by(ResponseId) %>%
+  # either has ESP driver indicated and "Single Species" checked in Q14
+  # OR has ESP driver indicated, no Response to Q14 and KT1 or KT2 not indicated
+  filter((has_ESP & grepl("Single", ESP_type)) | (has_ESP & !grepl("1|2", KT))) %>%
+  ungroup() 
+# nothing to update
+
+# RULES FOR KT2: (Community structure influencing function)
+# 1) has_biodiv in driver bin and no KT1
+# 2) across_spp & no KT2 [no cases! anyone who checked across also checked KT 2]
+
+# > no edits involved an ESP so don't need to recheck KT1
+# > only biodiversity variable was in AK/GV paper but was more of an index related to ES bundles, so not applicable to biodiv influencing EF (KT2)
+# > since scale question not revised, KT4 check not applicable
+
+# RULES FOR KT3 ENV: (Environmental factors that influence provision)
+# 1) has env driver (has_env) but Env not checked in KT Topics (!KT_env)
+# 2) does NOT have env driver (!has_env) but Env check in KT Topics (KT_env)
+
+# check KT3 with latest edits
+has_env <- subset(qdat_revised, abbr %in% c("Driver", "OtherDriver", "Response") | qnum %in% c("Q13", "Q14", "Q8")) %>%
+  #arrange(RecordedDate) %>%
+  # check for "Service Provider" in clean_answer_finer by ResponseId
+  group_by(ResponseId) %>%
+  # look for any answer that is assigned to an environmental group
+  mutate(env_answer = str_flatten(unique(clean_answer_binned[grepl("Env", clean_group) & !is.na(clean_answer_binned)])), # flatten all env driver bin labels that aren't NA
+         # screen for Service provider in all Bio group coarse bins
+         has_env = env_answer != "",
+         KT = clean_answer[abbr == "KremenTopics"],
+         # look for Krement Topic 3 (environmental) in Kremen Topics answer
+         KT_env = grepl("3", KT)) %>%
+  # subset to either has an env answer and no KT 3 checked *or* the reverse
+  filter((has_env & !KT_env) | (KT_env & !has_env)) %>%
+  ungroup() %>%
+  # keep only ResponseId, Title and flagging
+  #dplyr::select(ResponseId, doublerev, Title, Bio_answer:ncol(.)) %>%
+  subset(abbr %in%  c("KremenTopics", "KremenNotes", "ESP_type", "Driver", "OtherDriver", "Response", "Nested", "Extent") & !is.na(clean_answer)) %>%
+  #filter(is.na(clean_group)) %>%
+  distinct()
+
+add_KTenv <- subset(has_env, (has_env & !KT_env) & abbr == "KremenTopics", select = c("ResponseId", "rowid", "Init"))
+remove_KTenv <- subset(has_env, !has_env & KT_env & abbr == "KremenTopics", select = c("ResponseId", "rowid", "Init"))
+View(subset(has_env, ResponseId %in% add_KTenv$ResponseId))  # this is SDJ paper with updated drivers
+View(subset(has_env, ResponseId %in% remove_KTenv$ResponseId)) #AK/AIS paper shouldn't have KT3 (isn't in either of their individual responses, and no env present.. not sure how that happened)
+# > mostly lingering KT3 based on Group == Env, not clean_group == Env
+
+# because only 4 cases, treat manually
+KT3answer <- "Kremen Topic 3 : Environmental factors that influence provision (env. drivers not including human drivers)"
+# add KT 3 where needed
+qdat_revised$clean_answer[grepl(add_KTenv$rowid, qdat_revised$rowid)] <- KT3answer # Original answer here is "None" so can overwrite
+qdat_revised$qa_note[grepl(add_KTenv$rowid, qdat_revised$rowid)] <- "Added KT3 based on updated environmental drivers"
+
+
+# remove KT env where needed
+# > via gsub for all, then clean up as needed
+qdat_revised$clean_answer[qdat_revised$rowid %in% remove_KTenv$rowid] <- gsub(",?Kremen Topic 3 : Environmental factors that influence provision [(]env[.] drivers not including human drivers[)],?", "", qdat_revised$clean_answer[qdat_revised$rowid %in% remove_KTenv$rowid])
+# assign "None" to blanks
+qdat_revised$clean_answer[qdat_revised$rowid %in% remove_KTenv$rowid & qdat_revised$clean_answer == ""] <- "None"
+# update qa_notes
+qdat_revised$qa_note[qdat_revised$rowid %in% remove_KTenv$rowid & qdat_revised$clean_answer == "None"] <- "Removed KT3 based on lack of clean_group environmental driver (drivers reassigned from Env Group to a different clean_group)"
+qdat_revised$qa_note[qdat_revised$rowid %in% remove_KTenv$rowid[remove_KTenv$Init == "IS"]] <- NA #ctw added KT3, was never in IS answer, so removal of it is fine
+qdat_revised$qa_note[qdat_revised$rowid %in% remove_KTenv$rowid[remove_KTenv$Init == "AK/AIS"]] # no edit needed
+
+# clean up environment
+rm(has_env, has_ESPdriver, remove_KTenv, addKT1, add_KTenv, has_bin_group, missing_bin_group)
+
+
+
+# -- FIX REDUNDANT -----
+# this is a simple gsub
+# id relevant rows
+redundant_methods <- with(qdat_revised, which(Title %in% unique(redundant$Title) & survey_order == unique(redundant$survey_order)))
+# verify
+qdat_revised[redundant_methods, c("answer", "clean_answer")] # correct
+qdat_revised$clean_answer[redundant_methods] <- unique(redundant$clean_answer) 
+
+
+
 
 
 
@@ -1258,6 +1436,14 @@ qdat_revised_out <- ungroup(qdat_revised_out) %>%
   left_join(paperorder) %>%
   arrange(titleorder, survey_order, varnum) %>%
   select(StartDate:qa_note)
+
+# remake driverbins
+driverbins <- subset(qdat_revised_out, grepl("Driver", abbr) & !is.na(clean_answer), select = c(clean_answer, clean_answer_binned, Group, clean_group, abbr)) %>%
+  distinct() %>%
+  # remove other
+  subset(clean_answer != "Other") %>%
+  arrange(clean_group, clean_answer_binned, abbr, clean_answer) %>%
+  rename(question_abbr = abbr)
 
 
 # write out main datasaet
