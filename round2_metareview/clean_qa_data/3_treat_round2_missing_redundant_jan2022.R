@@ -16,7 +16,7 @@
 # 6. re-recompile r2 keep data and final list of drivers and their binned answers, write out for analysis
 
 
-# -- SETUP --
+# -- SETUP ----
 rm(list = ls())
 library(tidyverse)
 options(stringsAsFactors = F)
@@ -1178,7 +1178,7 @@ review_nonresponse <- subset(qdat_revised, qnum == "Q12" & ResponseId %in% drive
 # either way review papers
 distinct(review_nonresponse[,grep("Init|ES|Title|Author|Public", names(review_nonresponse))])
 
-# Genung et al. 2017
+# 1. Genung et al. 2017
 # here all responses and yclass answers entered in pollination services, but all driver and effects entered under habitat creation
 # hab create was in row above pollination in the survey, so seems like data entry error
 # looking at papers (and pollination services in title), is about crop production so go with pollination services
@@ -1205,17 +1205,60 @@ qdat_revised <- subset(qdat_revised, !rowid %in% update_genung$rowid) %>%
   rbind(update_genung) %>%
   arrange(rowid)
 
-# Garratt et al. 2017
+# 2. Garratt et al. 2017
 # > here, sometimes answers entered in "AQReg" row and othertimes "Pollination"
 # > missing "Other" drivers were recorded in AQreg, so when CTW looked up to infill, assigned missing drivers to AQReg
 # > this paper is clearly about pollination services (benefits of hedgerows for pollinators and natural enemies) and not air quality
 # > air quality appeared under pollination in the survey, so likely accidental survey entry
-# > resolution: move all clean_answers and notes in AQReg to Pollination ES, add note that answers entered in incorrect survey row
+# > resolution: move all clean_answers in human and biotic drivers and effects and notes in AQReg to Pollination ES, add note that answers entered in incorrect survey row
+## > ojo: biotic driver has 2 other drivers so need to add rows (increment rowid by 0.1 and 0.2 so in correct order)
 update_garratt <- subset(qdat_revised, ResponseId == unique(review_nonresponse$ResponseId[review_nonresponse$Init == "KCG"]) & qnum == "Q12" & grepl("AQR|Pol", ES))
+# deal with other drivers first
+garratt_otherdrivers <- subset(update_garratt, abbr == "OtherDriver" & ES == "AQReg" & clean_group == "Biotic")
+# > only things that need to change are ES, survey_order and rowid
+garratt_otherdrivers$ES <- "Pollination"
+garratt_otherdrivers$survey_order <- with(ESsurveyorder, survey_order[grepl("Poll", ES) & grepl("Oth", abbr) & Group == "Biotic"])
+# should be last rowid in subsetted data bc biotic other drivers would come last
+garratt_otherdrivers$rowid <- max(update_garratt$rowid[update_garratt$ES == "Pollination"]) + c(0.1, 0.2)
 
-update_garratt[update_garratt, c("clean_answer", "varnum", "clean_answer_binned")]
+# update the rest (human/biot driv + effects in AQreg-- > Pollination)
+# > only 1 driver var per type so no need to create multiple rows
 
-# Chaplin-Kramer et al. 2013 (response missing)
+# bio + human drivers and effects from AQR to move
+garratt_aqr_biodriver_rowid <- with(update_garratt, rowid[abbr == "Driver" & grepl("AQR", ES) & Group == "Biotic"])
+garratt_aqr_bioeffect_rowid <- with(update_garratt, rowid[abbr == "EffectDirect" & grepl("AQR", ES) & Group == "Biotic"])
+garratt_aqr_humdriver_rowid <- with(update_garratt, rowid[abbr == "Driver" & grepl("AQR", ES) & Group == "Human"])
+garratt_aqr_humeffect_rowid <- with(update_garratt, rowid[abbr == "EffectDirect" & grepl("AQR", ES) & Group == "Human"])
+
+# bio + human drivers and effects in pollination
+garratt_pol_biodriver_rowid <- with(update_garratt, rowid[abbr == "Driver" & grepl("Pol", ES) & Group == "Biotic"])
+garratt_pol_bioeffect_rowid <- with(update_garratt, rowid[abbr == "EffectDirect" & grepl("Pol", ES) & Group == "Biotic"])
+garratt_pol_humdriver_rowid <- with(update_garratt, rowid[abbr == "Driver" & grepl("Pol", ES) & Group == "Human"])
+garratt_pol_humeffect_rowid <- with(update_garratt, rowid[abbr == "EffectDirect" & grepl("Pol", ES) & Group == "Human"])
+
+# update driver in bio + human rows
+update_garratt[update_garratt$rowid %in% c(garratt_pol_biodriver_rowid, garratt_pol_humdriver_rowid), c("clean_answer", "varnum", "clean_answer_binned", "clean_group")] <- update_garratt[update_garratt$rowid %in% c(garratt_aqr_biodriver_rowid, garratt_aqr_humdriver_rowid), c("clean_answer", "varnum", "clean_answer_binned", "clean_group")]
+# update effect in bio + human rows
+update_garratt[update_garratt$rowid %in% c(garratt_pol_bioeffect_rowid, garratt_pol_humeffect_rowid), c("clean_answer", "varnum", "clean_answer_binned", "clean_group")] <- update_garratt[update_garratt$rowid %in% c(garratt_aqr_bioeffect_rowid, garratt_aqr_humeffect_rowid), c("clean_answer", "varnum", "clean_answer_binned", "clean_group")]
+# NA hab ES clean answers
+update_garratt[grepl("AQR", update_garratt$ES), c("clean_answer", "varnum", "clean_answer_binned", "clean_group", "qa_note")] <- NA
+# add qa note to all
+garratt_note <- "Biotic and human drivers and effect directions entered in AQ Regulation ES but response, yclass, and env drivers entered in pollination ES (adjacent row in survey). CTW reviewed, moved biotic and human driver and effect answers to pollination ES."
+update_garratt$qa_note[grepl("Hum|Bio", update_garratt$Group) & grepl("AQR|Pol", update_garratt$ES)] <- garratt_note
+View(update_garratt) # looks okay -- drop other drivers in AQreg and rbind other drivers in Pollination
+
+# sub in updates
+qdat_revised <- subset(qdat_revised, !rowid %in% update_garratt$rowid) %>% # remove all existing rowids first
+  rbind(subset(update_garratt, !(abbr == "OtherDriver" & Group == "Biotic"))) %>% # add in updated garratt rows minus old other drivers in AQreg
+  rbind(garratt_otherdrivers[names(.)]) %>%
+  arrange(rowid)
+# check everything there (should be two missing from update_garratt [old other drivers])
+summary(update_garratt$rowid %in% qdat_revised$rowid) # good
+summary(garratt_otherdrivers$rowid %in% qdat_revised$rowid) #good -- 2 new other driver rows present
+
+
+
+# 3. Chaplin-Kramer et al. 2013 (response missing)
 # > studied impact of habitat and natural enemy (syrphid fly larvae) on crop pest (aphid density)
 # only 1 response var to add
 LD_rowid <- min(with(review_nonresponse, rowid[Init == "LD" & abbr == "Response"])) # there are two rows available for response, so just choose min value
@@ -1226,8 +1269,9 @@ qdat_revised$qa_note[qdat_revised$rowid == LD_rowid] <- "Response variable missi
 subset(qdat_revised, ResponseId == unique(review_nonresponse$ResponseId[review_nonresponse$Init == "LD"]) & grepl("KremenTo|ESP", abbr), select = c("ResponseId", "Init", "clean_answer"))
 # okay
 
- 
 
+
+# > next issue!
 
 # look at the records that have response but no drivers
 response_nodrivers <- subset(ES_check, has_response & !has_driver)
@@ -1237,11 +1281,92 @@ length(unique(response_nodrivers$ResponseId)) #13? boo.
 # and it's always coming from the effect direct (ED has an answer in a different Group than the Driver answer)
 
 # pull ResponseIds and ESes for those in response_nodrivers; keep either !has_driver & has_effect | has_driver & !has_effect
-triage_response_nodrivers <- left_join(response_nodrivers[c("ResponseId", "ES")], ES_check) #%>%
-# drop anything that has a driver in the correct group
-subset(!(has_response & has_driver & has_effect))
+triage_response_nodrivers <-subset(ES_check, has_response & ((!has_driver & has_effect)|(has_driver & !has_effect))) %>%
+  # further subset to just papers that need fix
+  subset(ResponseId %in% response_nodrivers$ResponseId) %>%
+  # ignore anything that has a response & has_driver in the same but no effect when effect present in ES
+  #subset(!(!has_effect & !has_effect_inES & has_driver)) %>%
+  group_by(ResponseId, ES) %>%
+  mutate(nrows = length(has_response)) %>%
+  ungroup()
+
+# treat things that need a simple swap first, treat single ES-Group manually after
+swap_response_nodriver <- subset(triage_response_nodrivers, nrows == 2)
+# initiate data frame for storing edited rows
+treat_response_nodrivers <- data.frame()
+revisit <- data.frame()
+for(r in unique(triage_response_nodrivers$ResponseId)){
+  nodriver_lut <- subset(triage_response_nodrivers, ResponseId == r)
+  # iterate through ESes involved
+  for(e in unique(nodriver_lut$ES)){
+    # stash review if there isn't a trade between Groups
+    if(length(unique(nodriver_lut$has_driver[nodriver_lut$ES == e])) == 1){
+      revisit <- rbind(revisit, subset(nodriver_lut, ES == e))
+      next
+    }
+    # which row has driver
+    tempdriver <- with(nodriver_lut, Group[ES == e & has_driver])
+    # which row has effect (assign this to correct Group based on driver)
+    tempeffect <- with(nodriver_lut, Group[ES == e & !has_driver])
+    # move effect to driver row
+    newrows <- subset(qdat_revised, ResponseId == r & ES == e & abbr == "EffectDirect" & Group %in% c(tempdriver, tempeffect))
+    newrows[newrows$Group == tempdriver, c("clean_answer","clean_answer_binned", "qa_note")] <- newrows[newrows$Group == tempeffect, c("clean_answer","clean_answer_binned", "qa_note")]
+    newrows$clean_group[newrows$Group == tempdriver] <- tempdriver
+    newrows[newrows$Group == tempeffect, c("clean_answer","clean_answer_binned", "clean_group", "qa_note")] <- NA
+    # update qa notes
+    tempnote <- paste0("Effect direction for ", e, " ES entered in ", tempeffect, " driver type but driver entered as ", tempdriver, ". Moved effect direction to ", tempdriver, ".")
+    newrows$qa_note[newrows$Group == tempdriver] <- ifelse(is.na(newrows$qa_note[newrows$Group == tempdriver]), tempnote,
+                                                           # if has a comment already append,
+                                                           paste(newrows$qa_note[newrows$Group == tempdriver], tempnote, sep = "; "))
+    newrows$qa_note[newrows$Group == tempeffect] <- tempnote
+    # note which row is correct and which is old
+    newrows$switch <- ifelse(newrows$Group == tempdriver, "correct", "old")
+    # rbind both to master
+    treat_response_nodrivers <- rbind(treat_response_nodrivers, newrows)
+  }
+  # cycle to next ES in review
+}
+
+# manual corrections on the rest..
+# two are fine (one no issue, the other has an extra effect direct assigned to biotic bc of clean_group reassigned to biotic in env, but still has env driver too)
+# three records have answers entered erroneously in rows that don't have corresponding driver (data entry/reviewer errors)
+# one looks like it's missing climate variable in env group (all answers in Q12 same between four ESes, but climate missing for one [reviewer error])
+# > CTW skimmed paper and climate should also be checked in coastWQreg based on how NBD answered for other ESes
+
+# working backwards..
+# 1. assign climate to NBD paper (Zhang et al. 2019 Research on ecosystem health.. RID = R_UhyrikAxNKguB7r)
+update_zhang <- subset(qdat_revised, ResponseId == "R_UhyrikAxNKguB7r" & abbr == "Driver" & grepl("Env", Group) & (grepl("coast", ES)| !is.na(clean_answer)))
+update_zhang[grepl("coast", update_zhang$ES), grepl("clean|varnum", names(update_zhang))] <-  distinct(update_zhang[!grepl("coast", update_zhang$ES), grepl("clean|varnum", names(update_zhang))])
+# just keep updated row
+update_zhang <- subset(update_zhang, grepl("coast", ES))
+# add qa note (empty)
+update_zhang$qa_note <- "Env effect direction provided but no driver answer. CTW reviewed paper and reviewer responses, data entry error. Assigned climate as for other ESes."
 
 
+# 2. NA erroneous effect direct entries (drivers already have an effect direct, these answers were accidental data entry errors)
+na_effects <- subset(revisit, ResponseID %in% c())
+#"R_ahJIRReOGwvVKp3" -- "Didn't quantify" erroneously checked for Soil Protect Env & Human (only biotic drivers present)
+na_VKp3 <- subset(qdat_revised, ResponseId == "R_ahJIRReOGwvVKp3" & ES %in% revisit$ES[revisit$ResponseId == "R_ahJIRReOGwvVKp3"])
+na_VKp3[grepl("Effect", na_VKp3$abbr) & na_VKp3$Group %in% revisit$Group[revisit$ResponseId == "R_ahJIRReOGwvVKp3"] , grepl("clean", names(na_VKp3))] <- NA
+na_VKp3$qa_note[grepl("Effect", na_VKp3$abbr) & na_VKp3$Group %in% revisit$Group[revisit$ResponseId == "R_ahJIRReOGwvVKp3"]] <- "Effect direction erroneously provided. No drivers in this Group. Removed answer."
+# subset to just affected rows
+na_VKp3 <- subset(na_VKp3, grepl("Effect direction er", qa_note))
+
+# "R_1inzjZZX9lualBg" -- effect provided for env, see in qa_note "Other" in environment removed in reviewer correction so effect direct should have been too
+na_lBg <- subset(qdat_revised, ResponseId == "R_1inzjZZX9lualBg" & ES %in% revisit$ES[revisit$ResponseId == "R_1inzjZZX9lualBg"] & Group %in% revisit$Group[revisit$ResponseId == "R_1inzjZZX9lualBg"])
+# copy corrections from driver to effect direct row
+na_lBg[na_lBg$abbr == "EffectDirect",grepl("clean|qa", names(na_lBg))] <- na_lBg[na_lBg$abbr == "Driver",grepl("clean|qa", names(na_lBg))]
+# append "from Env" on both notes
+na_lBg$qa_note <- paste(na_lBg$qa_note, "from Environment group")
+
+
+# sub out all response updates, put back in 
+qdat_revised <- subset(qdat_revised, !rowid %in% c(update_zhang$rowid, na_VKp3$rowid, na_lBg$rowid)) %>%
+  rbind(update_zhang, na_VKp3, na_lBg) %>%
+  arrange(rowid)
+
+# clean up environment
+rm(list = ls()[grepl("update|new|respon|na_|temp|garra|nodriv|switch", ls())])
 
 
 
@@ -1258,7 +1383,7 @@ hasdriver <- subset(qdat_revised, qnum == "Q12" & grepl("Driver|Effect", abbr)) 
   subset(has_driver & effectmissing)
 # > not sure what to do where clean_group is different than original Group... 
 # how many reviews is this?
-unique(hasdriver$ResponseId) # 104..
+length(unique(hasdriver$ResponseId)) # 104..
 # decide to assign clean_group just based on original Group:
 # if there is only one clean_group and it's different than the original Group, enter clean_group
 # else enter the original Group (even when another clean_group is present within a given original Group -- because ultimately that answer would have been copied over to the Group row corresponding to clean_group)
@@ -1303,8 +1428,8 @@ for(i in unique(hasdriver$ResponseId)){
 # review what was amended
 View(subset(qdat_revised, rowid %in% noeffectdirect$rowid)) # looks okay
 
-# > clean up env and proceed with lulc driver type recoding
-rm(tempdrivers, tempeffect, tempES, e, g, i, tempnote, temprow, noeffectdirect, hasdriver)
+# > clean up environment
+rm(list = ls()[grepl("temp|hasdri|noef", ls())])
 
 
 
@@ -1425,13 +1550,13 @@ qdat_revised$clean_answer[redundant_methods] <- unique(redundant$clean_answer)
 # -- WRITE OUT ----
 # order dataset by order of answers received (same as how written out in original cleaning script)
 # > create paper order as done in original cleaning script
-paperorder <- ungroup(qdat_revised_out) %>%
+paperorder <- ungroup(qdat_revised) %>%
   subset(qnum == "Q3") %>% 
   distinct(ResponseId, RecordedDate) %>%
   arrange(RecordedDate) %>%
   mutate(titleorder = 1:nrow(.))
 # order dataset
-qdat_revised_out <- ungroup(qdat_revised_out) %>%
+qdat_revised_out <- ungroup(qdat_revised) %>%
   # sort dataset by order answers came in, then by survey order and varnum
   left_join(paperorder) %>%
   arrange(titleorder, survey_order, varnum) %>%

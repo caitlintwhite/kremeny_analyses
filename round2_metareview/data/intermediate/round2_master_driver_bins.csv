@@ -3,8 +3,8 @@ Amount of 'semi natural vegetation',Biotic characteristics of the plot,Environme
 availability of semi-natural habitat (% area within 500m radius),Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 bark thickness,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 broadleaved cover,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
-Canopy cover,Biotic characteristics of the plot,Human,Biotic,OtherDriver
 Canopy cover,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
+Canopy cover,Biotic characteristics of the plot,Human,Biotic,OtherDriver
 Canopy density,Biotic characteristics of the plot,Environmental,Biotic,OtherDriver
 Canopy openness,Biotic characteristics of the plot,Environmental,Biotic,OtherDriver
 foliar cover,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
@@ -28,8 +28,8 @@ Type of vegetation (grassland vs. shrubland),Biotic characteristics of the plot,
 Understory cover,Biotic characteristics of the plot,Environmental,Biotic,OtherDriver
 vegetation basal gap,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 vegetation canopy gap,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
-Vegetation cover,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 Vegetation cover,Biotic characteristics of the plot,Environmental,Biotic,OtherDriver
+Vegetation cover,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 vegetation type,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 wild flower strips planted,Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
 wildflower strip width (m),Biotic characteristics of the plot,Biotic,Biotic,OtherDriver
