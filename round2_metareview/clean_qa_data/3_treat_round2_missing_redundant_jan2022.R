@@ -1555,8 +1555,7 @@ table(dplyr::select(ES_recheck, has_response, has_driver)) # there should be 1 f
 table(dplyr::select(ES_recheck, has_driver, has_effect)) # the one record here is also the same AK paper
 table(dplyr::select(ES_recheck, has_driver, has_effectnote))
 response_nodriver_recheck <- subset(ES_recheck, has_response & !has_driver, select = c(ResponseId, ES, Group)) %>%
-  left_join(qdat_revised, by = c("ResponseId", "ES")) #%>%
-  mutate(groupcheck = unique) # ok. nothing to do.
+  left_join(qdat_revised, by = c("ResponseId", "ES")) # ok. nothing to do.
 
 
 # run ES recheck on clean_group instead one more time to be sure all is good to proceed
@@ -1599,6 +1598,31 @@ effectdirect_recheck <- subset(effectdirect_recheck, grepl("Effect", abbr)) # sh
 qdat_revised <- subset(qdat_revised, !rowid %in% effectdirect_recheck$rowid) %>%
   rbind(effectdirect_recheck) %>%
   arrange(rowid)
+
+# because all else in Q12 cleaned up at this point, note which yclass answers are missing for a given response-ES
+missing_yclass <- distinct(ES_recheck, ResponseId, ES, has_response, has_yclass)
+# be sure no missing response vars
+table(missing_yclass[c("has_response", "has_yclass")]) # no missing response vars, 38 records have missing yclass
+# remove things that are fine
+missing_yclass <- subset(missing_yclass, !has_yclass)
+# initate master data frame for storing updates
+yclass_updates <- data.frame()
+for(r in unique(missing_yclass$ResponseId)){
+  # pull rows then sub in
+  tempdat <- subset(qdat_revised, ResponseId == r & abbr == "Yclass" & ES %in% c(missing_yclass$ES[missing_yclass$ResponseId == r]))
+  # add note
+  tempdat$qa_note <- paste("Response variable(s) entered for", tempdat$ES, "ES, response variable classification(s) (ES, EF, or Proxy for ES) missing.")
+  # append to master
+  yclass_updates <- rbind(yclass_updates, tempdat)
+  # cycle to next
+}
+
+View(yclass_updates) # looks okay
+#sub in
+qdat_revised <- subset(qdat_revised, !rowid %in% yclass_updates$rowid) %>%
+  rbind(yclass_updates) %>%
+  arrange(rowid)
+
 
 
 
