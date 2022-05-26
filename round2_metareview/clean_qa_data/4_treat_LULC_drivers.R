@@ -131,13 +131,17 @@ new_abbrcodes <- subset(abbrcodes, qnum != "Q12") %>%
   subset(select = -survey_order) %>%
   rbind(newQ12_surveyorder[names(.)]) %>%
   arrange(new_order, qnum)
+# add new survey order to questions that appear after q12
 start_order <- (trunc(max(new_abbrcodes$new_order, na.rm = T))+1)
 needs_order <- which(is.na(new_abbrcodes$new_order))
 new_abbrcodes$new_order[needs_order] <- seq.int(start_order, length.out = length(needs_order), by =1)
-# finally, start order at 1 (begins at 20)
-if(min(new_abbrcodes$new_order) != 1){
-  new_abbrcodes$new_order <- new_abbrcodes$new_order - (min(new_abbrcodes$new_order)-1)
-}
+
+# > update: since keeping both survey order in the dataset, don't adjust numbering to start at 1 so unaffected numbers are consistent
+
+# # finally, start order at 1 (begins at 20)
+# if(min(new_abbrcodes$new_order) != 1){
+#   new_abbrcodes$new_order <- new_abbrcodes$new_order - (min(new_abbrcodes$new_order)-1)
+# }
 
 
 
@@ -428,7 +432,7 @@ for(i in unique(cleanup_other_lulc$ResponseId)){
       addnote <- paste("Other driver(s) entered in", c, "driver type recoded to Land Use Land Cover type. Updated 'Other' driver to LULC group for consistency.")
       # append (to one or more rows) and clean up
       tempdat$lulc_note[temprow] <- ifelse(is.na(tempdat$lulc_note[temprow]), addnote,
-                                         paste(tempdat$lulc_note[temprow], addnote, sep = "; "))
+                                           paste(tempdat$lulc_note[temprow], addnote, sep = "; "))
       # clear any NAs or weird punctuation in pasting (".;)
       tempdat$lulc_note[temprow] <- gsub("[.];", ";", tempdat$lulc_note[temprow])
     }
@@ -677,7 +681,7 @@ has_env <- subset(r2keep_lulc, abbr %in% c("Driver", "OtherDriver") | qnum %in% 
   distinct()
 
 # how many papers does it affect (in manual look it's because of env --> land use land cover)
-length(unique(has_env$Title)) #10 papers .. but these could be those excluded bc of lulc only
+length(unique(has_env$Title)) #9 papers .. but these could be those excluded bc of lulc only
 # check
 summary(unique(has_env$Title) %in% exclude_lulc_only$Title) # only 2..
 # maybe should note for Grant which papers would not have env topic if use lulc driver type coding
@@ -714,18 +718,6 @@ summary(unique(r2keep_lulc$Title[r2keep_lulc$only_lulc]) %in% exclude_lulc_only$
 checkgroups <- distinct(subset(r2keep_lulc, grepl("Driver|Effect", abbr) & !is.na(clean_answer), select = c(ResponseId, clean_answer, clean_answer_binned, abbr, Group:clean_group, new_group)))
 summary(is.na(checkgroups$new_group)) # everything has a new_group assigned that should. huzzah!
 
-# check for new_group in QA notes and replace with clean_group
-# > noticed while reviewing answers and notes for lulc
-cleanup_note_rowids <- r2keep_lulc$rowid[(grepl("new_group| new group", r2keep_lulc$qa_note))]
-View(subset(r2keep_lulc, rowid %in% cleanup_note_rowids)) # look at full Q12 responses to these (only several papers)
-View(subset(r2keep_lulc, ResponseId %in% r2keep$ResponseId[grepl("new_group", r2keep$qa_note)] & qnum == "Q12"))
-# ok. note assigned when a driver was assigned to a different clean_group and no effect direction to copy over
-# > clean up note so makes better sense with column names
-
-old_note <- "Driver assigned to this group and based on new_group but no answer in driver's old group effect direction to assign to clean_answer_binned;"
-new_note <- "Driver transferred to this Group because of clean_group associated with driver's clean_answer_binned answer. No effect direction provided in old Group to transfer;"
-r2keep_lulc$qa_note[r2keep_lulc$rowid %in% cleanup_note_rowids] <- gsub(old_note, new_note, r2keep_lulc$qa_note[r2keep_lulc$rowid %in% cleanup_note_rowids])
-
 # check for weird punctuation in notes
 summary(grepl("[.];", r2keep_lulc$qa_note)) # all okay
 
@@ -738,9 +730,9 @@ EScheck <- subset(r2keep_lulc, qnum == "Q12" & !is.na(clean_answer)) %>%
   # only drivers and effect directs have groups, summarise response and yclass first
   group_by(ResponseId, ES) %>%
   mutate(has_response = any(!is.na(clean_answer[abbr == "Response"])),
-        has_yclass = any(!is.na(clean_answer[abbr == "Yclass"])), 
-        has_driver_inES = any(!is.na(clean_answer[grepl("Driver", abbr)])),
-        has_effect_inES = any(!is.na(clean_answer[grepl("Effect", abbr)]))) %>%
+         has_yclass = any(!is.na(clean_answer[abbr == "Yclass"])), 
+         has_driver_inES = any(!is.na(clean_answer[grepl("Driver", abbr)])),
+         has_effect_inES = any(!is.na(clean_answer[grepl("Effect", abbr)]))) %>%
   ungroup() %>%
   # drop NA Groups (Response and Yclass)
   subset(!is.na(Group)) %>%
@@ -750,66 +742,163 @@ EScheck <- subset(r2keep_lulc, qnum == "Q12" & !is.na(clean_answer)) %>%
             has_driver = any(!is.na(clean_answer[grepl("Driver", abbr)])),
             has_effect = any(!is.na(clean_answer[grepl("Effect", abbr)])),
             has_effectnote = any(!is.na(qa_note[grepl("Effect", abbr)]))
-              )
+  )
 
 # at minimum, anything with a response should have a driver and vice versa
-table(subset(EScheck, select = c(has_response, has_driver)))
-# 5 cases with drivers have no response, 22 cases with responses have no drivers..
+table(subset(EScheck, select = c(has_response, has_driver))) # 1 case is the same AK paper that has effect direct assigned in Group = Bio bc of clean_group reassignment Env --> Bio and other env vars still present
+# i.e., all ok
 
 # do all groups have a clean_group and lulc_group?
 table(EScheck[c("Group", "has_clean_group", "has_lulc_group")]) # yes
 
-# look at the records that have drivers but no response
-drivers_noresponse <- subset(EScheck, has_driver & !has_response)
-# how many reviews?
-length(unique(drivers_noresponse$ResponseId)) # only 3.. not bad
-# looked at reviews manually.. these are real (no artifact of coding)
-# in two cases, reviewer entered response vars for one ES and driver/effects vars in a different ES
-# in one case, response vars never entered..
-
-# look at the records that have response but no drivers
-response_nodrivers <- subset(EScheck, has_response & !has_driver)
-length(unique(response_nodrivers$ResponseId)) #13? boo.
-# in manual check, seems like these are from reviewer corrections. person entered missing answer on wrong row?
-# these are typically ES response-driver match up (there is always a driver in the general ES), just entered for incorrect Group..
-# and it's always coming from the effect direct (ED has an answer in a different Group than the Driver answer)
-
-
-
-
-#### MAKE ES DAT FOR SANKEY -----
-
-# save driver types and es types for sankey
-dat3 <- r2keep_lulc %>%
-  filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
-  dplyr::select(Title, clean_answer_binned, clean_group) %>%
-  mutate(old_group = clean_group) %>%
-  # reassign clean_answer_binned land cover answers to have Group 'LU LC'
-  mutate(clean_group = ifelse(clean_answer_binned %in% c('Land cover', 'Land use and land cover change'), 'LU_LC',clean_group)) %>%
-  # reassign studies with only land cover biotic drivers (based on Q14) to 'LU LC' Group
-  mutate(clean_group = ifelse(Title %in% biot_lulc_titles & clean_group == 'Biotic', 'LU_LC', clean_group)) %>%
-  dplyr::select(-clean_answer_binned, -old_group) %>%
-  # take only unique rows 
-  unique() %>%
-  rename(driv_type = clean_group) %>%
-  # join with ES types
-  full_join(
-    r2keep %>%
-      filter(abbr=='Response') %>% 
-      filter(!is.na(clean_answer)) %>% 
-      dplyr::select(Title, ES) %>%
-      unique(),
-    by='Title'
+# do same check with clean_group instead
+EScheck <- subset(r2keep_lulc, qnum == "Q12" & !is.na(clean_answer)) %>%
+  # only drivers and effect directs have groups, summarise response and yclass first
+  group_by(ResponseId, ES) %>%
+  mutate(has_response = any(!is.na(clean_answer[abbr == "Response"])),
+         has_yclass = any(!is.na(clean_answer[abbr == "Yclass"])), 
+         has_driver_inES = any(!is.na(clean_answer[grepl("Driver", abbr)])),
+         has_effect_inES = any(!is.na(clean_answer[grepl("Effect", abbr)]))) %>%
+  ungroup() %>%
+  # drop NA Groups (Response and Yclass)
+  subset(!is.na(Group)) %>%
+  group_by(ResponseId, ES, clean_group, has_response, has_yclass, has_driver_inES, has_effect_inES) %>%
+  summarise(has_clean_group = all(!is.na(clean_group[is.na(clean_answer)])),
+            has_lulc_group = all(!is.na(clean_group[!is.na(clean_answer)])),
+            has_driver = any(!is.na(clean_answer[grepl("Driver", abbr)])),
+            has_effect = any(!is.na(clean_answer[grepl("Effect", abbr)])),
+            has_effectnote = any(!is.na(qa_note[grepl("Effect", abbr)])),
+            has_lulcnote = any(!is.na(lulc_note[grepl("Effect", abbr)]))
   )
+
+# at minimum, anything with a response should have a driver and vice versa
+table(subset(EScheck, select = c(has_response, has_driver))) # all good
+
+# do all groups have a clean_group and lulc_group?
+table(EScheck[c("has_clean_group", "has_lulc_group")]) # yes
+
+# do all groups that have effects have and lulc_group?
+table(EScheck[c("has_effect", "has_effectnote", "has_lulc_group")]) # has lulc group
+
+# something odd with effects and effects. recrunch just that to check complete answers or notes
+# do same check with clean_group instead
+EScheck <- subset(r2keep_lulc, grepl("Driver|Effect", abbr)) %>%
+  # only drivers and effect directs have groups, summarise response and yclass first
+  group_by(ResponseId, ES, clean_group) %>%
+  mutate(has_driver = any(!is.na(clean_answer[grepl("Driver", abbr)])),
+         has_effect = any(!is.na(clean_answer[grepl("Effect", abbr)])),
+         has_effectnote = any(!is.na(qa_note[grepl("Effect", abbr)])),
+         has_lulcnote = any(!is.na(lulc_note[grepl("Effect", abbr)]))) %>%
+  subset(has_driver) 
+# > in manual review, see that effect/effect note are false when abbr != EffectDirect. when look at abbr == EffectDirect effect answers are either present or there is a qa note
+table(subset(EScheck, abbr == "EffectDirect", select = c("has_effect", "has_effectnote"))) # what doesn't have an effect direction has a qa note confirming it's missing. huzzah!
+# okay to move on
+
+# be sure no duplicated rowids
+summary(duplicated(r2keep_lulc$rowid)) # no dups
+
 
 
 
 #### FINISHING -----
+# rename new survey order cols to join
+new_abbrcodes <- rename(new_abbrcodes, lulc_group = Group, lulc_survey_order = new_order)
+# > update: adding in lulc_survey_code not necessary (too much of a pain to add in bc of mismatched id col values)
+# > since keeping clean_group col in final dataset, okay to just have original survey order (can come back to this if needed)
+# remove unneeded cols, rename new_group to lulc_group, add lulc_survey_order
+r2keep_lulc_out <- rename(r2keep_lulc, lulc_group = new_group) %>%
+  # make sure arranged by rowid
+  arrange(rowid) %>%
+  subset(select = c(StartDate:clean_group, lulc_group, qnum:qa_note, lulc_note, only_lulc))
+
+
+# for exclusion dataset, maybe preserve what drivers they had and their ESP type response? although someone could see that in reading in the main dataset
+exclude_lulc_only_out <- subset(r2keep_lulc_out, only_lulc & qnum %in% c("Q12", "Q14")) %>%
+  # further subset to driver only for Q12 and clean answers that aren't NA
+  subset((qnum == "Q12" & grepl("Driver", abbr) & !is.na(clean_answer)) | qnum == "Q14") %>%
+  left_join(distinct(exclude_lulc_only[c("ResponseId", "exclude_reason")]))
+
+
+
+# MAKE ES DAT FOR SANKEY
+# save updated driver types
+# (from GV final_analses/results.R script -- tweak below for new lulc structure of dataset)
+# r2keep_lulc_out %>%
+#   filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
+#   dplyr::select(Title, clean_answer_binned, clean_group) %>%
+#   mutate(old_group = clean_group) %>%
+#   # reassign clean_answer_binned land cover answers to have Group 'LU LC'
+#   mutate(clean_group = ifelse(clean_answer_binned %in% c('Land cover', 'Land use and land cover change'), 'LU_LC',clean_group)) %>%
+#   # reassign studies with only land cover biotic drivers (based on Q14) to 'LU LC' Group
+#   mutate(clean_group = ifelse(Title %in% biot_lulc_titles & clean_group == 'Biotic', 'LU_LC', clean_group)) %>%
+#   # take only unique rows 
+#   unique() %>%
+#   write.csv(file='round2_metareview/analyze_data/final_analyses/lulc_reclass_bytitle.csv', row.names=F)
+
+update_driver_types <- r2keep_lulc_out %>%
+  # pull final answers for analysis only
+  subset(version == "final") %>%
+  # pull driver answers that are not NA
+  filter(grepl("Driver", abbr), !is.na(clean_answer)) %>%
+  # leaving in studies that are lulc_only
+  dplyr::select(Title, clean_answer_binned, lulc_group) %>%
+  # rename to clean_group so sankey code runs
+  rename(clean_group = lulc_group) %>%
+  # take only unique rows
+  distinct() %>%
+  # ctw -- drop 'Other' from binned answers since it's just a stand in
+  subset(!clean_answer_binned == "Other") #%>%
+# write.csv(file='round2_metareview/analyze_data/final_analyses/lulc_reclass_bytitle.csv', row.names=F)
+
+
+# save driver types and es types for sankey
+# preserve GV code to see goal of output
+# dat %>%
+#   filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
+#   dplyr::select(Title, clean_answer_binned, clean_group) %>%
+#   mutate(old_group = clean_group) %>%
+#   # reassign clean_answer_binned land cover answers to have Group 'LU LC'
+#   mutate(clean_group = ifelse(clean_answer_binned %in% c('Land cover', 'Land use and land cover change'), 'LU_LC',clean_group)) %>%
+#   # reassign studies with only land cover biotic drivers (based on Q14) to 'LU LC' Group
+#   mutate(clean_group = ifelse(Title %in% biot_lulc_titles & clean_group == 'Biotic', 'LU_LC', clean_group)) %>%
+#   dplyr::select(-clean_answer_binned, -old_group) %>%
+#   # take only unique rows 
+#   unique() %>%
+#   rename(driv_type = clean_group) %>%
+#   # join with ES types
+#   full_join(
+#     dat %>%
+#       filter(abbr=='Response') %>% 
+#       filter(!is.na(clean_answer)) %>% 
+#       dplyr::select(Title, ES) %>%
+#       unique(),
+#     by='Title'
+#   ) %>%
+#   write.csv(file='round2_metareview/analyze_data/final_analyses/lulcreclass_driv_ES_bytitle.csv', row.names=F)
+
+update_es_driver_types <- r2keep_lulc_out  %>%
+  # pull final answers for analysis only
+  subset(version == "final") %>%
+  # pull driver answers that are not NA
+  filter(grepl("Driver", abbr), !is.na(clean_answer), !clean_answer == "Other") %>%
+  dplyr::select(Title, ES, lulc_group) %>%
+  # take unique rows
+  distinct() %>%
+  rename(driv_type = lulc_group) #%>%
+# write.csv(file='round2_metareview/analyze_data/final_analyses/lulcreclass_driv_ES_bytitle.csv', row.names=F)
+
+biot_lulc_titles <- subset(r2keep_lulc_out, version == "final" & qnum == "Q14" & grepl("Only land cover", clean_answer))
+
+
+#### WRITE OUT -----
 # write out ES-driver table for Sankey
+write.csv(update_driver_types, file='round2_metareview/analyze_data/final_analyses/lulc_reclass_bytitle.csv', row.names=F)
+write.csv(update_es_driver_types, file='round2_metareview/analyze_data/final_analyses/lulcreclass_driv_ES_bytitle.csv', row.names=F)
 
 # write out lulc-adjusted analysis clean full text dataset
-
+# > different name than previous main dataset to not mess up any analyses code developed (it shouldn't, but just in case)
+write_csv(r2keep_lulc_out, "round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned_lulc.csv")
 
 # write out lulc-excluded dataset
-
+write_csv(exclude_lulc_only_out, "round2_metareview/data/cleaned/ESqualtrics_r2excludelulc_cleaned.csv")
 
