@@ -13,13 +13,17 @@ library(networkD3)
 library(htmlwidgets)
 
 # Load data, process data -------------------------------------------------------------------
-data <- read.csv("round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv")
+#data <- read.csv("round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv") # pre-lulc adjusted clean data
+# ctw note: read in cleaned, lulc-adjusted driver type full-text dataset
+# > original clean driver types still present in 'clean_group', lulc adjusted driver types in 'lulc_group'
+data <- read.csv("round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned_lulc.csv")
 new.bins <- read.csv("round2_metareview/analyze_data/final_analyses/lulc_reclass_bytitle.csv")
 es.bins <- read.csv("round2_metareview/analyze_data/final_analyses/lulcreclass_driv_ES_bytitle.csv")
 
 
 data <- data[data$version == "final",] # final data
-df <- data[,c(8,15:19)] # pull relevant columns
+# df <- data[,c(8,15:19)] # pull relevant columns, using ESqualtrics_r2keep_cleaned.csv
+df <- data[c("Title", "abbr", "lulc_group", "ES", "qnum")] # pull relevant columns, using lulc-adjusted-drivers cleaned data (ESqualtrics_r2keep_cleaned_lulc.csv) 
 df <- df[df$qnum == "Q12",] # subset to only Q12
 df <- df[,-5]
 
