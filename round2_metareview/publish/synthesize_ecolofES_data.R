@@ -93,67 +93,35 @@ biot_lulc_titles = dat %>%
 
 # separate out land use and land cover studies
 driv_types_title = dat %>%
-  filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
-  dplyr::select(Title, clean_answer_binned, clean_group) %>%
-  mutate(old_group = clean_group) %>%
-  # reassign clean_answer_binned land cover answers to have Group 'LU LC'
-  mutate(clean_group = ifelse(clean_answer_binned %in% c('Land cover', 'Land use and land cover change'), 'LU_LC',clean_group)) %>%
-  # reassign studies with only land cover biotic drivers (based on Q14) to 'LU LC' Group
-  mutate(clean_group = ifelse(Title %in% biot_lulc_titles & clean_group == 'Biotic', 'LU_LC', clean_group)) %>%
+  # subset to all non-NA driver answers except those == "Other" (signals Other Driver answers present, not meaningful answer)
+  subset(grepl("Driver", abbr) & !clean_answer_binned %in% c(NA, "Other"), 
+         # select only study Title, and LU_LC adjusted driver groups present in study
+         select = c(Title,  lulc_group)) %>% #clean_answer_binned,
   # take only unique rows 
   unique() %>%
-  dplyr::select(-old_group, -clean_answer_binned) %>%
-  filter(!is.na(clean_group)) %>% # two NAs snuck through somehow, I checked and there were always other drivers
   mutate(pres_holder = TRUE) %>%
-  unique() %>%
-  pivot_wider(id_cols = 'Title', names_from = 'clean_group', values_from = 'pres_holder') %>%
+  pivot_wider(id_cols = 'Title', names_from = 'lulc_group', values_from = 'pres_holder') %>%
   replace(is.na(.), FALSE)
+
 
 # exclude lulc studies
 excl_lulc = driv_types_title %>%
-  dplyr::select(-LU_LC) %>%
+  dplyr::select(-LU_LC) %>% # ctw comment: didn't change this, but confirming this drops any variables recoded as lulc for papers retained (in venn diagrams below we're ignoring any variables recoded as LU_LC) 
   filter(!(Biotic=='FALSE' & Human =='FALSE' & Environmental =='FALSE'))
-  # 110 studies used an lulc drivers, 26 studies only used lulc drivers
+summary(driv_types_title)
+nrow(excl_lulc)
+# 113 studies used an lulc driver, 29 studies only used lulc drivers
 
-# save updated driver types
-dat %>%
-  filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
-  dplyr::select(Title, clean_answer_binned, clean_group) %>%
-  mutate(old_group = clean_group) %>%
-  # reassign clean_answer_binned land cover answers to have Group 'LU LC'
-  mutate(clean_group = ifelse(clean_answer_binned %in% c('Land cover', 'Land use and land cover change'), 'LU_LC',clean_group)) %>%
-  # reassign studies with only land cover biotic drivers (based on Q14) to 'LU LC' Group
-  mutate(clean_group = ifelse(Title %in% biot_lulc_titles & clean_group == 'Biotic', 'LU_LC', clean_group)) %>%
-  # take only unique rows 
-  unique() %>%
-  write.csv(file='round2_metareview/analyze_data/final_analyses/lulc_reclass_bytitle.csv', row.names=F)
+# ctw note: another way to get excl_lulc: use T/F column 'only_lulc', which indicates studies that only involved LULC drivers based on:
+# 1) land use or land cover binned driver variables in Q12
+# 2) or indicated study ESP or other biotic variables (when only other biotic driver variables provided) were land cover proxies in Q14
+excl_lulc_titles <- with(dat, unique(Title[only_lulc]))
 
-# save driver types and es types for sankey
-dat %>%
-  filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
-  dplyr::select(Title, clean_answer_binned, clean_group) %>%
-  mutate(old_group = clean_group) %>%
-  # reassign clean_answer_binned land cover answers to have Group 'LU LC'
-  mutate(clean_group = ifelse(clean_answer_binned %in% c('Land cover', 'Land use and land cover change'), 'LU_LC',clean_group)) %>%
-  # reassign studies with only land cover biotic drivers (based on Q14) to 'LU LC' Group
-  mutate(clean_group = ifelse(Title %in% biot_lulc_titles & clean_group == 'Biotic', 'LU_LC', clean_group)) %>%
-  dplyr::select(-clean_answer_binned, -old_group) %>%
-  # take only unique rows 
-  unique() %>%
-  rename(driv_type = clean_group) %>%
-  # join with ES types
-  full_join(
-    dat %>%
-      filter(abbr=='Response') %>% 
-      filter(!is.na(clean_answer)) %>% 
-      dplyr::select(Title, ES) %>%
-      unique(),
-    by='Title'
-  ) %>%
-  write.csv(file='round2_metareview/analyze_data/final_analyses/lulcreclass_driv_ES_bytitle.csv', row.names=F)
-
-
-
+# create folder for storing figures
+figpath <- paste0(home, "fig_files/")
+if(!dir.exists(figpath)){
+  dir.create(figpath)
+}
 
 
 
@@ -237,7 +205,7 @@ map_plot = cc %>%
   coord_map("mollweide") + # to change projections
   theme_void()
 
-#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/map_study_locations.pdf', width = 10, height = 5)
+#ggsave(paste0(figpath,'map_study_locations.pdf'), width = 10, height = 5)
 
 # study system
 system_plot = dat %>% 
@@ -256,7 +224,7 @@ system_plot = dat %>%
   coord_flip() +
   theme_bw() 
 
-#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/study_system_simple.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave(paste0(figpath, 'study_system_simple.pdf'), width = 5, height = 5, dpi = 'retina')
 
 
 # methods
@@ -276,7 +244,7 @@ mthds_plot = dat %>%
   coord_flip() +
   theme_bw()
 
-#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/methods_used.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave(paste0(figpath, 'methods_used.pdf'), width = 5, height = 5, dpi = 'retina')
 
 # methods venn
 methods_tf = dat %>% 
@@ -310,9 +278,11 @@ methods_adjmat
 
 # ES type
 estype_plot = dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr == "Response") %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
-  dplyr::select(ES) %>%
+  dplyr::select(Title, ES) %>%
+  # take unique ESes per study
+  unique() %>%
   group_by(ES) %>%
   summarise(count = n()) %>%
   mutate(proportion = count/num_papers) %>%
@@ -325,8 +295,6 @@ estype_plot = dat %>%
   coord_flip() +
   theme_bw()
 
-#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/which_services.pdf', width = 5, height = 5, dpi = 'retina')
-
 
 # Make general patterns panel
 
@@ -338,7 +306,7 @@ ggdraw() +
   draw_plot_label(label = c("A", "B", "C", "D"), size = 15,
                   x = c(0, 0.6, 0, 0.5), y = c(1, 1, 0.5, 0.5))
 
-ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/panel_gen_patterns.pdf', width=7.5, height=5, dpi='retina')
+#ggsave(filename=paste0(figpath, 'panel_gen_patterns.pdf'), width=7.5, height=5, dpi='retina')
 
 
 
@@ -380,13 +348,13 @@ venn_plot = ggplot() +
   theme(legend.position = 'None') + #remove legend
   coord_sf(clip="off") + #don't cutoff labels 
   scale_x_continuous(expand = expansion(mult = .3)) 
-  # excludes 26 studies that only used land use or land cover drivers
+  # excludes 29 studies that only used land use or land cover drivers
 
 
 
 # venn diagrams by service
 driv_byserv = dat %>%
-  filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
+  filter(abbr %in% c('Driver', 'OtherDriver'), !clean_answer %in% c(NA, "Other")) %>% # ignore non-answers or "Other" answers that signal Other Drivers present
   dplyr::select(Title, ES) %>% 
   unique() %>%
   left_join(excl_lulc, by='Title') %>%
@@ -412,12 +380,23 @@ for (i in 1:length(es_types)){
     theme(legend.position = 'None', plot.title = element_text(hjust =-0.1, face='bold')) + #remove legend
     coord_sf(clip="off")  #don't cutoff labels
   
-  ggsave(filename = paste0('round2_metareview/analyze_data/final_analyses/fig_files/drivvenn_byservice/drivvenn_byserv_',es,'.pdf'), width=6, height=5, dpi='retina')
+  # create venn diagram folder for storing venn figures
+  if(!dir.exists(paste0(figpath,"drivvenn_byservice/"))){
+    dir.create(paste0(figpath,"drivvenn_byservice/"))
+  }
+  
+  #ggsave(filename = paste0(figpath, 'drivvenn_byservice/drivvenn_byserv_',es,'.pdf'), width=6, height=5, dpi='retina')
 }
 
 
-# Ecological scale of biotic drivers
+# > ID papers that have biotic drivers based on original clean group, but excluding papers that were lulc-drivers only 
+# >> (e.g., Service Provider or other biotic drivers recoded to LULC based on Q14 proxy answer are still Biotic this way)
+biot_driver_titles <- with(dat, unique(Title[grepl("Biotic", clean_group) & !only_lulc])) # 133 papers
+
+# ecological scale plot for studies that reported a biotic driver (rather than ESP as response variable)
 ecolscalebiotic_plot = dat %>% 
+  # select only papers that have a biotic driver indicated
+  filter(Title %in% biot_driver_titles) %>%
   filter(qnum=='Q14', abbr=='ESP_type') %>%
   dplyr::select(Title, clean_answer) %>%
   # clean up and separate answers
@@ -435,21 +414,26 @@ ecolscalebiotic_plot = dat %>%
   filter(!is.na(binned)) %>%
   dplyr::select(-clean_answer) %>%
   unique() %>%
-  group_by(binned) %>%
+  # ctw adds paper count
+  mutate(n_studies = length(unique(Title))) %>%
+  # preserve total # studies that had biotic driver to calculate proportions
+  group_by(binned, n_studies) %>%
+  #group_by(binned) %>%
   summarise(count = n()) %>%
-  mutate(perc = count/sum(count)) %>%
+  ungroup() %>%
+  mutate(perc = count/sum(count), # proportion of total answers checked (i.e., reviewer could check multiple answers per paper)
+         prop_studies = count/n_studies) %>%  # ctw adds: calculate proportion of papers with a given ESP type
   mutate(binned = factor(binned, levels = c('Within species','Single species','Multiple ESP species','Community level','Land cover proxy', NA))) %>%
   filter(!is.na(binned)) %>%
   ggplot() +
-  geom_col(aes(x=fct_rev(binned), y=perc)) +
+  geom_col(aes(x=fct_rev(binned), y=prop_studies)) + # ctw: use proportion of studies rather than proportion of checked answers instead
   ggtitle('Levels of biotic drivers') +
   xlab('') +
   ylab('Proportion of papers') +
   coord_flip() +
   theme_bw()
-  # checked that the same number of papers in multiple ESP species and community level was just a coincidence - it was
-
-#ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/biotic_driv_specific.pdf', width=5, height=5, dpi='retina')
+  
+#ggsave(filename=paste0(figpath,'biotic_driv_specific.pdf'), width=5, height=5, dpi='retina')
 
 # Biotic drivers panel
 ggdraw()+
@@ -458,7 +442,7 @@ ggdraw()+
   draw_plot_label(label = c("A", "B"), size = 15,
                   x = c(0, 0.5), y = c(1, 1))
 
-ggsave(filename = 'round2_metareview/analyze_data/final_analyses/fig_files/panel_bioticdrivers.pdf', width=7.5, height=4, dpi='retina')
+ggsave(filename = paste0(figpath,'panel_bioticdrivers.pdf'), width=7.5, height=4, dpi='retina')
 
 
 
@@ -469,7 +453,7 @@ ggsave(filename = 'round2_metareview/analyze_data/final_analyses/fig_files/panel
 excl_lulc %>%
   filter(Biotic==TRUE) %>%
   nrow() / num_papers
-  # 42.8% of papers
+  # 44.7% of papers
 
 
 
@@ -485,7 +469,7 @@ excl_lulc %>%
   nrow() / nrow(excl_lulc)
 
 
-#### Spatiotemporal scales ####
+##### Spatiotemporal scales #####
 
 ### num years
 numyears_plot = dat %>%
@@ -505,7 +489,7 @@ numyears_plot = dat %>%
   coord_flip() +
   theme_bw()
 
-#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/num_years.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave(paste0(figpath,'num_years.pdf'), width = 5, height = 5, dpi = 'retina')
 
 
 ### spatial extent
@@ -523,15 +507,17 @@ spatextent_plot = dat %>%
   coord_flip() +
   theme_bw()
 
-#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/spatial_extent.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave(paste0(figpath,'spatial_extent.pdf'), width = 5, height = 5, dpi = 'retina')
 
 
 ### time trends yes/no
 # overall props
 services_overall = dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr=='Response') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
-  dplyr::select(ES) %>%
+  dplyr::select(Title, ES) %>%
+  # unique ESes studies per paper
+  unique() %>%
   group_by(ES) %>%
   summarise(count = n()) %>%
   mutate(proportion = count/num_papers)
@@ -558,9 +544,11 @@ overall_yes_prop = dat %>%
 
 
 timeestype_plot = dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr=='Response') %>%
   filter(!is.na(clean_answer)) %>%
   dplyr::select(Title, ES) %>%
+  # because multiple Responses can be recorded per ES (tidy data), take unique Title-ES rows
+  unique() %>%
   left_join(timetrends_df, by = 'Title') %>% 
   group_by(ES, TimeTrends) %>%
   summarise(count_yesno = n()) %>%
@@ -579,7 +567,7 @@ timeestype_plot = dat %>%
   coord_flip() +
   theme_bw()
 
-#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/es_type_temporal.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave(paste0(figpath,'es_type_temporal.pdf'), width = 5, height = 5, dpi = 'retina')
 rm(list=c('services_overall','overall_yes_prop'))
 
 
@@ -587,9 +575,11 @@ rm(list=c('services_overall','overall_yes_prop'))
 
 # overall props
 services_overall = dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr=='Response') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
-  dplyr::select(ES) %>%
+  dplyr::select(Title,ES) %>%
+  # unique ESes studied per paper
+  unique() %>%
   group_by(ES) %>%
   summarise(count = n()) %>%
   mutate(proportion = count/num_papers)
@@ -612,9 +602,11 @@ overall_yes_prop = dat %>%
 
 
 spatconn_plot = dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr=='Response') %>%
   filter(!is.na(clean_answer)) %>%
   dplyr::select(Title, ES) %>%
+  # take unique Title-ESes studied (reviewer could enter multiple response vars per ES)
+  unique() %>%
   left_join(connect_df, by = 'Title') %>% 
   group_by(ES, Connectivity) %>%
   summarise(count_yesno = n()) %>%
@@ -633,16 +625,18 @@ spatconn_plot = dat %>%
   coord_flip() +
   theme_bw()
 
-#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/es_type_connectivity.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave(paste0(figpath, 'es_type_connectivity.pdf'), width = 5, height = 5, dpi = 'retina')
 rm(list=c('services_overall','overall_yes_prop'))
 
 ### multiple spatial scales
 
 # overall props
 services_overall = dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr=='Response') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
-  dplyr::select(ES) %>%
+  dplyr::select(Title, ES) %>%
+  # take unique ESes studied per paper (could enter multiple response variables per ES per study)
+  unique() %>%
   group_by(ES) %>%
   summarise(count = n()) %>%
   mutate(proportion = count/num_papers)
@@ -665,9 +659,11 @@ overall_yes_prop = dat %>%
 
 
 multispat_plot = dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr == 'Response') %>%
   filter(!is.na(clean_answer)) %>%
   dplyr::select(Title, ES) %>%
+  # take unique ESes studied per paper (could enter multiple response variables per ES per study)
+  unique() %>%
   left_join(nested_df, by = 'Title') %>% 
   group_by(ES, Nested) %>%
   summarise(count_yesno = n()) %>%
@@ -686,7 +682,7 @@ multispat_plot = dat %>%
   coord_flip() +
   theme_bw()
 
-#ggsave('round2_metareview/analyze_data/final_analyses/fig_files/es_type_multiscale.pdf', width = 5, height = 5, dpi = 'retina')
+#ggsave(paste0(figpath,'es_type_multiscale.pdf'), width = 5, height = 5, dpi = 'retina')
 rm(list=c('services_overall','overall_yes_prop'))
 
 
@@ -702,8 +698,8 @@ ggdraw() +
   draw_plot(multispat_plot, x=0.666, y=0, width=0.333, height=0.5) +
   draw_plot_label(label = c("A", "B", "C", "D", "E"), size = 15,
                   x = c(0, 0.5, 0, 0.333, 0.666), y = c(1, 1, 0.5, 0.5, 0.5)) 
-  
-ggsave(filename = 'round2_metareview/analyze_data/final_analyses/fig_files/panel_spatiotemp_simp.pdf', width=9, height=6, dpi='retina')
+
+#ggsave(filename = paste0(figpath,'panel_spatiotemp_simp.pdf'), width=9, height=6, dpi='retina')
 
 # with description of C,D,E
 ggdraw() +
@@ -724,8 +720,8 @@ ggdraw() +
             x=0.7, y=0.73, size=10, hjust=0, vjust=1) +
   draw_text(text=str_wrap('Yellow lines: expected proportion by ecosystem service type based on overall average', width=42),
             x=0.7, y=0.65, size=10, hjust=0, vjust=1) 
-  
-ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/panel_spatiotemp.pdf', width=9, height=6, dpi='retina')
+
+#ggsave(filename=paste0(figpath,'panel_spatiotemp.pdf'), width=9, height=6, dpi='retina')
 
 
 
@@ -809,13 +805,15 @@ dat %>%
 
 
 
-#### Multifunctionality ####
+##### Multifunctionality #####
 
 ### number of ES types per paper
 dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr=='Response') %>% 
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
-  dplyr::select(Title, ES) %>% 
+  dplyr::select(Title, ES) %>%
+  # take unique ESes studied per paper (could enter multiple response variables per ES per study)
+  unique() %>%
   mutate(pres_holder = 1) %>%
   pivot_wider(id_cols = 'Title', names_from = 'ES', values_from = 'pres_holder') %>% 
   replace(is.na(.), 0) %>%
@@ -833,9 +831,11 @@ dat %>%
 
 # view the table
 dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr=='Response') %>% 
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
   dplyr::select(Title, ES) %>% 
+  # take unique ESes studied per paper (could enter multiple response variables per ES per study)
+  unique() %>%
   mutate(pres_holder = 1) %>%
   pivot_wider(id_cols = 'Title', names_from = 'ES', values_from = 'pres_holder') %>% 
   replace(is.na(.), 0) %>%
@@ -845,13 +845,15 @@ dat %>%
   summarise(count = n()) %>%
   mutate(proportion = count/ sum(count))
 
-#ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/numestype_perpaper.pdf', width=5, height=5, dpi='retina')
+#ggsave(filename=paste0(figpath, 'numestype_perpaper.pdf'), width=5, height=5, dpi='retina')
 
 # pull titles that had 8+ service types
 dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr=='Response') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
   dplyr::select(Title, ES) %>% 
+  # take unique ESes studied per paper (could enter multiple response variables per ES per study)
+  unique() %>%
   mutate(pres_holder = 1) %>%
   pivot_wider(id_cols = 'Title', names_from = 'ES', values_from = 'pres_holder') %>% 
   replace(is.na(.), 0) %>%
@@ -863,9 +865,11 @@ dat %>%
 
 ### chord diagram of multifunctionality (two service types)
 site_by_es = dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr=='Response') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
   dplyr::select(Title, ES) %>% 
+  # take unique ESes studied per paper (could enter multiple response variables per ES per study)
+  unique() %>%
   mutate(pres_holder = TRUE) %>%
   pivot_wider(id_cols = 'Title', names_from = 'ES', values_from = 'pres_holder') %>% 
   replace(is.na(.), FALSE) %>%
@@ -880,11 +884,11 @@ p_int = chorddiag(adj_mat,
                   showTicks = F, # show ticks with counts on circle edge
                   groupPadding = 5, # distance of names/segments from each other
                   groupnamePadding = 5 # distance of names from outside of circles
-                  )
-  # this plot is interactive and can be saved as an interactive html
+)
+# this plot is interactive and can be saved as an interactive html
 
 # save the interactive version
-withr::with_dir('round2_metareview/analyze_data/final_analyses/fig_files/', saveWidget(p_int, file="chord_diag_interactive.html"))
+withr::with_dir('figpath', saveWidget(p_int, file="chord_diag_interactive.html"))
 
 # static version (excludes rare connections for better viewing)
 adj_mat_stat = replace(adj_mat, adj_mat < 5, 0) # can be used to exclude rare connections
@@ -895,19 +899,21 @@ p_static = chorddiag(adj_mat_stat,
                      groupnamePadding = 5 # distance of names from outside of circles
 )
 # save static
-#withr::with_dir('round2_metareview/analyze_data/final_analyses/fig_files/', saveWidget(p_static, file="chord_diag_static.html"))
+withr::with_dir('figpath', saveWidget(p_static, file="chord_diag_static.html"))
 
 # webshot to pdf
-#webshot("round2_metareview/analyze_data/final_analyses/fig_files/chord_diag_static.html" , "round2_metareview/analyze_data/final_analyses/fig_files/chord_diag_static.pdf", delay = 0.2)
+webshot(paste0(figpath, "chord_diag_static.html"), paste0(figpath, "chord_diag_static.pdf"), delay = 0.2)
 
 
 ### Multifunctionality and time scales
 
 # proportions within each single ES type
 dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr=='Response') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
   dplyr::select(Title, ES) %>%
+  # take unique ESes studied per paper 
+  unique() %>%
   left_join(
     dat %>%
       filter(abbr=='YrsData') %>%
@@ -931,9 +937,11 @@ dat %>%
 
 # counts instead, within each single ES type
 dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr=='Response') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
   dplyr::select(Title, ES) %>%
+  # take unique ESes studied per paper 
+  unique() %>%
   left_join(
     dat %>%
       filter(abbr=='YrsData') %>%
@@ -957,9 +965,11 @@ dat %>%
 
 
 dat %>%
-  filter(abbr=='Yclass') %>%
+  filter(abbr=='Response') %>%
   filter(!is.na(clean_answer)) %>% #removes the non-checked service bins
   dplyr::select(Title, ES) %>%
+  # take unique ESes studied per paper 
+  unique() %>%
   left_join(
     dat %>%
       filter(abbr=='YrsData') %>%
@@ -982,11 +992,10 @@ dat %>%
   coord_flip() +
   theme_bw()
 
-    # Not sure what we want from this...will need to ask what Laura had in mind
 
 
 
-#### Dynamics, non-linearities, uncertainty, and thresholds ####
+##### Dynamics, non-linearities, uncertainty, and thresholds #####
 
 
 
@@ -1047,7 +1056,7 @@ fdbck_plot = dat %>%
         title = element_text(size=7),
         axis.text.y=element_text(size=5))
 
-#ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/feedbacks.pdf', width=5, height=5, dpi='retina')
+#ggsave(filename=paste0(figpath,'feedbacks.pdf'), width=5, height=5, dpi='retina')
 
 
 # pulling list of titles that considered feedbacks
@@ -1058,7 +1067,7 @@ dat %>%
   mutate(clean_answer = ifelse(clean_answer=='Ecosystem function -> service providers,No feedbacks measured directly', 'No feedbacks measured directly', clean_answer)) %>%
   mutate(clean_answer = ifelse(clean_answer=='No feedbacks measured directly',clean_answer,'Feedbacks measured')) %>%
   filter(clean_answer != 'No feedbacks measured directly')
-  
+
 
 ### Thresholds
 dat %>%
@@ -1089,7 +1098,7 @@ thresh_plot = dat %>%
         title = element_text(size=7),
         axis.text.y=element_text(size=5))
 
-#ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/thresholds.pdf', width=5, height=5, dpi='retina')
+#ggsave(filename=paste0(figpath,'thresholds.pdf'), width=5, height=5, dpi='retina')
 
 
 # Add feedbacks and thresholds to conceptual figure
@@ -1103,7 +1112,7 @@ ggdraw() +
   draw_plot(fdbck_plot, x=0.58, y=0.5, height=0.35, width=0.2) +
   draw_plot(thresh_plot, x=0.58, y=0.1, height=0.4, width=0.2)
 
-#ggsave(filename='round2_metareview/analyze_data/final_analyses/fig_files/panel_dynfdbckthresh.pdf', width=8.5, height=5, dpi='retina')
+#ggsave(filename=paste0(figpath,'panel_dynfdbckthresh.pdf'), width=8.5, height=5, dpi='retina')
 
 
 ### Uncertainty
@@ -1123,42 +1132,35 @@ dat %>%
 
 ## prep data
 # isolate updated driver types
-new.bins <- dat %>%
-  filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
-  dplyr::select(Title, clean_answer_binned, clean_group) %>%
-  mutate(old_group = clean_group) %>%
-  # reassign clean_answer_binned land cover answers to have Group 'LU LC'
-  mutate(clean_group = ifelse(clean_answer_binned %in% c('Land cover', 'Land use and land cover change'), 'LU_LC',clean_group)) %>%
-  # reassign studies with only land cover biotic drivers (based on Q14) to 'LU LC' Group
-  mutate(clean_group = ifelse(Title %in% biot_lulc_titles & clean_group == 'Biotic', 'LU_LC', clean_group)) %>%
-  # take only unique rows 
+new.bins <- # > using adjusted LULC driver types column to make table of driver bins with their lulc adjusted driver types
+  # > this includes papers excluded for being lulc drivers only (to exclude those from sankey)
+  dat %>%
+  # pull driver answers that are not NA or 'Other' (signals other drivers present, but is not a meaningful driver)
+  # to exclude lulc driver-only studies, add filter: "!only_lulc" <-- will drop any paper where this is true
+  filter(abbr %in% c('Driver', 'OtherDriver'), !clean_answer %in% c(NA, "Other")) %>%
+  # retain all studies (even lulc_only), keep just Title, binned variable, and lulc adjusted driver type
+  dplyr::select(Title, clean_answer_binned, lulc_group) %>%
+  # rename to clean_group so sankey code runs
+  rename(clean_group = lulc_group) %>%
+  # take only unique rows
   unique()
 
 # isolate driver types and es types for sankey
-es.bins <- dat %>%
-  filter(abbr %in% c('Driver', 'OtherDriver'), !is.na(clean_answer)) %>%
-  dplyr::select(Title, clean_answer_binned, clean_group) %>%
-  mutate(old_group = clean_group) %>%
-  # reassign clean_answer_binned land cover answers to have Group 'LU LC'
-  mutate(clean_group = ifelse(clean_answer_binned %in% c('Land cover', 'Land use and land cover change'), 'LU_LC',clean_group)) %>%
-  # reassign studies with only land cover biotic drivers (based on Q14) to 'LU LC' Group
-  mutate(clean_group = ifelse(Title %in% biot_lulc_titles & clean_group == 'Biotic', 'LU_LC', clean_group)) %>%
-  dplyr::select(-clean_answer_binned, -old_group) %>%
-  # take only unique rows 
+# > using adjusted LULC driver types column to make table of driver bins with their lulc adjusted driver types
+# > this included papers excluded for being lulc drivers only
+es.bins <- dat  %>%
+  # pull driver answers that are not NA or 'Other' (signals other drivers present, but is not a meaningful driver)
+  # to exclude lulc driver-only studies, add filter: "!only_lulc" <-- will drop any paper where this is true
+  filter(abbr %in% c('Driver', 'OtherDriver'), !clean_answer %in% c(NA, "Other")) %>%
+  # select Title, lulc adjusted driver group, and ESes studied per paper
+  dplyr::select(Title, lulc_group, ES) %>%
+  # take unique rows
   unique() %>%
-  rename(driv_type = clean_group) %>%
-  # join with ES types
-  full_join(
-    dat %>%
-      filter(abbr=='Response') %>% 
-      filter(!is.na(clean_answer)) %>% 
-      dplyr::select(Title, ES) %>%
-      unique(),
-    by='Title'
-    )
+  # rename driver type as above column so sankey code runs
+  rename(driv_type = lulc_group)
 
 # subset extracted data
-df <- dat[,c(8,15:19)] # pull relevant columns for sankey
+df <- dat[c("Title", "abbr", "lulc_group", "ES", "qnum")] # pull relevant columns
 df <- df[df$qnum == "Q12",] # subset to only Q12
 df <- df[,-5]
 
