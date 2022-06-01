@@ -25,13 +25,19 @@ na_vals = c(NA, "NA", " ", "", ".")
 
 # read in relevant datasets
 datpath <- "round2_metareview/data/cleaned/"
+# lulc adjusted main analysis dataset
 r2keep_lulc <- read.csv(paste0(datpath, "ESqualtrics_r2keep_cleaned_lulc.csv"), na.strings = na_vals)
+# summary of excluded papers with reasons
 excludedpapers <- read.csv(paste0(datpath, "ESreview_allexcluded_allrounds.csv"), na.strings = na_vals)
+# all papers kept after round 1 (to grab papers that passed round 1 but were not selected for round 2 review by random chance)
+keep_round1 <- read.csv("round1_exclusion/output/keep_round1.csv", na.strings = na_vals)
+# WOS return for paper citations
 citations <- read.csv("round1_exclusion/EcosystemServicesPapersNov2019.csv", na.strings = na_vals)
 
 # review how all read in
 str(r2keep_lulc)
 str(excludedpapers)
+str(keep_round1)
 str(citations)
 
 # make lut to anonymize reviewers
@@ -57,6 +63,34 @@ double_reviewers <- dplyr::select(double_reviewers, -c(Init1, Init2)) %>%
 reviewers_lut <- rbind(single_reviewers, double_reviewers[c("Init", "ID")])
 # add ND row
 reviewers_lut <- rbind(reviewers_lut, data.frame(Init = "ND", ID = reviewers_lut$ID[reviewers_lut$Init == "NBD"]))
+
+# cross walk full names from round 1 review
+fullnames <- distinct(keep_round1, EBIOReviewer) %>%
+  mutate(Init = "CW") # placeholder to make char vector
+# think need to do this manually
+unique(reviewers_lut$Init)
+# assign initials
+fullnames$Init[grepl("Ais", fullnames$EBIOReviewer)] <- "AK"
+fullnames$Init[grepl("An", fullnames$EBIOReviewer)] <- "AIS"
+fullnames$Init[grepl("Cla", fullnames$EBIOReviewer)] <- "CK"
+fullnames$Init[grepl("Gra", fullnames$EBIOReviewer)] <- "GV"
+fullnames$Init[grepl("Isa", fullnames$EBIOReviewer)] <- "IS"
+fullnames$Init[grepl("Jul", fullnames$EBIOReviewer)] <- "JL"
+fullnames$Init[grepl("Ka", fullnames$EBIOReviewer)] <- "KCG"
+fullnames$Init[grepl("Laura/", fullnames$EBIOReviewer)] <- "LD/CW"
+fullnames$Init[grepl("Laura$", fullnames$EBIOReviewer)] <- "LD"
+fullnames$Init[grepl("Laure", fullnames$EBIOReviewer)] <- "LB"
+fullnames$Init[grepl("Ni", fullnames$EBIOReviewer)] <- "ND"
+fullnames$Init[grepl("Tra", fullnames$EBIOReviewer)] <- "TM"
+fullnames$Init[grepl("Ti", fullnames$EBIOReviewer)] <- "TK"
+fullnames$Init[grepl("Si", fullnames$EBIOReviewer)] <- "SDJ"
+# join IDs
+fullnames <- left_join(fullnames, reviewers_lut)  %>%
+  # remove Init col and rename fullname col to Init to rbind to main LUT
+  subset(select = -Init) %>%
+  rename(Init = EBIOReviewer)
+# add to main LUT
+reviewers_lut <- rbind(reviewers_lut, fullnames)
 
 
 
@@ -118,8 +152,8 @@ r2keep_out_clean <- left_join(r2keep_out, simple_citations, by = "title") %>%
 names(r2keep_out_clean)
 # rearrange cols for writing out
 r2keep_out_clean <- dplyr::select(r2keep_out_clean, title, authors:sourcepub, # paper info
-                            reviewer:qid, qnum, abbr, fullquestion, # question info
-                            raw_answer:only_lulc) # answers, groups, ESes and notes
+                                  reviewer:qid, qnum, abbr, fullquestion, # question info
+                                  raw_answer:only_lulc) # answers, groups, ESes and notes
 
 
 # write out final full-text dataset
@@ -177,36 +211,74 @@ exclusion_lut <- distinct(exclude_out, exclusion_reason, fullquestion) %>%
   mutate(clean_question = gsub("EF/ES", "ES/EF", fullquestion)) %>%
   left_join(clean_exclusion_lut[c("clean_question", "clean_id")]) %>%
   mutate(clean_reason = ifelse(grepl("meta", exclusion_reason), "Meta-analysis only",
-                                ifelse(grepl("review", exclusion_reason), "Review only",
-                                       ifelse(grepl("ef", exclusion_reason, ignore.case = T), "No EF/ES directly measured",
-                                              ifelse(grepl("biodi", exclusion_reason, ignore.case = T), "Stops at biodiversity or abundance metrics",
-                                                     ifelse(grepl("valr", exclusion_reason), "Valuation or risk assessment only",
-                                                            ifelse(grepl("tool", exclusion_reason), "Describes new tool or method only",
-                                                                   ifelse(grepl("Social", exclusion_reason), "Social dimensions focused",
-                                                                          # else it's the catch all methods/meta/review in round 2
-                                                                          "Meta-analysis, review, or methods paper only")
-                                                            )
-                                                     )
-                                              )
-                                       )
-                                )
-                                )
-         )
+                               ifelse(grepl("review", exclusion_reason), "Review only",
+                                      ifelse(grepl("ef", exclusion_reason, ignore.case = T), "No EF/ES directly measured",
+                                             ifelse(grepl("biodi", exclusion_reason, ignore.case = T), "Stops at biodiversity or abundance metrics",
+                                                    ifelse(grepl("valr", exclusion_reason), "Valuation or risk assessment only",
+                                                           ifelse(grepl("tool", exclusion_reason), "Describes new tool or method only",
+                                                                  ifelse(grepl("Social", exclusion_reason), "Social dimensions focused",
+                                                                         # else it's the catch all methods/meta/review in round 2
+                                                                         "Meta-analysis, review, or methods paper only")
+                                                           )
+                                                    )
+                                             )
+                                      )
+                               )
+  )
+  )
 
 
 # join simple citation cols (correct colnames, no missing pubyears, and reorder columns)
 exclude_out_clean <- left_join(exclude_out, simple_citations) %>%
   left_join(exclusion_lut)
-  # and join clean exclusion reasons
+# and join clean exclusion reasons
 names(exclude_out_clean)
 exclude_out_clean <- subset(exclude_out_clean, select = c(title, authors:sourcepub, # paper info
-                                               # reviewer and outside reviewer info
-                                               review_round, reviewer, doublerev, reviewer_comments, ID, outsidereviewer_notes,
-                                               # exclusion reasons
-                                               clean_id, clean_reason, clean_question)) %>%
+                                                          # reviewer and outside reviewer info
+                                                          review_round, reviewer, doublerev, reviewer_comments, ID, outsidereviewer_notes,
+                                                          # exclusion reasons
+                                                          clean_id, clean_reason, clean_question)) %>%
   # rename some cols for standardization
   rename(reviewer_notes = reviewer_comments, outsidereviewer = ID,
          exclusion_id = clean_id, exclusion_reason = clean_reason, fullquestion = clean_question)
+
+# create records for papers that made it past round 1 but were not selected for r2 review because of random chance (we only reviewed a subset of papers to make it manageable)
+random_unselected <- subset(simple_citations, !title %in% c(r2keep_out_clean$title, exclude_out_clean$title)) %>%
+  # create columns to match exclude_out_clean df
+  data.frame(matrix(nrow = nrow(.), ncol = sum(!names(exclude_out_clean) %in% names(.)),
+                    dimnames = list(1:nrow(.), names(exclude_out_clean)[!names(exclude_out_clean) %in% names(.)]))) %>%
+  # anonymize dataset and add comments
+  # > use final_name instead of Title (Title has some weird characters, final_name is clean title)
+  left_join(keep_round1[c("final_name", "EBIOReviewer", "comments")], by = c("title" = "final_name")) %>%
+  left_join(reviewers_lut, by = c("EBIOReviewer" = "Init"))
+# check for NAs (anything answers or reviewer IDs that didn't join)
+# > looking for TRUE in ID, EBIOReviewer, authors, pubyear, sourcepub
+summary(!is.na(random_unselected)) # all good
+# there is one title that was misnamed. fix
+random_unselected$title[grepl("eEde p", random_unselected$title)] <- keep_round1$Title[grepl("eEde p", keep_round1$final_name)]
+
+# look specifically for reviewer names or initials in comments field
+sort(unique(random_unselected$comments[grepl(str_flatten(reviewers_lut$Init, collapse = "|"), random_unselected$comments)])) # just LD and CTW in comments
+# anonymize CTW and LD
+random_unselected$comments <- gsub("CTW", reviewers_lut$ID[reviewers_lut$Init == "CW"], random_unselected$comments)
+random_unselected$comments <- gsub("LD", reviewers_lut$ID[reviewers_lut$Init == "LD"], random_unselected$comments)
+# clean up to rbind to excluded papers
+random_unselected <- mutate(random_unselected, reviewer_notes = comments, reviewer = ID,
+                            exclusion_reason = "Passed abstract screen, not random-selected for full-text review",
+                            exclusion_id = max(exclude_out_clean$exclusion_id)+1,
+                            # assign review round as 2 because selected out for that round
+                            review_round = 2,
+                            # only potentially doublerev papers were LD/CTW splits
+                            doublerev = grepl("/", reviewer)) %>%
+  dplyr::select(names(exclude_out_clean))
+# check for NAs  
+summary(is.na(random_unselected)) # all looks good
+# rbind to main dataset out
+exclude_out_clean <- rbind(exclude_out_clean, random_unselected)
+# make sure all distinct rows
+exclude_out_clean <- distinct(exclude_out_clean)
+# renumber rownames
+rownames(exclude_out_clean) <- NULL
 
 # write out final exclused papers dataset
 write.csv(exclude_out_clean, "round2_metareview/publish/ecolofES_excludedpapers.csv", row.names = F)
