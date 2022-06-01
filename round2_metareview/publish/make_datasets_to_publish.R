@@ -99,22 +99,113 @@ names(r2keep_out)[names(r2keep_out)== "init"] <- "reviewer"
 summary(is.na(citations))
 View(subset(citations, is.na(PublicationYear))) # early access date 'ea' has at least the year when pubyear not available
 simple_citations <- mutate(citations, pubyear = ifelse(is.na(PublicationYear), 
-                                                               as.numeric(paste0(20, str_extract(EA,"[0-9]{2}$"))),
-                                                               PublicationYear)) %>% #NA warnings thrown but it looks fine on manual review
+                                                       as.numeric(paste0(20, str_extract(EA,"[0-9]{2}$"))),
+                                                       PublicationYear)) %>% #NA warnings thrown but it looks fine on manual review
   subset(select = names(.)[grepl("Tit|Auth|Sour|pub", names(.))]) %>%
   rename(sourcepub = SourcePublication, title = Title, authors = AuthorsFull) %>%
   # rearrange columns
   subset(select = c(title, authors, pubyear, sourcepub))
+# remove duplicate title (two records from same paper for different pubyear [off by 1yr])
+simple_citations[duplicated(simple_citations$title), ] # EcolLetters online says pubdate = 03 February 2019; removing dup row will remove 2018 row
+simple_citations <- subset(simple_citations, !duplicated(title)) #1932 distinct papers
 
 r2keep_out <- left_join(r2keep_out, simple_citations, by = "title")
+names(r2keep_out)
 # rearrange cols for writing out
-r2keep_out <- dplyr::select(r2keep_out, title, authors:sourcepub, responseid:only_lulc)
+r2keep_out <- dplyr::select(r2keep_out, title, authors:sourcepub, # paper info
+                            reviewer:qid, qnum, abbr, fullquestion, # question info
+                            raw_answer:only_lulc) # answers, groups, ESes and notes
 
 
-# write out final dataset
+# write out final full-text dataset
 write.csv(r2keep_out, "round2_metareview/publish/ecolofES_extracted_data.csv", row.names = F)
 
 
+
 #### MAKE EXCLUDED PAPERS DATA OUT----
+# similar order + format as main analysis dataset out:
+# 1. paper info, then question/reason, and any qa notes
+# anonymize dataset
+# 29 partially excluded lulc papers were not used in drivers analyses, but used in everything else.. so don't include in fully excluded papers
+names(excludedpapers)
+exclude_out <- left_join(excludedpapers, reviewers_lut, by = c("reviewer_init" = "Init")) %>%
+  rename(reviewer = ID) %>%
+  left_join(reviewers_lut, by = c("outsidereviewer" = "Init")) %>%
+  # add CW ID for initals CTW
+  mutate(ID = ifelse(is.na(ID) & outsidereviewer == "CTW", reviewers_lut$ID[reviewers_lut$Init == "CW"], ID))
+# be sure all IDs joined
+with(exclude_out, summary(!is.na(reviewer_init) & is.na(reviewer))) # main reviewer. none missing.
+with(exclude_out, summary(!is.na(outsidereviewer) & is.na(ID))) # outside reviewer. none missing.
+# anonymize note cols as above
+for(i in 1:nrow(reviewers_lut)){
+  exclude_out$reviewer_comments <- gsub(paste0(reviewers_lut$Init[i],":"), paste0(reviewers_lut$ID[i],":"), exclude_out$reviewer_comments)
+  exclude_out$outsidereviewer_notes <- gsub(paste0(reviewers_lut$Init[i],":"), paste0(reviewers_lut$ID[i],":"), exclude_out$outsidereviewer_notes)
+}
+# anonymize CTW in outsidereviewer_notes
+exclude_out$reviewer_comments <- gsub("CTW", reviewers_lut$ID[reviewers_lut$Init == "CW"], exclude_out$reviewer_comments)
+exclude_out$outsidereviewer_notes <- gsub("CTW", reviewers_lut$ID[reviewers_lut$Init == "CW"], exclude_out$outsidereviewer_notes)
+# review subs
+sort(unique(exclude_out$reviewer_comments)) # some initials present without colon
+# look specifically for reviewer initials
+sort(unique(exclude_out$reviewer_comments[grepl(str_flatten(reviewers_lut$Init, collapse = "|"), exclude_out$reviewer_comments)])) # LD initials still present, ignore "ND" in NDVI
+# outside/third party reviewer notes
+sort(unique(exclude_out$outsidereviewer_notes))
+# look specifically for reviewer initials
+sort(unique(exclude_out$outsidereviewer_notes[grepl(str_flatten(reviewers_lut$Init, collapse = "|"), exclude_out$outsidereviewer_notes)])) # TK, AK, NBD, LD
+for(i in c("TK", "AK", "LD", "NBD")){
+  exclude_out$reviewer_comments <- gsub(i, reviewers_lut$ID[reviewers_lut$Init == i], exclude_out$reviewer_comments)
+  exclude_out$outsidereviewer_notes <- gsub(i, reviewers_lut$ID[reviewers_lut$Init == i], exclude_out$outsidereviewer_notes)
+}
+
+# clean up exclusion reasons
+distinct(exclude_out, exclusion_id, exclusion_reason, fullquestion)
+# reassign exclusion id so corresponds to unique questions (even if questions repeat across review rounds, e.g., biodiv + no direct measure of ef/es)
+clean_exclusion_lut <- distinct(exclude_out, fullquestion, exclusion_id) %>%
+  #mod question on biodiv only for round 2 (switches order of ES/EF --> EF/ES)
+  mutate(clean_question = gsub("EF/ES", "ES/EF", fullquestion)) %>%
+  subset(!duplicated(clean_question)) %>%
+  #mod question
+  mutate(clean_id = 1:length(exclusion_id))
+# then clean up reason to reflect
+exclusion_lut <- distinct(exclude_out, exclusion_reason, fullquestion) %>%
+  #mod question on biodiv only for round 2 (switches order of ES/EF --> EF/ES)
+  mutate(clean_question = gsub("EF/ES", "ES/EF", fullquestion)) %>%
+  left_join(clean_exclusion_lut[c("clean_question", "clean_id")]) %>%
+  mutate(clean_reason = ifelse(grepl("meta", exclusion_reason), "Meta-analysis only",
+                                ifelse(grepl("review", exclusion_reason), "Review only",
+                                       ifelse(grepl("ef", exclusion_reason, ignore.case = T), "No EF/ES directly measured",
+                                              ifelse(grepl("biodi", exclusion_reason, ignore.case = T), "Stops at biodiversity or abundance metrics",
+                                                     ifelse(grepl("valr", exclusion_reason), "Valuation or risk assessment only",
+                                                            ifelse(grepl("tool", exclusion_reason), "Describes new tool or method only",
+                                                                   ifelse(grepl("Social", exclusion_reason), "Social dimensions focused",
+                                                                          # else it's the catch all methods/meta/review in round 2
+                                                                          "Meta-analysis, review, or methods paper only")
+                                                            )
+                                                     )
+                                              )
+                                       )
+                                )
+                                )
+         )
+
+
+# join simple citation cols (correct colnames, no missing pubyears, and reorder columns)
+exclude_out_clean <- left_join(exclude_out, simple_citations) %>%
+  left_join(exclusion_lut)
+  # and join clean exclusion reasons
+names(exclude_out_clean)
+exclude_out_clean <- subset(exclude_out_clean, select = c(title, authors:sourcepub, # paper info
+                                               # reviewer and outside reviewer info
+                                               review_round, reviewer, doublerev, reviewer_comments, ID, outsidereviewer_notes,
+                                               # exclusion reasons
+                                               clean_id, clean_reason, clean_question)) %>%
+  # rename some cols for standardization
+  rename(reviewer_notes = reviewer_comments, outsidereviewer = ID,
+         exclusion_id = clean_id, exclusion_reason = clean_reason, fullquestion = clean_question)
+
+# write out final exclused papers dataset
+write.csv(exclude_out_clean, "round2_metareview/publish/ecolofES_excludedpapers.csv", row.names = F)
+
+
 
 #### MAKE EML METADATA -----
