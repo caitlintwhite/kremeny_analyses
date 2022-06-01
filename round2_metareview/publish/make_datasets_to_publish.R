@@ -109,16 +109,21 @@ simple_citations <- mutate(citations, pubyear = ifelse(is.na(PublicationYear),
 simple_citations[duplicated(simple_citations$title), ] # EcolLetters online says pubdate = 03 February 2019; removing dup row will remove 2018 row
 simple_citations <- subset(simple_citations, !duplicated(title)) #1932 distinct papers
 
-r2keep_out <- left_join(r2keep_out, simple_citations, by = "title")
-names(r2keep_out)
+# join simple citations to clean version dataset
+r2keep_out_clean <- left_join(r2keep_out, simple_citations, by = "title") %>%
+  # recode "original" to "individual" in version to make more intuitide (individual responses for double reviewed papers)
+  mutate(version = recode(version, "original" = "individual"))
+
+# look at current colname order
+names(r2keep_out_clean)
 # rearrange cols for writing out
-r2keep_out <- dplyr::select(r2keep_out, title, authors:sourcepub, # paper info
+r2keep_out_clean <- dplyr::select(r2keep_out_clean, title, authors:sourcepub, # paper info
                             reviewer:qid, qnum, abbr, fullquestion, # question info
                             raw_answer:only_lulc) # answers, groups, ESes and notes
 
 
 # write out final full-text dataset
-write.csv(r2keep_out, "round2_metareview/publish/ecolofES_extracted_data.csv", row.names = F)
+write.csv(r2keep_out_clean, "round2_metareview/publish/ecolofES_extracted_data.csv", row.names = F)
 
 
 
