@@ -93,6 +93,28 @@ fullnames <- left_join(fullnames, reviewers_lut)  %>%
 reviewers_lut <- rbind(reviewers_lut, fullnames)
 
 
+# prep simple citation df for all papers
+# > note: one of these papers had a bad title -- defer to final_name in round1_keep
+summary(is.na(citations))
+View(subset(citations, is.na(PublicationYear))) # early access date 'ea' has at least the year when pubyear not available
+simple_citations <- mutate(citations, pubyear = ifelse(is.na(PublicationYear), 
+                                                       as.numeric(paste0(20, str_extract(EA,"[0-9]{2}$"))),
+                                                       PublicationYear)) %>% #NA warnings thrown but it looks fine on manual review
+  subset(select = names(.)[grepl("Tit|Auth|Sour|pub", names(.))]) %>%
+  rename(sourcepub = SourcePublication, title = Title, authors = AuthorsFull) %>%
+  # rearrange columns
+  subset(select = c(title, authors, pubyear, sourcepub))
+# remove duplicate title (two records from same paper for different pubyear [off by 1yr])
+simple_citations[duplicated(simple_citations$title), ] # EcolLetters online says pubdate = 03 February 2019; removing dup row will remove 2018 row
+simple_citations <- subset(simple_citations, !duplicated(title)) #1932 distinct papers
+# replace bad title "eEde predator-prey interactions"
+good_title <- unique(keep_round1$Title[grepl("eEde p", keep_round1$final_name)])
+# clean up typo in predator-prey
+good_title <- gsub("predator prey-", "predator–prey", good_title)
+simple_citations$title[grepl("eEde p", simple_citations$title)] <- good_title
+
+
+
 
 #### MAKE FULL TEXT DATA OUT ----
 # anonymize dataset:
@@ -129,19 +151,6 @@ sort(unique(r2keep_out$raw_answer[grepl("R[0-9]{1,2}", r2keep_out$raw_answer)]))
 # rename init col to reviewer
 names(r2keep_out)[names(r2keep_out)== "init"] <- "reviewer"
 
-# add citation info
-summary(is.na(citations))
-View(subset(citations, is.na(PublicationYear))) # early access date 'ea' has at least the year when pubyear not available
-simple_citations <- mutate(citations, pubyear = ifelse(is.na(PublicationYear), 
-                                                       as.numeric(paste0(20, str_extract(EA,"[0-9]{2}$"))),
-                                                       PublicationYear)) %>% #NA warnings thrown but it looks fine on manual review
-  subset(select = names(.)[grepl("Tit|Auth|Sour|pub", names(.))]) %>%
-  rename(sourcepub = SourcePublication, title = Title, authors = AuthorsFull) %>%
-  # rearrange columns
-  subset(select = c(title, authors, pubyear, sourcepub))
-# remove duplicate title (two records from same paper for different pubyear [off by 1yr])
-simple_citations[duplicated(simple_citations$title), ] # EcolLetters online says pubdate = 03 February 2019; removing dup row will remove 2018 row
-simple_citations <- subset(simple_citations, !duplicated(title)) #1932 distinct papers
 
 # join simple citations to clean version dataset
 r2keep_out_clean <- left_join(r2keep_out, simple_citations, by = "title") %>%
@@ -254,8 +263,7 @@ random_unselected <- subset(simple_citations, !title %in% c(r2keep_out_clean$tit
 # check for NAs (anything answers or reviewer IDs that didn't join)
 # > looking for TRUE in ID, EBIOReviewer, authors, pubyear, sourcepub
 summary(!is.na(random_unselected)) # all good
-# there is one title that was misnamed. fix
-random_unselected$title[grepl("eEde p", random_unselected$title)] <- keep_round1$Title[grepl("eEde p", keep_round1$final_name)]
+
 
 # look specifically for reviewer names or initials in comments field
 sort(unique(random_unselected$comments[grepl(str_flatten(reviewers_lut$Init, collapse = "|"), random_unselected$comments)])) # just LD and CTW in comments
@@ -286,3 +294,4 @@ write.csv(exclude_out_clean, "round2_metareview/publish/ecolofES_excludedpapers.
 
 
 #### MAKE EML METADATA -----
+
