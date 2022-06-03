@@ -1371,6 +1371,26 @@ jsum <- left_join(r1jsum, r2jsum) %>%
 
 
 ##### Reasons for exclusion #####
+# number of distinct title-abstracts to start
+length(unique(allpapers$title)) #1932 (WOS returned 1933, but one record same paper with pub date of late 2018 and early 2019)
+# number of papers exclude in round 1
+sum(excluded$review_round == 1) #1149
+# number of papers kept after round 1 abstract screen
+sum(allpapers$review_round != 1) #783
+# number of papers excluded by random selection subsetting for full-text review
+nrow(subset(excluded, review_round == 2 & grepl("random", exclusion_reason))) #391
+# number of papers kept after random selection for full-text review
+nrow(subset(allpapers, review_round == 2 & !grepl("9", exclusion_id))) #392
+# number of papers retained after full text review (generally)
+length(unique(dat$title)) #273
+# number of papers excluded in round 2
+with(excluded, sum(review_round == 2 & exclusion_id %in% 1:8)) #119
+# number of papers that were LULC drivers only (excluded from certain narrative syntheses)
+length(unique(dat$title[dat$only_lulc]))
+# number of full text retained for all narrative synthesis (excluded LULc only)
+length(unique(dat$title[!dat$only_lulc])) #244
+
+# count reasons for exclusion across all rounds
 table(excluded$exclusion_reason)
 # split by review round
 sapply(split(excluded$exclusion_reason, excluded$review_round), table)
