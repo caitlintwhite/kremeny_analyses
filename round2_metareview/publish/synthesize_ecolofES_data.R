@@ -44,12 +44,12 @@ library(tidyverse) # used throughout
 library(ggVennDiagram) # only for drivers venn diagrams
 library(PBSmapping) # used for map plot
 library(chorddiag) # used for multifunctionality
-  #devtools::install_github("mattflor/chorddiag") #github install required for R 4.0.5 on 11 Oct 2021
+#devtools::install_github("mattflor/chorddiag") #github install required for R 4.0.5 on 11 Oct 2021
 library(htmlwidgets) # used to make interactive chord diagram
 library(webshot) # used to save html chord diagram as pdf
 library(cowplot) # used for all panel figures
 library(ungeviz) # used for time, connectivity, multiscale plots
-  #devtools::install_github("wilkelab/ungeviz") #github install for development version
+#devtools::install_github("wilkelab/ungeviz") #github install for development version
 library(grid) # used for spatiotemporal panel
 library(magick) # used for images in panel figure (temp dyn, thresholds, feedbacks)
 library(networkD3) # used to make sankey alluvial diagram
@@ -91,7 +91,7 @@ dat %>%
   pull(clean_answer_binned) %>% 
   unique() 
 
-  # 'Land cover' and 'Land use and land cover change' are the two bins that should get their own categories
+# 'Land cover' and 'Land use and land cover change' are the two bins that should get their own categories
 
 
 # Biotic drivers papers that only looked at land cover or habitat type as a proxy
@@ -160,7 +160,7 @@ cc <- raster::ccodes()
 
 # rename country codes 
 wm$region %>% unique %>% setdiff(cc$NAME)
-  
+
 mappings <- c("UK"="United Kingdom", "USA"="United States", "Ivory Coast" = "Côte d'Ivoire") # You add the others here
 cc$NAME[match(mappings, cc$NAME)] <- names(mappings)
 
@@ -277,9 +277,9 @@ methods_tf = dat %>%
 
 #ggVennDiagram(methods_list)
 rowSums(methods_tf)
-  # no paper used three methods, so the pairwise matrix will tell the whole story
+# no paper used three methods, so the pairwise matrix will tell the whole story
 sum(rowSums(methods_tf) == 2)/length(rowSums(methods_tf))
-  # 19 % of papers used two methods
+# 19 % of papers used two methods
 
 methods_adjmat = t(methods_tf) %*% methods_tf
 methods_adjmat
@@ -347,18 +347,18 @@ venn_plot = ggplot() +
                data = venn_setlabel(venn_dat),
                nudge_y = 0.1) +
   geom_sf_label(aes(label=percent),
-               data = region_label,
-               alpha=0.5,
-               color = 'black',
-               size = NA,
-               lineheight = 0.85) +
+                data = region_label,
+                alpha=0.5,
+                color = 'black',
+                size = NA,
+                lineheight = 0.85) +
   theme_void() +
   scale_fill_distiller(direction = 1) + #change fill colour palette
   scale_color_manual(values = c('black','black','black')) + #outlines of circles
   theme(legend.position = 'None') + #remove legend
   coord_sf(clip="off") + #don't cutoff labels 
   scale_x_continuous(expand = expansion(mult = .3)) 
-  # excludes 29 studies that only used land use or land cover drivers
+# excludes 29 studies that only used land use or land cover drivers
 
 
 
@@ -442,7 +442,7 @@ ecolscalebiotic_plot = dat %>%
   ylab('Proportion of papers') +
   coord_flip() +
   theme_bw()
-  
+
 #ggsave(filename=paste0(figpath,'biotic_driv_specific.pdf'), width=5, height=5, dpi='retina')
 
 # Biotic drivers panel
@@ -463,7 +463,7 @@ ggdraw()+
 excl_lulc %>%
   filter(Biotic==TRUE) %>%
   nrow() / num_papers
-  # 44.7% of papers
+# 44.7% of papers
 
 
 
@@ -1321,7 +1321,7 @@ allpapers <- subset(excluded, select = c(title:review_round, exclusion_id)) %>%
     cbind(distinct(dat, title, authors, pubyear, sourcepub),
           # indicate from round 2 and NA for exclusion_id (not excluded)
           review_round = 2, exclusion_id = NA)
-    )
+  )
 
 # how many unique journals to start?
 length(unique(allpapers$sourcepub)) #128 journals for round 1
@@ -1398,7 +1398,7 @@ sapply(split(excluded$exclusion_reason, excluded$review_round), table)
 # ignore papers not random selected for full text review (i.e. true excluded papers)
 # reason excluded?
 subset(excluded, exclusion_id != 9) %>%
-group_by(review_round, exclusion_reason) %>%
+  group_by(review_round, exclusion_reason) %>%
   summarise(nobs = length(title),
             grand_pct = (nobs/nrow(.))*100) %>%
   ungroup() %>%
@@ -1409,13 +1409,26 @@ group_by(review_round, exclusion_reason) %>%
 
 # lump reasons per round 2 and re-summarize
 subset(excluded, exclusion_id != 9) %>%
-mutate(grp_reason = ifelse(grepl("^Revi|^Meta|tool", exclusion_reason), "Meta-analysis, review, or methods/tool paper only",
-                                       ifelse(grepl("^Val|^Soc", exclusion_reason), "Social dimensions, valuation or risk paper", 
-                                              exclusion_reason))) %>%
+  mutate(grp_reason = ifelse(grepl("^Revi|^Meta|tool", exclusion_reason), "Meta-analysis, review, or methods/tool paper only",
+                             ifelse(grepl("^Val|^Soc", exclusion_reason), "Social dimensions, valuation or risk paper", 
+                                    exclusion_reason))) %>%
+  # calculate grand tot
   group_by(grp_reason) %>%
+  mutate(grand_nobs = length(title),
+         grand_pct = (grand_nobs/nrow(.))*100) %>%
+  ungroup() %>%
+  # summarize per round
+  group_by(grp_reason, review_round, grand_nobs, grand_pct) %>%
   summarise(nobs = length(title),
-            grand_pct = (nobs/nrow(.))*100) %>%
-  arrange(-nobs)
+            pct = (nobs/nrow(.))*100) %>%
+  ungroup() %>%
+  # gather stats then spread
+  gather(met, val, nobs:pct) %>%
+  # add "r" to round vals for spread colnames
+  mutate(review_round = paste0("r", review_round)) %>%
+  unite(met, review_round, met) %>%
+  spread(met, val) %>%
+  arrange(-grand_nobs)
 
 
 
@@ -1424,9 +1437,15 @@ mutate(grp_reason = ifelse(grepl("^Revi|^Meta|tool", exclusion_reason), "Meta-an
 # > runting et al. 2017 assigned 1 if agreed, 0.5 if partially agreed, and 0 if completely disagreed
 # > gauge q12 based on 1) ES row filled in, and types of coarse original drivers select (Human, Biotic, or Env in raw_group)
 
+# how many papers in total double reviewed?
+length(unique(doublerev$title)) #34
+# of excluded papers, how many required a second opinion?
+with(excluded, sapply(split(outsidereviewer, review_round), function(x) sum(!is.na(x))))
+# 35 papers in excluded dataset, but only for round 2 (not for round 1 -- may have been done more informally, e.g., in class discussion)
+
 # drop 3 papers where paper kept but reviewers didn't agree on exclusion (because all answers to those will conflict)
 dbltidy <- subset(doublerev, !title %in% with(dat, title[doublerev & grepl("keep paper", qa_note, ignore.case = T)]))
-  
+
 # summarize ES-response-driver question
 dblq12 <- subset(dbltidy, qnum == "Q12") %>%
   # need to note which cols are response 2
@@ -1479,7 +1498,7 @@ ESagreement <- dblq12 %>%
   dplyr::select(title, score) %>%
   distinct() %>%
   group_by(score) %>%
-  summarize(pct = round((length(score)/34)*100, 2)) %>%
+  summarize(pct = round((length(score)/31)*100, 2)) %>%
   ungroup() %>%
   mutate(q = "ES agreement") %>%
   spread(score, pct)
@@ -1542,8 +1561,12 @@ driversim2 <- select(driversim, title, clean_group, abbr, count_inits) %>%
   # if no clean_group present, it means reviewers agreed that category does not have a driver
   spread(clean_group, score, fill = 1) %>%
   gather(clean_group, score, Biotic:Human) %>%
+  # count titles per category
+  group_by(clean_group) %>%
+  mutate(paper_count = length(unique(title))) %>% #31 papers considered
+  ungroup() %>%
   group_by(clean_group, score) %>%
-  summarize(pct = round(100*(length(title)/34),2)) %>%
+  summarize(pct = round(100*(length(title)/31),2)) %>%
   ungroup() %>%
   mutate(q = "drivers") %>%
   spread(score, pct)
@@ -1691,7 +1714,7 @@ dplyr::select(dblother, title, qnum, abbr, survey_order, score) %>%
 # re-crunch dropping q's reviewers forgot to answer and ones that shouldn't be considered 
 otherqs <- dplyr::select(dblother, title, qnum, abbr, survey_order, score) %>%
   distinct() %>%
-  group_by(survey_order, abbr, score) %>%
+  group_by(qsurvey_order, abbr, score) %>%
   summarise(nobs = length(score)) %>%
   data.frame() %>%
   subset(score <= 1) %>%
@@ -1699,19 +1722,27 @@ otherqs <- dplyr::select(dblother, title, qnum, abbr, survey_order, score) %>%
   mutate(totsum = sum(nobs)) %>%
   ungroup() %>%
   mutate(pct = round((nobs/totsum)*100,2)) %>%
-  select(survey_order, abbr, score, pct) %>%
+  select(qnum, survey_order, abbr, score, pct) %>%
   spread(score, pct, fill = 0)
+
+# how many papers in each question for other questions (interested in answer-dependent questions?
+count_papers <- subset(dblother, score <= 1, select = c(title, qnum, abbr)) %>%
+  distinct() %>%
+  group_by(qnum, abbr) %>%
+  summarise(nobs = length(title))
 
 # compile all pcts for reference
 congruence <- rename(otherqs, q = abbr) %>%
   select(-survey_order) %>%
-  rbind(ESagreement) %>%
-  rbind(drivercats) %>%
-  rbind(unite(driversim2, q, q, clean_group, sep =" "))
+  rbind(cbind(qnum = "Q12", ESagreement)) %>%
+  rbind(cbind(qnum = "Q12", drivercats)) %>%
+  rbind(cbind(qnum = "Q12", unite(driversim2, q, q, clean_group, sep =" "))) %>%
+  mutate(qnum = parse_number(qnum)) %>%
+  arrange(qnum)
 
 # what is the average congruence score across all questions assessed?
 # take average by question, and then average those composite scores
-congruence2 <- congruence %>%
+mean_congruence <- congruence %>%
   mutate(rowid = 1:nrow(.)) %>%
   gather(score, pct, "0":"1") %>%
   mutate(score2 = as.numeric(score) * pct) %>%
@@ -1720,21 +1751,81 @@ congruence2 <- congruence %>%
   ungroup() %>%
   arrange(rowid)
 
-mean(congruence2$score)
 
-
-# check congruency in excluded papers (or kept but one person excluded). how many had reviewers agree (or one checked "yes" and another expressed doubt in comments), vs. ones where reviewers disagreed and LD/NBD reviewed
+# check congruency in excluded papers (or kept but one person excluded). 
+# how many had reviewers agree (or one checked "yes" and another expressed doubt in comments), vs. ones where reviewers disagreed and 3rd party reviewed?
+nrow(subset(excluded, review_round == 2 & doublerev & exclusion_id != 9)) #29 papers double reviewed in round 2 and excluded (not counting those randomly unselected)
 # > any paper where exclusion opinion disagreed will have a third party reviewer
-with(excluded, length(title[!is.na(outsidereviewer) & doublerev & exclusion_id != 9])) # 15 papers
+with(excluded, length(title[!is.na(outsidereviewer) & review_round ==2 & doublerev & exclusion_id != 9])) # 15 papers required third party review
 # review notes
-View(subset(excluded, !is.na(outsidereviewer) & doublerev & exclusion_id != 9, select = c(reviewer_notes, outsidereviewer_notes)))
+View(subset(excluded, !is.na(outsidereviewer) & doublerev & exclusion_id != 9, select = c(title, reviewer_notes, outsidereviewer_notes)))
 # 6 have partial agreement:
 ## 2 papers agree on exclusion, but for different reasons
 ## 2 papers both have reviewers expressing doubts in notes (but neither excluded)
 ## 2 papers have 1 reviewer excluded by Q3, and other expressed doubts in survey notes (but still filled out survey)
 # additionally, if look at full-text dataset, there are 3 double-reviewed papers that were kept ultimately, but initially reviewers disagreed on exclusion (outside reviewer reviewed the papers for final opinion)
 
+# add score for Exclude? agreement (do reviewers agree that papers should be excluded/kept?)
+# and score for Exclusion reason
+# > prep excluded and kept data so by title has a score for each
+doublerev_excludeQ <- subset(excluded, review_round == 2 & doublerev & exclusion_id != 9) %>%
+  group_by(title) %>%
+  summarise(exclude = TRUE,
+         # if there was no outside reviewer needed, then reviewers agreed, else they didn't
+         agree_exclude = ifelse(is.na(outsidereviewer), 1, 
+                                # if they agreed to exclude but differed on reason why, assign partial
+                                ifelse(grepl("disagree on exclusion", outsidereviewer_notes), 0.5, 
+                                       # otherwise, no agreement
+                                       0)),
+         # if outside reviewer note says reviewers disagreed on exclusion reason, then 0
+         agree_reason = ifelse(grepl("disagree on exclusion", outsidereviewer_notes), 0,
+                               # if both reviewers commented, say partial agreement
+                               ifelse(grepl("R[0-9]+.*R[0-9]+", reviewer_notes), 0.5, 
+                                      # if there was no outside review needed then reviewers agreed on reason
+                                      ifelse(is.na(outsidereviewer), 1, 
+                                             # otherwise, no agreement about reason to exclude (third party required)
+                                             0))))
 
+doublerev_keep <- subset(dat, doublerev & qnum == "Q3") %>%
+  group_by(title) %>%
+  summarise(exclude = FALSE,
+            agree_exclude = ifelse(any(grepl("Yes", raw_answer)), 0, 1),
+            agree_reason = ifelse(any(grepl("inconsistent", qa_note)), 0, 
+                                  # otherwise assign NA to ignore because exclusion reason not applicable
+                                  NA))
+
+# rbind both then crunch percents for summary table
+doublerev_exclude_tally <- rbind(doublerev_excludeQ, doublerev_keep) %>%
+  gather(q, val, agree_exclude:agree_reason) %>%
+  # if reason agreement is NA, drop because it means the paper was kept
+  subset(!is.na(val)) %>%
+  group_by(q, val) %>%
+  summarise(tally = length(title)) %>%
+  spread(val, tally)
+# calculate mean score
+doublerev_exclude_mean <- doublerev_exclude_tally %>%
+  gather(score, tally, '0':'1') %>%
+  group_by(q) %>%
+  mutate(tot = sum(tally)) %>%
+  ungroup() %>%
+  mutate(prop = tally/tot,
+         weighted_score = prop*as.numeric(score)) %>%
+  group_by(q) %>%
+  summarise(mean_score = sum(weighted_score))
+
+# convert to percentage
+doublerev_exclude_pcts <- doublerev_exclude_tally 
+doublerev_exclude_pcts[,2:4] <- doublerev_exclude_tally[,2:4]/apply(doublerev_exclude_tally[,2:4], 1, sum)
+doublerev_exclude_pcts[,2:4] <- apply(doublerev_exclude_pcts[,2:4], 2, function(x) round((x*100),2))
+# append mean score to pcts and add qnum
+doublerev_exclude_pcts <- left_join(doublerev_exclude_pcts, doublerev_exclude_mean) %>%
+  mutate(qnum = 3) %>%
+  # rearrange columns
+  dplyr::select(qnum, q:ncol(.))
+
+
+# what is the overall average reviewer convergence score (average all question averages)
+mean(c(mean_congruence$score,doublerev_exclude_pcts$mean_score)) # 0.7548786
 
 
 
