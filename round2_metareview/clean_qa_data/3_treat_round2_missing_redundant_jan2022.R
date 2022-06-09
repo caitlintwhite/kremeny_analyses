@@ -319,7 +319,9 @@ sdj_stacked <- rbind(sdjother, sdj_standard) %>%
   mutate(varnum = ifelse(needs_number, 1:length(clean_answer[needs_number]), NA)) %>%
   ungroup() %>%
   arrange(Title, survey_order, varnum) %>%
-  dplyr::select(names(qdat))
+  dplyr::select(names(qdat)) %>%
+  # NA answer bc otherwise looks like answers were already present (SDJ had provided answers)
+  mutate(answer = NA)
 
 
 
@@ -407,6 +409,14 @@ akgv_standard <- subset(akgv_standard, Init == "AK/GV") %>%
 # stack treated akgv final answers
 akgv_stacked <- rbind(akgv_standard, akgv_otherdrivers) %>%
   arrange(Title, desc(version), Init, survey_order)
+# clean up QA notes (answers where AK and GV agreed don't need a QA note)
+# > in manual review, can NA any qa note that confirms that has AK + GV agreed
+# > EXCEPT, agreement note for Response vars for ES Food for title "An analysis of trade-offs between multiple ecosystem..." is wrong
+# > they did disagree and I sided with GV (he has one additional response var)
+# change note first then NA the other qa notes where AK and GV agreed
+akgv_stacked$qa_note[grepl("GV: Total agricul", akgv_stacked$answer)] <- "CTW did third party review. GV has one additional response var, use GV answer."
+# anywhere where they agreed, qa_note gets NA'd because review not necessary
+akgv_stacked$qa_note[grepl("agreed here", akgv_stacked$qa_note)] <- NA
 
 
 
@@ -1483,7 +1493,7 @@ hasdriver <- subset(qdat_revised, qnum == "Q12" & grepl("Driver|Effect", abbr)) 
   subset(has_driver & effectmissing)
 # > not sure what to do where clean_group is different than original Group... 
 # how many reviews is this?
-length(unique(hasdriver$ResponseId)) # 104..
+length(unique(hasdriver$ResponseId)) # 96..
 # decide to assign clean_group just based on original Group:
 # if there is only one clean_group and it's different than the original Group, enter clean_group
 # else enter the original Group (even when another clean_group is present within a given original Group -- because ultimately that answer would have been copied over to the Group row corresponding to clean_group)
@@ -1709,7 +1719,7 @@ View(subset(has_env, ResponseId %in% remove_KTenv$ResponseId)) #AK/AIS paper sho
 KT3answer <- "Kremen Topic 3 : Environmental factors that influence provision (env. drivers not including human drivers)"
 # add KT 3 where needed
 qdat_revised$clean_answer[grepl(add_KTenv$rowid, qdat_revised$rowid)] <- KT3answer # Original answer here is "None" so can overwrite
-qdat_revised$qa_note[grepl(add_KTenv$rowid, qdat_revised$rowid)] <- "Added KT3 based on updated environmental drivers"
+qdat_revised$qa_note[qdat_revised$rowid %in% add_KTenv$rowid] <- "Added KT3 based on updated environmental drivers"
 
 
 # remove KT env where needed
@@ -1722,8 +1732,28 @@ qdat_revised$qa_note[qdat_revised$rowid %in% remove_KTenv$rowid & qdat_revised$c
 qdat_revised$qa_note[qdat_revised$rowid %in% remove_KTenv$rowid[remove_KTenv$Init == "IS"]] <- NA #ctw added KT3, was never in IS answer, so removal of it is fine
 qdat_revised$qa_note[qdat_revised$rowid %in% remove_KTenv$rowid[remove_KTenv$Init == "AK/AIS"]] # no edit needed
 
+
+# notice there is one SDJ paper where has KT3 added but was not ultimately because driver reclassed from human to env
+# scan through notes and update any as needed
+scan_ktqa <- subset(qdat_revised, abbr == "KremenTopics" & grepl("KT", qa_note)) %>%
+  # scan QA note
+  rowwise() %>%
+  mutate(KT_added = str_flatten(unique(unlist(str_extract_all(qa_note, "Added KT ?[1-4]|Appended KT ?[1-4]"))), collapse = "|"),
+         #KT_added = gsub("[a-z+]| ","",  KT_added, ignore.case = T),
+         KT_removed  = str_flatten(unique(unlist(str_extract_all(qa_note, "Removed KT ?[1-4]"))), collapse = "|")) %>%
+  mutate_at(c("KT_added", "KT_removed"), function(x) gsub("[a-z+]| ","", x, ignore.case = T)) %>%
+  mutate_at(c("KT_added", "KT_removed"),function(x) ifelse(x == "", NA, x)) %>%
+  # add flagging
+  mutate(flag_add = ifelse(is.na(KT_added), FALSE, !grepl(KT_added, clean_answer)),
+         flag_removed = ifelse(is.na(KT_removed), FALSE, grepl(KT_removed, clean_answer))) %>%
+  subset(flag_add | flag_removed)
+# review
+View(subset(qdat_revised, ResponseId %in% scan_ktqa$ResponseId & grepl("Driver|KremenTop|Extent|Nes|Time", abbr) & !is.na(clean_answer)))
+# only thing that needs a correction is SJD paper that doesn't have KT3 but QA note still present
+qdat_revised$qa_note[qdat_revised$rowid == with(scan_ktqa, rowid[Init == "SDJ"])] <- NA
+
 # clean up environment
-rm(has_env, has_ESPdriver, remove_KTenv, addKT1, add_KTenv)
+rm(has_env, has_ESPdriver, remove_KTenv, addKT1, add_KTenv, scan_ktqa)
 
 
 
@@ -1783,6 +1813,33 @@ summary(qdat_revised$varnum[qdat_revised$rowid %in% varnum_check$rowid] == varnu
 qdat_revised$varnum[qdat_revised$rowid %in% varnum_check$rowid] <- varnum_check$varnum2
 
 
+qdat_revised_copy <- qdat_revised
+# incidentally found weird punctuation and repeat answers in double reviewed raw answer col (esp when new answer assigned by reviewer)
+# clean up if possible
+# > in manual review, looks like AK's non-answer got repeated twice for a paper where CTW moved drivers to a different ES
+# > and should clarify that "New answer" is actually CTW (already have qa_note that did 3rd party review)
+qdat_revised$answer <- gsub("AK: [(]no answer or NA[)]; AK: [(]no answer or NA[)];", "AK: (no answer or NA);", qdat_revised$answer)
+# remove semi colon from start of answers
+qdat_revised$answer[grepl("^; ?", qdat_revised$answer)] <- gsub("^; ?", "", qdat_revised$answer[grepl("^; ?", qdat_revised$answer)])                                                                                  
+qdat_revised$answer[grepl("New answer:", qdat_revised$answer)]
+# maybe swap "reconciled" or "final reviewed" for "new" -- in all these cases, someone reviewed the answer
+# move GV's original answer before new answer
+GV_oldanswer <- with(qdat_revised, unique(answer[grepl("GV wrote in new answer", qa_note)])) # there's only 1, repeated across multiple ESes
+GV_newanswer <- gsub("; GV: [(]no answer or NA[)]", "", GV_oldanswer)
+GV_newanswer <- gsub("New", "GV: (no answer or NA); New", GV_newanswer)
+# swap
+qdat_revised$answer[qdat_revised$answer %in% GV_oldanswer] <- GV_newanswer
+qdat_revised$qa_note[qdat_revised$qa_note %in% "GV wrote in new answer"] <- "GV reviewed inconsistent answers"
+# swap final answer for new answer
+qdat_revised$answer <- gsub("New answer:", "Final answer:", qdat_revised$answer)
+# standardize note for add/append (only used append with KT4 or Other driver), and make notes past tense
+qdat_revised$qa_note <- gsub("Append[ed]?", "Added", qdat_revised$qa_note)
+qdat_revised$qa_note <- gsub("append[ed]?", "added", qdat_revised$qa_note)
+qdat_revised$qa_note <- gsub("add ", "added ", qdat_revised$qa_note, fixed = T)
+
+
+# all done
+
 
 
 # -- WRITE OUT ----
@@ -1795,10 +1852,12 @@ paperorder <- ungroup(qdat_revised) %>%
   mutate(titleorder = 1:nrow(.))
 # order dataset
 qdat_revised_out <- ungroup(qdat_revised) %>%
+  data.frame() %>%
   # sort dataset by order answers came in, then by survey order and varnum
-  left_join(paperorder) %>%
+  left_join(paperorder[c("ResponseId", "titleorder")]) %>%
   arrange(titleorder, survey_order, varnum) %>%
   select(StartDate:qa_note)
+  
 
 # remake driverbins
 driverbins <- subset(qdat_revised_out, grepl("Driver", abbr) & !is.na(clean_answer), select = c(clean_answer, clean_answer_binned, Group, clean_group, abbr)) %>%
