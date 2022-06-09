@@ -1,0 +1,29 @@
+"qnum","abbr","revnobs","refnobs","pctmod","fullquestion"
+3,"BiodivOnly",4,341,1.17,"Q3: This paper only measures biodiversity/abundance but NOT as an explicit proxy for EF/ES"
+3,"ReviewOnly",17,255,6.67,"This paper is a Review, Synthesis, Meta-analysis or a Methods only paper."
+3,"SocialOnly",16,314,5.1,"Q3b: This paper ONLY focuses on social dimensions of services (no measurement of services or processes)"
+4,"Ecosystem",171,338,50.59,"Q4: Type of Ecosystem - Selected Choice"
+4,"EcosystemNotes",0,35,0,"Q4: Type of Ecosystem - Other - Text"
+5,"Place",3,338,0.89,"Q5: What continent/ocean is the study in?"
+6,"Methods",69,338,20.41,"Q6: What methods were used? - Selected Choice"
+6,"GenInfo",0,152,0,"General Information about the study and its methods (Optional)"
+6,"MethodsNotes",0,8,0,"Q6: What methods were used? - Other - Text"
+7,"TimeTrends",7,338,2.07,"Q7: Does the study quantify trends over time?"
+7,"YrsData",10,166,6.02,"Q7b: How many years of data were used for the study?"
+8,"Extent",273,273,100,"Q8.1a: What is the spatial extent of the study? Select one (choose the largest extent covered, even if multiple scales are analyzed)."
+8,"Nested",273,273,100,"Q8.2a: Does the study consider nested or multiple spatial scales in the analysis?"
+9,"ScaleNotes",0,230,0,"Notes for Q9"
+10,"Connect",4,338,1.18,"Q10: Does the paper consider connectivity between spatial replicates (sites, plots)?"
+11,"ConnectDist",3,48,6.25,"Q11: What is the distance between replicates?"
+12,"Driver",280,1064,26.32,NA
+12,"EffectDirect",464,1045,44.4,NA
+12,"OtherDriver",151,411,36.74,NA
+12,"Response",87,740,11.76,NA
+12,"Yclass",115,668,17.22,NA
+13,"KremenTopics",224,338,66.27,"Q13: Which of Kremen's Topics does this paper address?"
+14,"ESP_type",21,242,8.68,"Q14: If the study incorporates a 'Service Provider', which service provider(s) does it utilize?"
+14,"KremenNotes",0,118,0,"Notes on Q14"
+15,"Feedbacks",2,338,0.59,"Q15: Does the paper measure feedbacks between levels?"
+16,"Thresholds",10,338,2.96,"Q16: Are there explicit discussions of thresholds required for the provisioning of the ES discussed?"
+17,"Uncertainty",0,25,0,"Note if there is anything interesting this paper does to assess uncertainty:"
+18,"SurveyNotes",0,129,0,"Notes, Questions, Comments"

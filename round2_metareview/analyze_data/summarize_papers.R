@@ -471,28 +471,64 @@ review_qdat <- subset(qdat_lulc, select = c(Title, Init, doublerev, version, ans
   # remove empty notes for Q9
   filter(!(is.na(answer) & is.na(clean_answer) & qnum == "Q9"))
 
-# count questions that had a third party review
+# tally third party review -----
+# count questions that had a third party review 
 # > ak + nbd looked at methods
 # > is + ld looked at ecosystem type
 # > ld + nbd considered exclusion
 # > ctw did third party review when original reviewers not available or responsive
-third_party <- subset(review_qdat, !is.na(qa_note)) # will have a note if modified
+third_party <- subset(review_qdat, !is.na(qa_note)) %>% # will have a note if modified
+  # check if raw answer is same as clean answer, and if clean group changed
+  mutate(same_answer = (answer == clean_answer) | is.na(answer) & is.na(clean_answer),
+         same_group = (Group == clean_group) | (is.na(Group) & is.na(clean_group))) %>%
+  replace_na(list(same_answer = FALSE, same_group = FALSE))
+
+
 # what questions have notes?
 distinct(third_party, qnum, abbr) %>%
   mutate(qnum = parse_number(qnum)) %>%
   arrange(qnum) # apparently every question has a note somewhere..
 
-# loook at example notes
+# look at example notes
 unique(third_party$qa_note[third_party$qnum == "Q15"])
 unique(third_party$qa_note[third_party$qnum == "Q9"])
-unique(third_party$qa_note[grepl("reviewed|third party|agree|[+]", third_party$qa_note)])
+unique(third_party$qa_note[grepl("reviewed|third party|agree|[+]|look[ed]? at", third_party$qa_note)])
 unique(third_party$qa_note[!grepl("CTW", third_party$qa_note)])
 
-CTWlooked <- subset(review_qdat, grepl("CTW", qa_note) & !grepl("CW", Init))
-nrow(CTWlooked)/nrow(review_qdat) # I reviewed almost 5% of records
+# what are the unique notes when answer and groups are the same?
+with(third_party, unique(qa_note[same_answer & same_group]))
+# can remove rows that are "Infilled ES from Driver where 'Other' specified" and any notes questions (we didn't review those)
+# also ignore Q8? or include as reviewed by third party.. bc question was completely redone (keep as reviewed)
+ignore_third_party <- subset(third_party, grepl("Note|GenInfo", abbr) | 
+                               (same_group & qa_note %in% "Infilled ES from Driver where 'Other' specified"))
+third_party2 <- anti_join(third_party, ignore_third_party)
+# summarize these reviews
+tally_reviews <- dplyr::select(third_party2, Title, Init, version, qnum, abbr, ES, Group, answer, qa_note) %>%
+  distinct() %>%
+  group_by(qnum, abbr) %>%
+  summarise(revnobs = length(qa_note))
+refcounts <- dplyr::select(review_qdat,  Title, Init, version, qnum, abbr, ES, Group,answer, qa_note) %>%
+  distinct() %>%
+  group_by(qnum, abbr) %>%
+  summarise(refnobs = length(qa_note))
+# full join all to calculate % modified
+summarize_revs <- full_join(tally_reviews, refcounts) %>%
+  replace_na(list(revnobs = 0)) %>%
+  mutate(pctmod = round((revnobs/refnobs)*100,2),
+         # pretty table
+         qnum = parse_number(qnum)) %>%
+  arrange(qnum) %>%
+  # join full question
+  left_join(distinct(subset(qdat_lulc, qnum != "Q12", select = c(abbr, fullquestion)))) %>%
+  # drop extent and nested notes because implicit in new questions
+  subset(!(qnum == 8 & grepl("Notes", abbr)))
+# bigger table, write out to put in data methods supplement
+# > put in clean_qa_data/qafigs since it's a summary of cleaning actions
+write.csv(summarize_revs, "round2_metareview/clean_qa_data/qafigs/summarize_thirdreview.csv", row.names = F)
 
 
-# pull records that were modified to tally:
+
+# pull records that were modified to tally: -----
 # > notes were never modified, Q8 was never modified once GV and JL redid
 modified_questions <- subset(review_qdat, !grepl("Notes|GenIn", abbr) & qnum != "Q8", 
                              # ignore lulc for counting mods before lulc adjustment
@@ -532,20 +568,22 @@ tally_mods <- dplyr::select(modified_questions2, Title, Init, version, qnum, abb
   distinct() %>%
   group_by(qnum, abbr) %>%
   summarise(modnobs = length(qa_note))
-refcounts <- dplyr::select(review_qdat,  Title, Init, version, qnum, abbr, ES, Group,answer, qa_note) %>%
-  distinct() %>%
-  group_by(qnum, abbr) %>%
-  summarise(refnobs = length(qa_note))
+
 # full join all to calculate % modified
 summarize_mods <- full_join(tally_mods, refcounts) %>%
   replace_na(list(modnobs = 0)) %>%
   mutate(pctmod = round((modnobs/refnobs)*100,2),
   # pretty table
   qnum = parse_number(qnum)) %>%
-  arrange(qnum)
+  arrange(qnum) %>%
+  # join full question
+  left_join(distinct(subset(qdat_lulc, qnum != "Q12", select = c(abbr, fullquestion))))
+# bigger table, write out to put in data methods supplement
+# > put in clean_qa_data/qafigs since it's a summary of cleaning actions
+write.csv(summarize_mods, "round2_metareview/clean_qa_data/qafigs/summarize_modifications.csv", row.names = F)
 
 
-# summarize lulc recodes
+# summarize lulc recodes -----
 # > just count rows for drivers and effect directs that got recoded
 q12lulc <- subset(review_qdat, qnum == "Q12" & grepl("Driver|Effect", abbr))
 
