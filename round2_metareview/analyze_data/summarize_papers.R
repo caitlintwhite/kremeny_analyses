@@ -471,7 +471,7 @@ review_qdat <- subset(qdat_lulc, select = c(Title, Init, doublerev, version, ans
   # remove empty notes for Q9
   filter(!(is.na(answer) & is.na(clean_answer) & qnum == "Q9"))
 
-# tally third party review -----
+# -- 1. tally third party review -----
 # count questions that had a third party review 
 # > ak + nbd looked at methods
 # > is + ld looked at ecosystem type
@@ -528,7 +528,7 @@ write.csv(summarize_revs, "round2_metareview/clean_qa_data/qafigs/summarize_thir
 
 
 
-# pull records that were modified to tally: -----
+# -- 2. pull records that were modified to tally: -----
 # > notes were never modified, Q8 was never modified once GV and JL redid
 modified_questions <- subset(review_qdat, !grepl("Notes|GenIn", abbr) & qnum != "Q8", 
                              # ignore lulc for counting mods before lulc adjustment
@@ -583,7 +583,7 @@ summarize_mods <- full_join(tally_mods, refcounts) %>%
 write.csv(summarize_mods, "round2_metareview/clean_qa_data/qafigs/summarize_modifications.csv", row.names = F)
 
 
-# summarize lulc recodes -----
+# -- 3. summarize lulc recodes -----
 # > just count rows for drivers and effect directs that got recoded
 q12lulc <- subset(review_qdat, qnum == "Q12" & grepl("Driver|Effect", abbr))
 
