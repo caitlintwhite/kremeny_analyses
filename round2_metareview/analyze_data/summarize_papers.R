@@ -15,6 +15,7 @@
 
 
 # -- SETUP --
+rm(list= ls())
 library(tidyverse)
 options(stringsAsFactors = F)
 na_vals <- c("NA", "NaN", ".", "", " ", NA, NaN)
@@ -75,7 +76,7 @@ mutate(allexclude, grp_reason = ifelse(grepl("revi|meta|tool", exclusion_reason,
             grand_pct = (nobs/nrow(.))*100) %>%
   arrange(-nobs)
 
-
+# cleaned full text retained dataset (before lulc adjustment)
 qdat <- read.csv("round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned.csv", na.strings = na_vals) 
 # stack and write out all varnames for all datasets for metadata
 varnames <- rbind(data.frame(source = "allexcluded", varnames = names(allexclude), type = sapply(allexclude, class)),
@@ -86,6 +87,7 @@ varnames <- rbind(data.frame(source = "allexcluded", varnames = names(allexclude
   rbind(data.frame(source = "r2_assigned", varnames = names(r2assigned),  type = sapply(r2assigned, class))) %>%
   rbind(data.frame(source = "r1_assigned", varnames = names(round1),  type = sapply(round1, class)))
 #write.csv(varnames, "round2_metareview/data/intermediate/varnames4metadata.csv", row.names = F)
+
 
 
 # -- DOUBLE REVIEW CONSISTENCY -----
@@ -408,18 +410,16 @@ unique(with(r2exclude, reviewer_exclusion_status[doublerev & flagged4review & ve
 
 # -- SUMMARIZE JOURNALS ----
 # how many journals considered, what potential bias is there?
-original <- read.csv("round1_exclusion/EcosystemServicesPapersNov2019.csv") %>%
-  # drop title that's duplicated (only 1 record)
-  subset(!duplicated(Title))
-length(unique(original$SourcePublication)) #128 journals for round 1
-length(unique(original$SourcePublication[original$Number %in% r1kept$Number])) #98 journals made it through
+length(unique(round1$SourcePublication)) #128 journals for round 1
+length(unique(round1$SourcePublication[round1$Number %in% r1kept$Number])) #98 journals made it through
 length(unique(r2assigned$SourcePublication)) # 80 journals selected for round 2 review
-length(unique(original$SourcePublication[original$Title %in% unique(qdat$Title)]))
+length(unique(round1$SourcePublication[round1$Title %in% unique(qdat$Title)]))
 
 # group titles by journal
-r1jsum <- group_by(original, SourcePublication) %>%
+r1jsum <- subset(round1, !duplicated(Title)) %>%
+  group_by(SourcePublication) %>%
   summarise(papers = length(Title),
-            pct = papers/nrow(original),
+            pct = papers/nrow(round1),
             pct = 100*pct) %>%
   ungroup() %>%
   arrange(-pct) %>%
@@ -457,6 +457,141 @@ jsum <- left_join(r1jsum, r2jsum) %>%
 third <- read.csv("round2_metareview/data/reviewer_revisions/excludenotes_review-COMPLETE.csv")
 with(third, sapply(split(Title, exclude_LD), function(x) length(unique(x))))
 length(unique(third$Title))
+
+
+
+# -- SUMMARIZE PERCENT MODIFIED ANSWERS FOR FINAL LULC DATASET ------
+# read in clean dataset that has lulc adjustments so can quantify how many answers/rows that mod impacted (in addition to other mods made)
+qdat_lulc <- read.csv("round2_metareview/data/cleaned/ESqualtrics_r2keep_cleaned_lulc.csv", na.strings = na_vals)
+
+# filter data to rows with answers or qa/lulc notes present
+review_qdat <- subset(qdat_lulc, select = c(Title, Init, doublerev, version, answer, clean_answer, qnum, abbr, Group, clean_group, lulc_group, ES, qa_note, lulc_note, only_lulc)) %>%
+  # remove rows that are empty in answer and clean_answer, keep anything with a qa_note or lulc_note
+  filter(!(is.na(answer) & is.na(clean_answer)) | !is.na(qa_note) | !is.na(lulc_note)) %>%
+  # remove empty notes for Q9
+  filter(!(is.na(answer) & is.na(clean_answer) & qnum == "Q9"))
+
+# count questions that had a third party review
+# > ak + nbd looked at methods
+# > is + ld looked at ecosystem type
+# > ld + nbd considered exclusion
+# > ctw did third party review when original reviewers not available or responsive
+third_party <- subset(review_qdat, !is.na(qa_note)) # will have a note if modified
+# what questions have notes?
+distinct(third_party, qnum, abbr) %>%
+  mutate(qnum = parse_number(qnum)) %>%
+  arrange(qnum) # apparently every question has a note somewhere..
+
+# loook at example notes
+unique(third_party$qa_note[third_party$qnum == "Q15"])
+unique(third_party$qa_note[third_party$qnum == "Q9"])
+unique(third_party$qa_note[grepl("reviewed|third party|agree|[+]", third_party$qa_note)])
+unique(third_party$qa_note[!grepl("CTW", third_party$qa_note)])
+
+CTWlooked <- subset(review_qdat, grepl("CTW", qa_note) & !grepl("CW", Init))
+nrow(CTWlooked)/nrow(review_qdat) # I reviewed almost 5% of records
+
+
+# pull records that were modified to tally:
+# > notes were never modified, Q8 was never modified once GV and JL redid
+modified_questions <- subset(review_qdat, !grepl("Notes|GenIn", abbr) & qnum != "Q8", 
+                             # ignore lulc for counting mods before lulc adjustment
+                             select = -c(lulc_group, lulc_note, only_lulc)) %>%
+  distinct() %>%
+  # track things things are different
+  mutate(noted = !is.na(qa_note) & ((answer != clean_answer) | is.na(answer) & !is.na(clean_answer)), # does it have a QA note
+         # does Group differ from clean_group?
+         modified_group = ifelse(is.na(Group), FALSE, Group != clean_group),
+         # does clean_answer differ from raw_answer (note: will be true for all Q12 variables split out and for double review bc of initials prefix)
+         modified_answer = (answer != clean_answer) | (is.na(answer) & !is.na(clean_answer)) | (is.na(clean_answer) & !is.na(answer)),
+         # does qa note indicate it was reviewed in any way?
+         reviewed = grepl("reviewed|third party|agree|[+]", qa_note)) # note answers could be different because I removed a comma
+
+# ignore answers that are same as clean_answer and clean_group did not change
+ignore_questions <- subset(modified_questions, !modified_group | is.na(modified_group)) %>%
+  # ignore (keep) what has same answer and doesn't have a qa note
+  subset(!modified_answer & !noted)
+
+# pull whatever still needs attention (isn't in ignore dataset)
+modified_questions2 <- anti_join(modified_questions, ignore_questions)
+
+# subset out more to ignore
+ignore_questions <- rbind(ignore_questions, 
+                          subset(modified_questions2, abbr %in% c("EffectDirect", "Yclass") & grepl("missing|No effect dire", qa_note) & modified_answer %in% c(NA, FALSE))) %>%
+  rbind(subset(modified_questions2, (!noted & !reviewed & !modified_group))) %>%
+  rbind(subset(modified_questions2, qa_note %in% c("Infilled ES from Driver where 'Other' specified", "Reviewer correction") & !modified_group)) %>%
+  rbind(subset(modified_questions2, grepl("Reviewer correc",qa_note) & !grepl("inconsistent", qa_note))) %>%
+  rbind(subset(modified_questions2, grepl("removed duplicate", qa_note, ignore.case = T))) %>%
+  distinct()
+
+# update filtered modified 
+modified_questions2 <- anti_join(modified_questions, ignore_questions) # I think this is enough sorting
+
+# distill to unique title-responseid-qnum-abbr-ES and tally that
+tally_mods <- dplyr::select(modified_questions2, Title, Init, version, qnum, abbr, ES, Group, answer, qa_note) %>%
+  distinct() %>%
+  group_by(qnum, abbr) %>%
+  summarise(modnobs = length(qa_note))
+refcounts <- dplyr::select(review_qdat,  Title, Init, version, qnum, abbr, ES, Group,answer, qa_note) %>%
+  distinct() %>%
+  group_by(qnum, abbr) %>%
+  summarise(refnobs = length(qa_note))
+# full join all to calculate % modified
+summarize_mods <- full_join(tally_mods, refcounts) %>%
+  replace_na(list(modnobs = 0)) %>%
+  mutate(pctmod = round((modnobs/refnobs)*100,2),
+  # pretty table
+  qnum = parse_number(qnum)) %>%
+  arrange(qnum)
+
+
+# summarize lulc recodes
+# > just count rows for drivers and effect directs that got recoded
+q12lulc <- subset(review_qdat, qnum == "Q12" & grepl("Driver|Effect", abbr))
+
+totdrivers <- sum(grepl("Driver", q12lulc$abbr))
+toteffects <- sum(grepl("Effect", q12lulc$abbr))
+
+# how many rows added in dataset because multiple drivers present in clean_group partially recoded to lulc?
+summarize_lulc <- q12lulc %>%
+  #subset(q12lulc, grepl("Effect", abbr)) %>%
+  # remove empty groups due to NA clean_answers (corrections to NA)
+  subset(!is.na(clean_group)) %>%
+  # count number of added rows due to lulc
+  mutate(driver = ifelse(grepl("Driver", abbr), "driver", "effect"), 
+    added = grepl("multiple", lulc_note, ignore.case = T),
+         recoded = lulc_group == "LU_LC") %>%
+  group_by(driver, added, recoded) %>%
+  summarise(nobs = length(Title)) %>%
+  ungroup() %>%
+  group_by(driver) %>%
+  mutate(totnobs = sum(nobs),
+         prop = nobs/sum(nobs))
+ 
+# 22% of driver answers and %15 effect direction answers recoded (includes rows duplicated because of presence of other drivers partially recoded)
+
+# how many papers would lose Kremen Topic: Env because of lulc recode
+nrow(subset(qdat_lulc, grepl("does not include env", lulc_note))) # 10 reviews
+length(unique(qdat_lulc$ResponseId)) #341 unique reviews present
+10/341 #3% of answers
+
+# how many ESP types consolidated by GV's aggregation?
+# he combines across and among species answers for ESP
+summarise_esp <- subset(qdat_lulc, abbr == "ESP_type" & version == "final", select = c(Title, clean_answer)) %>%
+  # split answers
+  separate(clean_answer, into = paste0("X", 1:4), sep = "],") %>%
+  gather(num, clean_answer, X1:X4) %>%
+  subset(!is.na(clean_answer)) %>%
+  mutate(adjust_answer = ifelse(grepl("Among|Across",clean_answer), "Community", clean_answer)) %>%
+  arrange(Title, num)
+summary(summarise_esp$adjust_answer == "Community") # 80 of 154 non-NA answers impacted
+# how many titles did not have ESP
+summary(unique(qdat_lulc$Title) %in% unique(summarise_esp$Title)) # 73 papers did not have an ESP
+80/(73+154) #35% of answers impacted (35% of responses, including no ESP, were across or among species)
+# how many unique titles have community? maybe counting boxes checked is double counting
+length(unique(summarise_esp$Title[summarise_esp$adjust_answer == "Community"])) # 77 titles out of 200 that gave an answer (or 273 total)
+77/200 # 38% of responses
+77/273 # or 28% of responses if include NA as "no ESP" response
 
 
 
@@ -780,3 +915,4 @@ driverdat <- left_join(driverdat, ESdescrip, by = "ES") %>%
 
 # write out 
 write_csv(driverdat, "round2_metareview/analyze_data/examples/ES_alldrivers_withESes_citations.csv", na = "")
+
