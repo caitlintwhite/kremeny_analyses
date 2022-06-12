@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eml:eml xmlns:eml="https://eml.ecoinformatics.org/eml-2.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:stmml="http://www.xml-cml.org/schema/stmml-1.2" packageId="d47e8666-a1fc-4bb9-82b7-adadaafcbab5" system="uuid" xsi:schemaLocation="https://eml.ecoinformatics.org/eml-2.2.0 https://eml.ecoinformatics.org/eml-2.2.0/eml.xsd">
+  <dataset>
+    <title>Ecology of ecosystem services systematic map: excluded articles</title>
+    <creator id="https://orcid.org/0000-0001-8723-3568">
+      <individualName>
+        <givenName>Caitlin</givenName>
+        <surName>White</surName>
+      </individualName>
+      <electronicMailAddress>caitlin.t.white@colorado.edu</electronicMailAddress>
+    </creator>
+    <metadataProvider id="0000-0001-8723-3568">
+      <individualName>
+        <givenName>Caitlin</givenName>
+        <surName>White</surName>
+      </individualName>
+      <organizationName>Department of Ecology and Evolutionary Biology, University of Colorado Boulder</organizationName>
+      <electronicMailAddress>caitlin.t.white@colorado.edu</electronicMailAddress>
+      <userId directory="https://orcid.org/">0000-0001-8723-3568</userId>
+    </metadataProvider>
+    <pubDate>2022</pubDate>
+    <language>English</language>
+    <abstract>
+      <para>
+    ABSTRACT
+  </para>
+      <para>
+    This is the lovely abstract overviewing our study. We created a
+    systematic map of advances and outstanding knowledge gaps in the
+    ecology of ecosystem services since Claire Kremen’s 2005 seminal
+    paper.
+  </para>
+    </abstract>
+    <keywordSet>
+      <keyword>Biodiversity</keyword>
+      <keyword>Ecological drivers</keyword>
+      <keyword>Ecosystem services</keyword>
+      <keyword>Ecosystem service providers</keyword>
+      <keyword>Global change</keyword>
+      <keyword>Multifunctionality</keyword>
+      <keyword>Nature’s benefits to people</keyword>
+      <keyword>ROSES</keyword>
+      <keyword>Systematic map</keyword>
+    </keywordSet>
+    <intellectualRights>TBD</intellectualRights>
+    <coverage>
+      <temporalCoverage>
+        <rangeOfDates>
+          <beginDate>
+            <calendarDate>2006-01-01</calendarDate>
+          </beginDate>
+          <endDate>
+            <calendarDate>2019-11-23</calendarDate>
+          </endDate>
+        </rangeOfDates>
+      </temporalCoverage>
+    </coverage>
+    <maintenance>
+      <description>complete</description>
+      <maintenanceUpdateFrequency>notPlanned</maintenanceUpdateFrequency>
+    </maintenance>
+    <contact id="0000-0003-0471-1371">
+      <individualName>
+        <givenName>Laura</givenName>
+        <surName>Dee</surName>
+      </individualName>
+      <organizationName>Department of Ecology and Evolutionary Biology, University of Colorado Boulder</organizationName>
+      <address>
+        <deliveryPoint>EBIO, Ramaley N122</deliveryPoint>
+        <city>Boulder</city>
+        <administrativeArea>Colorado</administrativeArea>
+        <postalCode>80309-0334</postalCode>
+        <country>U.S.A.</country>
+      </address>
+      <electronicMailAddress>laura.dee@colorado.edu</electronicMailAddress>
+      <onlineUrl>https://www.colorado.edu/ebio/laura-dee</onlineUrl>
+      <userId directory="https://orcid.org/">0000-0003-0471-1371</userId>
+    </contact>
+    <methods>
+      <methodStep>
+        <description>
+          <para>
+    METHODS
+  </para>
+          <para>
+    We followed Reporting Standards for Evidence Based Synthesis (ROSES,
+    </para>
+          <para>&lt;link xlink:href="https://www.roses-reporting.com/"&gt;https://www.roses-reporting.com/&lt;/link&gt;</para>
+          <para>,
+    Haddaway et al., 2018) to create a quasi-systematic map of advances
+    and knowledge gaps in the ecology of ecosystem services since Kremen
+    (2005). In November 2019, we searched the University of Colorado
+    Boulder subscription to Clarivate Web of Science (WOS) Core
+    Collections database (Clarivate Analytics, Philadelphia, PA) using
+    the Boolean search string: TS=(“ecosystem service*” AND ecolog*) NOT
+    TS = econo* NOT TI = cost NOT TI = social pref* NOT TI = valu* NOT
+    TI= govern* NOT TI = paymen*. Results were then refined to the
+    Science Citation Expanded database, English-language articles,
+    within the WOS Ecology category, from years 2006-2019 (present in
+    the database by 2019-11-23, our query date). We did not search other
+    databases, grey literature, or other sources of evidence.
+  </para>
+          <para>
+    Our query returned 1932 unique primary research articles from
+    peer-reviewed academic journals. We randomly assigned a roughly
+    equal number of articles among a 14-person review team and evaluated
+    title and abstracts (together) against our exclusion criteria. Our
+    exclusion criteria aimed to screen out review, meta-analyses, and
+    methods papers, studies that focused on social dimensions rather
+    than the ecology of ecosystem services, and ecological research
+    studies that inadequately or unclearly measured or linked driver and
+    response metrics to ecosystem function or services. We used Google
+    Forms to capture abstract screening data.
+  </para>
+          <para>
+    We excluded 1149 articles at abstract review stage, randomly
+    selected half of the 783 articles that remained, and randomly
+    assigned the 392 selected articles equally among the review team for
+    full-text review. No person reviewed the same article at both
+    abstract and full-text screening stages, and 63 of the 392 article
+    were reviewed independently by two people. 119 more articles were
+    excluded at full-text review, and 273 studied retained for meta-data
+    coding extraction. We used Qualtrics to capture exclusion criteria
+    reevaluation and meta-data coding. When an answer was unclear, we
+    discussed how to code as a group and when needed a third person in
+    the group reviewed the study.
+  </para>
+          <para>
+    All data were compiled, quality controlled for logical consistency
+    and completeness, and prepared for analysis in R (R Core Development
+    Team, 2020). Full data methods are described in Appendix xx: Ecology
+    of Ecosystem Services Data Methods.
+  </para>
+          <para>
+    The excluded papers dataset describes articles excluded at title and
+    abstract or full-text screening stages, or excluded by random chance
+    (among 391 articles not randomly selected for full-text review). The
+    primary reason for exclusion is provided for each study along with
+    the study’s citation information as provided by our Web of Science
+    search results. All reviewer information is anonymized.
+  </para>
+          <para>
+    REFERENCES
+  </para>
+          <para>
+    Haddaway, N. R., Macura, B., Whaley, P., &amp;amp; Pullin, A. S. (2018).
+    ROSES Reporting standards for Systematic Evidence Syntheses: Pro
+    forma, flow-diagram and descriptive summary of the plan and conduct
+    of environmental systematic reviews and systematic maps.
+    </para>
+          <para>
+            <emphasis>Environmental Evidence</emphasis>
+          </para>
+          <para>,
+    </para>
+          <para>
+            <emphasis>7</emphasis>
+          </para>
+          <para>(1), 1–8.
+    https://doi.org/10.1186/s13750-018-0121-7
+  </para>
+          <para>
+    Kremen, C. (2005). Managing ecosystem services: What do we need to
+    know about their ecology? </para>
+          <para>
+            <emphasis>Ecology Letters</emphasis>
+          </para>
+          <para>
+            <emphasis>8</emphasis>
+          </para>
+          <para>(5), 468–479.
+    https://doi.org/10.1111/j.1461-0248.2005.00751.x
+  </para>
+          <para>
+    R Core Development Team. (2020). R: A Language and Environment for
+    Statistical Computing. In </para>
+          <para>
+            <emphasis>R Foundation for Statistical
+    Computing</emphasis>
+          </para>
+          <para>. http://www.r-project.org
+  </para>
+          <para>
+     
+  </para>
+        </description>
+      </methodStep>
+    </methods>
+    <dataTable>
+      <entityName>EcolofES excluded articles</entityName>
+      <entityDescription>All studies excluded at abstract or full-text screening stages, with reason for exclusion and ctudy citation information</entityDescription>
+      <physical>
+        <objectName>ecolofES_excludedpapers.csv</objectName>
+        <size unit="bytes">603183</size>
+        <authentication method="MD5"/>
+        <dataFormat>
+          <textFormat>
+            <recordDelimiter>&#13;
+</recordDelimiter>
+            <attributeOrientation>column</attributeOrientation>
+            <simpleDelimited>
+              <fieldDelimiter>,</fieldDelimiter>
+            </simpleDelimited>
+          </textFormat>
+        </dataFormat>
+      </physical>
+      <attributeList>
+        <attribute>
+          <attributeName>title</attributeName>
+          <attributeLabel>Title</attributeLabel>
+          <attributeDefinition>Title of study</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <textDomain>
+                  <definition>any text</definition>
+                </textDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>authors</attributeName>
+          <attributeLabel>Full authors</attributeLabel>
+          <attributeDefinition>Full list of study authors</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <textDomain>
+                  <definition>any text</definition>
+                </textDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>pubyear</attributeName>
+          <attributeLabel>Publication year</attributeLabel>
+          <attributeDefinition>Year study published</attributeDefinition>
+          <storageType>date</storageType>
+          <measurementScale>
+            <dateTime>
+              <formatString>YYYY</formatString>
+              <dateTimeDomain/>
+            </dateTime>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>sourcepub</attributeName>
+          <attributeLabel>Publication source</attributeLabel>
+          <attributeDefinition>Journal where study published</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <textDomain>
+                  <definition>any text</definition>
+                </textDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>review_round</attributeName>
+          <attributeLabel>Review stage</attributeLabel>
+          <attributeDefinition>Whether study was excluded at title and abstract screening stage or full-text screening stage</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <enumeratedDomain>
+                  <codeDefinition>
+                    <code>1</code>
+                    <definition>Title and abstract screening stage</definition>
+                  </codeDefinition>
+                  <codeDefinition>
+                    <code>2</code>
+                    <definition>Full-tet screening stage</definition>
+                  </codeDefinition>
+                </enumeratedDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>reviewer</attributeName>
+          <attributeLabel>Reviewer</attributeLabel>
+          <attributeDefinition>Anonymized reviewer identity</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <textDomain>
+                  <definition>convention: "Q"[question number, 1-18]</definition>
+                </textDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>doublerev</attributeName>
+          <attributeLabel>Double reviewed</attributeLabel>
+          <attributeDefinition>Whether study was double reviewed or not</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <textDomain>
+                  <definition>TRUE or FALSE</definition>
+                </textDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>reviewer_notes</attributeName>
+          <attributeLabel>Reviewer notes</attributeLabel>
+          <attributeDefinition>Reviewer notes on exclusion</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <textDomain>
+                  <definition>any text</definition>
+                </textDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>outsidereviewer</attributeName>
+          <attributeLabel>Outside reviewer</attributeLabel>
+          <attributeDefinition>Anonymized identity of third party reviewer when needed</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <textDomain>
+                  <definition>any text</definition>
+                </textDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>outsidereviewer_notes</attributeName>
+          <attributeLabel>Outside reviewer notes</attributeLabel>
+          <attributeDefinition>Third party reviewer notes on exclusion</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <textDomain>
+                  <definition>any text</definition>
+                </textDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>exclusion_id</attributeName>
+          <attributeLabel>Exclusion ID</attributeLabel>
+          <attributeDefinition>Unique code for exclusion</attributeDefinition>
+          <storageType>float</storageType>
+          <measurementScale>
+            <ratio>
+              <unit>
+                <standardUnit>number</standardUnit>
+              </unit>
+              <numericDomain>
+                <numberType>real</numberType>
+              </numericDomain>
+            </ratio>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>exclusion_reason</attributeName>
+          <attributeLabel>Exclusion reason</attributeLabel>
+          <attributeDefinition>Primary reason for exclusion</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <textDomain>
+                  <definition>any text</definition>
+                </textDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+        <attribute>
+          <attributeName>fullquestion</attributeName>
+          <attributeLabel>Full question</attributeLabel>
+          <attributeDefinition>Full exclusion criterion question</attributeDefinition>
+          <storageType>string</storageType>
+          <measurementScale>
+            <nominal>
+              <nonNumericDomain>
+                <textDomain>
+                  <definition>any text</definition>
+                </textDomain>
+              </nonNumericDomain>
+            </nominal>
+          </measurementScale>
+        </attribute>
+      </attributeList>
+    </dataTable>
+  </dataset>
+</eml:eml>

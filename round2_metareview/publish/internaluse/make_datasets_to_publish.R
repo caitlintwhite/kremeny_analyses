@@ -294,6 +294,9 @@ rownames(exclude_out_clean) <- NULL
 # write.csv(exclude_out_clean, "round2_metareview/publish/ecolofES_excludedpapers.csv", row.names = F)
 
 
+# clean up environment
+rm(list= ls()[grepl("out$|lulc$|citat|lut$|keep|revi|rand|full", ls()) & !grepl("clean",ls())])
+rm(i, clean_exclusion_lut, excludedpapers, good_title)
 
 
 #### MAKE EML METADATA -----
@@ -320,15 +323,64 @@ es_entities <- metaprep$DataSetEntities
 # -- make common items -----
 # coverage: only coverage to set is temporal
 es_coverage <- set_coverage(beginDate = "2006-01-01", endDate = "2019-11-23")
-# responsible party: Laura is point of contact
-es_responsibleparty <- with(es_persons[es_persons$surName == "Dee",], set_responsibleParty(givenName, surName, organizationName = organizationName, 
-                                                                                           electronicMailAddress = electronicMailAddress, id = id,
-                                                                                           onlineUrl = "https://www.colorado.edu/ebio/laura-dee"))
+# remove coverage elements that don't apply
+es_coverage$geographicCoverage <- NULL
+es_coverage$taxonomicCoverage <- NULL
+
+
 # EBIO/CU address
 EBIO_address <- list(deliveryPoint = "EBIO, Ramaley N122", 
                      city = "Boulder", administrativeArea = "Colorado", 
                      postalCode = "80309-0334", country = "U.S.A."  
 )
+
+
+# associated persons
+# iterate through persons dataset to compile
+reviewteam <- list()
+for(i in 1:nrow(es_persons)){
+  addperson <- person(given = es_persons$givenName[i], family = es_persons$surName[i], email = es_persons$electronicMailAddress[i], role = "cre", 
+                      comment = c(ORCID = es_persons$userId[i]))
+  # add to list
+  reviewteam[[i]] <- as_emld(addperson)
+  
+}
+
+# responsible party: Laura is point of contact
+es_responsibleparty <- with(es_persons[es_persons$surName == "Dee",], set_responsibleParty(givenName, surName, address = EBIO_address,
+                                                                                           organizationName = organizationName, 
+                                                                                           electronicMailAddress = electronicMailAddress, id = userId,
+                                                                                           userId = list(directory = "https://orcid.org/", userId = userId),
+                                                                                           onlineUrl = "https://www.colorado.edu/ebio/laura-dee"))
+# userId is not made correctly, needs directory assigned
+
+LD <- subset(es_persons, givenName == "Laura")
+LD_contact <- person(given = LD$givenName, family = LD$surName, email = LD$electronicMailAddress, role = "cre", 
+                          comment = c(ORCID = LD$userId))
+LD_contact <- as_emld(LD_contact)
+
+es_contact <- list(individualName = LD_contact$individualName,
+                   elctronicMailAddress = LD_contact$electronicMailAddress,
+                   address = EBIO_address,
+                   organizationName = LD$organizationName,
+                   onlineUrl =  "https://www.colorado.edu/ebio/laura-dee")
+
+es_metadataprov <- with(es_persons[es_persons$surName == "White",], set_responsibleParty(givenName, surName, #address = EBIO_address,
+                                                                                       organizationName = organizationName, 
+                                                                                       electronicMailAddress = electronicMailAddress, id = userId,
+                                                                                       userId = list(directory = "https://orcid.org/", userId = userId)))
+                                                                                       
+
+# make dataset creator
+es_creator <- reviewteam[[which(es_persons$givenName == "Caitlin")]]
+# null role type
+#es_creator$RoleType <- NULL
+es_contact <- reviewteam[which(es_persons$givenName == "Laura")]
+es_contact$onlineUrl <- "https://www.colorado.edu/ebio/laura-dee"
+es_contact$address <- EBIO_address
+
+# add address
+
 
 # keywords -- took from manuscript draft
 keywordSet <- list(
@@ -340,101 +392,143 @@ keywordSet <- list(
 ))
 
 
+# abstract
+es_abstract <- set_TextType(paste0(pubdir, "internaluse/ecolofES_abstract.docx"))
+# for some reason set working directory path changes after using set_TextType
+kremeny_analyses <- str_extract(rstudioapi::documentPath(), "^.*kremeny_analyses[/]")
+setwd(kremeny_analyses)
+getwd() # good, back to Rproj level
+
+# maintenance
+es_maintenance <- list(description = "complete",
+                       maintenanceUpdateFrequency = "notPlanned")
 
 
-# dataset specific items ----
 
-# make attributeLists
+
+# make extracted metadata eml ----
+
+# methods
+es_extracted_methods <- set_methods(paste0(pubdir, "internaluse/ecolofES_extracted_methods.docx"))
+
+# make attribute list
 es_extracted_attributes <- set_attributes(
-  as_tibble(
+  tibble(
     subset(es_attribs, grepl("extract", entityName),
-           select = c(attributeName, attributeLabel, attributeDefinition, formatString, unit, numberType))),
+           select = c(attributeName, attributeLabel, attributeDefinition, formatString, definition, unit, numberType))),
   # code definitions for es fields
-  es_factors[c("attributeName", "code", "definition")],
+  subset(es_factors, grepl("extr", entityname),select = c(attributeName, code, definition)),
   # class of field
   col_classes = with(es_attribs, col_classes[grepl("extra", entityName)]))
 
-es_excluded__attributes_excluded <- set_attributes(
-  as_tibble(
-    subset(es_attribs, grepl("exclud", entityName),
-           select = c(attributeName, attributeLabel, attributeDefinition, formatString, unit, numberType))),
-  # code definitions for es fields
-  es_factors[c("attributeName", "code", "definition")],
-  # class of field
-  col_classes = with(es_attribs, col_classes[grepl("exclud", entityName)]))
 
-
-# make dataTables
+# make physical module
 es_extracted_physical <- set_physical(objectName = with(metaprep$DataSetEntities, entityfilename[grepl("extr", entityfilename)]),
                                       size = file.info(paste0(pubdir, "ecolofES_extracted_data.csv"))$size,
                                       authentication =  unname(tools::md5sum(paste0(pubdir, "ecolofES_extracted_data.csv"))),
                                       authMethod = "MD5"
                                   )
-es_excluded_physical <- set_physical(objectName = with(metaprep$DataSetEntities, entityfilename[grepl("exclu", entityfilename)]),
-                                      size = file.info(paste0(pubdir, "ecolofES_excludedpapers.csv"))$size,
-                                     authentication =  unname(tools::md5sum(paste0(pubdir, "ecolofES_excluded_papers.csv"))),
-                                     authMethod = "MD5"
-)
-
+# compile data table
 es_extracted_dataTable <- list(entityName = with(es_entities, entityName[grepl("extr", entityName)]),
                               entityDescription = with(es_entities, entitydescription[grepl("extr", entityName)]),
                               physical = es_extracted_physical,
                               attributeList = es_extracted_attributes)
 
 
-# make extracted data eml ----
+
+
+# make root eml for extracted dataset
+extracted_eml <- list(
+  packageId = uuid::UUIDgenerate(),
+  system = "uuid"
+)
+# compile dataset elements
 extracted_dataset <- list(
   title = with(es_entities, title[grepl("extr", title)]),
-  creator = ,
+  creator = reviewteam,
+  metadataProvider = es_metadataprov,
   pubDate = 2022,
-  intellectualRights = "TBD",
-  abstract = "TBD",
-  associatedParty = ,
+  language = "English",
+  abstract = es_abstract,
   keywordSet = keywordSet,
+  intellectualRights = "TBD",
   coverage = es_coverage,
+  maintenance = es_maintenance,
   contact = es_responsibleparty,
-  methods = "TBD",
+  methods = es_extracted_methods,
   dataTable = es_extracted_dataTable
 )
 
 # add to root eml
-extracted_eml <- list(
-  packageId = uuid::UUIDgenerate(),
-  system = "uuid",
-  dataset = extracted_dataset
-)
+extracted_eml$dataset <- extracted_dataset
+# check that xml file validates
+eml_validate(extracted_eml)
 
 # write out xml file
 write_eml(excluded_eml, paste0(pubdir, "ecolofES_extracted_data_eml.xml"))
-# check that xml file validates
-eml_validate(paste0(pubdir, "ecolofES_extracted_data_eml.xml"))
 
 
 
 # make excluded papers eml ----
+
+# METHODS
+# > import from word doc
+es_excluded_methods <- set_methods(paste0(pubdir, "internaluse/ecolofES_excluded_methods.docx"))
+
+
+# DATA TABLE
+# reqs: entityName, entityDescription, physical, and attributes with code descriptions for any factors
+
+# make attribute list
+es_excluded_attributes <- set_attributes(
+  as_tibble(
+    subset(es_attribs, grepl("exclud", entityName),
+           select = c(attributeName, attributeLabel, attributeDefinition, formatString, definition, unit, numberType))),
+  # code definitions for es fields
+  subset(es_factors, grepl("excl", entityname),select = c(attributeName, code, definition)),
+  # class of field
+  col_classes = with(es_attribs, col_classes[grepl("exclud", entityName)]))
+
+# make physical module
+es_excluded_physical <- set_physical(objectName = with(metaprep$DataSetEntities, entityfilename[grepl("exclu", entityfilename)]),
+                                     size = file.info(paste0(pubdir, "ecolofES_excludedpapers.csv"))$size,
+                                     authentication =  unname(tools::md5sum(paste0(pubdir, "ecolofES_excluded_papers.csv"))),
+                                     authMethod = "MD5"
+)
+
+# compile data table
+es_excluded_dataTable <- list(entityName = with(es_entities, entityName[grepl("excl", entityName)]),
+                              entityDescription = with(es_entities, entitydescription[grepl("excl", entityName)]),
+                              physical = es_excluded_physical,
+                              attributeList = es_excluded_attributes)
+
+
+
+# start root eml
+excluded_eml <- list(
+  packageId = uuid::UUIDgenerate(),
+  system = "uuid"
+)
+# compile full dataset
 excluded_dataset <- list(
   title = with(es_entities, title[grepl("excl", title)]),
-  creator = ,
+  creator = es_creator,
+  metadataProvider = es_metadataprov,
   pubDate = 2022,
+  language = "English",
+  maintenance = es_maintenance,
   intellectualRights = "TBD",
-  abstract = "TBD",
-  associatedParty = ,
+  abstract = es_abstract,
   keywordSet = keywordSet,
   coverage = es_coverage,
   contact = es_responsibleparty,
-  methods = "TBD",
-  dataTable = es_extracted_dataTable
+  methods = es_excluded_methods,
+  dataTable = es_excluded_dataTable
 )
 
-# add to root eml
-excluded_eml <- list(
-  packageId = uuid::UUIDgenerate(),
-  system = "uuid",
-  dataset = excluded_dataset
-)
-
+# add dataset element to root eml
+excluded_eml$dataset <- excluded_dataset
+# validate (don't write out if this fails)
+eml_validate(excluded_eml)
 # write out xml file
 write_eml(excluded_eml, paste0(pubdir, "ecolofES_excludedpapers_eml.xml"))
-# check that xml file validates
-eml_validate(paste0(pubdir, "ecolofES_excludedpapers_eml.xml"))
-
