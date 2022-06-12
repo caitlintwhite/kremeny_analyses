@@ -20,6 +20,7 @@ rm(list = ls()) # start w clean environment (ctw does not care this is not best 
 # load needed libraries
 library(tidyverse)
 library(EML)
+library(readxl)
 options(stringsAsFactors = F)
 na_vals = c(NA, "NA", " ", "", ".")
 
@@ -34,6 +35,7 @@ keep_round1 <- read.csv("round1_exclusion/output/keep_round1.csv", na.strings = 
 # WOS return for paper citations
 citations <- read.csv("round1_exclusion/EcosystemServicesPapersNov2019.csv", na.strings = na_vals)
 
+  
 # review how all read in
 str(r2keep_lulc)
 str(excludedpapers)
@@ -166,7 +168,7 @@ r2keep_out_clean <- dplyr::select(r2keep_out_clean, title, authors:sourcepub, # 
 
 
 # write out final full-text dataset
-write.csv(r2keep_out_clean, "round2_metareview/publish/ecolofES_extracted_data.csv", row.names = F)
+# write.csv(r2keep_out_clean, "round2_metareview/publish/ecolofES_extracted_data.csv", row.names = F)
 
 
 
@@ -289,9 +291,150 @@ exclude_out_clean <- distinct(exclude_out_clean)
 rownames(exclude_out_clean) <- NULL
 
 # write out final exclused papers dataset
-write.csv(exclude_out_clean, "round2_metareview/publish/ecolofES_excludedpapers.csv", row.names = F)
+# write.csv(exclude_out_clean, "round2_metareview/publish/ecolofES_excludedpapers.csv", row.names = F)
+
 
 
 
 #### MAKE EML METADATA -----
+# set path to publication files
+pubdir <- "round2_metareview/publish/"
+# read in metadata prep files to list
+metaprep <- list()
+# grab names of each sheet in metareview prep file
+prepsheets <- excel_sheets(paste0(pubdir, "internaluse/ecolofES_EMLmetadata_prep.xlsx"))
+# iterate to read in each sheet as data frame
+for(i in 1:length(prepsheets)){
+  metaprep[[i]] <- read_excel(path = paste0(pubdir, "internaluse/ecolofES_EMLmetadata_prep.xlsx"), 
+                              sheet = prepsheets[i], na = na_vals, trim_ws = T)
+  names(metaprep)[[i]] <- prepsheets[i]
+}
+
+# pull datasets to use
+es_factors <- metaprep[[grep("CodeDe", names(metaprep))]]
+es_attribs <- metaprep[[grep("Attributes", names(metaprep))]]
+es_persons <- metaprep[["Person"]]
+es_entities <- metaprep$DataSetEntities
+
+
+# -- make common items -----
+# coverage: only coverage to set is temporal
+es_coverage <- set_coverage(beginDate = "2006-01-01", endDate = "2019-11-23")
+# responsible party: Laura is point of contact
+es_responsibleparty <- with(es_persons[es_persons$surName == "Dee",], set_responsibleParty(givenName, surName, organizationName = organizationName, 
+                                                                                           electronicMailAddress = electronicMailAddress, id = id,
+                                                                                           onlineUrl = "https://www.colorado.edu/ebio/laura-dee"))
+# EBIO/CU address
+EBIO_address <- list(deliveryPoint = "EBIO, Ramaley N122", 
+                     city = "Boulder", administrativeArea = "Colorado", 
+                     postalCode = "80309-0334", country = "U.S.A."  
+)
+
+# keywords -- took from manuscript draft
+keywordSet <- list(
+  keyword = list(
+    "Biodiversity", "Ecological drivers", "Ecosystem services", 
+    "Ecosystem service providers", "Global change", "Multifunctionality", 
+    "Nature’s benefits to people", 
+    "ROSES", "Systematic map"
+))
+
+
+
+
+# dataset specific items ----
+
+# make attributeLists
+es_extracted_attributes <- set_attributes(
+  as_tibble(
+    subset(es_attribs, grepl("extract", entityName),
+           select = c(attributeName, attributeLabel, attributeDefinition, formatString, unit, numberType))),
+  # code definitions for es fields
+  es_factors[c("attributeName", "code", "definition")],
+  # class of field
+  col_classes = with(es_attribs, col_classes[grepl("extra", entityName)]))
+
+es_excluded__attributes_excluded <- set_attributes(
+  as_tibble(
+    subset(es_attribs, grepl("exclud", entityName),
+           select = c(attributeName, attributeLabel, attributeDefinition, formatString, unit, numberType))),
+  # code definitions for es fields
+  es_factors[c("attributeName", "code", "definition")],
+  # class of field
+  col_classes = with(es_attribs, col_classes[grepl("exclud", entityName)]))
+
+
+# make dataTables
+es_extracted_physical <- set_physical(objectName = with(metaprep$DataSetEntities, entityfilename[grepl("extr", entityfilename)]),
+                                      size = file.info(paste0(pubdir, "ecolofES_extracted_data.csv"))$size,
+                                      authentication =  unname(tools::md5sum(paste0(pubdir, "ecolofES_extracted_data.csv"))),
+                                      authMethod = "MD5"
+                                  )
+es_excluded_physical <- set_physical(objectName = with(metaprep$DataSetEntities, entityfilename[grepl("exclu", entityfilename)]),
+                                      size = file.info(paste0(pubdir, "ecolofES_excludedpapers.csv"))$size,
+                                     authentication =  unname(tools::md5sum(paste0(pubdir, "ecolofES_excluded_papers.csv"))),
+                                     authMethod = "MD5"
+)
+
+es_extracted_dataTable <- list(entityName = with(es_entities, entityName[grepl("extr", entityName)]),
+                              entityDescription = with(es_entities, entitydescription[grepl("extr", entityName)]),
+                              physical = es_extracted_physical,
+                              attributeList = es_extracted_attributes)
+
+
+# make extracted data eml ----
+extracted_dataset <- list(
+  title = with(es_entities, title[grepl("extr", title)]),
+  creator = ,
+  pubDate = 2022,
+  intellectualRights = "TBD",
+  abstract = "TBD",
+  associatedParty = ,
+  keywordSet = keywordSet,
+  coverage = es_coverage,
+  contact = es_responsibleparty,
+  methods = "TBD",
+  dataTable = es_extracted_dataTable
+)
+
+# add to root eml
+extracted_eml <- list(
+  packageId = uuid::UUIDgenerate(),
+  system = "uuid",
+  dataset = extracted_dataset
+)
+
+# write out xml file
+write_eml(excluded_eml, paste0(pubdir, "ecolofES_extracted_data_eml.xml"))
+# check that xml file validates
+eml_validate(paste0(pubdir, "ecolofES_extracted_data_eml.xml"))
+
+
+
+# make excluded papers eml ----
+excluded_dataset <- list(
+  title = with(es_entities, title[grepl("excl", title)]),
+  creator = ,
+  pubDate = 2022,
+  intellectualRights = "TBD",
+  abstract = "TBD",
+  associatedParty = ,
+  keywordSet = keywordSet,
+  coverage = es_coverage,
+  contact = es_responsibleparty,
+  methods = "TBD",
+  dataTable = es_extracted_dataTable
+)
+
+# add to root eml
+excluded_eml <- list(
+  packageId = uuid::UUIDgenerate(),
+  system = "uuid",
+  dataset = excluded_dataset
+)
+
+# write out xml file
+write_eml(excluded_eml, paste0(pubdir, "ecolofES_excludedpapers_eml.xml"))
+# check that xml file validates
+eml_validate(paste0(pubdir, "ecolofES_excludedpapers_eml.xml"))
 
